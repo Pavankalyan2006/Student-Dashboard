@@ -1,0 +1,66 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: btech-learning-platform
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=postgresql://btech_user:btech_secure_pw@postgres:5432/btech_db
+      - REDIS_URL=redis://redis:6379/0
+      - JWT_SECRET=btech_production_super_secret_jwt_key_64_chars_length_min_entropy_2026
+      - JWT_REFRESH_SECRET=btech_production_super_secret_refresh_key_64_chars_length_2026
+      - CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+      - AI_PROVIDER=gemini
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health/live"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: btech-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=btech_user
+      - POSTGRES_PASSWORD=btech_secure_pw
+      - POSTGRES_DB=btech_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U btech_user -d btech_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: btech-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+  redis_data:

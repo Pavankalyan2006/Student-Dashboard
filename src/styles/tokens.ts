@@ -1,0 +1,27 @@
+export const themeTokens = {
+  colors: {
+    primary: '#2563EB',
+    primaryDark: '#1D4ED8',
+    aiIndigo: '#4F46E5',
+    aiPurple: '#7C3AED',
+    success: '#16A34A',
+    warning: '#F59E0B',
+    error: '#DC2626',
+    info: '#0891B2',
+    sidebar: '#0B1530',
+    sidebarSurface: '#101E42',
+    sidebarBorder: '#1E2E55',
+    sidebarText: '#94A3B8',
+    foreground: '#101828',
+    secondary: '#475467',
+    muted: '#667085',
+    border: '#E4E7EC',
+    background: '#F7F9FC',
+    white: '#FFFFFF',
+  },
+  spacing: [4, 8, 12, 16, 20, 24, 32, 40, 48, 64] as const,
+  typography: {
+    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+    monoFamily: "'JetBrains Mono', monospace",
+  },
+} as const;

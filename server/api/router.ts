@@ -1,0 +1,76 @@
+import { Router } from 'express';
+import { healthRouter } from './routes/health';
+import { authRouter } from './routes/auth';
+import { studentsRouter } from './routes/students';
+import { notificationsRouter } from './routes/notifications';
+import { searchRouter } from './routes/search';
+import { aiRouter } from './routes/ai';
+import { storageRouter } from './routes/storage';
+import { dashboardRouter } from './routes/dashboard';
+import { coursesRouter } from './routes/courses';
+import { notesRouter } from './routes/notes';
+import { documentsRouter } from './routes/documents';
+import { codingRouter } from './routes/coding';
+import { dsaRouter } from './routes/dsa';
+import { quizRouter } from './routes/quiz';
+import projectsRouter from './routes/projects';
+import placementsRouter from './routes/placements';
+import { resumesRouter } from './routes/resumes';
+import { careerRouter } from './routes/career';
+import { skillsRouter } from './routes/skills';
+import { researchRouter } from './routes/research';
+import { githubRouter } from './routes/github';
+import { contextRouter } from './routes/context';
+import { profileRouter } from './routes/profile';
+import { progressRouter } from './routes/progress';
+import { goalsRouter } from './routes/goals';
+import { bookmarksRouter } from './routes/bookmarks';
+import { communityRouter } from './routes/community';
+import { certificatesRouter } from './routes/certificates';
+import { insightsRouter } from './routes/insights';
+import { adminRouter } from './routes/admin';
+
+import { learningModulesRouter } from './routes/learningModules';
+import { externalIntegrationsRouter } from './routes/externalIntegrations';
+import { semesterCommandCenterRouter } from './routes/semesterCommandCenter';
+
+export const apiV1Router = Router();
+
+apiV1Router.use('/', healthRouter);
+apiV1Router.use('/', authRouter);
+apiV1Router.use('/admin', adminRouter);
+apiV1Router.use('/', studentsRouter);
+apiV1Router.use('/', notificationsRouter);
+apiV1Router.use('/', searchRouter);
+apiV1Router.use('/', aiRouter);
+apiV1Router.use('/', storageRouter);
+apiV1Router.use('/', dashboardRouter);
+apiV1Router.use('/', coursesRouter);
+apiV1Router.use('/', notesRouter);
+apiV1Router.use('/', documentsRouter);
+apiV1Router.use('/', codingRouter);
+apiV1Router.use('/', dsaRouter);
+apiV1Router.use('/', quizRouter);
+apiV1Router.use('/projects', projectsRouter);
+apiV1Router.use('/placements', placementsRouter);
+apiV1Router.use('/resumes', resumesRouter);
+apiV1Router.use('/career', careerRouter);
+apiV1Router.use('/skills', skillsRouter);
+apiV1Router.use('/research', researchRouter);
+apiV1Router.use('/github', githubRouter);
+apiV1Router.use('/context', contextRouter);
+apiV1Router.use('/', profileRouter);
+apiV1Router.use('/', progressRouter);
+apiV1Router.use('/', goalsRouter);
+apiV1Router.use('/', bookmarksRouter);
+apiV1Router.use('/', communityRouter);
+apiV1Router.use('/', certificatesRouter);
+apiV1Router.use('/', insightsRouter);
+apiV1Router.use('/', learningModulesRouter);
+apiV1Router.use('/', externalIntegrationsRouter);
+apiV1Router.use('/', semesterCommandCenterRouter);
+
+
+
+
+

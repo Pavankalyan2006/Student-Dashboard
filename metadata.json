@@ -1,0 +1,7 @@
+{
+  "name": "B.Tech AI Learning Platform",
+  "description": "Premium student-focused AI learning workspace for engineering students",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
