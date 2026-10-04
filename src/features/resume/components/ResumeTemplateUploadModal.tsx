@@ -179,79 +179,86 @@ export const ResumeTemplateUploadModal: React.FC<ResumeTemplateUploadModalProps>
           } catch (_) {}
         }
 
-        if (!fullResume) {
-          fullResume = {
-            resume: {
-              id: targetResumeId || 'custom-resume',
-              student_id: 'student-default',
-              title: uploadFile.name.replace(/\.pdf$/i, ''),
-              template: 'CUSTOM_UPLOADED',
-              target_role: 'Software Engineer',
-              target_industry: 'Software Engineering',
-              summary: 'Motivated B.Tech student with strong foundations in software development, data structures, and computer science principles. Experienced in building full-stack applications and collaborative problem solving.',
-              status: 'DRAFT',
-              custom_template_config: config,
-              section_order: config.section_order,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            },
-            profile: {
-              id: 'prof-default',
+        const validFullResume: FullResumeData = fullResume || {
+          resume: {
+            id: targetResumeId || 'custom-resume',
+            student_id: 'student-default',
+            title: uploadFile.name.replace(/\.pdf$/i, ''),
+            template: 'CUSTOM_UPLOADED',
+            target_role: 'Software Engineer',
+            target_industry: 'Software Engineering',
+            summary: 'Motivated B.Tech student with strong foundations in software development, data structures, and computer science principles. Experienced in building full-stack applications and collaborative problem solving.',
+            status: 'DRAFT',
+            custom_template_config: config,
+            section_order: config.section_order,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          },
+          profile: {
+            id: 'prof-default',
+            resume_id: targetResumeId || 'custom-resume',
+            full_name: 'Alex Johnson',
+            email: 'alex.johnson@university.edu',
+            phone: '+91 98765 43210',
+            location: 'Bangalore, India',
+            linkedin_url: 'https://linkedin.com/in/alex-johnson',
+            github_url: 'https://github.com/alexjohnson',
+            website: '',
+            portfolio_url: '',
+            headline: 'Computer Science & Engineering Student',
+          },
+          education: [
+            {
+              id: 'edu-default',
               resume_id: targetResumeId || 'custom-resume',
-              full_name: 'Alex Johnson',
-              email: 'alex.johnson@university.edu',
-              phone: '+91 98765 43210',
-              location: 'Bangalore, India',
-              linkedin_url: 'https://linkedin.com/in/alex-johnson',
-              github_url: 'https://github.com/alexjohnson',
+              institution: 'National Institute of Technology',
+              degree: 'B.Tech',
+              field_of_study: 'Computer Science & Engineering',
+              start_date: '2023-08-01',
+              end_date: '2027-05-30',
+              grade: '8.8 CGPA',
+              description: '',
+              order_index: 0,
             },
-            education: [
-              {
-                id: 'edu-default',
-                resume_id: targetResumeId || 'custom-resume',
-                institution: 'National Institute of Technology',
-                degree: 'B.Tech',
-                field_of_study: 'Computer Science & Engineering',
-                start_date: '2023-08-01',
-                end_date: '2027-05-30',
-                grade: '8.8 CGPA',
-              },
-            ],
-            skills: [
-              { id: 'sk-1', resume_id: targetResumeId || 'custom-resume', name: 'TypeScript', category: 'LANGUAGES' },
-              { id: 'sk-2', resume_id: targetResumeId || 'custom-resume', name: 'Python', category: 'LANGUAGES' },
-              { id: 'sk-3', resume_id: targetResumeId || 'custom-resume', name: 'React', category: 'FRAMEWORKS' },
-              { id: 'sk-4', resume_id: targetResumeId || 'custom-resume', name: 'Node.js', category: 'BACKEND' },
-            ],
-            projects: [],
-            experience: [],
-            certifications: [],
-            achievements: [],
-            completeness_score: 85,
-            completeness_breakdown: [],
-          };
-        } else {
-          fullResume.resume.template = 'CUSTOM_UPLOADED';
-          fullResume.resume.custom_template_config = config;
+          ],
+          skills: [
+            { id: 'sk-1', resume_id: targetResumeId || 'custom-resume', skill: 'TypeScript', category: 'LANGUAGE', proficiency: 'ADVANCED', source: 'VERIFIED', order_index: 0 },
+            { id: 'sk-2', resume_id: targetResumeId || 'custom-resume', skill: 'Python', category: 'LANGUAGE', proficiency: 'ADVANCED', source: 'VERIFIED', order_index: 1 },
+            { id: 'sk-3', resume_id: targetResumeId || 'custom-resume', skill: 'React', category: 'FRAMEWORK', proficiency: 'INTERMEDIATE', source: 'VERIFIED', order_index: 2 },
+            { id: 'sk-4', resume_id: targetResumeId || 'custom-resume', skill: 'Node.js', category: 'PROGRAMMING', proficiency: 'INTERMEDIATE', source: 'VERIFIED', order_index: 3 },
+          ],
+          projects: [],
+          experience: [],
+          certifications: [],
+          achievements: [],
+          completeness_score: 85,
+          completeness_breakdown: [],
+        };
+
+        if (fullResume) {
+          validFullResume.resume.template = 'CUSTOM_UPLOADED';
+          validFullResume.resume.custom_template_config = config;
         }
 
         res = {
           templateConfig: config,
-          fullResume,
+          fullResume: validFullResume,
         };
       }
 
       setProcessingStep(4);
       await new Promise((r) => setTimeout(r, 250));
 
-      setResult(res);
-      if (onTemplateApplied) {
-        onTemplateApplied(res.fullResume);
+      if (res) {
+        setResult(res);
+        if (onTemplateApplied) {
+          onTemplateApplied(res.fullResume);
+        }
+        if (onSuccess) {
+          onSuccess(res.fullResume);
+        }
+        toast.success(`Template '${res.templateConfig.template_name}' successfully parsed and applied!`);
       }
-      if (onSuccess) {
-        onSuccess(res.fullResume);
-      }
-      toast.success(`Template '${res.templateConfig.template_name}' successfully parsed and applied!`);
     } catch (err: any) {
       toast.error(err.message || 'Failed to process template');
     } finally {

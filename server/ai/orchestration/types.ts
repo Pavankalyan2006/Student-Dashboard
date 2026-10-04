@@ -73,8 +73,8 @@ export interface AgentContext {
   conversation_id: string;
   request_id: string;
   current_page?: string;
-  current_course?: { id: string; name: string; code: string; progress: number };
-  current_lesson?: { id: string; title: string; topic: string };
+  current_course?: { id?: string; name: string; code: string; progress: number };
+  current_lesson?: { id?: string; title: string; topic: string };
   current_project?: { id: string; title: string; repo?: string };
   current_research?: { id: string; title: string };
   selected_documents?: string[];

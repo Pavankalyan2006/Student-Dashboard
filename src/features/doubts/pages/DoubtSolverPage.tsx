@@ -73,7 +73,7 @@ export function DoubtSolverPage({ onNavigate }: DoubtSolverPageProps) {
       const created = await learningModulesApi.doubts.createDoubt({
         title,
         question_text: questionText,
-        subject,
+        course_name: subject,
         code_snippet: codeSnippet || undefined,
         topic: subject,
       });
@@ -118,7 +118,7 @@ export function DoubtSolverPage({ onNavigate }: DoubtSolverPageProps) {
         actions={
           <div className="flex items-center gap-2">
             <Button
-              variant={activeTab === 'ask' ? 'default' : 'outline'}
+              variant={activeTab === 'ask' ? 'primary' : 'outline'}
               size="sm"
               onClick={() => setActiveTab('ask')}
               className={activeTab === 'ask' ? 'bg-[#2563EB] text-white' : ''}
@@ -126,7 +126,7 @@ export function DoubtSolverPage({ onNavigate }: DoubtSolverPageProps) {
               Ask a Doubt
             </Button>
             <Button
-              variant={activeTab === 'history' ? 'default' : 'outline'}
+              variant={activeTab === 'history' ? 'primary' : 'outline'}
               size="sm"
               onClick={() => setActiveTab('history')}
               className={activeTab === 'history' ? 'bg-[#2563EB] text-white' : ''}
@@ -248,7 +248,7 @@ export function DoubtSolverPage({ onNavigate }: DoubtSolverPageProps) {
                     >
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded">
-                          {d.subject}
+                          {d.topic || d.course_name || 'Engineering'}
                         </span>
                         <span
                           className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
@@ -278,7 +278,7 @@ export function DoubtSolverPage({ onNavigate }: DoubtSolverPageProps) {
               <div className="border-b border-gray-100 pb-4 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-purple-600 bg-purple-50 px-2.5 py-1 rounded-md">
-                    {selectedDoubt.subject}
+                    {selectedDoubt.topic || selectedDoubt.course_name || 'Engineering'}
                   </span>
                   <span className="text-xs text-[#475467]">
                     Asked {new Date(selectedDoubt.created_at).toLocaleDateString()}

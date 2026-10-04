@@ -5,15 +5,13 @@ import { MODULE_REGISTRY } from '../pages/ModulePlaceholderPage';
 describe('Navigation & Shell Route Foundation', () => {
   it('contains all required B.Tech platform sidebar sections', () => {
     const titles = NAV_SECTIONS.map((s) => s.title);
-    expect(titles).toContain('HOME');
-    expect(titles).toContain('AI');
-    expect(titles).toContain('LEARN');
-    expect(titles).toContain('BUILD');
-    expect(titles).toContain('CAREER');
-    expect(titles).toContain('RESEARCH');
+    expect(titles).toContain('LEARNING');
+    expect(titles).toContain('PRACTICE LABS');
+    expect(titles).toContain('ASSESSMENT');
+    expect(titles).toContain('PROJECT & RESEARCH');
+    expect(titles).toContain('CAREER & EXTERNAL PLATFORMS');
     expect(titles).toContain('COMMUNITY');
-    expect(titles).toContain('STUDENT');
-    expect(titles).toContain('SETTINGS');
+    expect(titles).toContain('PROFILE');
   });
 
   it('maps all primary student routes in the sidebar', () => {

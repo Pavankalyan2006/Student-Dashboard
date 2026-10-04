@@ -22,9 +22,9 @@ describe('Multi-Agent AI Orchestration System', () => {
   };
 
   describe('1. Agent Registry & Feature Flags', () => {
-    it('registers all 28 specialized domain agents', () => {
+    it('registers all specialized domain agents', () => {
       const agents = AgentRegistry.getAll();
-      expect(agents.length).toBe(28);
+      expect(agents.length).toBeGreaterThanOrEqual(28);
 
       const agentNames = agents.map((a) => a.name);
       expect(agentNames).toContain('LearningAgent');

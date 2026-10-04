@@ -75,6 +75,7 @@ export interface EmptyStateProps {
   icon?: React.ReactNode;
   actionText?: string;
   onAction?: () => void;
+  action?: React.ReactNode;
   className?: string;
 }
 
@@ -84,6 +85,7 @@ export function EmptyState({
   icon,
   actionText,
   onAction,
+  action,
   className,
 }: EmptyStateProps) {
   return (
@@ -98,11 +100,13 @@ export function EmptyState({
       </div>
       <h3 className="text-sm font-semibold text-[#101828] mb-1">{title}</h3>
       <p className="text-xs text-[#475467] max-w-sm mb-4 leading-relaxed">{description}</p>
-      {actionText && onAction && (
+      {action ? (
+        action
+      ) : actionText && onAction ? (
         <Button variant="outline" size="sm" onClick={onAction}>
           {actionText}
         </Button>
-      )}
+      ) : null}
     </div>
   );
 }

@@ -394,7 +394,7 @@ export function ExternalProfileHubPage({ onNavigate }: ExternalProfileHubPagePro
                   </div>
                   <p className="text-sm text-slate-200 font-medium">{match.evidence_summary}</p>
                   <div className="flex flex-wrap gap-1.5 pt-1">
-                    {match.sources.map((src, idx) => (
+                    {match.sources.map((src: string, idx: number) => (
                       <span key={idx} className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded">
                         {src}
                       </span>
@@ -479,12 +479,12 @@ export function ExternalProfileHubPage({ onNavigate }: ExternalProfileHubPagePro
                 </div>
 
                 <div className="space-y-1">
-                  <div className="text-[11px] text-slate-400">Verified Evidence ({skill.evidence_sources.length}):</div>
+                  <div className="text-[11px] text-slate-400">Verified Evidence ({skill.evidence_sources?.length || 0}):</div>
                   <div className="space-y-1">
-                    {skill.evidence_sources.map((ev, idx) => (
+                    {(skill.evidence_sources || []).map((ev: any, idx: number) => (
                       <div key={idx} className="flex items-center justify-between text-xs bg-slate-950 p-1.5 rounded border border-slate-800/80">
-                        <span className="text-slate-300 truncate mr-2">{ev.description}</span>
-                        <span className="text-[10px] text-slate-500 shrink-0 font-mono">{ev.source}</span>
+                        <span className="text-slate-300 truncate mr-2">{ev.description || ev.name}</span>
+                        <span className="text-[10px] text-slate-500 shrink-0 font-mono">{ev.source || ev.type || 'Verified'}</span>
                       </div>
                     ))}
                   </div>
@@ -492,7 +492,7 @@ export function ExternalProfileHubPage({ onNavigate }: ExternalProfileHubPagePro
 
                 <div className="flex items-center justify-between pt-2 border-t border-slate-800/80 text-[11px] text-slate-500">
                   <span>Confidence: {(skill.confidence_score * 100).toFixed(0)}%</span>
-                  <span>Synced {new Date(skill.last_updated).toLocaleDateString()}</span>
+                  <span>Synced {skill.last_updated ? new Date(skill.last_updated).toLocaleDateString() : 'Recently'}</span>
                 </div>
               </div>
             ))}
@@ -656,7 +656,7 @@ function ProfileCard({
             </div>
             <div className="flex items-center justify-between text-slate-400">
               <span className="text-slate-500">Last Synced:</span>
-              <span>{new Date(connection.last_synced_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+              <span>{connection.last_synced_at ? new Date(connection.last_synced_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Never'}</span>
             </div>
             {connection.profile_url && (
               <div className="flex items-center justify-between text-slate-400 truncate">

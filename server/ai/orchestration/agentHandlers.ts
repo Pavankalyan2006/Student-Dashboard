@@ -509,14 +509,14 @@ export class AgentHandlers {
 
         case 'CareerAgent': {
           const roles = await ToolRegistry.execute('get_career_roles', {}, { studentId, role }).catch(() => []);
-          const role = Array.isArray(roles) && roles.length > 0 ? roles[0] : { title: 'Backend / Distributed Systems Engineer' };
+          const targetRole = Array.isArray(roles) && roles.length > 0 ? roles[0] : { title: 'Backend / Distributed Systems Engineer' };
 
           return {
             agent: 'CareerAgent',
             status: 'success',
-            summary: `Mapped skill requirements for '${role.title || 'Backend Engineer'}'. Identified 2 curriculum gap competencies (Distributed Caching & Event Queues) without predicting hiring outcomes.`,
+            summary: `Mapped skill requirements for '${targetRole.title || 'Backend Engineer'}'. Identified 2 curriculum gap competencies (Distributed Caching & Event Queues) without predicting hiring outcomes.`,
             data: {
-              targetRole: role.title || 'Backend Engineer',
+              targetRole: targetRole.title || 'Backend Engineer',
               skillGaps: ['Redis Caching Patterns', 'Message Streaming (Kafka/RabbitMQ)'],
               recommendedElective: 'Distributed Cloud Architectures',
             },

@@ -188,7 +188,7 @@ export function registerLearningModulesTools(): void {
     handler: async (params, context) => {
       const exam = await LearningModulesService.getExamById(context.studentId, params.exam_id);
       const weakTopics = exam.topics.filter((t) => t.confidence === 'WEAK');
-      const masteredTopics = exam.topics.filter((t) => t.confidence === 'MASTERED');
+      const masteredTopics = exam.topics.filter((t) => t.status === 'MASTERED' || t.confidence === 'STRONG');
       return {
         exam_id: exam.id,
         title: exam.title,
@@ -357,7 +357,7 @@ export function registerLearningModulesTools(): void {
     handler: async (params, context) => {
       const doubts = await LearningModulesService.getDoubts(context.studentId);
       const q = params.query.toLowerCase();
-      return doubts.filter((d) => d.title.toLowerCase().includes(q) || d.subject.toLowerCase().includes(q));
+      return doubts.filter((d) => d.title.toLowerCase().includes(q) || d.topic.toLowerCase().includes(q) || (d.course_name && d.course_name.toLowerCase().includes(q)));
     },
   });
 
@@ -409,6 +409,7 @@ export function registerLearningModulesTools(): void {
         confidence: 0,
         next_review: new Date().toISOString().split('T')[0],
         created_at: new Date().toISOString(),
+        student_id: context.studentId,
       };
       deck.cards.push(newCard);
       deck.total_cards = deck.cards.length;
@@ -461,7 +462,7 @@ export function registerLearningModulesTools(): void {
     category: 'MUTATION',
     handler: async (params, context) => {
       const deck = await LearningModulesService.getDeckById(context.studentId, params.deck_id);
-      const card = deck.cards.find((c) => c.id === params.card_id);
+      const card = deck.cards.find((c: any) => c.id === params.card_id);
       if (!card) throw new Error(`Card '${params.card_id}' not found`);
       if (params.front) card.front = params.front;
       if (params.back) card.back = params.back;
@@ -845,8 +846,8 @@ export function registerLearningModulesTools(): void {
     handler: async (params, context) => {
       const exp = await LearningModulesService.getMlExperimentById(context.studentId, params.experiment_id);
       return {
-        metrics: exp.metrics,
-        insights: exp.insights,
+        metrics: exp?.metrics || {},
+        insights: exp?.insights || [],
       };
     },
   });
@@ -1251,7 +1252,7 @@ export function registerLearningModulesTools(): void {
       return apps
         .filter((a) => a.deadline || a.interview_date)
         .map((a) => ({
-          company: a.company,
+          company: a.company_name,
           role: a.role,
           deadline: a.deadline,
           interview_date: a.interview_date,

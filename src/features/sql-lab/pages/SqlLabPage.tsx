@@ -119,7 +119,7 @@ export function SqlLabPage({ onNavigate }: SqlLabPageProps) {
         actions={
           <div className="flex items-center gap-2">
             <Button
-              variant={activeTab === 'editor' ? 'default' : 'outline'}
+              variant={activeTab === 'editor' ? 'primary' : 'outline'}
               size="sm"
               onClick={() => setActiveTab('editor')}
               className={activeTab === 'editor' ? 'bg-[#2563EB] text-white' : ''}
@@ -127,7 +127,7 @@ export function SqlLabPage({ onNavigate }: SqlLabPageProps) {
               SQL Editor
             </Button>
             <Button
-              variant={activeTab === 'schema' ? 'default' : 'outline'}
+              variant={activeTab === 'schema' ? 'primary' : 'outline'}
               size="sm"
               onClick={() => setActiveTab('schema')}
               className={activeTab === 'schema' ? 'bg-[#2563EB] text-white' : ''}
@@ -135,7 +135,7 @@ export function SqlLabPage({ onNavigate }: SqlLabPageProps) {
               Schema Viewer
             </Button>
             <Button
-              variant={activeTab === 'challenges' ? 'default' : 'outline'}
+              variant={activeTab === 'challenges' ? 'primary' : 'outline'}
               size="sm"
               onClick={() => setActiveTab('challenges')}
               className={activeTab === 'challenges' ? 'bg-[#2563EB] text-white' : ''}

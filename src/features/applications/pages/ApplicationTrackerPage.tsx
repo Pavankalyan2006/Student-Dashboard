@@ -137,7 +137,7 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
         actions={
           <div className="flex items-center gap-2">
             <Button
-              variant={activeView === 'kanban' ? 'default' : 'outline'}
+              variant={activeView === 'kanban' ? 'primary' : 'outline'}
               size="sm"
               onClick={() => setActiveView('kanban')}
               className={activeView === 'kanban' ? 'bg-[#2563EB] text-white' : ''}
@@ -145,7 +145,7 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
               Pipeline Kanban
             </Button>
             <Button
-              variant={activeView === 'list' ? 'default' : 'outline'}
+              variant={activeView === 'list' ? 'primary' : 'outline'}
               size="sm"
               onClick={() => setActiveView('list')}
               className={activeView === 'list' ? 'bg-[#2563EB] text-white' : ''}

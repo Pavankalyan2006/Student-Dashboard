@@ -224,6 +224,16 @@ export interface SQLExecutionResult {
   optimization_tips?: string[];
 }
 
+export interface MLDataset {
+  id: string;
+  name: string;
+  features: string[];
+  target_column: string;
+  total_samples: number;
+  preview: Record<string, any>[];
+  task_type: 'CLASSIFICATION' | 'REGRESSION' | 'CLUSTERING';
+}
+
 export interface MLExperimentMetric {
   accuracy?: number;
   precision?: number;

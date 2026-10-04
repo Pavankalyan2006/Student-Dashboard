@@ -124,14 +124,14 @@ export function JobDiscoveryPage({ onNavigate }: JobDiscoveryPageProps) {
   };
 
   const handleTrackJob = (job: ExternalJob) => {
-    toast.success(`Job "${job.title}" at ${job.company} added to Application Tracker!`);
+    toast.success(`Job "${job.title}" at ${job.company || job.company_name} added to Application Tracker!`);
     if (onNavigate) {
       onNavigate('/applications');
     }
   };
 
   const handlePrepareJob = (job: ExternalJob) => {
-    toast.info(`Configuring Placement Prep session for ${job.company} (${job.title})...`);
+    toast.info(`Configuring Placement Prep session for ${job.company || job.company_name} (${job.title})...`);
     if (onNavigate) {
       onNavigate('/placements');
     }
@@ -251,7 +251,7 @@ export function JobDiscoveryPage({ onNavigate }: JobDiscoveryPageProps) {
                     <div className="flex items-center gap-2 mt-1 text-xs text-slate-400">
                       <span className="flex items-center gap-1 font-medium text-slate-300">
                         <Building className="w-3.5 h-3.5 text-indigo-400" />
-                        {job.company}
+                        {job.company || job.company_name}
                       </span>
                       <span>•</span>
                       <span className="flex items-center gap-1">
@@ -275,7 +275,7 @@ export function JobDiscoveryPage({ onNavigate }: JobDiscoveryPageProps) {
 
                 {/* Skills tags */}
                 <div className="flex flex-wrap gap-1.5 mt-3">
-                  {job.skills_required.map((skill, idx) => (
+                  {(job.skills_required || job.required_skills || []).map((skill: string, idx: number) => (
                     <span
                       key={idx}
                       className="text-[11px] px-2 py-0.5 rounded bg-slate-800/80 text-slate-300 border border-slate-700/60"
@@ -318,9 +318,9 @@ export function JobDiscoveryPage({ onNavigate }: JobDiscoveryPageProps) {
                     <Target className="w-3.5 h-3.5 mr-1 text-sky-400" />
                     Track
                   </Button>
-                  {job.url && (
+                  {(job.url || job.job_url) && (
                     <a
-                      href={job.url}
+                      href={job.url || job.job_url}
                       target="_blank"
                       rel="noreferrer"
                       className="p-1.5 rounded-lg border border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
@@ -347,7 +347,7 @@ export function JobDiscoveryPage({ onNavigate }: JobDiscoveryPageProps) {
                   <Sparkles className="w-4 h-4" /> Multi-Agent Job Fit Analysis
                 </div>
                 <h3 className="text-xl font-bold text-white">
-                  {analyzingJob.title} <span className="text-slate-400 font-normal">at {analyzingJob.company}</span>
+                  {analyzingJob.title} <span className="text-slate-400 font-normal">at {analyzingJob.company || analyzingJob.company_name}</span>
                 </h3>
               </div>
               <Button
@@ -374,7 +374,7 @@ export function JobDiscoveryPage({ onNavigate }: JobDiscoveryPageProps) {
                   {/* Match Score Banner */}
                   <div className="p-4 bg-gradient-to-r from-indigo-950/60 to-slate-900 border border-indigo-800/40 rounded-xl flex items-center justify-between">
                     <div>
-                      <div className="text-3xl font-extrabold text-emerald-400">{analysisResult.fit_score}% Match</div>
+                      <div className="text-3xl font-extrabold text-emerald-400">{analysisResult.fit_score ?? analysisResult.overall_match_score}% Match</div>
                       <p className="text-xs text-slate-300 mt-1">
                         High alignment with your verified B.Tech projects & coding history.
                       </p>
@@ -400,10 +400,10 @@ export function JobDiscoveryPage({ onNavigate }: JobDiscoveryPageProps) {
                     <div className="p-4 bg-slate-950 rounded-xl border border-slate-800 space-y-3">
                       <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wide flex items-center gap-1.5">
                         <CheckCircle2 className="w-4 h-4" /> Verified In Your Profile (
-                        {analysisResult.matched_skills.length})
+                        {analysisResult.matched_skills?.length || 0})
                       </h4>
                       <div className="space-y-1.5">
-                        {analysisResult.matched_skills.map((skill, idx) => (
+                        {(analysisResult.matched_skills || []).map((skill: string, idx: number) => (
                           <div
                             key={idx}
                             className="flex items-center justify-between p-2 rounded bg-slate-900 border border-slate-800 text-xs"
@@ -421,10 +421,10 @@ export function JobDiscoveryPage({ onNavigate }: JobDiscoveryPageProps) {
                     <div className="p-4 bg-slate-950 rounded-xl border border-slate-800 space-y-3">
                       <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wide flex items-center gap-1.5">
                         <AlertCircle className="w-4 h-4" /> Skills Needing Practice (
-                        {analysisResult.skills_needing_practice.length})
+                        {analysisResult.skills_needing_practice?.length || 0})
                       </h4>
                       <div className="space-y-1.5">
-                        {analysisResult.skills_needing_practice.map((skill, idx) => (
+                        {(analysisResult.skills_needing_practice || []).map((skill: string, idx: number) => (
                           <div
                             key={idx}
                             className="flex items-center justify-between p-2 rounded bg-slate-900 border border-slate-800 text-xs"
@@ -451,7 +451,7 @@ export function JobDiscoveryPage({ onNavigate }: JobDiscoveryPageProps) {
                       Relevant Student Projects to Highlight:
                     </h4>
                     <div className="space-y-2">
-                      {analysisResult.relevant_projects.map((proj, idx) => (
+                      {(analysisResult.relevant_projects || []).map((proj: any, idx: number) => (
                         <div key={idx} className="p-3 bg-slate-950 border border-slate-800 rounded-lg text-xs space-y-1">
                           <div className="font-semibold text-indigo-300">{proj.title}</div>
                           <p className="text-slate-400">{proj.relevance_note}</p>
@@ -466,7 +466,7 @@ export function JobDiscoveryPage({ onNavigate }: JobDiscoveryPageProps) {
                       <Target className="w-4 h-4" /> Recommended 7-Day Interview Prep:
                     </h4>
                     <ul className="text-xs text-slate-300 space-y-1.5 list-disc pl-4">
-                      {analysisResult.suggested_preparation.map((step, idx) => (
+                      {(analysisResult.suggested_preparation || []).map((step: string, idx: number) => (
                         <li key={idx}>{step}</li>
                       ))}
                     </ul>

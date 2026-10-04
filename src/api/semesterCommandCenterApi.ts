@@ -419,12 +419,18 @@ let fallbackRecoveryPlans: AcademicRecoveryPlan[] = [
   },
 ];
 
+const unwrapData = <T>(res: any): T | null => {
+  if (res && res.data !== undefined) return res.data as T;
+  if (res !== undefined && res !== null) return res as T;
+  return null;
+};
+
 export const semesterCommandCenterApi = {
   // 1. Get complete overview
   getOverview: async (): Promise<SemesterOverviewDashboardData> => {
     try {
-      const res = await apiClient.request<SemesterOverviewDashboardData>('/semester/overview');
-      if (res.data) return res.data;
+      const res = await apiClient.request<any>('/semester/overview');
+      const data = unwrapData<any>(res); if (data) return data;
     } catch {
       // Fallback
     }
@@ -515,8 +521,8 @@ export const semesterCommandCenterApi = {
   // 2. Semester Config
   getConfig: async (): Promise<AcademicSemesterConfig> => {
     try {
-      const res = await apiClient.request<AcademicSemesterConfig>('/semester/config');
-      if (res.data) return res.data;
+      const res = await apiClient.request<any>('/semester/config');
+      const data = unwrapData<any>(res); if (data) return data;
     } catch {
       // Fallback
     }
@@ -525,11 +531,11 @@ export const semesterCommandCenterApi = {
 
   updateConfig: async (configUpdate: Partial<AcademicSemesterConfig>): Promise<AcademicSemesterConfig> => {
     try {
-      const res = await apiClient.request<AcademicSemesterConfig>('/semester/config', {
+      const res = await apiClient.request<any>('/semester/config', {
         method: 'PATCH',
         body: JSON.stringify(configUpdate),
       });
-      if (res.data) return res.data;
+      const data = unwrapData<any>(res); if (data) return data;
     } catch {
       // Fallback
     }
@@ -540,21 +546,21 @@ export const semesterCommandCenterApi = {
   // 3. Subjects
   getSubjects: async (): Promise<SemesterSubject[]> => {
     try {
-      const res = await apiClient.request<SemesterSubject[]>('/semester/subjects');
-      if (res.data && Array.isArray(res.data)) return res.data;
+      const res = await apiClient.request<any>('/semester/subjects');
+      const data = unwrapData<any>(res); if (data && Array.isArray(data)) return data;
     } catch {
       // Fallback
     }
     return fallbackSubjects;
   },
 
-  addSubject: async (subject: Omit<SemesterSubject, 'id' | 'semester_id' | 'progress_percent' | 'syllabus_remaining_percent'>): Promise<SemesterSubject> => {
+  addSubject: async (subject: Omit<SemesterSubject, 'id' | 'semester_id' | 'progress_percent' | 'syllabus_remaining_percent' | 'units'> & { units?: SemesterUnit[] }): Promise<SemesterSubject> => {
     try {
-      const res = await apiClient.request<SemesterSubject>('/semester/subjects', {
+      const res = await apiClient.request<any>('/semester/subjects', {
         method: 'POST',
         body: JSON.stringify(subject),
       });
-      if (res.data) return res.data;
+      const data = unwrapData<any>(res); if (data) return data;
     } catch {
       // Fallback
     }
@@ -579,11 +585,11 @@ export const semesterCommandCenterApi = {
 
   updateSubjectUnits: async (subjectId: string, units: SemesterUnit[]): Promise<SemesterSubject> => {
     try {
-      const res = await apiClient.request<SemesterSubject>(`/semester/subjects/${subjectId}/units`, {
+      const res = await apiClient.request<any>(`/semester/subjects/${subjectId}/units`, {
         method: 'PUT',
         body: JSON.stringify({ units }),
       });
-      if (res.data) return res.data;
+      const data = unwrapData<any>(res); if (data) return data;
     } catch {
       // Fallback
     }
@@ -603,8 +609,8 @@ export const semesterCommandCenterApi = {
   // 4. Events & Calendar
   getEvents: async (): Promise<AcademicEvent[]> => {
     try {
-      const res = await apiClient.request<AcademicEvent[]>('/semester/events');
-      if (res.data && Array.isArray(res.data)) return res.data;
+      const res = await apiClient.request<any>('/semester/events');
+      const data = unwrapData<any>(res); if (data && Array.isArray(data)) return data;
     } catch {
       // Fallback
     }
@@ -613,11 +619,11 @@ export const semesterCommandCenterApi = {
 
   addEvent: async (eventData: Omit<AcademicEvent, 'id' | 'student_id'>): Promise<AcademicEvent> => {
     try {
-      const res = await apiClient.request<AcademicEvent>('/semester/events', {
+      const res = await apiClient.request<any>('/semester/events', {
         method: 'POST',
         body: JSON.stringify(eventData),
       });
-      if (res.data) return res.data;
+      const data = unwrapData<any>(res); if (data) return data;
     } catch {
       // Fallback
     }
@@ -637,8 +643,8 @@ export const semesterCommandCenterApi = {
   getStudyStream: async (subjectId?: string): Promise<SemesterStudyStreamNode[]> => {
     try {
       const url = subjectId ? `/semester/stream?subject_id=${subjectId}` : '/semester/stream';
-      const res = await apiClient.request<SemesterStudyStreamNode[]>(url);
-      if (res.data && Array.isArray(res.data)) return res.data;
+      const res = await apiClient.request<any>(url);
+      const data = unwrapData<any>(res); if (data && Array.isArray(data)) return data;
     } catch {
       // Fallback
     }
@@ -651,11 +657,11 @@ export const semesterCommandCenterApi = {
 
   updateStreamNodeStatus: async (nodeId: string, status: SemesterStudyStreamNode['status']): Promise<SemesterStudyStreamNode> => {
     try {
-      const res = await apiClient.request<SemesterStudyStreamNode>(`/semester/stream/${nodeId}/status`, {
+      const res = await apiClient.request<any>(`/semester/stream/${nodeId}/status`, {
         method: 'PATCH',
         body: JSON.stringify({ status }),
       });
-      if (res.data) return res.data;
+      const data = unwrapData<any>(res); if (data) return data;
     } catch {
       // Fallback
     }
@@ -671,8 +677,8 @@ export const semesterCommandCenterApi = {
   // 6. Slip Tests
   getSlipTests: async (): Promise<SlipTest[]> => {
     try {
-      const res = await apiClient.request<SlipTest[]>('/semester/slip-tests');
-      if (res.data && Array.isArray(res.data)) return res.data;
+      const res = await apiClient.request<any>('/semester/slip-tests');
+      const data = unwrapData<any>(res); if (data && Array.isArray(data)) return data;
     } catch {
       // Fallback
     }
@@ -681,11 +687,11 @@ export const semesterCommandCenterApi = {
 
   addSlipTest: async (testData: Omit<SlipTest, 'id'>): Promise<SlipTest> => {
     try {
-      const res = await apiClient.request<SlipTest>('/semester/slip-tests', {
+      const res = await apiClient.request<any>('/semester/slip-tests', {
         method: 'POST',
         body: JSON.stringify(testData),
       });
-      if (res.data) return res.data;
+      const data = unwrapData<any>(res); if (data) return data;
     } catch {
       // Fallback
     }
@@ -701,11 +707,11 @@ export const semesterCommandCenterApi = {
 
   recordSlipTestScore: async (testId: string, score: number, weakTopics: string[]): Promise<SlipTest> => {
     try {
-      const res = await apiClient.request<SlipTest>(`/semester/slip-tests/${testId}/score`, {
+      const res = await apiClient.request<any>(`/semester/slip-tests/${testId}/score`, {
         method: 'POST',
         body: JSON.stringify({ score, weak_topics: weakTopics }),
       });
-      if (res.data) return res.data;
+      const data = unwrapData<any>(res); if (data) return data;
     } catch {
       // Fallback
     }
@@ -723,8 +729,8 @@ export const semesterCommandCenterApi = {
   // 7. Minor Examinations
   getMinorExams: async (): Promise<MinorExam[]> => {
     try {
-      const res = await apiClient.request<MinorExam[]>('/semester/minors');
-      if (res.data && Array.isArray(res.data)) return res.data;
+      const res = await apiClient.request<any>('/semester/minors');
+      const data = unwrapData<any>(res); if (data && Array.isArray(data)) return data;
     } catch {
       // Fallback
     }
@@ -765,8 +771,8 @@ export const semesterCommandCenterApi = {
   // 8. End-Sem Readiness
   getEndSemReadiness: async (): Promise<EndSemReadiness[]> => {
     try {
-      const res = await apiClient.request<EndSemReadiness[]>('/semester/end-sem-readiness');
-      if (res.data && Array.isArray(res.data)) return res.data;
+      const res = await apiClient.request<any>('/semester/end-sem-readiness');
+      const data = unwrapData<any>(res); if (data && Array.isArray(data)) return data;
     } catch {
       // Fallback
     }
@@ -859,8 +865,8 @@ export const semesterCommandCenterApi = {
   // 9. Academic Recovery Plans
   getRecoveryPlans: async (): Promise<AcademicRecoveryPlan[]> => {
     try {
-      const res = await apiClient.request<AcademicRecoveryPlan[]>('/semester/recovery');
-      if (res.data && Array.isArray(res.data)) return res.data;
+      const res = await apiClient.request<any>('/semester/recovery');
+      const data = unwrapData<any>(res); if (data && Array.isArray(data)) return data;
     } catch {
       // Fallback
     }

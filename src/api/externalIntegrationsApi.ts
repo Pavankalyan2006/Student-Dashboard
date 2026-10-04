@@ -432,12 +432,18 @@ let fallbackJobs: ExternalJob[] = [
   },
 ];
 
+const unwrapData = <T>(res: any): T | null => {
+  if (res && res.data !== undefined) return res.data as T;
+  if (res !== undefined && res !== null) return res as T;
+  return null;
+};
+
 export const externalIntegrationsApi = {
   // 1. Get all registered external providers
   getProviders: async (): Promise<ExternalProviderInfo[]> => {
     try {
-      const res = await apiClient.request<ExternalProviderInfo[]>('/integrations/providers');
-      if (res.data && Array.isArray(res.data) && res.data.length > 0) return res.data;
+      const res = await apiClient.request<any>('/integrations/providers');
+      const data = unwrapData<any>(res); if (data && Array.isArray(data) && data.length > 0) return data;
     } catch {
       // Fallback
     }
@@ -447,8 +453,8 @@ export const externalIntegrationsApi = {
   // 2. Get student connected external accounts
   getConnections: async (): Promise<ExternalAccountConnection[]> => {
     try {
-      const res = await apiClient.request<ExternalAccountConnection[]>('/integrations/connections');
-      if (res.data && Array.isArray(res.data)) return res.data;
+      const res = await apiClient.request<any>('/integrations/connections');
+      const data = unwrapData<any>(res); if (data && Array.isArray(data)) return data;
     } catch {
       // Fallback
     }
@@ -458,11 +464,11 @@ export const externalIntegrationsApi = {
   // 3. Start OAuth connection
   initiateOAuth: async (provider: ExternalProviderId, redirectUri?: string): Promise<{ auth_url: string; state: string }> => {
     try {
-      const res = await apiClient.request<{ auth_url: string; state: string }>(`/integrations/connections/${provider}/start`, {
+      const res = await apiClient.request<any>(`/integrations/connections/${provider}/start`, {
         method: 'POST',
         body: JSON.stringify({ redirect_uri: redirectUri }),
       });
-      if (res.data) return res.data;
+      const data = unwrapData<any>(res); if (data) return data;
     } catch {
       // Fallback
     }
@@ -478,11 +484,11 @@ export const externalIntegrationsApi = {
     payload: { username?: string; profile_url?: string; code?: string }
   ): Promise<ExternalAccountConnection> => {
     try {
-      const res = await apiClient.request<ExternalAccountConnection>(`/integrations/connections/${provider}/connect`, {
+      const res = await apiClient.request<any>(`/integrations/connections/${provider}/connect`, {
         method: 'POST',
         body: JSON.stringify(payload),
       });
-      if (res.data) return res.data;
+      const data = unwrapData<any>(res); if (data) return data;
     } catch {
       // Fallback
     }
@@ -514,10 +520,10 @@ export const externalIntegrationsApi = {
   // 5. Sync data from connected platform
   syncConnection: async (connectionId: string): Promise<ExternalAccountConnection> => {
     try {
-      const res = await apiClient.request<ExternalAccountConnection>(`/integrations/connections/${connectionId}/sync`, {
+      const res = await apiClient.request<any>(`/integrations/connections/${connectionId}/sync`, {
         method: 'POST',
       });
-      if (res.data) return res.data;
+      const data = unwrapData<any>(res); if (data) return data;
     } catch {
       // Fallback
     }
@@ -548,8 +554,8 @@ export const externalIntegrationsApi = {
   // 7. Get synchronized external activity feed
   getActivities: async (): Promise<ExternalActivity[]> => {
     try {
-      const res = await apiClient.request<ExternalActivity[]>('/integrations/activity');
-      if (res.data && Array.isArray(res.data)) return res.data;
+      const res = await apiClient.request<any>('/integrations/activity');
+      const data = unwrapData<any>(res); if (data && Array.isArray(data)) return data;
     } catch {
       // Fallback
     }
@@ -559,8 +565,8 @@ export const externalIntegrationsApi = {
   // 8. Get unified multi-agent skill evidence
   getSkillEvidence: async (): Promise<ExternalSkillEvidence[]> => {
     try {
-      const res = await apiClient.request<ExternalSkillEvidence[]>('/integrations/skills');
-      if (res.data && Array.isArray(res.data)) return res.data;
+      const res = await apiClient.request<any>('/integrations/skills');
+      const data = unwrapData<any>(res); if (data && Array.isArray(data)) return data;
     } catch {
       // Fallback
     }
@@ -615,8 +621,8 @@ export const externalIntegrationsApi = {
   // 9. Career profile consistency report
   getConsistencyReport: async (): Promise<CareerConsistencyReport> => {
     try {
-      const res = await apiClient.request<CareerConsistencyReport>('/integrations/consistency');
-      if (res.data) return res.data;
+      const res = await apiClient.request<any>('/integrations/consistency');
+      const data = unwrapData<any>(res); if (data) return data;
     } catch {
       // Fallback
     }
@@ -669,8 +675,8 @@ export const externalIntegrationsApi = {
       if (filters?.location) params.append('location', filters.location);
       if (filters?.remote !== undefined) params.append('remote', String(filters.remote));
 
-      const res = await apiClient.request<ExternalJob[]>(`/integrations/jobs?${params.toString()}`);
-      if (res.data && Array.isArray(res.data)) return res.data;
+      const res = await apiClient.request<any>(`/integrations/jobs?${params.toString()}`);
+      const data = unwrapData<any>(res); if (data && Array.isArray(data)) return data;
     } catch {
       // Fallback
     }
@@ -681,8 +687,8 @@ export const externalIntegrationsApi = {
       results = results.filter(
         (j) =>
           j.title.toLowerCase().includes(q) ||
-          j.company.toLowerCase().includes(q) ||
-          j.skills_required.some((s) => s.toLowerCase().includes(q))
+          (j.company || j.company_name || '').toLowerCase().includes(q) ||
+          (j.skills_required || j.required_skills || []).some((s) => s.toLowerCase().includes(q))
       );
     }
     if (filters?.location && filters.location !== 'ALL') {
@@ -704,11 +710,11 @@ export const externalIntegrationsApi = {
     description: string;
   }): Promise<ExternalJob> => {
     try {
-      const res = await apiClient.request<ExternalJob>('/integrations/jobs/import', {
+      const res = await apiClient.request<any>('/integrations/jobs/import', {
         method: 'POST',
         body: JSON.stringify(payload),
       });
-      if (res.data) return res.data;
+      const data = unwrapData<any>(res); if (data) return data;
     } catch {
       // Fallback
     }
@@ -737,10 +743,10 @@ export const externalIntegrationsApi = {
   // 12. Run Multi-Agent Gap Analysis on a Job
   analyzeJob: async (jobId: string): Promise<JobAnalysisResult> => {
     try {
-      const res = await apiClient.request<JobAnalysisResult>(`/integrations/jobs/${jobId}/analyze`, {
+      const res = await apiClient.request<any>(`/integrations/jobs/${jobId}/analyze`, {
         method: 'POST',
       });
-      if (res.data) return res.data;
+      const data = unwrapData<any>(res); if (data) return data;
     } catch {
       // Fallback
     }

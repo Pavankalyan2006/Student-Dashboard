@@ -49,6 +49,7 @@ export function SemesterCalendarEventsPage({ onNavigate }: SemesterCalendarEvent
     priority: 'HIGH' as const,
     syllabus_scope: '',
     notes: '',
+    status: 'UPCOMING' as const,
   });
 
   const loadData = React.useCallback(async () => {
@@ -91,6 +92,7 @@ export function SemesterCalendarEventsPage({ onNavigate }: SemesterCalendarEvent
         priority: 'HIGH',
         syllabus_scope: '',
         notes: '',
+        status: 'UPCOMING',
       });
       await loadData();
     } catch (err: any) {

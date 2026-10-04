@@ -9,13 +9,25 @@ export type ExternalProviderId =
   | 'hackerrank'
   | 'codechef'
   | 'geeksforgeeks'
-  | 'kaggle';
+  | 'kaggle'
+  | 'LINKEDIN'
+  | 'INDEED'
+  | 'LEETCODE'
+  | 'GITHUB'
+  | 'HACKERRANK'
+  | 'CODECHEF'
+  | 'GEEKSFORGEEKS'
+  | 'KAGGLE';
 
 export type ExternalPlatformCategory =
   | 'CAREER_PROFESSIONAL'
   | 'CODING_COMPETITIVE'
   | 'DATA_AI'
-  | 'DEVELOPER_TOOLS';
+  | 'DEVELOPER_TOOLS'
+  | 'CAREER'
+  | 'CODING'
+  | 'DATA_SCIENCE'
+  | 'COLLABORATION';
 
 export type ConnectionStatus =
   | 'CONNECTED'
@@ -80,7 +92,7 @@ export interface ExternalAccountConnection {
 export interface ExternalActivity {
   id: string;
   student_id: string;
-  provider: ExternalProviderId;
+  provider: ExternalProviderId | string;
   activity_type: 'PROBLEM_SOLVED' | 'COMMIT' | 'CONTEST' | 'NOTEBOOK_RUN' | 'JOB_SAVED' | 'PROFILE_SYNC';
   title: string;
   description?: string;
@@ -92,7 +104,7 @@ export interface ExternalActivity {
 export interface ExternalAchievement {
   id: string;
   student_id: string;
-  provider: ExternalProviderId;
+  provider: ExternalProviderId | string;
   title: string;
   badge_name?: string;
   rating?: number;
@@ -113,7 +125,7 @@ export interface ExternalCodingStats {
 }
 
 export interface ExternalProfile {
-  provider: ExternalProviderId;
+  provider: ExternalProviderId | string;
   username: string;
   headline?: string;
   bio?: string;
@@ -127,13 +139,16 @@ export interface ExternalSkillEvidence {
   id: string;
   student_id: string;
   skill_name: string;
-  source_provider: ExternalProviderId | 'INTERNAL_COURSE' | 'INTERNAL_LAB';
+  source_provider: ExternalProviderId | 'INTERNAL_COURSE' | 'INTERNAL_LAB' | string;
   evidence_type: 'REPOSITORY' | 'COMPETITIVE_CODING' | 'DATASET' | 'COURSE_COMPLETION' | 'CERTIFICATE';
   evidence_description: string;
   evidence_url?: string;
   verified: boolean;
   confidence_score: number; // 0 - 100
   recorded_at: string;
+  proficiency?: string;
+  evidence_sources?: Array<{ name: string; url?: string; type?: string }>;
+  last_updated?: string;
 }
 
 export interface ExternalJob {
@@ -145,7 +160,7 @@ export interface ExternalJob {
   employment_type: 'INTERNSHIP' | 'FULL_TIME' | 'CONTRACT' | 'PART_TIME';
   experience_level: 'ENTRY' | 'MID' | 'SENIOR' | 'INTERN';
   salary_range?: string;
-  source: ExternalProviderId | 'MANUAL_IMPORT';
+  source: ExternalProviderId | 'MANUAL_IMPORT' | string;
   job_url?: string;
   deadline?: string;
   description: string;

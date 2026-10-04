@@ -154,7 +154,7 @@ export function FlashcardsPage({ onNavigate }: FlashcardsPageProps) {
         actions={
           <div className="flex items-center gap-2">
             <Button
-              variant={viewMode === 'decks' ? 'default' : 'outline'}
+              variant={viewMode === 'decks' ? 'primary' : 'outline'}
               size="sm"
               onClick={() => setViewMode('decks')}
               className={viewMode === 'decks' ? 'bg-[#2563EB] text-white' : ''}

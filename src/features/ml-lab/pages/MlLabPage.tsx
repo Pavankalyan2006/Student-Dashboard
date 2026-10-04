@@ -118,7 +118,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
         actions={
           <div className="flex items-center gap-2">
             <Button
-              variant={activeTab === 'experiments' ? 'default' : 'outline'}
+              variant={activeTab === 'experiments' ? 'primary' : 'outline'}
               size="sm"
               onClick={() => setActiveTab('experiments')}
               className={activeTab === 'experiments' ? 'bg-[#2563EB] text-white' : ''}
@@ -126,7 +126,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
               Experiments ({experiments.length})
             </Button>
             <Button
-              variant={activeTab === 'datasets' ? 'default' : 'outline'}
+              variant={activeTab === 'datasets' ? 'primary' : 'outline'}
               size="sm"
               onClick={() => setActiveTab('datasets')}
               className={activeTab === 'datasets' ? 'bg-[#2563EB] text-white' : ''}
@@ -409,7 +409,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
               </div>
               <p className="text-xs text-[#475467]">{ds.total_samples} samples • Target: '{ds.target_column}'</p>
               <div className="flex flex-wrap gap-1.5 pt-1">
-                {ds.features.map((f, idx) => (
+                {ds.features.map((f: string, idx: number) => (
                   <span key={idx} className="text-xs font-mono bg-gray-100 px-2 py-0.5 rounded text-gray-700">
                     {f}
                   </span>

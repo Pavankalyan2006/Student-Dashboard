@@ -139,7 +139,7 @@ export const ExternalActivityWidget: React.FC<ExternalActivityWidgetProps> = ({ 
           <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center justify-between">
             <span>Recent Synced Event</span>
             <span className="text-slate-500 font-mono font-normal">
-              {new Date(activities[0].occurred_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              {new Date(activities[0].timestamp || (activities[0] as any).occurred_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
           </div>
           <div className="p-2 bg-slate-950/60 rounded-lg border border-slate-800/80 flex items-center justify-between text-xs">

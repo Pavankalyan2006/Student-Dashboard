@@ -102,7 +102,7 @@ export class LinkedInProviderImpl implements ExternalProvider {
         },
       ],
       profile: {
-        provider: 'linkedin',
+        provider: 'linkedin' as const,
         username: connection.username,
         headline: 'B.Tech CSE Undergraduate | Full-Stack & ML Enthusiast',
         profile_url: connection.profile_url,
@@ -256,7 +256,7 @@ export class LeetCodeProviderImpl implements ExternalProvider {
         },
       ],
       profile: {
-        provider: 'leetcode',
+        provider: 'leetcode' as const,
         username: connection.username,
         profile_url: connection.profile_url,
         coding_stats: {
@@ -331,7 +331,8 @@ export class GitHubProviderImpl implements ExternalProvider {
   }
 
   async initiateAuth(studentId: string, redirectUri?: string): Promise<{ auth_url: string; state: string }> {
-    return GitHubService.initiateOAuth(studentId, redirectUri);
+    const res = GitHubService.initiateOAuth(studentId, redirectUri);
+    return { auth_url: res.oauth_url, state: res.state };
   }
 
   async connectAccount(studentId: string, payload: { username?: string }): Promise<Partial<ExternalAccountConnection>> {
@@ -344,8 +345,8 @@ export class GitHubProviderImpl implements ExternalProvider {
       profile_url: `https://github.com/${username}`,
       status: existing.is_connected ? 'CONNECTED' : 'DISCONNECTED',
       scopes: ['read:user', 'repo:status', 'public_repo'],
-      connected_at: existing.connection?.connected_at || new Date().toISOString(),
-      last_synced_at: existing.connection?.last_synced_at || new Date().toISOString(),
+      connected_at: existing.connection?.created_at || new Date().toISOString(),
+      last_synced_at: existing.connection?.updated_at || new Date().toISOString(),
       sync_status: 'SUCCESS',
     };
   }
@@ -366,7 +367,7 @@ export class GitHubProviderImpl implements ExternalProvider {
         },
       ],
       profile: {
-        provider: 'github',
+        provider: 'github' as const,
         username: connection.username,
         profile_url: connection.profile_url,
         achievements: [
@@ -451,7 +452,7 @@ export class HackerRankProviderImpl implements ExternalProvider {
         },
       ],
       profile: {
-        provider: 'hackerrank',
+        provider: 'hackerrank' as const,
         username: connection.username,
         profile_url: connection.profile_url,
         achievements: [
@@ -544,7 +545,7 @@ export class CodeChefProviderImpl implements ExternalProvider {
         },
       ],
       profile: {
-        provider: 'codechef',
+        provider: 'codechef' as const,
         username: connection.username,
         profile_url: connection.profile_url,
         coding_stats: {
@@ -639,7 +640,7 @@ export class GeeksforGeeksProviderImpl implements ExternalProvider {
         },
       ],
       profile: {
-        provider: 'geeksforgeeks',
+        provider: 'geeksforgeeks' as const,
         username: connection.username,
         profile_url: connection.profile_url,
         coding_stats: {
@@ -733,7 +734,7 @@ export class KaggleProviderImpl implements ExternalProvider {
         },
       ],
       profile: {
-        provider: 'kaggle',
+        provider: 'kaggle' as const,
         username: connection.username,
         profile_url: connection.profile_url,
         achievements: [

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Search, BookOpen, FileText, Files, Binary, Code2, Hammer, Bot, Users, X, ArrowRight, Loader2 } from 'lucide-react';
+import { Search, BookOpen, FileText, Files, Binary, Code2, Hammer, Bot, Users, X, ArrowRight, Loader2, HelpCircle } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '../ui/dialog';
 import { useUiStore } from '../../store/uiStore';
 import { useSearch } from '../../hooks/useSearch';

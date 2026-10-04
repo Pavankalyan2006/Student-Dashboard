@@ -372,7 +372,9 @@ export function IntegrationsCenterPage({ onNavigate, initialTab = 'platforms' }:
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
                   <span className="text-[11px] text-gray-400">
-                    {new Date(act.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    {(act.timestamp || act.occurred_at || act.created_at)
+                      ? new Date(act.timestamp || act.occurred_at || act.created_at!).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                      : 'Recently'}
                   </span>
                   {act.url && (
                     <a

@@ -743,7 +743,6 @@ adminRouter.post('/ai/agents/:name/toggle', async (req: Request, res: Response, 
     const { name } = req.params;
     const { enabled } = req.body;
     const { AgentRegistry } = await import('../../ai/orchestration/registry');
-    const { AgentName } = await import('../../ai/orchestration/types');
 
     if (typeof enabled !== 'boolean') {
       throw new ValidationError("Parameter 'enabled' must be a boolean");
