@@ -9,8 +9,8 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Install build dependencies
-COPY package*.json ./
-RUN npm ci
+COPY package*.json .npmrc* ./
+RUN npm ci --legacy-peer-deps
 
 # Copy full application source code
 COPY . .
@@ -27,8 +27,8 @@ ENV NODE_ENV=production
 ENV PORT=3000
 
 # Install production dependencies only
-COPY package*.json ./
-RUN npm ci --omit=dev && npm cache clean --force
+COPY package*.json .npmrc* ./
+RUN npm ci --omit=dev --legacy-peer-deps && npm cache clean --force
 
 # Copy compiled frontend distribution and backend code from builder
 COPY --from=builder /app/dist ./dist
