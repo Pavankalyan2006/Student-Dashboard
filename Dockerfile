@@ -8,6 +8,9 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Ensure compatibility for native binary bindings (esbuild, tailwind, etc.)
+RUN apk add --no-cache libc6-compat
+
 # Install build dependencies
 COPY package*.json .npmrc* ./
 RUN npm ci --legacy-peer-deps
@@ -22,6 +25,8 @@ RUN npm run build
 FROM node:20-alpine AS runner
 
 WORKDIR /app
+
+RUN apk add --no-cache libc6-compat wget
 
 ENV NODE_ENV=production
 ENV PORT=3000
