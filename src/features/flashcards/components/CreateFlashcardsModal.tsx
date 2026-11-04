@@ -98,23 +98,23 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
         const [notesRes, docsRes, coursesRes] = await Promise.allSettled([
           notesApi.getNotes(),
           documentsApi.getDocuments({ limit: 50 }),
-          coursesApi.getCourses(),
+          coursesApi.getCourses({ limit: 100 }),
         ]);
 
         if (notesRes.status === 'fulfilled') {
-          const nList = notesRes.value.notes || [];
+          const nList = notesRes.value?.items || [];
           setSavedNotes(nList);
           if (nList.length > 0 && !selectedNoteId) setSelectedNoteId(nList[0].id);
         }
 
         if (docsRes.status === 'fulfilled') {
-          const dList = docsRes.value.documents || [];
+          const dList = docsRes.value?.items || [];
           setSavedDocs(dList);
           if (dList.length > 0 && !selectedDocId) setSelectedDocId(dList[0].id);
         }
 
         if (coursesRes.status === 'fulfilled') {
-          const cList = coursesRes.value || [];
+          const cList: any[] = coursesRes.value?.items || [];
           setEnrolledCourses(cList);
           if (cList.length > 0 && !selectedCourseId) {
             setSelectedCourseId(cList[0].id);

@@ -21,7 +21,7 @@ gateRouter.get('/gate/papers', async (_req: Request, res: Response) => {
     res.json({ success: true, data: papers });
   } catch (err: any) {
     logger.error('Error fetching GATE papers', err);
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -34,7 +34,7 @@ gateRouter.get('/gate/papers/:code', async (req: Request, res: Response) => {
     res.json({ success: true, data: paper });
   } catch (err: any) {
     logger.error('Error fetching GATE paper', err);
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -46,7 +46,7 @@ gateRouter.get('/gate/syllabus', async (req: Request, res: Response) => {
     res.json({ success: true, data: sections });
   } catch (err: any) {
     logger.error('Error fetching GATE syllabus', err);
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -66,7 +66,7 @@ gateRouter.post('/gate/syllabus/topic-status', async (req: Request, res: Respons
     res.json({ success: true, data: result });
   } catch (err: any) {
     logger.error('Error updating GATE topic status', err);
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -81,7 +81,7 @@ gateRouter.get('/gate/profile', async (req: Request, res: Response) => {
     res.json({ success: true, data: profile });
   } catch (err: any) {
     logger.error('Error fetching GATE student profile', err);
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -92,7 +92,7 @@ gateRouter.post('/gate/profile', async (req: Request, res: Response) => {
     res.json({ success: true, data: profile });
   } catch (err: any) {
     logger.error('Error saving GATE student profile', err);
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -115,7 +115,7 @@ gateRouter.get('/gate/questions', async (req: Request, res: Response) => {
     res.json({ success: true, data: questions, count: questions.length });
   } catch (err: any) {
     logger.error('Error fetching GATE questions', err);
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -128,7 +128,7 @@ gateRouter.get('/gate/questions/:id', async (req: Request, res: Response) => {
     res.json({ success: true, data: question });
   } catch (err: any) {
     logger.error('Error fetching GATE question', err);
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -145,7 +145,7 @@ gateRouter.post('/gate/questions/:id/attempt', async (req: Request, res: Respons
     res.json({ success: true, data: result });
   } catch (err: any) {
     logger.error('Error recording GATE question attempt', err);
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -157,7 +157,7 @@ gateRouter.post('/gate/questions/:id/bookmark', async (req: Request, res: Respon
     res.json({ success: true, data: result });
   } catch (err: any) {
     logger.error('Error toggling GATE bookmark', err);
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -168,7 +168,7 @@ gateRouter.get('/gate/bookmarks', async (req: Request, res: Response) => {
     res.json({ success: true, data: bookmarks });
   } catch (err: any) {
     logger.error('Error fetching GATE bookmarks', err);
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -184,7 +184,7 @@ gateRouter.get('/gate/tests', async (req: Request, res: Response) => {
     res.json({ success: true, data: tests });
   } catch (err: any) {
     logger.error('Error fetching GATE mock tests', err);
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -197,7 +197,7 @@ gateRouter.get('/gate/tests/:id', async (req: Request, res: Response) => {
     res.json({ success: true, data: test });
   } catch (err: any) {
     logger.error('Error fetching GATE mock test', err);
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -208,7 +208,7 @@ gateRouter.post('/gate/tests/:id/start', async (req: Request, res: Response) => 
     res.json({ success: true, data: session });
   } catch (err: any) {
     logger.error('Error starting GATE mock test session', err);
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -225,7 +225,7 @@ gateRouter.put('/gate/sessions/:sessionId/answers', async (req: Request, res: Re
     res.json({ success: true, data: session });
   } catch (err: any) {
     logger.error('Error updating GATE test session answers', err);
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -236,7 +236,7 @@ gateRouter.post('/gate/sessions/:sessionId/submit', async (req: Request, res: Re
     res.json({ success: true, data: result });
   } catch (err: any) {
     logger.error('Error submitting GATE test session', err);
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -250,7 +250,7 @@ gateRouter.get('/gate/sessions/:sessionId', async (req: Request, res: Response) 
     res.json({ success: true, data: session });
   } catch (err: any) {
     logger.error('Error fetching GATE test session', err);
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -261,7 +261,7 @@ gateRouter.get('/gate/results', async (req: Request, res: Response) => {
     res.json({ success: true, data: results });
   } catch (err: any) {
     logger.error('Error fetching GATE test results', err);
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -277,7 +277,7 @@ gateRouter.get('/gate/study-plan', async (req: Request, res: Response) => {
     res.json({ success: true, data: tasks });
   } catch (err: any) {
     logger.error('Error fetching GATE study plan', err);
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -288,7 +288,7 @@ gateRouter.post('/gate/study-plan/tasks', async (req: Request, res: Response) =>
     res.status(201).json({ success: true, data: task });
   } catch (err: any) {
     logger.error('Error adding GATE study task', err);
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -302,7 +302,7 @@ gateRouter.post('/gate/study-plan/tasks/:taskId/toggle', async (req: Request, re
     res.json({ success: true, data: task });
   } catch (err: any) {
     logger.error('Error toggling GATE study task', err);
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -313,7 +313,7 @@ gateRouter.get('/gate/dashboard', async (req: Request, res: Response) => {
     res.json({ success: true, data: dashboard });
   } catch (err: any) {
     logger.error('Error fetching GATE dashboard data', err);
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -332,6 +332,6 @@ gateRouter.post('/gate/ai-tutor', async (req: Request, res: Response) => {
     res.json({ success: true, data: response });
   } catch (err: any) {
     logger.error('Error querying GATE AI tutor', err);
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });

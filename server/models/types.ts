@@ -172,7 +172,7 @@ export interface ActiveProjectItem {
 export interface UpcomingCalendarItem {
   id: string;
   title: string;
-  type: 'quiz' | 'assignment' | 'milestone' | 'interview';
+  type: 'quiz' | 'exam' | 'assignment' | 'milestone' | 'interview';
   date: string;
   time: string;
   status: string;
@@ -430,6 +430,8 @@ export interface CourseResource {
   document_id?: string;
   note_id?: string;
   processing_status?: 'READY' | 'PROCESSING' | 'NOT_INDEXED';
+  /** Student who attached this resource. Seeded catalog resources have no owner and are shared. */
+  student_id?: string;
 }
 
 export interface LessonWithNavigation extends CourseLesson {
@@ -744,6 +746,9 @@ export interface Document {
   category?: DocumentCategory | string;
   folder_id?: string;
   folder_name?: string;
+  content_indexed?: boolean;
+  current_version?: number;
+  version_count?: number;
   metadata: {
     course_id?: string;
     course_title?: string;

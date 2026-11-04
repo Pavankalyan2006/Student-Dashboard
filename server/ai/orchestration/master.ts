@@ -61,7 +61,7 @@ export class MasterAgent {
             additionalSources.push({
               sourceType: 'COURSE_DATABASE',
               sourceId: course.id,
-              title: `${course.name} (${course.code}) Syllabus`,
+              title: `${course.title} (${course.code}) Syllabus`,
               link: `/courses/${course.id}`,
               retrievedAt: new Date().toISOString(),
               confidence: 1.0,
@@ -95,7 +95,9 @@ export class MasterAgent {
         try {
           const doc = await db.getDocumentById(dId, studentId);
           if (doc) {
-            documentExcerpts += `\n[DOCUMENT: "${doc.title}"]\n${(doc.extracted_text || doc.summary || '').slice(0, 2500)}\n`;
+            const pages = await db.getDocumentPages(doc.id, studentId);
+            const text = pages.map((p) => p.text).join('\n') || doc.description || '';
+            documentExcerpts += `\n[DOCUMENT: "${doc.title}"]\n${text.slice(0, 2500)}\n`;
             additionalSources.push({
               sourceType: 'DOCUMENT_RAG',
               sourceId: doc.id,
@@ -116,10 +118,10 @@ export class MasterAgent {
         conversation_id: conversationId,
         request_id: workflowId,
         current_course: activeCourseData
-          ? { name: activeCourseData.name, code: activeCourseData.code, progress: activeCourseData.progress || 0 }
+          ? { id: activeCourseData.id, name: activeCourseData.title, code: activeCourseData.code, progress: activeCourseData.progress_percentage || 0 }
           : studentContext.current_course,
         current_lesson: activeLessonData
-          ? { title: activeLessonData.title, topic: activeLessonData.chapter_title || 'Core Topic', progress: 0 }
+          ? { id: activeLessonData.id, title: activeLessonData.title, topic: activeLessonData.chapter_title || 'Core Topic' }
           : studentContext.current_lesson,
         client_metadata: clientContext,
         selected_documents: docIds,

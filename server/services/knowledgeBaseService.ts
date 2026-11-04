@@ -49,7 +49,7 @@ export class KnowledgeBaseService {
       const colDocIds = new Set(col.document_ids);
       const colNotes = notes.filter((n) => colDocIds.has(n.document_id));
 
-      const totalSize = colDocs.reduce((acc, d) => acc + (d.size_bytes || 0), 0);
+      const totalSize = colDocs.reduce((acc, d) => acc + (d.file_size || 0), 0);
 
       return {
         ...col,
@@ -81,7 +81,7 @@ export class KnowledgeBaseService {
     const colDocIds = new Set(collection.document_ids);
     const colNotes = notes.filter((n) => colDocIds.has(n.document_id));
 
-    const totalSize = documents.reduce((acc, d) => acc + (d.size_bytes || 0), 0);
+    const totalSize = documents.reduce((acc, d) => acc + (d.file_size || 0), 0);
 
     const enrichedCollection: KnowledgeCollection = {
       ...collection,
@@ -428,13 +428,14 @@ export class KnowledgeBaseService {
     // If specific document was requested and chunks are empty, load document text directly
     if (relevantChunks.length === 0 && input.document_id) {
       const doc = await db.getDocumentById(input.document_id, studentId);
-      if (doc && doc.pages && doc.pages.length > 0) {
-        for (const p of doc.pages.slice(0, 5)) {
+      const pages = doc ? await db.getDocumentPages(doc.id, studentId) : [];
+      if (doc && pages.length > 0) {
+        for (const p of pages.slice(0, 5)) {
           relevantChunks.push({
             chunkId: `page-${p.page_number}`,
             documentId: doc.id,
             pageNumber: p.page_number,
-            content: p.extracted_text.substring(0, 800),
+            content: (p.text || '').substring(0, 800),
             score: 0.85,
           });
         }
@@ -606,10 +607,11 @@ Provide a comprehensive, pedagogical answer citing the sources:`;
 
     // Collect text from document pages
     let sampleContent = '';
-    if (doc.pages && doc.pages.length > 0) {
-      sampleContent = doc.pages
+    const pages = await db.getDocumentPages(doc.id, studentId);
+    if (pages.length > 0) {
+      sampleContent = pages
         .slice(0, 8)
-        .map((p) => `--- Page ${p.page_number} ---\n${p.extracted_text}`)
+        .map((p) => `--- Page ${p.page_number} ---\n${p.text || ''}`)
         .join('\n\n');
     } else {
       sampleContent = `${doc.title}\n${doc.description || ''}\nFilename: ${doc.original_filename}`;
@@ -868,7 +870,7 @@ Return valid JSON only with this structure:
       content: markdownContent,
       description: `Imported from Knowledge Base study material (${material.type})`,
       tags: ['knowledge-base', material.type.toLowerCase()],
-      note_type: 'document',
+      note_type: 'STUDY_NOTES',
     });
 
     return note;
@@ -917,23 +919,34 @@ Return valid JSON only with this structure:
     const quiz = await db.createQuiz({
       student_id: studentId,
       title: material.title,
-      subject: 'Computer Science',
-      topic: 'Knowledge Base Self-Assessment',
-      difficulty: 'medium',
-      time_limit_minutes: 15,
-      total_questions: questions.length,
-      passing_score_percentage: 70,
+      description: 'Knowledge Base self-assessment generated from your document',
+      source_type: 'DOCUMENT',
+      source_id: material.source_document_id,
+      difficulty: 'MEDIUM',
+      question_count: questions.length,
+      time_limit_seconds: 15 * 60,
+      adaptive_mode: false,
       mode: 'PRACTICE',
+      status: 'READY',
     });
 
-    const quizQuestions = questions.map((q: any) => ({
-      quiz_id: quiz.id,
-      question_text: q.question,
-      options: q.options || [],
-      correct_option_index: q.correct_answer_index || 0,
-      explanation: q.explanation || 'Refer to course study materials.',
-      points: 1,
-    }));
+    const quizQuestions = questions.map((q: any, i: number) => {
+      const options: string[] = q.options || [];
+      return {
+        quiz_id: quiz.id,
+        question_number: i + 1,
+        question_type: 'MCQ' as const,
+        question_text: q.question,
+        options,
+        correct_answer: options[q.correct_answer_index || 0] ?? '',
+        explanation: q.explanation || 'Refer to course study materials.',
+        difficulty: 'MEDIUM' as const,
+        topic_id: q.topic || 'knowledge_base',
+        topic_name: q.topic,
+        source_type: 'DOCUMENT' as const,
+        source_id: material.source_document_id,
+      };
+    });
 
     await db.createQuizQuestions(quizQuestions);
 
@@ -1136,7 +1149,7 @@ Return valid JSON only with this structure:
     const categoryMap = new Map<KnowledgeCategory, number>();
 
     for (const d of docs.items) {
-      totalSizeBytes += d.size_bytes || 0;
+      totalSizeBytes += d.file_size || 0;
       if (d.status === 'READY') indexedCount++;
       else if (d.status === 'FAILED') failedCount++;
       else pendingCount++;
@@ -1161,7 +1174,10 @@ Return valid JSON only with this structure:
     ];
 
     // Compute course knowledge bases
-    const courseMap = new Map<string, { code: string; title: string; docCount: number; collectionCount: number }>();
+    const courseMap = new Map<
+      string,
+      { code: string; title: string; docCount: number; collectionCount: number; collection_id?: string }
+    >();
     for (const c of collections) {
       const courseKey = c.code || c.subject || c.name;
       if (!courseMap.has(courseKey)) {
@@ -1170,6 +1186,7 @@ Return valid JSON only with this structure:
           title: c.name,
           docCount: c.document_ids.length,
           collectionCount: 1,
+          collection_id: c.id,
         });
       } else {
         const item = courseMap.get(courseKey)!;

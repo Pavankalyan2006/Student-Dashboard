@@ -176,11 +176,11 @@ export class LabAssistantService {
       student_id: studentId,
       title,
       subject: (manualData.subject || lab.subject).trim(),
-      course_code: (manualData.course_code || lab.course_code).trim(),
+      course_code: (manualData.course_code || lab.course_code || '').trim(),
       semester: Number(manualData.semester) || lab.semester,
-      department: (manualData.department || lab.department).trim(),
+      department: (manualData.department || lab.department || '').trim(),
       lab_type: manualData.lab_type || lab.lab_type,
-      tools: (manualData.tools || lab.tools_or_languages).trim(),
+      tools: (manualData.tools || lab.tools_or_languages || '').trim(),
       description: (manualData.description || '').trim(),
       instructions: (manualData.instructions || '').trim(),
       is_draft: false,
@@ -326,7 +326,7 @@ export class LabAssistantService {
     }
 
     const parsed = await DocumentParserRegistry.parse(bufferOrBase64, mimetype, ext, { filename });
-    const fullText = parsed.text || parsed.pages?.map((p: any) => p.text).join('\n\n') || '';
+    const fullText = (parsed as any).text || parsed.pages?.map((p: any) => p.text).join('\n\n') || '';
     const pageCount = parsed.pages?.length || parsed.pageCount || 1;
 
     if (!fullText.trim()) {
@@ -572,13 +572,9 @@ Output ONLY valid JSON with this shape:
   ]
 }`;
 
-      const aiResponse = await AIService.generate({
-        promptKey: 'student_learning_agent',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.2,
-      });
+      const aiResponse = await AIService.generate([{ role: 'user', content: prompt }], 'student_learning_agent', 0.2);
 
-      const jsonMatch = aiResponse.content.match(/\{[\s\S]*\}/);
+      const jsonMatch = aiResponse.text.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
         if (Array.isArray(parsed.experiments) && parsed.experiments.length > 0) {
@@ -590,7 +586,7 @@ Output ONLY valid JSON with this shape:
         }
       }
     } catch (err: any) {
-      logger.warn('AI manual structuring failed, falling back to heuristic parsing', err);
+      logger.warn('AI manual structuring failed, falling back to heuristic parsing', { error: err instanceof Error ? err.message : String(err) });
     }
 
     // Heuristic fallback
@@ -858,13 +854,9 @@ Format output as valid JSON:
   ]
 }`;
 
-      const res = await AIService.generate({
-        promptKey: 'student_learning_agent',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.3,
-      });
+      const res = await AIService.generate([{ role: 'user', content: prompt }], 'student_learning_agent', 0.3);
 
-      const match = res.content.match(/\{[\s\S]*\}/);
+      const match = res.text.match(/\{[\s\S]*\}/);
       if (match) {
         const parsed = JSON.parse(match[0]);
         if (Array.isArray(parsed.questions) && parsed.questions.length > 0) {
@@ -881,7 +873,7 @@ Format output as valid JSON:
         }
       }
     } catch (err) {
-      logger.warn('AI viva generation failed, returning default curriculum questions', err);
+      logger.warn('AI viva generation failed, returning default curriculum questions', { error: err instanceof Error ? err.message : String(err) });
     }
 
     const fallbackQuestions: VivaQuestionItem[] = [
@@ -943,13 +935,9 @@ ${codeSnippet ? `\nStudent's Code Snippet:\n${codeSnippet}` : ''}
 
 Answer beginner-friendly, stay strictly grounded in the experiment, and provide direct actionable steps.`;
 
-      const aiRes = await AIService.generate({
-        promptKey: 'student_learning_agent',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.3,
-      });
+      const aiRes = await AIService.generate([{ role: 'user', content: prompt }], 'student_learning_agent', 0.3);
 
-      answer = aiRes.content;
+      answer = aiRes.text;
     } catch (err) {
       answer = `Based on Experiment ${exp.experiment_number} (${exp.title}): ${exp.aim}. Ensure your inputs match the requirements (${exp.requirements.join(', ')}). Review the procedure steps in the checklist to isolate where the issue occurs.`;
     }

@@ -211,7 +211,7 @@ export class OnboardingService {
           await GoalService.createGoal(studentId, {
             title: `Master ${firstSubject.name}`,
             description: `Cover all units, complete lab experiments, and achieve 85%+ on slip tests.`,
-            category: 'ACADEMIC',
+            category: 'COURSES',
             priority: 'HIGH',
             target_value: 100,
             current_value: 0,
@@ -820,12 +820,19 @@ export class OnboardingService {
     return portfolioProjects.get(studentId) || [];
   }
 
-  public static async addPortfolioProject(studentId: string, data: Omit<PortfolioProject, 'id' | 'student_id' | 'created_at' | 'updated_at'>): Promise<PortfolioProject> {
+  public static async addPortfolioProject(
+    studentId: string,
+    data: Omit<PortfolioProject, 'id' | 'student_id' | 'created_at' | 'updated_at' | 'skills_demonstrated'> & {
+      skills_demonstrated?: string[];
+    }
+  ): Promise<PortfolioProject> {
     const now = new Date().toISOString();
     const project: PortfolioProject = {
       id: generateId('proj'),
       student_id: studentId,
       ...data,
+      technologies: data.technologies || [],
+      skills_demonstrated: data.skills_demonstrated || [],
       created_at: now,
       updated_at: now,
     };

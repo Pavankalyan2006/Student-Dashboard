@@ -242,7 +242,7 @@ export function DocumentVersionsModal({
               const isCurrent = ver.version_number === (document.current_version || 1);
               return (
                 <div
-                  key={ver.id}
+                  key={ver.version_number}
                   className={`p-3.5 rounded-xl border transition-all ${
                     isCurrent
                       ? 'border-blue-300 bg-blue-50/30 shadow-xs'
@@ -285,7 +285,7 @@ export function DocumentVersionsModal({
                         <span>·</span>
                         <span className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
-                          {new Date(ver.created_at).toLocaleString()}
+                          {new Date(ver.uploaded_at).toLocaleString()}
                         </span>
                       </div>
                     </div>

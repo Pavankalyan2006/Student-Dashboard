@@ -12,7 +12,7 @@ bookmarksRouter.get('/bookmarks', requireAuth, async (req: Request, res: Respons
     const bookmarks = await BookmarkService.getBookmarks(studentId, category);
     res.json({ success: true, data: bookmarks });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -23,7 +23,7 @@ bookmarksRouter.post('/bookmarks', requireAuth, async (req: Request, res: Respon
     const bookmark = await BookmarkService.addBookmark(studentId, req.body);
     res.status(201).json({ success: true, data: bookmark });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -34,6 +34,6 @@ bookmarksRouter.delete('/bookmarks/:id', requireAuth, async (req: Request, res: 
     await BookmarkService.removeBookmark(req.params.id, studentId);
     res.json({ success: true, message: 'Bookmark removed successfully' });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });

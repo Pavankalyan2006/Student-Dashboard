@@ -89,10 +89,10 @@ export function StudentContextProvider({ children }: { children: React.ReactNode
         onboardingApi.getStudyConstraints(),
         onboardingApi.getCareerGoals(),
         onboardingApi.getProjects(),
-        apiClient.get<{ success: boolean; data: any }>('/student/profile'),
-        apiClient.get<{ success: boolean; data: any[] }>('/student/goals'),
-        apiClient.get<{ success: boolean; data: any[] }>('/student/notifications?unreadOnly=true'),
-        apiClient.get<{ success: boolean; data: any }>('/student/progress/summary'),
+        apiClient.get<any>('/student/profile'),
+        apiClient.get<any[]>('/goals'),
+        apiClient.get<{ items: any[]; unreadCount: number }>('/notifications?unreadOnly=true'),
+        apiClient.get<any>('/progress'),
       ]);
 
       if (onboardingRes.status === 'fulfilled' && onboardingRes.value) {
@@ -119,17 +119,26 @@ export function StudentContextProvider({ children }: { children: React.ReactNode
       if (projectsRes.status === 'fulfilled' && projectsRes.value) {
         setProjects(projectsRes.value);
       }
-      if (profileRes.status === 'fulfilled' && profileRes.value?.data) {
-        setProfile(profileRes.value.data);
+      // apiClient.request() already unwraps `{ success, data }` envelopes, so each
+      // settled value is the payload itself (not an object with a `.data` field).
+      if (profileRes.status === 'fulfilled' && profileRes.value) {
+        setProfile(profileRes.value as any);
       }
-      if (goalsRes.status === 'fulfilled' && goalsRes.value?.data) {
-        setGoals(goalsRes.value.data);
+      if (goalsRes.status === 'fulfilled' && Array.isArray(goalsRes.value)) {
+        setGoals(goalsRes.value as any[]);
       }
-      if (notifRes.status === 'fulfilled' && notifRes.value?.data) {
-        setNotificationsCount(notifRes.value.data.length);
+      if (notifRes.status === 'fulfilled' && notifRes.value) {
+        const notifData = notifRes.value as any;
+        setNotificationsCount(
+          typeof notifData.unreadCount === 'number'
+            ? notifData.unreadCount
+            : Array.isArray(notifData.items)
+              ? notifData.items.length
+              : 0
+        );
       }
-      if (progressRes.status === 'fulfilled' && progressRes.value?.data) {
-        setProgressSummary(progressRes.value.data);
+      if (progressRes.status === 'fulfilled' && progressRes.value) {
+        setProgressSummary(progressRes.value as any);
       }
     } catch {
       // Graceful fallback to partial data
@@ -146,9 +155,10 @@ export function StudentContextProvider({ children }: { children: React.ReactNode
   const updateProfile = async (data: any): Promise<boolean> => {
     setIsSaving(true);
     try {
-      const res = await apiClient.patch<{ success: boolean; data: any }>('/student/profile', data);
-      if (res.success) {
-        setProfile(res.data);
+      // apiClient throws on non-2xx and returns the unwrapped payload on success.
+      const updated = await apiClient.patch<any>('/student/profile', data);
+      if (updated) {
+        setProfile(updated);
         await refreshStudent();
         await queryClient.invalidateQueries({ queryKey: ['profile'] });
         await queryClient.invalidateQueries({ queryKey: ['student'] });

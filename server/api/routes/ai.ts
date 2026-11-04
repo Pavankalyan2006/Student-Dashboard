@@ -399,8 +399,8 @@ aiRouter.get('/ai/tutor/context-options', requireAuth, async (req, res, next) =>
   try {
     const studentId = req.user!.userId;
     const coursesResult = await db.getCourses({ limit: 120 });
-    const documents = await db.getDocumentsByStudentId(studentId).catch(() => []);
-    const notes = await db.getNotesByStudentId(studentId).catch(() => []);
+    const documents = await db.getDocuments(studentId).catch(() => []);
+    const notes = await db.getNotes(studentId).catch(() => []);
 
     const engineeringSubjects = [
       'Programming in C / C++ / Python',
@@ -439,11 +439,11 @@ aiRouter.get('/ai/tutor/context-options', requireAuth, async (req, res, next) =>
       data: {
         courses: coursesResult.items.map((c) => ({
           id: c.id,
-          name: c.name,
+          name: c.title,
           code: c.code,
           category: c.category,
           difficulty: c.difficulty,
-          units_count: c.units_count,
+          units_count: c.total_chapters ?? 0,
         })),
         documents: documents.map((d: any) => ({
           id: d.id,

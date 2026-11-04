@@ -154,9 +154,7 @@ export class DocumentService {
 
     const existingDocs = await db.getStudentDocuments(studentId, { limit: 1000 });
     const duplicate = existingDocs.items.find(
-      (d) =>
-        (d.metadata?.content_hash && d.metadata.content_hash === contentHash) ||
-        (d.original_filename === originalName && d.file_size === sizeBytes && d.status !== 'FAILED')
+      (d) => d.original_filename === originalName && d.file_size === sizeBytes && d.status !== 'FAILED'
     );
 
     if (duplicate) {
@@ -337,26 +335,6 @@ export class DocumentService {
     logger.info(`Uploaded version ${currentVersion + 1} for document ${documentId}`, {
       userId: studentId,
       context: { documentId, newVersion: currentVersion + 1 },
-    });
-
-    return updated;
-  }
-
-  /**
-   * Updates document metadata (rename, tags, favorite).
-   */
-  public static async updateDocument(
-    documentId: string,
-    studentId: string,
-    updates: Partial<Document>
-  ): Promise<Document> {
-    const doc = await this.getDocument(documentId, studentId);
-
-    const updated = await db.updateDocument(documentId, studentId, {
-      title: updates.title !== undefined ? updates.title.trim() : undefined,
-      description: updates.description,
-      is_favorite: updates.is_favorite,
-      metadata: updates.metadata ? { ...doc.metadata, ...updates.metadata } : undefined,
     });
 
     return updated;
@@ -815,7 +793,7 @@ export class DocumentService {
   public static async indexDocumentInKnowledgeBase(
     documentId: string,
     studentId: string
-  ): Promise<{ success: boolean; status: string; chunks_indexed: number }> {
+  ): Promise<{ success: boolean; status: string; chunks_indexed: number; indexed?: boolean; message?: string }> {
     const doc = await this.getDocument(documentId, studentId);
 
     // Get pages
@@ -876,7 +854,19 @@ export class DocumentService {
     studentId: string,
     updates: Partial<Document>
   ): Promise<Document> {
-    return db.updateDocument(documentId, studentId, updates);
+    const doc = await this.getDocument(documentId, studentId);
+    const cleaned: Partial<Document> = { ...updates };
+    if (updates.title !== undefined) {
+      const title = String(updates.title).trim();
+      if (!title) {
+        throw new ValidationError('Document title cannot be empty');
+      }
+      cleaned.title = title;
+    }
+    if (updates.metadata) {
+      cleaned.metadata = { ...(doc.metadata || {}), ...updates.metadata };
+    }
+    return db.updateDocument(documentId, studentId, cleaned);
   }
 
   /**

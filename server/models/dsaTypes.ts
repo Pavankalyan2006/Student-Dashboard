@@ -17,6 +17,8 @@ export type VisualizationType =
   | 'DP_TABLE';
 
 export interface DSATopic {
+  /** Number of curated problems targeted for this topic in the 150 catalog. */
+  target?: number;
   id: string;
   name: string;
   slug: string;
@@ -91,6 +93,8 @@ export interface VisualizationSession {
 }
 
 export interface DSAProblem {
+  /** 1-based position in the DSA 150 catalog. */
+  number?: number;
   id: string;
   title: string;
   slug: string;

@@ -6,3 +6,7 @@ coverage/
 *.log
 .env*
 !.env.example
+data/runtime/
+
+# Files uploaded at runtime (tests and local use); seed files already tracked stay tracked
+data/vault/*

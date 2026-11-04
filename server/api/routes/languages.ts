@@ -28,7 +28,7 @@ languageLearningRouter.get('/', async (req: Request, res: Response) => {
     res.json({ success: true, data: result });
   } catch (err: any) {
     logger.error('Error in GET /languages', err);
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -40,7 +40,7 @@ languageLearningRouter.get('/analytics/my', requireAuth, async (req: Request, re
     res.json({ success: true, data: analytics });
   } catch (err: any) {
     logger.error('Error in GET /languages/analytics/my', err);
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -52,7 +52,7 @@ languageLearningRouter.get('/enrollments/my', requireAuth, async (req: Request, 
     res.json({ success: true, data: enrollments });
   } catch (err: any) {
     logger.error('Error in GET /languages/enrollments/my', err);
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -68,7 +68,7 @@ languageLearningRouter.post('/translate', async (req: Request, res: Response) =>
     res.json({ success: true, data: result });
   } catch (err: any) {
     logger.error('Error in POST /languages/translate', err);
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -120,7 +120,7 @@ languageLearningRouter.delete('/:code/enroll', requireAuth, async (req: Request,
     await LanguageLearningService.deleteStudentLanguageData(studentId, code);
     res.json({ success: true, message: `Unenrolled from language '${code}'.` });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 

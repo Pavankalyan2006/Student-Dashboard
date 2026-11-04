@@ -178,7 +178,7 @@ describe('Master 5-Step Student Registration, Onboarding & Centralized Personali
     it('4.1 persists student explanation style, depth, and language preferences', async () => {
       const prefs = await OnboardingService.saveLearningPreferences(studentPriya.id, {
         learning_style: 'Practical examples with code walkthroughs',
-        explanation_depth: 'BALANCED',
+        explanation_depth: 'STANDARD',
         preferred_explanation_language: 'English',
         weekday_study_hours: 4.0,
         weekend_study_hours: 6.0,
@@ -199,7 +199,7 @@ describe('Master 5-Step Student Registration, Onboarding & Centralized Personali
         study_reminders_enabled: true,
       });
 
-      expect(constraints.available_days.length).toBe(6);
+      expect(constraints.available_days!.length).toBe(6);
       expect(constraints.preferred_session_duration).toBe(60);
       expect(constraints.study_reminders_enabled).toBe(true);
     });

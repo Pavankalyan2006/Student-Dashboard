@@ -561,7 +561,10 @@ export const JobsDiscoveryPage: React.FC<JobsDiscoveryPageProps> = ({ onNavigate
                 isSaved={savedJobs.some((s) => s.job_id === job.id)}
                 onSelect={(selected) => setSelectedJob(selected)}
                 onToggleSave={handleToggleSave}
-                onTrackApplication={handleTrackApplication}
+                onTrackApplication={(selected, e) => {
+                  e.stopPropagation();
+                  handleTrackApplication(selected);
+                }}
               />
             ))}
           </div>

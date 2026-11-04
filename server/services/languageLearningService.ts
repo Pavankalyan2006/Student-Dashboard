@@ -647,7 +647,7 @@ Evaluate and respond ONLY with a valid JSON object matching this schema:
         aiFeedback = JSON.parse(jsonMatch[0]);
       }
     } catch (err) {
-      logger.warn('AI writing feedback evaluation failed; using deterministic pedagogical fallback', err);
+      logger.warn('AI writing feedback evaluation failed; using deterministic pedagogical fallback', { error: err instanceof Error ? err.message : String(err) });
     }
 
     // High-fidelity fallback if AI is offline
@@ -781,7 +781,7 @@ Respond ONLY with a valid JSON object matching this schema:
         aiCorrection = parsed.correction_note;
       }
     } catch (err) {
-      logger.warn('AI conversation generation failed; using deterministic fallback', err);
+      logger.warn('AI conversation generation failed; using deterministic fallback', { error: err instanceof Error ? err.message : String(err) });
     }
 
     if (!aiReplyText) {
@@ -861,7 +861,7 @@ Provide a rich linguistic breakdown. Respond ONLY in valid JSON:
         };
       }
     } catch (err) {
-      logger.warn('AI contextual translation failed; using deterministic fallback', err);
+      logger.warn('AI contextual translation failed; using deterministic fallback', { error: err instanceof Error ? err.message : String(err) });
     }
 
     if (!result) {

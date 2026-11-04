@@ -17,7 +17,7 @@ describe('Complete Student Lifecycle & Whole-Platform Personalization Verificati
     name: 'Aditya Varma',
     email: 'aditya.varma.cse@btech.edu',
     password: 'Password123!',
-    degree: 'B.Tech',
+    degree: 'B.Tech' as const,
     branch: 'Computer Science & Engineering (CSE)',
     semester: 6,
     admission_year: 2023,
@@ -269,7 +269,7 @@ print(two_sum([2, 7, 11, 15], 9))
   it('8. creates an engineering project and links it to student portfolio', async () => {
     const project = await ProjectService.createProject(newStudentData.id, {
       title: 'Distributed Microservices E-Commerce Platform',
-      project_type: 'CAPSTONE_PROJECT',
+      project_type: 'FINAL_YEAR_PROJECT',
       domain: 'Distributed Systems',
       problem_statement: 'High-throughput order processing and event streaming.',
       objectives: [

@@ -30,6 +30,7 @@ describe('Knowledge Base & Document Repository System', () => {
       const col = await knowledgeBaseService.createCollection(TEST_STUDENT_ID, {
         name: 'Operating Systems & Concurrency',
         code: 'CS301',
+        category: 'COURSEWORK',
         description: 'Processes, threads, CPU scheduling, deadlocks, and virtual memory.',
         semester: 5,
         color: '#6366F1',

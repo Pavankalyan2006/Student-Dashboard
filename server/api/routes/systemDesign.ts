@@ -23,7 +23,7 @@ systemDesignRouter.get('/system-design/roadmap', async (req: Request, res: Respo
     res.json({ success: true, data: roadmap });
   } catch (err: any) {
     logger.error('Error fetching system design roadmap', err);
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -34,7 +34,7 @@ systemDesignRouter.get('/system-design/lessons', async (req: Request, res: Respo
     res.json({ success: true, data: lessons, count: lessons.length });
   } catch (err: any) {
     logger.error('Error fetching system design lessons', err);
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -43,7 +43,7 @@ systemDesignRouter.get('/system-design/lessons/:lesson_id', async (req: Request,
     const lesson = await SystemDesignService.getLessonById(req.params.lesson_id);
     res.json({ success: true, data: lesson });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -54,7 +54,7 @@ systemDesignRouter.post('/system-design/lessons/:lesson_id/complete', async (req
     const result = await SystemDesignService.completeLesson(studentId, req.params.lesson_id, quiz_score);
     res.json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -68,7 +68,7 @@ systemDesignRouter.get('/system-design/projects', async (req: Request, res: Resp
     const projects = await SystemDesignService.getProjects(studentId);
     res.json({ success: true, data: projects });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -78,7 +78,7 @@ systemDesignRouter.post('/system-design/projects', async (req: Request, res: Res
     const project = await SystemDesignService.createProject(studentId, req.body);
     res.status(201).json({ success: true, data: project });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -88,7 +88,7 @@ systemDesignRouter.get('/system-design/projects/:project_id', async (req: Reques
     const project = await SystemDesignService.getProjectById(req.params.project_id, studentId);
     res.json({ success: true, data: project });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -98,7 +98,7 @@ systemDesignRouter.patch('/system-design/projects/:project_id', async (req: Requ
     const updated = await SystemDesignService.updateProject(req.params.project_id, studentId, req.body);
     res.json({ success: true, data: updated });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -108,7 +108,7 @@ systemDesignRouter.delete('/system-design/projects/:project_id', async (req: Req
     await SystemDesignService.deleteProject(req.params.project_id, studentId);
     res.json({ success: true, message: 'Project deleted successfully' });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -119,7 +119,7 @@ systemDesignRouter.post('/system-design/projects/:project_id/versions', async (r
     const version = await SystemDesignService.createProjectVersion(req.params.project_id, studentId, note);
     res.status(201).json({ success: true, data: version });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -130,7 +130,7 @@ systemDesignRouter.post('/system-design/projects/:project_id/duplicate', async (
     const cloned = await SystemDesignService.duplicateProject(req.params.project_id, studentId, title);
     res.status(201).json({ success: true, data: cloned });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -140,7 +140,7 @@ systemDesignRouter.post('/system-design/projects/import', async (req: Request, r
     const imported = await SystemDesignService.importProject(studentId, req.body);
     res.status(201).json({ success: true, data: imported });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -155,7 +155,7 @@ systemDesignRouter.get('/system-design/challenges', async (req: Request, res: Re
     const challenges = await SystemDesignService.getChallenges(difficulty, category);
     res.json({ success: true, data: challenges, count: challenges.length });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -164,7 +164,7 @@ systemDesignRouter.get('/system-design/challenges/:challenge_id', async (req: Re
     const challenge = await SystemDesignService.getChallengeById(req.params.challenge_id);
     res.json({ success: true, data: challenge });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -174,7 +174,7 @@ systemDesignRouter.post('/system-design/challenges/:challenge_id/start', async (
     const project = await SystemDesignService.startProjectFromChallenge(studentId, req.params.challenge_id);
     res.status(201).json({ success: true, data: project });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -189,7 +189,7 @@ systemDesignRouter.post('/system-design/challenges/:challenge_id/submissions', a
     const submission = await SystemDesignService.submitChallengeSolution(studentId, req.params.challenge_id, project_id);
     res.status(201).json({ success: true, data: submission });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -199,7 +199,7 @@ systemDesignRouter.get('/system-design/challenges/:challenge_id/submissions', as
     const submissions = await SystemDesignService.getChallengeSubmissions(studentId, req.params.challenge_id);
     res.json({ success: true, data: submissions });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -222,7 +222,7 @@ systemDesignRouter.post('/system-design/projects/:project_id/evaluate', async (r
     const evaluation = SystemDesignService.evaluateArchitecture(project, challenge);
     res.json({ success: true, data: evaluation });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -258,7 +258,7 @@ systemDesignRouter.post('/system-design/simulate', async (req: Request, res: Res
     }
     res.json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -267,7 +267,7 @@ systemDesignRouter.post('/system-design/capacity-estimate', (req: Request, res: 
     const result = SystemDesignService.calculateCapacity(req.body);
     res.json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -277,7 +277,7 @@ systemDesignRouter.post('/system-design/generate-sql', (req: Request, res: Respo
     const sql = SystemDesignService.generateSqlDdl(database_design, dialect || 'POSTGRESQL');
     res.json({ success: true, data: { sql, dialect: dialect || 'POSTGRESQL' } });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -287,7 +287,7 @@ systemDesignRouter.post('/system-design/generate-openapi', (req: Request, res: R
     const spec = SystemDesignService.generateOpenApiSpec(api_specification || { title: 'API', version: '1.0.0', base_url: '', endpoints: [] });
     res.json({ success: true, data: spec });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -306,7 +306,7 @@ systemDesignRouter.post('/system-design/interviews', async (req: Request, res: R
     const session = await SystemDesignService.startInterview(studentId, challenge_id, target_role, duration_minutes);
     res.status(201).json({ success: true, data: session });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -316,7 +316,7 @@ systemDesignRouter.get('/system-design/interviews', async (req: Request, res: Re
     const sessions = await db.getSystemDesignInterviews(studentId);
     res.json({ success: true, data: sessions });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -330,7 +330,7 @@ systemDesignRouter.get('/system-design/interviews/:session_id', async (req: Requ
     }
     res.json({ success: true, data: session });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -345,7 +345,7 @@ systemDesignRouter.post('/system-design/interviews/:session_id/responses', async
     const updated = await SystemDesignService.submitInterviewStep(req.params.session_id, studentId, step, notes, diagram_snapshot);
     res.json({ success: true, data: updated });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -360,7 +360,7 @@ systemDesignRouter.post('/system-design/ai-tutor', async (req: Request, res: Res
     const result = await SystemDesignService.queryAiAssistant(studentId, prompt, mode || 'CONCEPT', context);
     res.json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -389,6 +389,6 @@ systemDesignRouter.get('/system-design/analytics', async (req: Request, res: Res
       }
     });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });

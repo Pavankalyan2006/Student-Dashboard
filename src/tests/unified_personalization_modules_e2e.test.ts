@@ -64,11 +64,11 @@ describe('Unified Personalization Modules E2E Test Suite', () => {
 
       // Verify overview cards are truthful
       expect(progress.overview_cards).toHaveLength(8);
-      const codingCard = progress.overview_cards.find((c) => c.id === 'coding');
+      const codingCard = progress.overview_cards.find((c: any) => c.id === 'coding');
       expect(codingCard).toBeDefined();
       expect(codingCard?.metric).toBe('0 Problems Solved');
 
-      const assessmentsCard = progress.overview_cards.find((c) => c.id === 'assessments');
+      const assessmentsCard = progress.overview_cards.find((c: any) => c.id === 'assessments');
       expect(assessmentsCard?.metric).toBe('No assessments yet');
 
       // Verify empty timeline
@@ -79,27 +79,30 @@ describe('Unified Personalization Modules E2E Test Suite', () => {
       // Record a quiz activity for Alice
       await ActivityService.recordActivity({
         student_id: studentAlice,
-        type: 'QUIZ_SUBMITTED',
+        activity_type: 'QUIZ_COMPLETED',
+        entity_type: 'quiz',
+        entity_id: 'quiz_algo_midterm',
         title: 'Algorithms Midterm Quiz Completed',
-        description: 'Scored 92% on Dynamic Programming and Graph Theory',
         metadata: { score: 92, total: 100, subject: 'Design & Analysis of Algorithms' },
       });
 
       // Record a coding submission
       await ActivityService.recordActivity({
         student_id: studentAlice,
-        type: 'CODING_SUBMISSION',
+        activity_type: 'CODING_PROBLEM_SOLVED',
+        entity_type: 'coding_problem',
+        entity_id: 'dsa_dijkstra_01',
         title: 'Solved Dijkstra Shortest Path Problem',
-        description: 'Passed all 15 hidden test cases in C++',
         metadata: { problem_id: 'dsa_dijkstra_01', language: 'cpp', status: 'ACCEPTED' },
       });
 
       // Record a course lesson
       await ActivityService.recordActivity({
         student_id: studentAlice,
-        type: 'LESSON_COMPLETED',
+        activity_type: 'COURSE_LESSON_COMPLETED',
+        entity_type: 'lesson',
+        entity_id: 'lec_14',
         title: 'Finished Lecture 14: Multi-Head Attention',
-        description: 'Deep Learning Specialization',
         metadata: { course_id: 'course_dl_01', lesson_id: 'lec_14' },
       });
 
@@ -111,10 +114,10 @@ describe('Unified Personalization Modules E2E Test Suite', () => {
       expect(progress.summary.quiz_average_accuracy).toBe(92);
 
       // Check overview cards reflects real recorded numbers
-      const codingCard = progress.overview_cards.find((c) => c.id === 'coding');
+      const codingCard = progress.overview_cards.find((c: any) => c.id === 'coding');
       expect(codingCard?.metric).toBe('1 Problem Solved');
 
-      const assessmentsCard = progress.overview_cards.find((c) => c.id === 'assessments');
+      const assessmentsCard = progress.overview_cards.find((c: any) => c.id === 'assessments');
       expect(assessmentsCard?.metric).toBe('92% Avg Score');
 
       // Activity timeline contains genuine recorded entries
@@ -182,8 +185,8 @@ describe('Unified Personalization Modules E2E Test Suite', () => {
       expect(goal.milestones[0].completed).toBe(false);
 
       createdGoalId = goal.id;
-      milestoneOneId = goal.milestones[0].id;
-      milestoneTwoId = goal.milestones[1].id;
+      milestoneOneId = goal.milestones[0].id!;
+      milestoneTwoId = goal.milestones[1].id!;
     });
 
     it('2.2 retrieves goals filtered by category, priority, and search query', async () => {
@@ -265,7 +268,7 @@ describe('Unified Personalization Modules E2E Test Suite', () => {
       expect(profile.name).toBe('Alice Personalization');
       expect(profile.completion_percentage).toBeGreaterThan(0);
       expect(profile.completion_breakdown).toBeDefined();
-      expect(profile.completion_breakdown.basic_profile).toBe(true);
+      expect(profile.completion_breakdown!.basic_profile).toBe(true);
     });
 
     it('3.2 updates personal, academic, and skills information with validation', async () => {
@@ -276,11 +279,12 @@ describe('Unified Personalization Modules E2E Test Suite', () => {
         github_url: 'https://github.com/alice-personalization',
         linkedin_url: 'https://linkedin.com/in/alice-personalization',
         interests: ['Artificial Intelligence', 'Operating Systems', 'System Design'],
+        // Structured skills are accepted from the profile form and stored as-is.
         skills: [
           { name: 'Python', level: 'ADVANCED' },
           { name: 'C++', level: 'INTERMEDIATE' },
           { name: 'PyTorch', level: 'BEGINNER' },
-        ],
+        ] as unknown as string[],
       });
 
       expect(updated.display_name).toBe('Alice P.');
@@ -324,7 +328,7 @@ describe('Unified Personalization Modules E2E Test Suite', () => {
     it('4.1 creates and fetches student notifications with unread count', async () => {
       const notif = await NotificationService.createNotification({
         student_id: studentAlice,
-        type: 'GOAL_MILESTONE_ACHIEVED',
+        type: 'GOAL_MILESTONE',
         title: 'Milestone Completed: Graph Algorithms',
         message: 'Great job completing your milestone in Graph Theory!',
         link: '/goals',
@@ -354,7 +358,7 @@ describe('Unified Personalization Modules E2E Test Suite', () => {
 
       const activeGoal = await GoalService.createGoal(studentAlice, {
         title: 'Complete Distributed Systems Lab 3',
-        category: 'Academic',
+        category: 'COURSES',
         priority: 'CRITICAL',
         target_date: nearTargetDate.toISOString().split('T')[0],
         milestones: [{ title: 'Implement Raft Leader Election' }],
@@ -389,7 +393,7 @@ describe('Unified Personalization Modules E2E Test Suite', () => {
 
       const urgentGoal = await GoalService.createGoal(studentAlice, {
         title: 'Submit Operating System Scheduling Assignment',
-        category: 'Academic',
+        category: 'COURSES',
         priority: 'HIGH',
         target_date: urgentDate.toISOString().split('T')[0],
       });
@@ -495,7 +499,7 @@ describe('Unified Personalization Modules E2E Test Suite', () => {
       const aliceProject = await ProjectService.createProject(studentAlice, {
         title: 'Alice Autonomous AI Agent',
         description: 'Multi-agent orchestration platform for distributed scheduling',
-        project_type: 'CAPSTONE',
+        project_type: 'FINAL_YEAR_PROJECT',
         domain: 'AI & Distributed Systems',
       });
 
@@ -509,7 +513,7 @@ describe('Unified Personalization Modules E2E Test Suite', () => {
 
       // Verify Bob's unified progress does not contain Alice's project
       const bobProgress = await ProgressService.getUnifiedProgress(studentBob);
-      const bobProjectCard = bobProgress.overview_cards.find((c) => c.id === 'projects');
+      const bobProjectCard = bobProgress.overview_cards.find((c: any) => c.id === 'projects');
       expect(bobProjectCard?.metric).toBe('0 Total Projects');
 
       // Clean up Alice's project

@@ -669,7 +669,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
                         <tr key={col.name} className="hover:bg-slate-50">
                           <td className="py-2 px-3 font-semibold text-slate-800 flex items-center gap-1.5">
                             {col.name === selectedDataset.target_column && (
-                              <Target className="w-3 h-3 text-red-500" title="Target Column" />
+                              <Target className="w-3 h-3 text-red-500" aria-label="Target Column" />
                             )}
                             {col.name}
                           </td>

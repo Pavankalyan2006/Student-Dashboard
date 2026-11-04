@@ -13,7 +13,7 @@ notificationsRouter.get('/notifications', requireAuth, async (req, res, next) =>
     const { unreadOnly, category, limit } = req.query;
     let notifications = await db.getNotifications(studentId);
 
-    if (unreadOnly === 'true' || unreadOnly === true) {
+    if (String(unreadOnly) === 'true') {
       notifications = notifications.filter((n) => !n.is_read);
     }
 

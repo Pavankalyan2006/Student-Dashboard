@@ -7225,6 +7225,7 @@ export const SYSTEM_DESIGN_CHALLENGES: SystemDesignChallenge[] = [
     "scale_estimation_benchmarks": {
       "daily_active_users": "500,000",
       "requests_per_second": "2,000 RPS avg, 15,000 RPS peak during enrollment",
+      "peak_requests_per_second": "15,000 RPS during enrollment",
       "read_write_ratio": "10:1 read heavy",
       "storage_per_year": "Assignment uploads in S3: 50 TB/year",
       "bandwidth": "Moderate"

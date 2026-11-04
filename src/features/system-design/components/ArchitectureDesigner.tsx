@@ -929,7 +929,7 @@ export function ArchitectureDesigner({
                 <Button
                   onClick={handleDeleteSelected}
                   size="sm"
-                  variant="destructive"
+                  variant="danger"
                   className="flex-1 text-xs"
                 >
                   <Trash2 className="w-3.5 h-3.5 mr-1" /> Delete
@@ -1002,7 +1002,7 @@ export function ArchitectureDesigner({
                 <Button
                   onClick={handleDeleteSelected}
                   size="sm"
-                  variant="destructive"
+                  variant="danger"
                   className="w-full text-xs"
                 >
                   <Trash2 className="w-3.5 h-3.5 mr-1" /> Delete Connection

@@ -346,7 +346,13 @@ export const RepositoryDetailPage: React.FC<RepositoryDetailPageProps> = ({
       <RepoResumeModal
         repoId={repo.id}
         repoName={repo.name}
-        defaultTechStack={repo.languages || [repo.language]}
+        defaultTechStack={
+          Array.isArray(repo.languages)
+            ? repo.languages
+            : repo.languages
+              ? Object.keys(repo.languages)
+              : [repo.language]
+        }
         isOpen={isResumeModalOpen}
         onClose={() => setIsResumeModalOpen(false)}
       />

@@ -211,7 +211,7 @@ export function FlashcardsPage({ onNavigate }: FlashcardsPageProps) {
   const handleSchedulePlanner = async (deck: FlashcardDeck) => {
     try {
       const task = await learningModulesApi.flashcards.scheduleStudyTask(deck.id);
-      toast.success(`Scheduled review task: "${task.title}" for ${task.scheduled_date}`);
+      toast.success(`Scheduled review task: "${task.title}" for ${task.date}`);
     } catch (err: any) {
       toast.error('Failed to schedule in planner: ' + (err.message || err));
     }
@@ -436,7 +436,9 @@ export function FlashcardsPage({ onNavigate }: FlashcardsPageProps) {
           deck={studyingDeck}
           initialCards={studyInitialCards}
           onReviewCard={handleReviewCard}
-          onBookmarkCard={handleBookmarkCard}
+          onBookmarkCard={async (deckId, cardId, isBookmarked) => {
+            await handleBookmarkCard(deckId, cardId, isBookmarked);
+          }}
         />
 
         {/* Deck Detail & Card Manager Modal */}

@@ -14,7 +14,7 @@ semesterCommandCenterRouter.get('/semester/overview', async (req: Request, res: 
     const data = semesterCommandCenterService.getOverview(studentId);
     res.json({ success: true, data });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -25,7 +25,7 @@ semesterCommandCenterRouter.get('/semester/config', async (req: Request, res: Re
     const overview = semesterCommandCenterService.getOverview(studentId);
     res.json({ success: true, data: overview.config });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -34,7 +34,7 @@ semesterCommandCenterRouter.patch('/semester/config', requireAuth, async (req: R
     const updated = semesterCommandCenterService.updateConfig(req.body);
     res.json({ success: true, data: updated });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -45,7 +45,7 @@ semesterCommandCenterRouter.get('/semester/subjects', async (req: Request, res: 
     const subjects = semesterCommandCenterService.getSubjects(studentId);
     res.json({ success: true, data: subjects });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -54,7 +54,7 @@ semesterCommandCenterRouter.post('/semester/subjects', requireAuth, async (req: 
     const subject = semesterCommandCenterService.addSubject(req.body);
     res.status(201).json({ success: true, data: subject });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -64,7 +64,7 @@ semesterCommandCenterRouter.get('/semester/subjects/:subjectId', async (req: Req
     if (!subject) return res.status(404).json({ success: false, message: 'Subject not found' });
     res.json({ success: true, data: subject });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -73,7 +73,7 @@ semesterCommandCenterRouter.put('/semester/subjects/:subjectId/units', requireAu
     const updated = semesterCommandCenterService.updateSubjectUnits(req.params.subjectId, req.body.units);
     res.json({ success: true, data: updated });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -83,7 +83,7 @@ semesterCommandCenterRouter.get('/semester/events', async (_req: Request, res: R
     const events = semesterCommandCenterService.getEvents();
     res.json({ success: true, data: events });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -92,7 +92,7 @@ semesterCommandCenterRouter.post('/semester/events', requireAuth, async (req: Re
     const event = semesterCommandCenterService.addEvent(req.body);
     res.status(201).json({ success: true, data: event });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -103,7 +103,7 @@ semesterCommandCenterRouter.get('/semester/stream', async (req: Request, res: Re
     const nodes = semesterCommandCenterService.getStudyStream(subjectId);
     res.json({ success: true, data: nodes });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -112,7 +112,7 @@ semesterCommandCenterRouter.patch('/semester/stream/:nodeId/status', requireAuth
     const updated = semesterCommandCenterService.updateStreamNodeStatus(req.params.nodeId, req.body.status);
     res.json({ success: true, data: updated });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -122,7 +122,7 @@ semesterCommandCenterRouter.get('/semester/slip-tests', async (_req: Request, re
     const tests = semesterCommandCenterService.getSlipTests();
     res.json({ success: true, data: tests });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -131,7 +131,7 @@ semesterCommandCenterRouter.post('/semester/slip-tests', requireAuth, async (req
     const test = semesterCommandCenterService.addSlipTest(req.body);
     res.status(201).json({ success: true, data: test });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -141,7 +141,7 @@ semesterCommandCenterRouter.post('/semester/slip-tests/:testId/score', requireAu
     const test = semesterCommandCenterService.recordSlipTestScore(req.params.testId, score, weak_topics || []);
     res.json({ success: true, data: test });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -151,7 +151,7 @@ semesterCommandCenterRouter.get('/semester/minors', async (_req: Request, res: R
     const minors = semesterCommandCenterService.getMinorExams();
     res.json({ success: true, data: minors });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -160,7 +160,7 @@ semesterCommandCenterRouter.get('/semester/end-sem-readiness', async (_req: Requ
     const readiness = semesterCommandCenterService.getEndSemReadiness();
     res.json({ success: true, data: readiness });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -170,7 +170,7 @@ semesterCommandCenterRouter.get('/semester/recovery', async (_req: Request, res:
     const plans = semesterCommandCenterService.getRecoveryPlans();
     res.json({ success: true, data: plans });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -179,7 +179,7 @@ semesterCommandCenterRouter.post('/semester/recovery/:planId/resolve', requireAu
     semesterCommandCenterService.resolveRecoveryPlan(req.params.planId);
     res.json({ success: true, message: 'Recovery plan resolved' });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -189,7 +189,7 @@ semesterCommandCenterRouter.get('/semester/today-guidance', async (_req: Request
     const guidance = semesterCommandCenterService.getTodayGuidance();
     res.json({ success: true, data: guidance });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -198,6 +198,6 @@ semesterCommandCenterRouter.get('/semester/weekly-review', async (_req: Request,
     const review = semesterCommandCenterService.getLatestWeeklyReview();
     res.json({ success: true, data: review });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });

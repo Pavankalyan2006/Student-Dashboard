@@ -19,6 +19,11 @@ export interface StudentProfile {
   branch: string;
   semester: number;
   graduation_year: number;
+  college_name?: string;
+  target_role?: string;
+  display_name?: string;
+  github_url?: string;
+  linkedin_url?: string;
   bio: string;
   skills: string[];
   interests: string[];
@@ -167,6 +172,12 @@ export interface LearningGoal {
   status: GoalStatus;
   milestones: LearningGoalMilestone[];
   related_resource_ids?: string[];
+  progress_percentage?: number;
+  priority?: 'LOW' | 'MEDIUM' | 'HIGH' | string;
+  notes?: string;
+  measurement_method?: string;
+  completion_criteria?: string;
+  reminder_preference?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -438,6 +449,7 @@ export interface NotificationPreference {
   system: boolean;
   in_app: boolean;
   in_app_enabled?: boolean;
+  categories?: Record<string, boolean>;
   study_reminders?: boolean;
   revision_reminders?: boolean;
   goal_deadlines?: boolean;

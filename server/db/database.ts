@@ -1,4 +1,5 @@
 import bcrypt from 'bcryptjs';
+import { randomBytes } from 'crypto';
 import {
   Student,
   SafeStudent,
@@ -62,6 +63,8 @@ import {
   Algorithm,
   DSAProblem,
   DSAProgress,
+  CreateCourseInput,
+  UpdateCourseInput,
 } from '../models/types';
 import { seedProblems, seedTestCases } from './seedCoding';
 import { seedDSATopics, seedAlgorithms, seedDSAProblems } from './seedDsa';
@@ -603,12 +606,36 @@ class DatabaseStore {
     });
   }
 
+  private initializePromise: Promise<void> | null = null;
+
+  /**
+   * Seeds the store once. Every public method awaits this, so concurrent first calls
+   * share a single in-flight seeding run instead of each re-seeding the Maps.
+   */
   public async initialize(): Promise<void> {
+    if (this.isInitialized) return;
+    if (!this.initializePromise) {
+      this.initializePromise = this.seedInitialData().catch((err) => {
+        this.initializePromise = null;
+        throw err;
+      });
+    }
+    return this.initializePromise;
+  }
+
+  private async seedInitialData(): Promise<void> {
     if (this.isInitialized) return;
 
     // Pre-hash default passwords
     const studentPasswordHash = await bcrypt.hash('Password123!', 10);
-    const adminPasswordHash = await bcrypt.hash('AdminPassword123!', 10);
+    // The seeded platform administrator must never ship with a password that is
+    // published in source control. Its password comes from ADMIN_BOOTSTRAP_PASSWORD;
+    // without it, the account gets a random unguessable password and cannot sign in.
+    const adminBootstrapPassword =
+      process.env.ADMIN_BOOTSTRAP_PASSWORD && process.env.ADMIN_BOOTSTRAP_PASSWORD.length >= 12
+        ? process.env.ADMIN_BOOTSTRAP_PASSWORD
+        : randomBytes(32).toString('hex');
+    const adminPasswordHash = await bcrypt.hash(adminBootstrapPassword, 10);
 
     const defaultStudent: Student = {
       id: 'std_01j8k9x2p4',
@@ -3963,7 +3990,6 @@ print(power_mod(2, 10, 1000))  # Output: 24
       status?: string;
       is_archived?: boolean;
       academic_year?: string;
-      search?: string;
       sort?: string;
       page?: number;
       limit?: number;
@@ -4284,7 +4310,10 @@ print(power_mod(2, 10, 1000))  # Output: 24
         : { id: courseLessons[0].id, title: courseLessons[0].title };
     }
 
-    const resources = this.courseResources.get(courseId) || [];
+    // Student-attached resources are private to that student; seeded catalog resources are shared.
+    const resources = (this.courseResources.get(courseId) || []).filter(
+      (r) => !r.student_id || r.student_id === studentId
+    );
 
     // Related courses (same branch or difficulty, excluding self)
     const related = Array.from(this.courses.values())
@@ -4444,6 +4473,7 @@ print(power_mod(2, 10, 1000))  # Output: 24
             document_id: doc.id,
             size_bytes: doc.file_size,
             processing_status: 'READY',
+            student_id: studentId,
           });
         }
       }
@@ -4463,6 +4493,7 @@ print(power_mod(2, 10, 1000))  # Output: 24
             url: `/notes/${note.id}`,
             note_id: note.id,
             processing_status: 'READY',
+            student_id: studentId,
           });
         }
       }
@@ -4491,7 +4522,8 @@ print(power_mod(2, 10, 1000))  # Output: 24
     }
 
     // Only creator can edit custom courses
-    if (course.is_custom && course.student_id !== studentId) {
+    // Shared catalog courses are read-only for students; only the owner of a custom course may change it.
+    if (!course.is_custom || course.student_id !== studentId) {
       throw new AuthorizationError('You do not have permission to edit this course');
     }
 
@@ -4587,7 +4619,8 @@ print(power_mod(2, 10, 1000))  # Output: 24
       throw new NotFoundError(`Course '${courseId}' not found`);
     }
 
-    if (course.is_custom && course.student_id !== studentId) {
+    // Shared catalog courses are read-only for students; only the owner of a custom course may change it.
+    if (!course.is_custom || course.student_id !== studentId) {
       throw new AuthorizationError('You do not have permission to add chapters to this course');
     }
 
@@ -4624,7 +4657,8 @@ print(power_mod(2, 10, 1000))  # Output: 24
       throw new NotFoundError(`Chapter '${chapterId}' not found in course`);
     }
 
-    if (course.is_custom && course.student_id !== studentId) {
+    // Shared catalog courses are read-only for students; only the owner of a custom course may change it.
+    if (!course.is_custom || course.student_id !== studentId) {
       throw new AuthorizationError('You do not have permission to add lessons to this course');
     }
 
@@ -4695,6 +4729,7 @@ print(power_mod(2, 10, 1000))  # Output: 24
       document_id: data.document_id,
       note_id: data.note_id,
       processing_status: 'READY',
+      student_id: studentId,
     };
 
     resList.push(resource);
@@ -4710,6 +4745,13 @@ print(power_mod(2, 10, 1000))  # Output: 24
   ): Promise<{ success: boolean }> {
     await this.initialize();
     const resList = this.courseResources.get(courseId) || [];
+    const target = resList.find((r) => r.id === resourceId);
+    if (!target) {
+      throw new NotFoundError(`Resource '${resourceId}' not found in course`);
+    }
+    if (target.student_id !== studentId) {
+      throw new AuthorizationError('You do not have permission to remove this resource');
+    }
     const updated = resList.filter((r) => r.id !== resourceId);
     this.courseResources.set(courseId, updated);
     return { success: true };
@@ -4738,7 +4780,7 @@ print(power_mod(2, 10, 1000))  # Output: 24
         id: q.id,
         title: q.title,
         description: q.description,
-        total_questions: q.total_questions || 10,
+        total_questions: q.question_count || 10,
         difficulty: q.difficulty || 'MEDIUM',
       }));
 
@@ -4747,7 +4789,7 @@ print(power_mod(2, 10, 1000))  # Output: 24
       id: q.id,
       title: `${course.title} - ${q.title}`,
       description: q.description,
-      total_questions: q.total_questions || 10,
+      total_questions: q.question_count || 10,
       difficulty: q.difficulty || 'MEDIUM',
     }));
 
@@ -5105,6 +5147,16 @@ print(power_mod(2, 10, 1000))  # Output: 24
     }
     if (note.student_id !== studentId) {
       throw new AuthorizationError('You do not have permission to modify this note');
+    }
+
+    // Drop keys that were not supplied. Routes forward every known field from the
+    // request body, so a partial PATCH (e.g. title only) previously spread
+    // `content: undefined` / `tags: undefined` over the stored note and erased it.
+    updates = Object.fromEntries(
+      Object.entries(updates).filter(([, value]) => value !== undefined)
+    ) as typeof updates;
+    if (updates.title !== undefined && !String(updates.title).trim()) {
+      throw new ValidationError('Note title cannot be empty');
     }
 
     const now = new Date().toISOString();
@@ -5850,6 +5902,10 @@ print(power_mod(2, 10, 1000))  # Output: 24
 
   public async getDocumentPages(documentId: string, studentId: string): Promise<DocumentPage[]> {
     await this.initialize();
+    const doc = this.documents.get(documentId);
+    if (!doc || doc.student_id !== studentId) {
+      return [];
+    }
     return this.documentPages.get(documentId) || [];
   }
 
@@ -10457,7 +10513,7 @@ print(power_mod(2, 10, 1000))  # Output: 24
     let list = Array.from(this.gateQuestions.values());
 
     if (filters.paper_code) {
-      list = list.filter((q) => q.paper_code === filters.paper_code.toUpperCase());
+      list = list.filter((q) => q.paper_code === filters.paper_code!.toUpperCase());
     }
     if (filters.subject) {
       list = list.filter((q) => q.subject.toLowerCase() === filters.subject!.toLowerCase());

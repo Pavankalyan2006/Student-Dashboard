@@ -290,16 +290,7 @@ export function OnboardingPage({ onNavigate }: { onNavigate: (path: string) => v
   const [longTermGoal, setLongTermGoal] = React.useState('Join a top-tier engineering product company as an SDE / Systems Engineer');
 
   // Projects
-  const [projectsList, setProjectsList] = React.useState<PortfolioProject[]>([
-    {
-      id: 'proj_1',
-      title: 'B.Tech AI Learning Platform',
-      description: 'Unified full-stack student learning workspace with AI tutor and automated grading.',
-      technologies: ['React', 'TypeScript', 'Node.js', 'Express', 'SQLite'],
-      status: 'IN_PROGRESS',
-      repository_url: 'https://github.com/student/btech-ai-platform',
-    },
-  ]);
+  const [projectsList, setProjectsList] = React.useState<PortfolioProject[]>([]);
   const [newProjTitle, setNewProjTitle] = React.useState('');
   const [newProjDesc, setNewProjDesc] = React.useState('');
   const [newProjTech, setNewProjTech] = React.useState('');
@@ -318,7 +309,7 @@ export function OnboardingPage({ onNavigate }: { onNavigate: (path: string) => v
   const [preferredLearningFormats, setPreferredLearningFormats] = React.useState<string[]>([
     'Interactive Code Sandboxes', 'Step-by-step Walkthroughs', 'Practice Questions'
   ]);
-  const [preferredDifficulty, setPreferredDifficulty] = React.useState('INTERMEDIATE');
+  const [preferredDifficulty, setPreferredDifficulty] = React.useState<'FOUNDATIONAL' | 'INTERMEDIATE' | 'ADVANCED' | 'ADAPTIVE'>('INTERMEDIATE');
   const [preferredExplanationLanguage, setPreferredExplanationLanguage] = React.useState('English');
 
   const [availableDays, setAvailableDays] = React.useState<string[]>(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']);
@@ -427,7 +418,15 @@ export function OnboardingPage({ onNavigate }: { onNavigate: (path: string) => v
       if (prefRes.status === 'fulfilled' && prefRes.value) {
         const p = prefRes.value;
         if (p.learning_style) setExplanationStyle(p.learning_style);
-        if (p.explanation_depth) setExplanationDepth(p.explanation_depth);
+        if (p.explanation_depth) {
+          const fromServer: Record<string, 'CONCISE' | 'BALANCED' | 'DETAILED'> = {
+            QUICK_OVERVIEW: 'CONCISE',
+            ELI5: 'CONCISE',
+            STANDARD: 'BALANCED',
+            DEEP_DIVE: 'DETAILED',
+          };
+          setExplanationDepth(fromServer[p.explanation_depth] || 'BALANCED');
+        }
         if (p.preferred_explanation_language) setPreferredExplanationLanguage(p.preferred_explanation_language);
         if (p.weekday_study_hours) setDailyHours(p.weekday_study_hours);
         if (p.weekend_study_hours) setWeekendHours(p.weekend_study_hours);
@@ -606,7 +605,9 @@ export function OnboardingPage({ onNavigate }: { onNavigate: (path: string) => v
         case 3: // STEP 4: Learning Preferences, Pace & Study Schedule
           await onboardingApi.savePreferences({
             learning_style: explanationStyle,
-            explanation_depth: explanationDepth,
+            explanation_depth: (
+              { CONCISE: 'QUICK_OVERVIEW', BALANCED: 'STANDARD', DETAILED: 'DEEP_DIVE' } as const
+            )[explanationDepth],
             preferred_explanation_language: preferredExplanationLanguage,
             weekday_study_hours: dailyHours,
             weekend_study_hours: weekendHours,
@@ -642,6 +643,7 @@ export function OnboardingPage({ onNavigate }: { onNavigate: (path: string) => v
               revision_reminders: true,
               deadline_reminders: prioritizeDeadlines,
               goal_reminders: true,
+              community_notifications: false,
             },
           });
 
@@ -770,29 +772,38 @@ export function OnboardingPage({ onNavigate }: { onNavigate: (path: string) => v
   };
 
   // Project Helpers
-  const handleAddProject = () => {
+  const handleAddProject = async () => {
     if (!newProjTitle.trim()) {
       toast.error('Project title is required');
       return;
     }
-    const newProj: PortfolioProject = {
-      id: `proj_${Date.now()}`,
-      title: newProjTitle.trim(),
-      description: newProjDesc.trim() || 'Practical software implementation.',
-      technologies: newProjTech.split(',').map((t) => t.trim()).filter(Boolean),
-      status: 'IN_PROGRESS',
-      repository_url: newProjRepo.trim() || undefined,
-    };
-    setProjectsList([...projectsList, newProj]);
-    setNewProjTitle('');
-    setNewProjDesc('');
-    setNewProjTech('');
-    setNewProjRepo('');
-    toast.success('Project added to portfolio');
+    try {
+      // Persist immediately so projects entered during onboarding are not lost.
+      const saved = await onboardingApi.addProject({
+        title: newProjTitle.trim(),
+        description: newProjDesc.trim() || 'Practical software implementation.',
+        technologies: newProjTech.split(',').map((t) => t.trim()).filter(Boolean),
+        status: 'IN_PROGRESS',
+        repository_url: newProjRepo.trim() || undefined,
+      });
+      setProjectsList((prev) => [...prev, saved]);
+      setNewProjTitle('');
+      setNewProjDesc('');
+      setNewProjTech('');
+      setNewProjRepo('');
+      toast.success('Project added to portfolio');
+    } catch (err: any) {
+      toast.error(err?.message || 'Could not save project');
+    }
   };
 
-  const handleRemoveProject = (id: string) => {
-    setProjectsList(projectsList.filter((p) => p.id !== id));
+  const handleRemoveProject = async (id: string) => {
+    try {
+      await onboardingApi.deleteProject(id);
+      setProjectsList((prev) => prev.filter((p) => p.id !== id));
+    } catch (err: any) {
+      toast.error(err?.message || 'Could not remove project');
+    }
   };
 
   const currentStep = ONBOARDING_5_STEPS[currentStepIndex];

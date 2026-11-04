@@ -205,7 +205,7 @@ describe('AI Academic Tutor - Complete Master System Tests', () => {
     expect(quizResult.quiz).toBeDefined();
     expect(quizResult.quiz.id).toBeDefined();
     expect(quizResult.questions.length).toBe(2);
-    expect(quizResult.questions[0].options.length).toBeGreaterThanOrEqual(2);
+    expect(quizResult.questions[0].options!.length).toBeGreaterThanOrEqual(2);
     expect(quizResult.questions[0].explanation).toBeDefined();
   });
 
@@ -213,7 +213,7 @@ describe('AI Academic Tutor - Complete Master System Tests', () => {
     const note = await NotesService.createManualNote(studentA, {
       title: 'Process Synchronization Invariants',
       content: '## Critical Section Problem\n\n1. **Mutual Exclusion**: If process Pi is executing in its critical section, no other processes can be executing.\n2. **Progress**: Selection of next process cannot be postponed indefinitely.\n3. **Bounded Waiting**: Bound exists on number of times other processes are allowed to enter.',
-      topic: 'Operating Systems',
+      tags: ['Operating Systems'],
     });
 
     expect(note.id).toBeDefined();

@@ -193,6 +193,8 @@ export interface MockInterviewSession {
   max_questions: number;
   overall_score?: number;
   feedback_summary?: MockInterviewFeedback;
+  /** Legacy alias of feedback_summary found in older records. */
+  feedback?: MockInterviewFeedback;
   started_at?: string;
   completed_at?: string;
   created_at: string;

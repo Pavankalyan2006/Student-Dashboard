@@ -15,7 +15,7 @@ progressRouter.get('/progress', requireAuth, async (req: Request, res: Response)
     });
     res.json({ success: true, data: progress });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -26,7 +26,7 @@ progressRouter.get('/progress/export', requireAuth, async (req: Request, res: Re
     const exported = await ProgressService.exportProgress(studentId);
     res.json({ success: true, data: exported });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -38,7 +38,7 @@ progressRouter.get('/progress/courses', requireAuth, async (req: Request, res: R
     const progress = await ProgressService.getCoursesProgress(studentId);
     res.json({ success: true, data: progress });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -49,7 +49,7 @@ progressRouter.get('/progress/skills', requireAuth, async (req: Request, res: Re
     const progress = await ProgressService.getSkillsProgress(studentId);
     res.json({ success: true, data: progress });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -60,7 +60,7 @@ progressRouter.get('/progress/quiz', requireAuth, async (req: Request, res: Resp
     const progress = await ProgressService.getQuizProgress(studentId);
     res.json({ success: true, data: progress });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -71,7 +71,7 @@ progressRouter.get('/progress/coding', requireAuth, async (req: Request, res: Re
     const progress = await ProgressService.getCodingProgress(studentId);
     res.json({ success: true, data: progress });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -82,7 +82,7 @@ progressRouter.get('/progress/dsa', requireAuth, async (req: Request, res: Respo
     const progress = await ProgressService.getDsaProgress(studentId);
     res.json({ success: true, data: progress });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -93,7 +93,7 @@ progressRouter.get('/progress/projects', requireAuth, async (req: Request, res: 
     const progress = await ProgressService.getProjectsProgress(studentId);
     res.json({ success: true, data: progress });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -104,7 +104,7 @@ progressRouter.get('/progress/placement', requireAuth, async (req: Request, res:
     const progress = await ProgressService.getPlacementProgress(studentId);
     res.json({ success: true, data: progress });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -115,6 +115,6 @@ progressRouter.get('/progress/research', requireAuth, async (req: Request, res: 
     const progress = await ProgressService.getResearchProgress(studentId);
     res.json({ success: true, data: progress });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });

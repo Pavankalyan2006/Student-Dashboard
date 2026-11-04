@@ -286,6 +286,7 @@ export interface GitHubRepository {
     tech_stack?: string[];
     key_features?: string[];
     challenges_solved?: string;
+    lessons_learned?: string;
     demo_url?: string;
     resume_bullets?: string[];
   };
@@ -313,6 +314,8 @@ export interface GitHubInterviewQuestion {
   answer: string;
   category: 'ARCHITECTURE' | 'TRADEOFFS' | 'TESTING' | 'PERFORMANCE' | 'CHALLENGES';
   relevant_files: string[];
+  model_answer?: string;
+  key_points?: string[];
 }
 
 export interface GitHubLearningRepo {
@@ -353,6 +356,7 @@ export interface GitHubArchitectureComponent {
   type: 'frontend' | 'backend' | 'database' | 'ai_service' | 'auth' | 'storage' | 'external_api' | 'queue';
   description: string;
   files: string[];
+  evidence_files?: string[];
 }
 
 export interface GitHubRepositoryAnalysis {
@@ -378,6 +382,10 @@ export interface GitHubRepositoryAnalysis {
 }
 
 export interface GitHubCommit {
+  id?: string;
+  repository_id?: string;
+  author_email?: string;
+  url?: string;
   sha: string;
   hash?: string;
   message: string;
@@ -392,6 +400,10 @@ export interface GitHubCommit {
 }
 
 export interface GitHubIssue {
+  id?: string;
+  repository_id?: string;
+  url?: string;
+  updated_at?: string;
   number: number;
   title: string;
   body: string;
@@ -404,6 +416,10 @@ export interface GitHubIssue {
 }
 
 export interface GitHubPullRequest {
+  id?: string;
+  repository_id?: string;
+  url?: string;
+  updated_at?: string;
   number: number;
   title: string;
   body: string;

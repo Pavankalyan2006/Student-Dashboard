@@ -6,7 +6,7 @@ import { X, UploadCloud, FileText, CheckCircle, AlertCircle, Folder, RefreshCw }
 import { documentsApi } from '../../documents/api/documentsApi';
 import { knowledgeBaseApi } from '../api/knowledgeBaseApi';
 import { KnowledgeCollection } from '../types/knowledgeBaseTypes';
-import { DocumentCardData } from '../../../types';
+import { DocumentCardData } from '../../documents/types/document';
 
 interface KnowledgeUploadModalProps {
   isOpen: boolean;
@@ -89,10 +89,10 @@ export const KnowledgeUploadModal: React.FC<KnowledgeUploadModalProps> = ({
           .filter(Boolean);
 
         const created = await documentsApi.uploadDocument({
-          original_filename: file.name,
-          mime_type: file.type || 'application/pdf',
-          size_bytes: file.size,
-          file_data_base64: base64Data,
+          originalName: file.name,
+          mimeType: file.type || 'application/pdf',
+          sizeBytes: file.size,
+          contentBase64: base64Data,
           title: title.trim() || file.name,
           tags: parsedTags,
         });

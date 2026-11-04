@@ -30,7 +30,7 @@ import {
   KnowledgeAnnotationNote,
   KnowledgeResource,
 } from '../types/knowledgeBaseTypes';
-import { DocumentCardData } from '../../../types';
+import { DocumentCardData } from '../../documents/types/document';
 
 // Child components
 import { KnowledgeDashboardHeader } from '../components/KnowledgeDashboardHeader';
@@ -487,24 +487,24 @@ export const KnowledgeBasePage: React.FC<KnowledgeBasePageProps> = ({ onNavigate
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {stats.course_knowledge_bases.map((ckb) => (
                       <div
-                        key={ckb.collection_id}
+                        key={ckb.code}
                         onClick={() => {
-                          setSelectedCollectionId(ckb.collection_id);
+                          if (ckb.collection_id) setSelectedCollectionId(ckb.collection_id);
                           switchTab('DOCUMENTS');
                         }}
                         className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 hover:border-emerald-500/40 cursor-pointer transition group"
                       >
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs font-bold text-emerald-400">{ckb.course_code || 'COURSE'}</span>
+                          <span className="text-xs font-bold text-emerald-400">{ckb.code || 'COURSE'}</span>
                           <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-400">
-                            {ckb.indexed_documents}/{ckb.total_documents} indexed
+                            {ckb.docCount} document{ckb.docCount === 1 ? '' : 's'}
                           </span>
                         </div>
                         <h4 className="text-sm font-semibold text-white group-hover:text-emerald-300 transition truncate">
-                          {ckb.course_name}
+                          {ckb.title}
                         </h4>
                         <div className="flex items-center justify-between mt-3 text-xs text-slate-400">
-                          <span>{ckb.subject || 'Syllabus Library'}</span>
+                          <span>{ckb.collectionCount} collection{ckb.collectionCount === 1 ? '' : 's'}</span>
                           <span className="text-emerald-400 group-hover:translate-x-1 transition flex items-center gap-0.5">
                             Browse &rarr;
                           </span>
@@ -533,7 +533,7 @@ export const KnowledgeBasePage: React.FC<KnowledgeBasePageProps> = ({ onNavigate
                       >
                         <div className="flex items-center gap-2.5 truncate">
                           <FileText className="w-4 h-4 text-indigo-400 shrink-0" />
-                          <span className="text-white font-medium truncate">{q.filename}</span>
+                          <span className="text-white font-medium truncate">{q.title || q.original_filename}</span>
                         </div>
                         <div className="flex items-center gap-3 shrink-0">
                           <span
@@ -548,7 +548,7 @@ export const KnowledgeBasePage: React.FC<KnowledgeBasePageProps> = ({ onNavigate
                             {q.status}
                           </span>
                           <span className="text-[10px] text-slate-500">
-                            {new Date(q.queued_at).toLocaleTimeString()}
+                            {new Date(q.created_at).toLocaleTimeString()}
                           </span>
                         </div>
                       </div>
@@ -583,7 +583,7 @@ export const KnowledgeBasePage: React.FC<KnowledgeBasePageProps> = ({ onNavigate
                         >
                           <div className="truncate flex-1">
                             <h5 className="font-semibold text-white truncate">{r.title}</h5>
-                            <span className="text-[11px] text-slate-400">{r.resource_type} • {r.subject || 'General'}</span>
+                            <span className="text-[11px] text-slate-400">{r.type} • {r.description || 'General'}</span>
                           </div>
                           {r.url && (
                             <a

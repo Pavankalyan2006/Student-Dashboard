@@ -15,7 +15,7 @@ externalIntegrationsRouter.get('/integrations/providers', async (_req: Request, 
     const providers = ExternalIntegrationRegistry.getAllProviders();
     res.json({ success: true, data: providers });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -26,7 +26,7 @@ externalIntegrationsRouter.get('/integrations/connections', requireAuth, async (
     const connections = await ExternalIntegrationService.listConnections(studentId);
     res.json({ success: true, data: connections });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -41,7 +41,7 @@ externalIntegrationsRouter.post('/integrations/connections/:provider/start', req
     const authData = await provider.initiateAuth(studentId, req.body.redirect_uri);
     res.json({ success: true, data: authData });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -56,7 +56,7 @@ externalIntegrationsRouter.post('/integrations/connections/:provider/connect', r
     );
     res.status(201).json({ success: true, data: connection });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -67,7 +67,7 @@ externalIntegrationsRouter.post('/integrations/connections/:connectionId/sync', 
     const updated = await ExternalIntegrationService.syncConnection(studentId, req.params.connectionId);
     res.json({ success: true, data: updated });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -78,7 +78,7 @@ externalIntegrationsRouter.delete('/integrations/connections/:connectionId', req
     await ExternalIntegrationService.disconnectPlatform(studentId, req.params.connectionId);
     res.json({ success: true, message: 'Platform disconnected successfully' });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -89,7 +89,7 @@ externalIntegrationsRouter.get('/integrations/activity', requireAuth, async (req
     const activities = await ExternalIntegrationService.listActivities(studentId);
     res.json({ success: true, data: activities });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -100,7 +100,7 @@ externalIntegrationsRouter.get('/integrations/skills', requireAuth, async (req: 
     const skills = await ExternalIntegrationService.getAggregatedSkillEvidence(studentId);
     res.json({ success: true, data: skills });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -111,7 +111,7 @@ externalIntegrationsRouter.get('/integrations/consistency', requireAuth, async (
     const report = await ExternalIntegrationService.checkProfileConsistency(studentId);
     res.json({ success: true, data: report });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -123,7 +123,7 @@ externalIntegrationsRouter.get('/integrations/jobs', async (req: Request, res: R
     const jobs = await ExternalIntegrationService.searchJobs(query, location);
     res.json({ success: true, data: jobs });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -134,6 +134,6 @@ externalIntegrationsRouter.post('/integrations/jobs/import', requireAuth, async 
     const job = await ExternalIntegrationService.importJob(studentId, req.body);
     res.status(201).json({ success: true, data: job });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });

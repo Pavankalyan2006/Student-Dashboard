@@ -12,7 +12,7 @@ careerRouter.get('/dashboard-summary', requireAuth, async (req: Request, res: Re
     const summary = await CareerService.getCareerDashboardSummary(studentId);
     res.json({ success: true, data: summary });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -23,7 +23,7 @@ careerRouter.get('/profile', requireAuth, async (req: Request, res: Response) =>
     const profile = await CareerService.getCareerProfile(studentId);
     res.json({ success: true, data: profile });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -33,7 +33,7 @@ careerRouter.patch('/profile', requireAuth, async (req: Request, res: Response) 
     const updated = await CareerService.updateCareerProfile(studentId, req.body);
     res.json({ success: true, data: updated });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -43,7 +43,7 @@ careerRouter.get('/roles', requireAuth, async (_req: Request, res: Response) => 
     const roles = await CareerService.listRoles();
     res.json({ success: true, data: roles });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -52,7 +52,7 @@ careerRouter.get('/roles/:id', requireAuth, async (req: Request, res: Response) 
     const role = await CareerService.getRole(req.params.id);
     res.json({ success: true, data: role });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -66,7 +66,7 @@ careerRouter.post('/compare', requireAuth, async (req: Request, res: Response) =
     const comparison = await CareerService.compareRoles(role_ids);
     res.json({ success: true, data: comparison });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -77,7 +77,7 @@ careerRouter.get('/recommendations', requireAuth, async (req: Request, res: Resp
     const recommendations = await CareerService.getRecommendations(studentId);
     res.json({ success: true, data: recommendations });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -88,7 +88,7 @@ careerRouter.get('/roadmaps', requireAuth, async (req: Request, res: Response) =
     const roadmaps = await CareerService.listRoadmaps(studentId);
     res.json({ success: true, data: roadmaps });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -102,7 +102,7 @@ careerRouter.post('/roadmaps', requireAuth, async (req: Request, res: Response) 
     const roadmap = await CareerService.generateRoadmap(studentId, role_id, title);
     res.status(201).json({ success: true, data: roadmap });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -112,7 +112,7 @@ careerRouter.get('/roadmaps/:id', requireAuth, async (req: Request, res: Respons
     const roadmap = await CareerService.getRoadmap(req.params.id, studentId);
     res.json({ success: true, data: roadmap });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -123,7 +123,7 @@ careerRouter.patch('/roadmaps/:id/steps/:stepId', requireAuth, async (req: Reque
     const roadmap = await CareerService.updateStepStatus(req.params.id, studentId, req.params.stepId, status);
     res.json({ success: true, data: roadmap });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -133,6 +133,6 @@ careerRouter.delete('/roadmaps/:id', requireAuth, async (req: Request, res: Resp
     const deleted = await CareerService.deleteRoadmap(req.params.id, studentId);
     res.json({ success: true, data: { deleted } });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });

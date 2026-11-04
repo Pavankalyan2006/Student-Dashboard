@@ -20,6 +20,27 @@ export class ApiError extends Error {
   }
 }
 
+export interface RequestOptions {
+  params?: Record<string, unknown>;
+  headers?: Record<string, string>;
+}
+
+export function appendQueryParams(path: string, params?: Record<string, unknown>): string {
+  if (!params) return path;
+  const search = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value === undefined || value === null || value === '') continue;
+    if (Array.isArray(value)) {
+      value.forEach((v) => search.append(key, String(v)));
+    } else {
+      search.append(key, String(value));
+    }
+  }
+  const qs = search.toString();
+  if (!qs) return path;
+  return path + (path.includes('?') ? '&' : '?') + qs;
+}
+
 class ApiClient {
   private baseUrl = '/api/v1';
   private token: string | null = null;
@@ -102,8 +123,29 @@ class ApiClient {
     }
   }
 
-  public get<T = any>(path: string, headers?: Record<string, string>): Promise<T> {
-    return this.request<T>(path, { method: 'GET', headers });
+  /**
+   * Accepts either plain headers or an axios-style `{ params, headers }` options object.
+   * Several feature APIs pass `{ params }`; previously those were sent as HTTP headers
+   * and the query filters were silently dropped.
+   */
+  private resolveRequestOptions(
+    path: string,
+    options?: RequestOptions | Record<string, string>
+  ): { path: string; headers?: Record<string, string> } {
+    if (!options) return { path };
+    const maybe = options as RequestOptions;
+    const isOptionsObject =
+      Object.prototype.hasOwnProperty.call(options, 'params') ||
+      (Object.prototype.hasOwnProperty.call(options, 'headers') && typeof maybe.headers === 'object');
+    if (!isOptionsObject) {
+      return { path, headers: options as Record<string, string> };
+    }
+    return { path: appendQueryParams(path, maybe.params), headers: maybe.headers };
+  }
+
+  public get<T = any>(path: string, options?: RequestOptions | Record<string, string>): Promise<T> {
+    const resolved = this.resolveRequestOptions(path, options);
+    return this.request<T>(resolved.path, { method: 'GET', headers: resolved.headers });
   }
 
   public post<T = any>(path: string, body?: any, headers?: Record<string, string>): Promise<T> {
@@ -130,8 +172,9 @@ class ApiClient {
     });
   }
 
-  public delete<T = any>(path: string, headers?: Record<string, string>): Promise<T> {
-    return this.request<T>(path, { method: 'DELETE', headers });
+  public delete<T = any>(path: string, options?: RequestOptions | Record<string, string>): Promise<T> {
+    const resolved = this.resolveRequestOptions(path, options);
+    return this.request<T>(resolved.path, { method: 'DELETE', headers: resolved.headers });
   }
 }
 

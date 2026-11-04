@@ -55,11 +55,11 @@ export function DashboardAIHero({ onNavigate }: { onNavigate: (path: string) => 
               <Sparkles className="h-4 w-4" />
             </div>
             <span className="text-xs font-bold tracking-tight uppercase text-indigo-300">
-              {persona?.companion_name ? `${persona.companion_name} · AI Companion` : 'B.Tech AI Learning Assistant'}
+              {persona?.agent_companion_name ? `${persona.agent_companion_name} · AI Companion` : 'B.Tech AI Learning Assistant'}
             </span>
-            {persona?.tone && (
+            {persona?.pedagogical_tone && (
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-200 border border-indigo-500/30 font-medium capitalize">
-                {persona.tone.replace(/-/g, ' ')}
+                {persona.pedagogical_tone.replace(/_/g, ' ').toLowerCase()}
               </span>
             )}
           </div>

@@ -45,14 +45,14 @@ export class ProgressService {
 
     // Real activity counts
     const lessonsCount = activities.filter((a) => {
-      const t = a.activity_type || (a as any).type || '';
+      const t: string = a.activity_type || (a as any).type || '';
       return t === 'COURSE_LESSON_COMPLETED' || t === 'LESSON_COMPLETED';
     }).length;
 
     let totalQuizScore = 0;
     let quizScoreCount = 0;
     const quizzesCount = activities.filter((a) => {
-      const t = a.activity_type || (a as any).type || '';
+      const t: string = a.activity_type || (a as any).type || '';
       const isQuiz = t === 'QUIZ_COMPLETED' || t === 'QUIZ_SUBMITTED';
       if (isQuiz) {
         const score = (a.metadata as any)?.score || (a.metadata as any)?.accuracy;
@@ -65,22 +65,22 @@ export class ProgressService {
     }).length;
 
     const codingCount = activities.filter((a) => {
-      const t = a.activity_type || (a as any).type || '';
+      const t: string = a.activity_type || (a as any).type || '';
       return t === 'CODING_PROBLEM_SOLVED' || t === 'CODING_SUBMISSION';
     }).length;
 
     const dsaCount = activities.filter((a) => {
-      const t = a.activity_type || (a as any).type || '';
+      const t: string = a.activity_type || (a as any).type || '';
       return t === 'DSA_PROBLEM_SOLVED' || t.includes('DSA');
     }).length;
 
     const papersCount = activities.filter((a) => {
-      const t = a.activity_type || (a as any).type || '';
+      const t: string = a.activity_type || (a as any).type || '';
       return t === 'PAPER_ANALYZED' || t.includes('RESEARCH') || t.includes('PAPER');
     }).length;
 
     const interviewsCount = activities.filter((a) => {
-      const t = a.activity_type || (a as any).type || '';
+      const t: string = a.activity_type || (a as any).type || '';
       return t === 'MOCK_INTERVIEW_COMPLETED' || t.includes('INTERVIEW');
     }).length;
 
@@ -220,7 +220,7 @@ export class ProgressService {
       { id: 'coding', title: 'Coding', metric: (codingCount + dsaCount) > 0 ? `${codingCount + dsaCount} Problem${(codingCount + dsaCount) > 1 ? 's' : ''} Solved` : '0 Problems Solved', ...overviewCards.coding },
       { id: 'revision', title: 'Revision', metric: '0 Items Due', ...overviewCards.revision },
       { id: 'projects', title: 'Projects', metric: `${projects.length} Total Project${projects.length !== 1 ? 's' : ''}`, ...overviewCards.projects },
-      { id: 'career', title: 'Career Prep', metric: interviewsCount > 0 ? `${interviewsCount} Mock Interviews` : 'Preparation pending', ...overviewCards.career },
+      { id: 'career', title: 'Career Prep', metric: interviewsCount > 0 ? `${interviewsCount} Mock Interviews` : 'Preparation pending', ...overviewCards.career_prep },
       { id: 'goals', title: 'Goals', metric: `${activeGoals} Active Goal${activeGoals !== 1 ? 's' : ''}`, ...overviewCards.learning_goals },
     ];
     Object.assign(overviewCardsList, overviewCards);

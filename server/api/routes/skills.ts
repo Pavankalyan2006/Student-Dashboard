@@ -13,7 +13,7 @@ skillsRouter.get('/profile', requireAuth, async (req: Request, res: Response) =>
     const skills = await SkillService.getStudentSkills(studentId);
     res.json({ success: true, data: skills });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -27,7 +27,7 @@ skillsRouter.post('/declare', requireAuth, async (req: Request, res: Response) =
     const skill = await SkillService.declareStudentSkill(studentId, skill_id, proficiency);
     res.status(201).json({ success: true, data: skill });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -38,7 +38,7 @@ skillsRouter.get('/evidence', requireAuth, async (req: Request, res: Response) =
     const evidence = await SkillService.getSkillEvidence(studentId, skillId);
     res.json({ success: true, data: evidence });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -49,7 +49,7 @@ skillsRouter.get('/gaps', requireAuth, async (req: Request, res: Response) => {
     const gaps = await SkillService.getSkillGaps(studentId, roleId);
     res.json({ success: true, data: gaps });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -60,7 +60,7 @@ skillsRouter.get('/assessments', requireAuth, async (req: Request, res: Response
     const list = await SkillAssessmentService.listAssessments(studentId);
     res.json({ success: true, data: list });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -79,7 +79,7 @@ skillsRouter.post('/assessments', requireAuth, async (req: Request, res: Respons
     );
     res.status(201).json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -89,7 +89,7 @@ skillsRouter.get('/assessments/:id', requireAuth, async (req: Request, res: Resp
     const assessment = await SkillAssessmentService.getAssessment(req.params.id, studentId);
     res.json({ success: true, data: assessment });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -104,7 +104,7 @@ skillsRouter.post('/assessments/:id/submit', requireAuth, async (req: Request, r
     });
     res.json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -114,7 +114,7 @@ skillsRouter.post('/assessments/:id/complete', requireAuth, async (req: Request,
     const result = await SkillAssessmentService.completeAssessment(req.params.id, studentId);
     res.json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -125,7 +125,7 @@ skillsRouter.get('/', requireAuth, async (req: Request, res: Response) => {
     const skills = await SkillService.listSkills(category);
     res.json({ success: true, data: skills });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -134,6 +134,6 @@ skillsRouter.get('/:id', requireAuth, async (req: Request, res: Response) => {
     const skill = await SkillService.getSkill(req.params.id);
     res.json({ success: true, data: skill });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });

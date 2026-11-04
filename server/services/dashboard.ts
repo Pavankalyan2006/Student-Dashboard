@@ -1,5 +1,5 @@
 import { db } from '../db/database';
-import { DashboardData, TodayPlanTask, CourseProgressItem, ActiveProjectItem } from '../models/types';
+import { DashboardData, TodayPlanTask, CourseProgressItem, ActiveProjectItem, UpcomingCalendarItem } from '../models/types';
 import { NotFoundError, AuthenticationError } from '../core/exceptions';
 import { logger } from '../core/logging';
 import { OnboardingService } from './onboardingService';
@@ -74,7 +74,7 @@ export class DashboardService {
             lesson_id: `lsn_${firstSub.id}_01`,
             lesson_title: `Unit 1 Foundations & Problem Formulations`,
             progress: 48,
-            next_topic: firstSub.units?.[0]?.name || 'Core Mathematical Principles & Invariants',
+            next_topic: firstSub.syllabus_units?.[0]?.title || 'Core Mathematical Principles & Invariants',
             category: firstSub.subject_type || 'Core Subject',
             total_lessons: 12,
             completed_lessons: 5,
@@ -92,18 +92,25 @@ export class DashboardService {
 
           // Sync upcoming assessment dates from student's schedule
           if (sem.academic_dates && sem.academic_dates.length > 0) {
-            baseDashboard.upcoming_items = sem.academic_dates.map((d, i) => {
-              const eventType = (d as any).event_type || d.type || 'ASSESSMENT';
-              const title = (d as any).title || d.label || 'Assessment';
+            baseDashboard.upcoming_items = sem.academic_dates.map((d) => {
+              const eventType = d.type || 'OTHER';
               const subject = sem.subjects.find((s) => s.id === d.subject_id);
+              const label = d.label || 'Assessment';
+              const isExam = /EXAM|TEST|END_SEMESTER/.test(eventType);
               return {
                 id: d.id,
-                title: `${title} (${String(eventType).replace(/_/g, ' ')})`,
-                course_name: (d as any).subject_name || subject?.name || sem.subjects[i % sem.subjects.length]?.name || 'Academic Assessment',
+                title: subject ? `${label} · ${subject.name}` : label,
                 date: d.date,
                 time: '10:00 AM',
-                type: (String(eventType).includes('EXAM') || String(eventType).includes('TEST') ? 'exam' : 'assignment') as 'exam' | 'assignment',
-                priority: 'high' as const,
+                type: (eventType === 'PROJECT_REVIEW'
+                  ? 'milestone'
+                  : eventType === 'QUIZ'
+                    ? 'quiz'
+                    : isExam
+                      ? 'exam'
+                      : 'assignment') as UpcomingCalendarItem['type'],
+                status: new Date(d.date).getTime() < Date.now() ? 'Past' : 'Upcoming',
+                link: '/semester',
               };
             });
           }
@@ -116,8 +123,9 @@ export class DashboardService {
             title: p.title,
             progress: p.status === 'COMPLETED' ? 100 : p.status === 'IN_PROGRESS' ? 65 : 20,
             current_milestone: p.status === 'COMPLETED' ? 'Production Ready / Documentation Finalized' : 'Architecture & Core Feature Implementation',
-            due_date: 'End of Semester',
-            status: p.status === 'COMPLETED' ? 'completed' : 'active',
+            next_step: p.status === 'COMPLETED' ? 'Add it to your resume' : 'Continue core feature implementation',
+            tech_stack: p.technologies || [],
+            link: '/projects',
           }));
         }
 

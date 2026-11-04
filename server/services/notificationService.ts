@@ -92,6 +92,7 @@ export class NotificationService {
       message: string;
       entity_type?: string;
       entity_id?: string;
+      link?: string;
     }
   ): Promise<NotificationItem> {
     if (typeof studentIdOrPayload === 'string') {
@@ -107,10 +108,12 @@ export class NotificationService {
     return { success: deleted };
   }
 
-  public static async generateReminders(studentId: string): Promise<NotificationItem[]> {
+  public static async generateReminders(
+    studentId: string
+  ): Promise<NotificationItem[] & { generated: number; message: string }> {
     const prefs = await this.getPreferences(studentId);
     if (prefs && prefs.in_app === false) {
-      return [];
+      return Object.assign([] as NotificationItem[], { generated: 0, message: 'In-app notifications are disabled' });
     }
 
     const created: NotificationItem[] = [];
@@ -176,6 +179,6 @@ export class NotificationService {
       generated: created.length,
       message: created.length > 0 ? `Generated ${created.length} reminders` : 'No new reminders needed',
     });
-    return result as any;
+    return result;
   }
 }

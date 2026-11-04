@@ -89,7 +89,7 @@ describe('Unified Career System E2E Master Suite (All 8 Pages & Cross-Module Int
       expect(fullResume).toBeDefined();
       expect(fullResume.resume.title).toBe('Full Stack & ML Specialist Resume');
       expect(fullResume.resume.target_role).toBe('Software Development Engineer');
-      expect(fullResume.profile.full_name).toBeDefined();
+      expect(fullResume.profile!.full_name).toBeDefined();
       expect(fullResume.education.length).toBeGreaterThanOrEqual(1);
       expect(fullResume.skills.length).toBeGreaterThanOrEqual(1);
 
@@ -239,16 +239,16 @@ describe('Unified Career System E2E Master Suite (All 8 Pages & Cross-Module Int
       expect(targetJob).toBeDefined();
 
       const newApp = await LearningModulesService.createApplication(studentA, {
-        company_name: targetJob.company || targetJob.company_name || 'Discovered Company',
+        company_name: targetJob.company_name || 'Discovered Company',
         role: targetJob.title,
         location: targetJob.location || 'Remote',
-        application_url: targetJob.url || targetJob.job_url,
+        application_url: targetJob.job_url,
         notes: `Imported directly from Jobs Discovery platform.`,
         status: 'SAVED',
       });
 
       expect(newApp).toBeDefined();
-      expect(newApp.company_name).toBe(targetJob.company || targetJob.company_name);
+      expect(newApp.company_name).toBe(targetJob.company_name);
       expect(newApp.status).toBe('SAVED');
 
       // Verify it appears in student's Application Tracker list

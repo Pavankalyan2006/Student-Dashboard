@@ -17,7 +17,7 @@ goalsRouter.get('/goals', requireAuth, async (req: Request, res: Response) => {
     });
     res.json({ success: true, data: goals });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -28,7 +28,7 @@ goalsRouter.post('/goals', requireAuth, async (req: Request, res: Response) => {
     const goal = await GoalService.createGoal(studentId, req.body);
     res.status(201).json({ success: true, data: goal });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -39,7 +39,7 @@ goalsRouter.get('/goals/:id', requireAuth, async (req: Request, res: Response) =
     const goal = await GoalService.getGoal(req.params.id, studentId);
     res.json({ success: true, data: goal });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -50,7 +50,7 @@ goalsRouter.patch('/goals/:id', requireAuth, async (req: Request, res: Response)
     const updated = await GoalService.updateGoal(req.params.id, studentId, req.body);
     res.json({ success: true, data: updated });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -61,7 +61,7 @@ goalsRouter.post('/goals/:id/milestones/:milestoneId/toggle', requireAuth, async
     const updated = await GoalService.toggleMilestone(studentId, req.params.id, req.params.milestoneId);
     res.json({ success: true, data: updated });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -72,7 +72,7 @@ goalsRouter.delete('/goals/:id', requireAuth, async (req: Request, res: Response
     await GoalService.deleteGoal(req.params.id, studentId);
     res.json({ success: true, message: 'Goal deleted successfully' });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -83,7 +83,7 @@ goalsRouter.get('/goals/:id/recommendations', requireAuth, async (req: Request, 
     const recs = await GoalService.getGoalRecommendations(req.params.id, studentId);
     res.json({ success: true, data: recs });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 

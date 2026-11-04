@@ -17,7 +17,7 @@ contextRouter.post('/resolve', requireAuth, async (req: Request, res: Response) 
     const resolved = await ContextService.resolveContextItems(studentId, items);
     res.json({ success: true, data: resolved });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -32,7 +32,7 @@ contextRouter.post('/build-prompt', requireAuth, async (req: Request, res: Respo
     const result = await ContextService.buildMultiSourcePrompt(studentId, prompt, items || []);
     res.json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -91,6 +91,6 @@ contextRouter.get('/options', requireAuth, async (req: Request, res: Response) =
 
     res.json({ success: true, data: options });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });

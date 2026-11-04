@@ -27,6 +27,8 @@ import {
   KnowledgeCollection,
   KnowledgeGraphData,
   InternshipApplication,
+  ApplicationStatus,
+  ApplicationTimelineEvent,
   JobDescriptionSkillAnalysis,
 } from '../models/learningModulesTypes';
 import { db } from '../db/database';
@@ -139,6 +141,7 @@ export class LearningModulesService {
     {
       id: 'ds_iris',
       name: 'Iris Flower Classification',
+      source: 'BUILT_IN',
       task_type: 'CLASSIFICATION',
       features: ['sepal_length', 'sepal_width', 'petal_length', 'petal_width'],
       target_column: 'species',
@@ -153,6 +156,7 @@ export class LearningModulesService {
     {
       id: 'ds_housing',
       name: 'California Housing Price Prediction',
+      source: 'BUILT_IN',
       task_type: 'REGRESSION',
       features: ['MedInc', 'HouseAge', 'AveRooms', 'AveBedrms', 'Population', 'AveOccup'],
       target_column: 'MedHouseVal',
@@ -998,8 +1002,15 @@ export class LearningModulesService {
     return deck;
   }
 
-  public static async createFlashcardDeck(studentId: string, data: Partial<FlashcardDeck>): Promise<FlashcardDeck> {
-    const subject = (data.subject || (data as any).subject_name || '').trim();
+  public static async createFlashcardDeck(
+    studentId: string,
+    data: Omit<Partial<FlashcardDeck>, 'cards'> & {
+      cards?: Array<Pick<Flashcard, 'front' | 'back'> & Partial<Flashcard>>;
+      /** Legacy alias for subject. */
+      subject_name?: string;
+    }
+  ): Promise<FlashcardDeck> {
+    const subject = (data.subject || data.subject_name || '').trim();
     if (!data.title?.trim() || !subject) {
       throw new ValidationError('Title and subject are required');
     }
@@ -1011,8 +1022,8 @@ export class LearningModulesService {
       id: `fc_${deckId}_${idx + 1}`,
       deck_id: deckId,
       student_id: studentId,
-      front: c.front.trim(),
-      back: c.back.trim(),
+      front: String(c.front || '').trim(),
+      back: String(c.back || '').trim(),
       type: c.type || 'CONCEPT',
       topic: c.topic || subject || 'General',
       difficulty: c.difficulty || 'MEDIUM',
@@ -1337,7 +1348,7 @@ export class LearningModulesService {
         card.interval_days = grade === 5 ? 7 : (grade === 3 ? 3 : 6);
       } else {
         const bonus = grade === 5 ? 1.3 : (grade === 3 ? 0.85 : 1.0);
-        card.interval_days = Math.max(1, Math.round(card.interval_days * card.ease_factor * bonus));
+        card.interval_days = Math.max(1, Math.round((card.interval_days || 1) * card.ease_factor * bonus));
       }
 
       card.repetition_count += 1;
@@ -1355,7 +1366,7 @@ export class LearningModulesService {
 
     // Calculate next due date
     const nextDate = new Date();
-    nextDate.setDate(nextDate.getDate() + card.interval_days);
+    nextDate.setDate(nextDate.getDate() + (card.interval_days || 1));
     card.next_review = nextDate.toISOString().split('T')[0];
     card.next_review_at = card.next_review;
     card.last_reviewed_at = new Date().toISOString();
@@ -1619,7 +1630,7 @@ Output JSON format:
       throw new NotFoundError(`Document '${documentId}' not found or unauthorized`);
     }
 
-    const material = await KnowledgeBaseService.generateStudyMaterials(studentId, {
+    const material = await KnowledgeBaseService.generateStudyMaterial(studentId, {
       document_id: documentId,
       type: 'FLASHCARDS',
       target_count: targetCount,
@@ -1698,12 +1709,11 @@ Output JSON format:
     const plans = await this.getStudyPlans(studentId);
     let plan = plans[0];
     if (!plan) {
-      plan = await this.createPlan(studentId, {
+      plan = await this.createStudyPlan(studentId, {
         title: `Spaced Revision Plan: ${deck.subject}`,
-        target_role: 'Active Recall Mastery',
-        semester: 6,
-        target_hours_per_week: 10,
-        subjects: [deck.subject],
+        type: 'REVISION',
+        description: 'Active recall flashcard revision schedule',
+        total_hours_target: 10,
       });
     }
 
@@ -1711,14 +1721,17 @@ Output JSON format:
     const taskId = `task_rev_${Date.now()}`;
     const newTask: StudyPlanTask = {
       id: taskId,
+      plan_id: plan.id,
+      student_id: studentId,
       title: `Flashcard Spaced Review: ${deck.title}`,
-      description: `Active recall review of ${deck.due_count || deck.total_cards} cards scheduled for ${deck.subject}.`,
+      notes: `Active recall review of ${deck.due_count || deck.total_cards} cards scheduled for ${deck.subject}.`,
       subject: deck.subject,
-      scheduled_date: earliestDue,
+      topic: deck.title,
+      date: earliestDue,
       duration_minutes: durationMinutes,
       priority: 'HIGH',
       status: 'PENDING',
-      type: 'REVISION',
+      created_at: new Date().toISOString(),
     };
 
     plan.tasks.push(newTask);
@@ -2133,12 +2146,6 @@ Output JSON format:
     return this.getFlashcardDeckById(studentId, deckId);
   }
 
-  public static async getDueFlashcards(studentId: string): Promise<Flashcard[]> {
-    const decks = await this.getFlashcardDecks(studentId);
-    const allCards = decks.flatMap((d) => d.cards || []);
-    return allCards.filter((c) => c.state !== 'MASTERED');
-  }
-
   public static async reviewCard(studentId: string, deckId: string, cardId: string, rating: any): Promise<Flashcard> {
     return this.reviewFlashcard(studentId, deckId, cardId, rating);
   }
@@ -2146,7 +2153,7 @@ Output JSON format:
   public static async getExperimentById(studentId: string, labId: string, experimentId?: string): Promise<any> {
     const lab = await this.getLabById(studentId, labId);
     if (!experimentId) return lab;
-    const exp = lab.experiments.find((e) => e.id === experimentId);
+    const exp = lab.experiments.find((e: any) => e.id === experimentId);
     return exp || lab;
   }
 

@@ -287,7 +287,7 @@ Additional Context: ${JSON.stringify(context || {})}`;
           ]
         };
       } catch (err) {
-        logger.warn('AI Gate Tutor call failed, using deterministic educational fallback', err);
+        logger.warn('AI Gate Tutor call failed, using deterministic educational fallback', { error: err instanceof Error ? err.message : String(err) });
       }
     }
 
