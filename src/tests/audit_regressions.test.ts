@@ -142,3 +142,26 @@ describe('BUG-010: in-memory store can be snapshotted and restored', () => {
     }
   });
 });
+
+describe('BUG-011: DSA 150 starter code compiles', () => {
+  it('every JavaScript starter parses', async () => {
+    const { TOP150_PROBLEMS } = await import('../../server/db/dsa150Catalog');
+    const broken: string[] = [];
+    for (const p of TOP150_PROBLEMS as any[]) {
+      const js: string | undefined = p.starter_code?.javascript;
+      if (!js) continue;
+      try {
+        // eslint-disable-next-line no-new-func
+        new Function(js.replace(/require\.main === module/g, 'false'));
+      } catch {
+        broken.push(p.title);
+      }
+    }
+    expect(broken).toEqual([]);
+  });
+
+  it('DSA topics carry timestamps', async () => {
+    const { seedDSATopics } = await import('../../server/db/seedDsa');
+    expect(seedDSATopics.every((t) => !!t.created_at && !!t.updated_at)).toBe(true);
+  });
+});

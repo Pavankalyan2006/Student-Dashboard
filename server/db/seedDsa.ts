@@ -1,7 +1,13 @@
 import { DSATopic, Algorithm, DSAProblem } from '../models/dsaTypes';
 import { TOP150_TOPICS, TOP150_PROBLEMS } from './dsa150Catalog';
 
-export const seedDSATopics: DSATopic[] = TOP150_TOPICS;
+const CATALOG_SEEDED_AT = '2026-01-01T00:00:00.000Z';
+
+export const seedDSATopics: DSATopic[] = TOP150_TOPICS.map((topic) => ({
+  created_at: CATALOG_SEEDED_AT,
+  updated_at: CATALOG_SEEDED_AT,
+  ...topic,
+}));
 
 export const seedAlgorithms: Algorithm[] = [
   {
