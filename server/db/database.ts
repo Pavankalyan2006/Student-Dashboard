@@ -5900,6 +5900,10 @@ print(power_mod(2, 10, 1000))  # Output: 24
 
   public async getDocumentPages(documentId: string, studentId: string): Promise<DocumentPage[]> {
     await this.initialize();
+    const doc = this.documents.get(documentId);
+    if (!doc || doc.student_id !== studentId) {
+      return [];
+    }
     return this.documentPages.get(documentId) || [];
   }
 

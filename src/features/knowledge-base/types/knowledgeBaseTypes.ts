@@ -1,7 +1,7 @@
 // src/features/knowledge-base/types/knowledgeBaseTypes.ts
 // Frontend domain models and types for AI Knowledge Base
 
-import { DocumentCardData } from '../../../types';
+import { DocumentCardData } from '../../documents/types/document';
 
 export type KnowledgeCategory =
   | 'COURSEWORK'
@@ -19,6 +19,7 @@ export interface KnowledgeCollection {
   id: string;
   student_id: string;
   name: string;
+  code?: string;
   description?: string;
   category: KnowledgeCategory;
   subject?: string;
@@ -192,6 +193,7 @@ export interface KnowledgeDashboardStats {
     title: string;
     docCount: number;
     collectionCount: number;
+    collection_id?: string;
   }>;
   collections_breakdown: Array<{
     category: KnowledgeCategory;
@@ -202,6 +204,7 @@ export interface KnowledgeDashboardStats {
 
 export interface CreateCollectionInput {
   name: string;
+  code?: string;
   description?: string;
   category: KnowledgeCategory;
   subject?: string;
@@ -214,6 +217,7 @@ export interface CreateCollectionInput {
 
 export interface UpdateCollectionInput {
   name?: string;
+  code?: string;
   description?: string;
   category?: KnowledgeCategory;
   subject?: string;
@@ -248,4 +252,11 @@ export interface GenerateStudyMaterialInput {
   type: StudyMaterialType;
   topic?: string;
   target_count?: number;
+}
+
+export interface KnowledgeSearchFilters {
+  query?: string;
+  limit?: number;
+  document_id?: string;
+  collection_id?: string;
 }

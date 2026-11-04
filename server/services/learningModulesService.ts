@@ -1619,7 +1619,7 @@ Output JSON format:
       throw new NotFoundError(`Document '${documentId}' not found or unauthorized`);
     }
 
-    const material = await KnowledgeBaseService.generateStudyMaterials(studentId, {
+    const material = await KnowledgeBaseService.generateStudyMaterial(studentId, {
       document_id: documentId,
       type: 'FLASHCARDS',
       target_count: targetCount,

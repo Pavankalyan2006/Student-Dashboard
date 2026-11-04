@@ -21,7 +21,7 @@ import {
   Download,
   Upload,
 } from 'lucide-react';
-import { DocumentCardData } from '../../../types';
+import { DocumentCardData } from '../../documents/types/document';
 import { KnowledgeCollection } from '../types/knowledgeBaseTypes';
 
 interface KnowledgeDocumentsViewProps {
@@ -236,7 +236,7 @@ export const KnowledgeDocumentsView: React.FC<KnowledgeDocumentsViewProps> = ({
                     <div className="flex items-center gap-3 text-xs text-slate-400 flex-wrap">
                       <span>{doc.original_filename}</span>
                       <span>•</span>
-                      <span>{formatBytes(doc.size_bytes || 0)}</span>
+                      <span>{formatBytes(doc.file_size || 0)}</span>
                       {doc.page_count !== undefined && doc.page_count > 0 && (
                         <>
                           <span>•</span>

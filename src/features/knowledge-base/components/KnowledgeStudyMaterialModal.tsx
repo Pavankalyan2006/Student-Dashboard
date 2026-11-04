@@ -23,7 +23,7 @@ import {
   QuizQuestionItem,
   FormulaItem,
 } from '../types/knowledgeBaseTypes';
-import { DocumentCardData } from '../../../types';
+import { DocumentCardData } from '../../documents/types/document';
 import { knowledgeBaseApi } from '../api/knowledgeBaseApi';
 
 interface KnowledgeStudyMaterialModalProps {

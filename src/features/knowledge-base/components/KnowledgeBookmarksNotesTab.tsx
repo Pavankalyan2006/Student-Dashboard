@@ -4,7 +4,7 @@
 import React, { useState } from 'react';
 import { Bookmark, StickyNote, Trash2, BookOpen, Plus, Tag } from 'lucide-react';
 import { KnowledgeBookmark, KnowledgeAnnotationNote } from '../types/knowledgeBaseTypes';
-import { DocumentCardData } from '../../../types';
+import { DocumentCardData } from '../../documents/types/document';
 
 interface KnowledgeBookmarksNotesTabProps {
   bookmarks: KnowledgeBookmark[];

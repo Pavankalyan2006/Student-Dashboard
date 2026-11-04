@@ -1,44 +1,41 @@
 // server/models/knowledgeBaseTypes.ts
-// Domain models and interfaces for the B.Tech AI Knowledge Base module
+// Domain models for the AI Knowledge Base, matching what KnowledgeBaseService stores and returns.
+// Keep in sync with src/features/knowledge-base/types/knowledgeBaseTypes.ts.
 
-import { DocumentMetadata, DocumentProcessingStatus, DocumentCitation } from './types';
+import { DocumentCardData } from './types';
 
-export type KnowledgeVisibility = 'PRIVATE' | 'COURSE_SHARED' | 'PUBLIC';
-
-export type KnowledgeResourceType =
-  | 'DOCUMENT_UPLOAD'
-  | 'OFFICIAL_DOCUMENTATION'
-  | 'EDUCATIONAL_ARTICLE'
+export type KnowledgeCategory =
+  | 'COURSEWORK'
+  | 'TEXTBOOK'
   | 'RESEARCH_PAPER'
-  | 'VIDEO_LINK'
-  | 'LECTURE_RESOURCE'
-  | 'COURSE_WEBPAGE'
-  | 'REFERENCE_WEBSITE'
-  | 'PERSONAL_STUDY_NOTE';
-
-export type ResourceIndexingStatus =
-  | 'LINK_SAVED'
-  | 'CONTENT_RETRIEVED'
-  | 'CONTENT_INDEXED'
-  | 'RETRIEVAL_UNAVAILABLE';
+  | 'LAB_MANUAL'
+  | 'LECTURE_NOTES'
+  | 'EXAM_PAPER'
+  | 'GATE_EXAM'
+  | 'INTERVIEW_PREP'
+  | 'PROJECT_DOCS'
+  | 'GENERAL_STUDY';
 
 export interface KnowledgeCollection {
   id: string;
   student_id: string;
   name: string;
   code?: string;
-  description: string;
-  color?: string;
-  icon?: string;
+  description?: string;
+  category: KnowledgeCategory;
   subject?: string;
-  course_id?: string;
-  course_title?: string;
   semester?: number;
   tags: string[];
+  color: string;
+  icon: string;
+  is_favorite: boolean;
+  visibility: 'PRIVATE' | 'SHARED' | 'PUBLIC';
   document_ids: string[];
   resource_ids: string[];
-  is_default?: boolean;
-  visibility: KnowledgeVisibility;
+  document_count: number;
+  resource_count: number;
+  notes_count: number;
+  total_size_bytes: number;
   created_at: string;
   updated_at: string;
 }
@@ -47,217 +44,220 @@ export interface KnowledgeResource {
   id: string;
   student_id: string;
   collection_id?: string;
-  collection_name?: string;
   title: string;
-  resource_type: KnowledgeResourceType;
-  url?: string;
   description?: string;
-  subject?: string;
-  course_id?: string;
-  course_title?: string;
-  semester?: number;
-  topic?: string;
-  tags: string[];
-  personal_notes?: string;
-  indexing_status: ResourceIndexingStatus;
-  extracted_text?: string;
-  indexed_chunk_count?: number;
-  last_retrieved_at?: string;
-  error_message?: string;
+  url: string;
+  type: 'LINK' | 'VIDEO' | 'PAPER' | 'CODE_REPO';
   created_at: string;
-  updated_at: string;
 }
-
-export interface KnowledgeDocumentVersion {
-  version_number: number;
-  storage_key: string;
-  file_hash: string;
-  file_size: number;
-  uploaded_at: string;
-  change_notes?: string;
-}
-
-export interface KnowledgeDocumentEntity {
-  id: string;
-  student_id: string;
-  title: string;
-  original_filename: string;
-  description?: string;
-  file_type: string;
-  mime_type: string;
-  file_size: number;
-  file_hash: string;
-  storage_key: string;
-  collection_id?: string;
-  collection_name?: string;
-  subject?: string;
-  course_id?: string;
-  course_title?: string;
-  semester?: number;
-  topic?: string;
-  tags: string[];
-  visibility: KnowledgeVisibility;
-  status: DocumentProcessingStatus;
-  page_count: number;
-  chunk_count: number;
-  current_version: number;
-  versions: KnowledgeDocumentVersion[];
-  is_favorite: boolean;
-  is_bookmarked: boolean;
-  processing_started_at?: string;
-  processing_completed_at?: string;
-  processing_error?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export type KnowledgeBookmarkType =
-  | 'DOCUMENT'
-  | 'PAGE'
-  | 'SECTION'
-  | 'AI_ANSWER'
-  | 'EXCERPT';
 
 export interface KnowledgeBookmark {
   id: string;
   student_id: string;
   document_id: string;
-  document_title: string;
-  collection_id?: string;
-  page_number?: number;
-  section_title?: string;
-  excerpt?: string;
-  notes?: string;
-  type: KnowledgeBookmarkType;
+  page_number: number;
+  title: string;
+  note?: string;
   created_at: string;
-  updated_at: string;
 }
 
 export interface KnowledgeAnnotationNote {
   id: string;
   student_id: string;
   document_id: string;
-  document_title: string;
-  collection_id?: string;
-  page_number?: number;
-  section_title?: string;
-  content: string;
-  tags: string[];
-  color?: string;
+  page_number: number;
+  selected_text?: string;
+  note_text: string;
+  color: string;
   created_at: string;
   updated_at: string;
 }
 
-export type KnowledgeAskScope =
-  | 'ALL_KNOWLEDGE'
-  | 'COLLECTION'
-  | 'COURSE'
-  | 'DOCUMENTS'
-  | 'CURRENT_DOCUMENT';
-
-export interface KnowledgeAskRequest {
-  question: string;
-  scope: KnowledgeAskScope;
-  collection_id?: string;
-  course_id?: string;
-  document_ids?: string[];
-  current_document_id?: string;
-  current_page?: number;
-  conversation_id?: string;
-}
-
-export interface KnowledgeSourceCitation {
-  citation_id: string;
+export interface GroundedCitation {
   document_id: string;
   document_title: string;
-  collection_id?: string;
-  collection_name?: string;
   page_number: number;
-  section_title?: string;
   chunk_id: string;
-  quoted_text: string;
-  similarity_score: number;
-}
-
-export interface KnowledgeAskResponse {
-  answer: string;
-  citations: KnowledgeSourceCitation[];
-  confidence: 'GROUNDED' | 'PARTIAL' | 'NOT_FOUND';
-  disclaimer?: string;
-  scope_used: {
-    scope: KnowledgeAskScope;
-    searched_document_count: number;
-    searched_chunk_count: number;
-  };
-  conversation_id: string;
-  created_at: string;
+  snippet: string;
+  confidence: number;
 }
 
 export interface KnowledgeQuestionRecord {
   id: string;
   student_id: string;
-  conversation_id: string;
+  document_id?: string;
+  collection_id?: string;
   question: string;
   answer: string;
-  scope: KnowledgeAskScope;
-  scope_target_name?: string;
-  citations: KnowledgeSourceCitation[];
-  confidence: 'GROUNDED' | 'PARTIAL' | 'NOT_FOUND';
+  citations: GroundedCitation[];
+  key_concepts: string[];
+  follow_up_questions: string[];
+  confidence_score: number;
   created_at: string;
 }
 
 export type StudyMaterialType =
-  | 'CONCISE_SUMMARY'
-  | 'DETAILED_SUMMARY'
-  | 'REVISION_NOTES'
+  | 'SUMMARY'
   | 'FLASHCARDS'
-  | 'PRACTICE_QUIZ'
-  | 'VIVA_QUESTIONS'
-  | 'INTERVIEW_QUESTIONS'
-  | 'TOPIC_COMPARISON';
+  | 'QUIZ'
+  | 'FORMULA_SHEET'
+  | 'STUDY_GUIDE'
+  | 'DISCUSSION_POINTS';
 
-export interface StudyMaterialGenerationRequest {
-  document_id?: string;
-  collection_id?: string;
-  topic?: string;
-  output_type: StudyMaterialType;
-  difficulty?: 'EASY' | 'MEDIUM' | 'HARD';
-  length?: 'SHORT' | 'STANDARD' | 'COMPREHENSIVE';
-  page_range?: { start_page: number; end_page: number };
+export interface FlashcardItem {
+  id: string;
+  question: string;
+  answer: string;
+  difficulty: 'EASY' | 'MEDIUM' | 'HARD';
+  topic: string;
+}
+
+export interface QuizQuestionItem {
+  id: string;
+  question: string;
+  options: string[];
+  correct_answer_index: number;
+  explanation: string;
+  topic: string;
+}
+
+export interface FormulaItem {
+  name: string;
+  formula: string;
+  description: string;
+  variables: string;
+  complexity?: string;
+}
+
+export interface SummaryContent {
+  title?: string;
+  summary: string;
+  key_takeaways: string[];
+  prerequisites?: string[];
+  core_formulas?: string[];
 }
 
 export interface GeneratedStudyMaterial {
   id: string;
   student_id: string;
+  source_document_id: string;
+  type: StudyMaterialType;
   title: string;
-  output_type: StudyMaterialType;
-  source_document_id?: string;
-  source_document_title?: string;
-  source_collection_id?: string;
-  topic?: string;
-  content: string; // Markdown formatted
-  structured_data?: {
-    flashcards?: Array<{ front: string; back: string; tags: string[] }>;
-    quiz_questions?: Array<{
-      question: string;
-      options: string[];
-      correct_answer_index: number;
-      explanation: string;
-    }>;
-    viva_questions?: Array<{ question: string; ideal_answer: string; key_points: string[] }>;
+  content: {
+    summary?: string;
+    key_takeaways?: string[];
+    prerequisites?: string[];
+    flashcards?: FlashcardItem[];
+    quiz_questions?: QuizQuestionItem[];
+    formula_sheet?: FormulaItem[];
+    study_guide_markdown?: string;
   };
-  saved_to_module?: 'notes' | 'flashcards' | 'quiz';
-  saved_module_id?: string;
   created_at: string;
+}
+
+export interface KnowledgeSearchMatch {
+  document_id: string;
+  document_title: string;
+  page_number: number;
+  chunk_id: string;
+  snippet: string;
+  score: number;
+  mime_type?: string;
+}
+
+export interface KnowledgeSearchResult {
+  query: string;
+  total_matches: number;
+  matches: KnowledgeSearchMatch[];
+  collections: KnowledgeCollection[];
 }
 
 export interface KnowledgeDashboardStats {
   total_documents: number;
   total_collections: number;
   indexed_documents: number;
-  total_resources: number;
+  pending_documents: number;
+  failed_documents: number;
   total_bookmarks: number;
+  total_notes: number;
   total_questions_asked: number;
-  total_study_materials: number;
-  queue_pending_count: number;
+  storage_used_bytes: number;
+  storage_limit_bytes: number;
+  is_onboarding: boolean;
+  recent_documents: DocumentCardData[];
+  recent_resources?: KnowledgeResource[];
+  recent_bookmarks?: KnowledgeBookmark[];
+  recent_questions?: KnowledgeQuestionRecord[];
+  processing_queue?: DocumentCardData[];
+  course_knowledge_bases?: Array<{
+    code: string;
+    title: string;
+    docCount: number;
+    collectionCount: number;
+    collection_id?: string;
+  }>;
+  collections_breakdown: Array<{
+    category: KnowledgeCategory;
+    count: number;
+    label: string;
+  }>;
+}
+
+export interface CreateCollectionInput {
+  name: string;
+  code?: string;
+  description?: string;
+  category: KnowledgeCategory;
+  subject?: string;
+  semester?: number;
+  tags?: string[];
+  color?: string;
+  icon?: string;
+  visibility?: 'PRIVATE' | 'SHARED' | 'PUBLIC';
+}
+
+export interface UpdateCollectionInput {
+  name?: string;
+  code?: string;
+  description?: string;
+  category?: KnowledgeCategory;
+  subject?: string;
+  semester?: number;
+  tags?: string[];
+  color?: string;
+  icon?: string;
+  is_favorite?: boolean;
+  visibility?: 'PRIVATE' | 'SHARED' | 'PUBLIC';
+}
+
+export interface AskKnowledgeQuestionInput {
+  question: string;
+  document_id?: string;
+  collection_id?: string;
+  stream?: boolean;
+}
+
+export interface AskKnowledgeQuestionResponse {
+  id: string;
+  question: string;
+  answer: string;
+  citations: GroundedCitation[];
+  key_concepts: string[];
+  follow_up_questions: string[];
+  confidence_score: number;
+  created_at: string;
+}
+
+export interface GenerateStudyMaterialInput {
+  document_id: string;
+  type: StudyMaterialType;
+  topic?: string;
+  target_count?: number;
+}
+
+export interface KnowledgeSearchFilters {
+  query?: string;
+  limit?: number;
+  document_id?: string;
+  collection_id?: string;
 }
