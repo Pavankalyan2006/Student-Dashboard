@@ -286,10 +286,14 @@ export class GeminiProvider implements AIProvider {
       };
     }
 
-    // Case 3: Default Academic Response
+    // Case 3: No model answered. Say so plainly instead of returning canned text
+    // that reads like a real AI answer.
+    const reason = this.apiKey
+      ? 'The AI provider request failed, so no answer was generated.'
+      : 'No AI provider is configured on the server (GEMINI_API_KEY is not set), so no answer was generated.';
     return {
-      text: `### Academic Overview\n\n1. Technical Invariant: Engineering systems enforce deterministic properties.\n2. Mathematical Foundations: Relationships are modeled using established physical and algorithmic theorems.\n3. Exam Practice: Verify problem constraints and formulate clear, step-by-step solutions.\n\n*Grounded response from EduVerse AI Intelligence Layer.*`,
-      usage: { promptTokens: 35, completionTokens: 40, totalTokens: 75 },
+      text: `**AI unavailable.** ${reason}\n\nPlease try again later, or ask your administrator to configure the AI provider.`,
+      usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
     };
   }
 }

@@ -694,16 +694,9 @@ export class AgentHandlers {
               conceptSummary: task.params.query || 'Academic concept analysis',
             },
             evidenceType: 'AI_RECOMMENDATION',
-            sources: [
-              {
-                sourceType: 'COURSE_DATABASE',
-                sourceId: 'curr_cs401',
-                title: 'University Engineering Curriculum Reference',
-                link: '/courses',
-                retrievedAt: new Date().toISOString(),
-                confidence: 0.95,
-              },
-            ],
+            // Nothing was retrieved for a general explanation, so cite nothing rather than
+            // attaching a placeholder "curriculum reference" that does not exist.
+            sources: [],
           };
         }
       }
