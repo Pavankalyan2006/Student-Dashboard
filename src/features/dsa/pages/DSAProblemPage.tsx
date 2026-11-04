@@ -89,7 +89,7 @@ export const DSAProblemPage: React.FC<DSAProblemPageProps> = ({ problemId, onNav
     setLoading(true);
     Promise.all([
       dsaApi.getProblem(problemId),
-      dsaApi.getBookmarks().catch(() => []),
+      dsaApi.getBookmarks().catch((): string[] => []),
       dsaApi.getDraft(problemId).catch(() => null),
     ])
       .then(([prob, bookmarks, draft]) => {

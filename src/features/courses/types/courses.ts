@@ -186,6 +186,7 @@ export interface AcademicSubjectOption {
   units_count: number;
   topics_count: number;
   is_enrolled: boolean;
+  existing_course_id?: string;
 }
 
 export interface CourseAIAssistantRequest {

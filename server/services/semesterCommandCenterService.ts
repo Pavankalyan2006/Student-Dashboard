@@ -621,81 +621,89 @@ export const semesterCommandCenterService = {
           config = {
             ...config,
             semester_number: edu.current_semester || config.semester_number,
-            branch: edu.branch || config.branch,
+            branch: (edu.branch as AcademicSemesterConfig['branch']) || config.branch,
           };
         }
 
         if (syllabus && syllabus.subjects && syllabus.subjects.length > 0) {
           const colors = ['#2563EB', '#4F46E5', '#7C3AED', '#0891B2', '#059669', '#D97706'];
-          activeSubjects = syllabus.subjects.map((s, idx) => ({
-            id: s.id,
-            semester_id: config.id,
-            name: s.name,
-            code: s.code || `CS${config.semester_number}0${idx + 1}`,
-            credits: s.credits || 4,
-            faculty_name: s.faculty_name || 'Prof. Faculty Member',
-            subject_type: (s.subject_type as any) || 'THEORY',
-            difficulty: (s.difficulty as any) || 'MODERATE',
-            progress_percent: s.progress_percent || Math.min(95, Math.max(30, (idx + 1) * 20)),
-            syllabus_remaining_percent: Math.max(5, 100 - (s.progress_percent || Math.min(95, Math.max(30, (idx + 1) * 20)))),
-            target_grade: 'A',
-            units: ((s.units && s.units.length > 0) ? s.units : (s as any).syllabus_units && (s as any).syllabus_units.length > 0 ? (s as any).syllabus_units : null)
-              ? (((s.units && s.units.length > 0) ? s.units : (s as any).syllabus_units) as any[]).map((u, ui) => ({
-                  id: u.id || `unit_${s.id}_${ui}`,
-                  subject_id: s.id,
-                  unit_number: u.unit_number || ui + 1,
-                  name: u.name || u.title || `Unit ${ui + 1}`,
-                  estimated_hours: 10,
-                  progress_percent: 50,
-                  topics: (u.topics || []).map((t: any, ti: number) => ({
-                    id: `topic_${s.id}_${ui}_${ti}`,
-                    unit_id: `unit_${s.id}_${ui}`,
-                    name: typeof t === 'string' ? t : t.name || `Topic ${ti + 1}`,
-                    status: 'IN_PROGRESS' as const,
-                    difficulty: 'MEDIUM' as const,
-                    revision_count: 1,
-                  })),
-                }))
-              : [
-                  {
-                    id: `unit_${s.id}_1`,
-                    subject_id: s.id,
-                    unit_number: 1,
-                    name: 'Core Theory & Mathematical Invariants',
-                    estimated_hours: 12,
-                    progress_percent: 70,
-                    topics: [
-                      { id: `top_${s.id}_1`, unit_id: `unit_${s.id}_1`, name: 'Fundamental Concepts', status: 'COMPLETED', difficulty: 'EASY', revision_count: 2 },
-                      { id: `top_${s.id}_2`, unit_id: `unit_${s.id}_1`, name: 'Analytical Formulations', status: 'IN_PROGRESS', difficulty: 'MEDIUM', revision_count: 1 },
+          const typeMap: Record<string, SemesterSubject['subject_type']> = {
+            THEORY: 'CORE',
+            CORE: 'CORE',
+            LAB: 'LAB',
+            PROJECT: 'PROJECT',
+            ELECTIVE: 'ELECTIVE',
+            AUDIT: 'OTHER',
+          };
+          activeSubjects = syllabus.subjects.map((s, idx): SemesterSubject => {
+            const progress = Math.min(95, Math.max(30, (idx + 1) * 20));
+            const units = (s.syllabus_units || []).map((u, ui) => ({
+              id: `unit_${s.id}_${ui}`,
+              unit_number: u.unit_number || ui + 1,
+              name: u.title || `Unit ${ui + 1}`,
+              status: 'IN_PROGRESS' as const,
+              topics: (u.topics || []).map((t, ti) => ({
+                id: `topic_${s.id}_${ui}_${ti}`,
+                name: t || `Topic ${ti + 1}`,
+                estimated_hours: 2,
+                conceptual_difficulty: 'MEDIUM' as const,
+                practical_difficulty: 'MEDIUM' as const,
+                completed: false,
+                revision_count: 0,
+              })),
+            }));
+            return {
+              id: s.id,
+              semester_id: config.id,
+              name: s.name,
+              code: s.code || `CS${config.semester_number}0${idx + 1}`,
+              credits: s.credits || 4,
+              subject_type: typeMap[s.subject_type] || 'OTHER',
+              difficulty: 'MEDIUM',
+              priority: idx < 2 ? 'HIGH' : 'MEDIUM',
+              progress_percent: progress,
+              syllabus_remaining_percent: Math.max(5, 100 - progress),
+              target_grade: 'A',
+              units:
+                units.length > 0
+                  ? units
+                  : [
+                      {
+                        id: `unit_${s.id}_1`,
+                        unit_number: 1,
+                        name: 'Core Theory & Mathematical Invariants',
+                        status: 'IN_PROGRESS',
+                        topics: [
+                          { id: `top_${s.id}_1`, name: 'Fundamental Concepts', estimated_hours: 3, conceptual_difficulty: 'EASY', practical_difficulty: 'EASY', completed: true, revision_count: 2 },
+                          { id: `top_${s.id}_2`, name: 'Analytical Formulations', estimated_hours: 4, conceptual_difficulty: 'MEDIUM', practical_difficulty: 'MEDIUM', completed: false, revision_count: 1 },
+                        ],
+                      },
                     ],
-                  },
-                ],
-            slip_tests_count: 2,
-            minor_exams_count: 2,
-            labs_count: 8,
-            assignments_count: 4,
-            is_priority: idx < 2,
-            color: colors[idx % colors.length],
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          }));
+            };
+          });
 
           if (syllabus.academic_dates && syllabus.academic_dates.length > 0) {
-            events = syllabus.academic_dates.map((d, i) => ({
+            const eventTypeMap: Record<string, AcademicEvent['event_type']> = {
+              INTERNAL_EXAM: 'MINOR_1',
+              MINOR_EXAM: 'MINOR_1',
+              SLIP_TEST: 'SLIP_TEST',
+              QUIZ: 'QUIZ',
+              LAB_ASSESSMENT: 'LAB_EXAM',
+              ASSIGNMENT: 'ASSIGNMENT',
+              PROJECT_REVIEW: 'PROJECT_REVIEW',
+              END_SEMESTER: 'END_SEMESTER',
+            };
+            events = syllabus.academic_dates.map((d, i): AcademicEvent => ({
               id: d.id,
-              semester_id: config.id,
-              subject_id: activeSubjects[i % activeSubjects.length]?.id || 'sub_default',
-              title: d.title,
-              event_type: (d.event_type as any) || 'INTERNAL_EXAM',
-              weightage_percent: 25,
-              total_marks: 50,
-              passing_marks: 20,
-              start_date: d.date,
-              end_date: d.date,
-              status: 'UPCOMING',
+              student_id: studentId,
+              subject_id: d.subject_id || activeSubjects[i % activeSubjects.length]?.id,
+              title: d.label || 'Academic Assessment',
+              event_type: eventTypeMap[d.type] || 'OTHER',
+              date: d.date,
               priority: 'HIGH',
-              syllabus_coverage: 'Units 1-3 Comprehensive',
-              created_at: new Date().toISOString(),
+              syllabus_scope: 'Units 1-3 Comprehensive',
+              status: 'UPCOMING',
+              notes: d.notes,
             }));
           }
         }

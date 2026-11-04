@@ -53,7 +53,8 @@ export type ComponentType =
   | 'LEADER'
   | 'FOLLOWER'
   | 'REGIONAL_DEPLOYMENT'
-  | 'FAILOVER_COMPONENT';
+  | 'FAILOVER_COMPONENT'
+  | 'EXTERNAL_API';
 
 export type ConnectionProtocol =
   | 'HTTP/REST'
@@ -67,7 +68,8 @@ export type ConnectionProtocol =
   | 'SQL'
   | 'Redis/RESP'
   | 'GraphQL'
-  | 'Replication_Log';
+  | 'Replication_Log'
+  | 'Event';
 
 export interface ArchitectureComponent {
   id: string;
@@ -442,7 +444,7 @@ export interface SimulationResult {
   timestamp: string;
   status: 'STABLE' | 'WARNING' | 'OVERLOADED';
   metrics: Record<string, number | string>;
-  chart_data: Array<{ time_or_step: string | number; [key: string]: any }>;
+  chart_data: Array<{ time_or_step?: string | number; [key: string]: any }>;
   bottlenecks_detected: string[];
   recommendations: string[];
   educational_disclaimer: string;

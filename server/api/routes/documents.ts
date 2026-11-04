@@ -77,7 +77,7 @@ documentsRouter.post('/documents/folders', requireAuth, async (req, res, next) =
       name,
       description,
       color,
-      parent_id,
+      parent_folder_id: parent_id,
     });
     res.status(201).json({
       success: true,

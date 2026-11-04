@@ -689,9 +689,9 @@ export function SqlLabPage({ onNavigate }: SqlLabPageProps) {
                             >
                               <div className="flex items-center gap-1.5">
                                 {col.is_primary_key ? (
-                                  <Key className="w-3.5 h-3.5 text-amber-500" title="Primary Key" />
+                                  <Key className="w-3.5 h-3.5 text-amber-500" aria-label="Primary Key" />
                                 ) : col.is_foreign_key ? (
-                                  <Link className="w-3.5 h-3.5 text-indigo-500" title="Foreign Key" />
+                                  <Link className="w-3.5 h-3.5 text-indigo-500" aria-label="Foreign Key" />
                                 ) : (
                                   <span className="w-3.5" />
                                 )}

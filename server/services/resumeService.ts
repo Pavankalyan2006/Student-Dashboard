@@ -164,12 +164,11 @@ export class ResumeService {
       id: `rproj_${Date.now()}_${idx}`,
       resume_id: resumeId,
       title: p.title,
-      role: 'Lead Developer',
-      technologies: Array.isArray((p as any).tech_stack) ? (p as any).tech_stack.join(', ') : 'TypeScript, React, Node.js',
-      bullets: [
-        p.description || 'Engineered full-stack features with clean modular architecture.',
-        'Validated system reliability with automated unit and integration tests.',
-      ],
+      description_override: p.description || 'Engineered full-stack features with clean modular architecture.',
+      highlighted_features: ['Validated system reliability with automated unit and integration tests.'],
+      technologies: Array.isArray((p as any).tech_stack) && (p as any).tech_stack.length > 0
+        ? (p as any).tech_stack
+        : ['TypeScript', 'React', 'Node.js'],
       project_id: p.id,
       order_index: idx,
     }));

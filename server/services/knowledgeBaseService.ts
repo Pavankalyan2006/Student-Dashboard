@@ -919,23 +919,34 @@ Return valid JSON only with this structure:
     const quiz = await db.createQuiz({
       student_id: studentId,
       title: material.title,
-      subject: 'Computer Science',
-      topic: 'Knowledge Base Self-Assessment',
+      description: 'Knowledge Base self-assessment generated from your document',
+      source_type: 'DOCUMENT',
+      source_id: material.source_document_id,
       difficulty: 'MEDIUM',
-      time_limit_minutes: 15,
-      total_questions: questions.length,
-      passing_score_percentage: 70,
+      question_count: questions.length,
+      time_limit_seconds: 15 * 60,
+      adaptive_mode: false,
       mode: 'PRACTICE',
+      status: 'READY',
     });
 
-    const quizQuestions = questions.map((q: any) => ({
-      quiz_id: quiz.id,
-      question_text: q.question,
-      options: q.options || [],
-      correct_option_index: q.correct_answer_index || 0,
-      explanation: q.explanation || 'Refer to course study materials.',
-      points: 1,
-    }));
+    const quizQuestions = questions.map((q: any, i: number) => {
+      const options: string[] = q.options || [];
+      return {
+        quiz_id: quiz.id,
+        question_number: i + 1,
+        question_type: 'MCQ' as const,
+        question_text: q.question,
+        options,
+        correct_answer: options[q.correct_answer_index || 0] ?? '',
+        explanation: q.explanation || 'Refer to course study materials.',
+        difficulty: 'MEDIUM' as const,
+        topic_id: q.topic || 'knowledge_base',
+        topic_name: q.topic,
+        source_type: 'DOCUMENT' as const,
+        source_id: material.source_document_id,
+      };
+    });
 
     await db.createQuizQuestions(quizQuestions);
 

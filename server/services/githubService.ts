@@ -88,7 +88,7 @@ export class GitHubService {
    */
   public static async getConnectionStatus(studentId: string): Promise<{
     is_connected: boolean;
-    connection?: Omit<GitHubConnection, 'encrypted_token'>;
+    connection?: Omit<GitHubConnection, 'encrypted_token'> | null;
     stats: {
       total_repositories: number;
       public_repositories: number;
@@ -392,6 +392,8 @@ export class GitHubService {
             author_name: conn.name || conn.username,
             author_email: `${conn.username}@btech.edu`,
             committed_at: new Date(Date.now() - 3600000 * 2).toISOString(),
+            date: new Date(Date.now() - 3600000 * 2).toISOString(),
+            changed_files_count: 6,
             url: `${demoRepo1.url}/commit/a1b2c3d4e5f6`,
             additions: 120,
             deletions: 15,
@@ -404,6 +406,8 @@ export class GitHubService {
             author_name: conn.name || conn.username,
             author_email: `${conn.username}@btech.edu`,
             committed_at: new Date(Date.now() - 86400000).toISOString(),
+            date: new Date(Date.now() - 86400000).toISOString(),
+            changed_files_count: 2,
             url: `${demoRepo1.url}/commit/f7e8d9c0b1a2`,
             additions: 45,
             deletions: 8,
@@ -417,7 +421,9 @@ export class GitHubService {
             repository_id: demoRepo1.id,
             number: 1,
             title: 'Implement rate limiting failover caching for GitHub API',
-            state: 'OPEN',
+            body: 'Cache GitHub API responses and fall back to cached data when the rate limit is hit.',
+            comments_count: 0,
+            state: 'open',
             author: conn.username,
             labels: ['enhancement', 'security'],
             created_at: new Date(Date.now() - 86400000 * 2).toISOString(),
@@ -433,10 +439,11 @@ export class GitHubService {
             repository_id: demoRepo1.id,
             number: 2,
             title: 'refactor: decouple repository sync from browser socket dependency',
-            state: 'OPEN',
+            body: 'Moves repository sync off the browser socket so it can run in the background.',
+            state: 'open',
             author: conn.username,
-            source_branch: 'feature/resilient-sync',
-            target_branch: 'main',
+            head_branch: 'feature/resilient-sync',
+            base_branch: 'main',
             created_at: new Date(Date.now() - 86400000).toISOString(),
             updated_at: new Date(Date.now() - 3600000).toISOString(),
             url: `${demoRepo1.url}/pull/2`,
@@ -626,6 +633,7 @@ export class GitHubService {
             tech_stack: metadata?.tech_stack || [repo.language, ...(repo.topics || [])].filter(Boolean),
             key_features: metadata?.key_features || ['Clean modular architecture', 'Version controlled workflows'],
             challenges_solved: metadata?.challenges_solved || 'Architected and implemented project core modules.',
+            lessons_learned: metadata?.lessons_learned,
             demo_url: metadata?.demo_url || undefined,
             resume_bullets: metadata?.resume_bullets || [],
           }
@@ -691,6 +699,7 @@ export class GitHubService {
   public static async getLanguagesSummary(studentId: string): Promise<{
     languages: { name: string; repo_count: number; percentage: number; color: string }[];
     total_repos_counted: number;
+    total_repositories?: number;
     primary_language: string;
   }> {
     const repos = await db.getGitHubRepositories(studentId);

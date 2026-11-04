@@ -111,7 +111,7 @@ export interface EducationProfile {
 }
 
 // --- Step 4: Semester & Syllabus ---
-export type SubjectType = 'THEORY' | 'LAB' | 'PROJECT' | 'ELECTIVE' | 'AUDIT';
+export type SubjectType = 'THEORY' | 'CORE' | 'LAB' | 'PROJECT' | 'ELECTIVE' | 'AUDIT';
 
 export interface SyllabusUnit {
   unit_number: number;
@@ -277,7 +277,7 @@ export interface LearningPreferences {
   topics_of_interest: string[];
   difficult_topics: string[];
   preferred_programming_languages: string[];
-  learning_style: LearningStyle;
+  learning_style: LearningStyle | string;
   explanation_depth: ExplanationDepth;
   preferred_explanation_language: string;
   additional_languages?: string[];

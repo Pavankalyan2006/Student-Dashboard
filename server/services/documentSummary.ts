@@ -56,12 +56,9 @@ export class DocumentSummaryService {
             document_id: documentId,
             page_number: 1,
             text: `${doc.title}\n\n${doc.description || 'Academic curriculum reference material and lecture notes.'}`,
-            char_count: 100,
-            word_count: 20,
-            token_estimate: 25,
-            has_images: false,
-            has_tables: false,
+            metadata: { word_count: 20, has_tables: false },
             created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
           },
         ];
       } else {

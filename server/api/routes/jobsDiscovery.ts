@@ -256,7 +256,7 @@ jobsDiscoveryRouter.get('/jobs/:id/match', requireAuth, async (req: Request, res
     let extractedSkills: string[] = [];
     if (resumes.length > 0) {
       const resumeSkills = await db.getResumeSkills(resumes[0].id);
-      extractedSkills = resumeSkills.map((s) => s.skill_name);
+      extractedSkills = resumeSkills.map((s) => s.skill);
     }
     if (extractedSkills.length === 0) {
       extractedSkills = ['Data Structures & Algorithms', 'C++', 'Java', 'Python', 'SQL', 'Computer Networks', 'Operating Systems', 'Git'];

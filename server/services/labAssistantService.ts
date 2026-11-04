@@ -176,11 +176,11 @@ export class LabAssistantService {
       student_id: studentId,
       title,
       subject: (manualData.subject || lab.subject).trim(),
-      course_code: (manualData.course_code || lab.course_code).trim(),
+      course_code: (manualData.course_code || lab.course_code || '').trim(),
       semester: Number(manualData.semester) || lab.semester,
-      department: (manualData.department || lab.department).trim(),
+      department: (manualData.department || lab.department || '').trim(),
       lab_type: manualData.lab_type || lab.lab_type,
-      tools: (manualData.tools || lab.tools_or_languages).trim(),
+      tools: (manualData.tools || lab.tools_or_languages || '').trim(),
       description: (manualData.description || '').trim(),
       instructions: (manualData.instructions || '').trim(),
       is_draft: false,
@@ -326,7 +326,7 @@ export class LabAssistantService {
     }
 
     const parsed = await DocumentParserRegistry.parse(bufferOrBase64, mimetype, ext, { filename });
-    const fullText = parsed.text || parsed.pages?.map((p: any) => p.text).join('\n\n') || '';
+    const fullText = (parsed as any).text || parsed.pages?.map((p: any) => p.text).join('\n\n') || '';
     const pageCount = parsed.pages?.length || parsed.pageCount || 1;
 
     if (!fullText.trim()) {
@@ -586,7 +586,7 @@ Output ONLY valid JSON with this shape:
         }
       }
     } catch (err: any) {
-      logger.warn('AI manual structuring failed, falling back to heuristic parsing', err);
+      logger.warn('AI manual structuring failed, falling back to heuristic parsing', { error: err instanceof Error ? err.message : String(err) });
     }
 
     // Heuristic fallback
@@ -873,7 +873,7 @@ Format output as valid JSON:
         }
       }
     } catch (err) {
-      logger.warn('AI viva generation failed, returning default curriculum questions', err);
+      logger.warn('AI viva generation failed, returning default curriculum questions', { error: err instanceof Error ? err.message : String(err) });
     }
 
     const fallbackQuestions: VivaQuestionItem[] = [

@@ -413,28 +413,28 @@ describe('Master Interactive System Design Lab E2E Suite', () => {
             name: 'Web Client',
             category: 'APPLICATION',
             type: 'WEB_CLIENT',
-            position: { x: 50, y: 50 }
+            position: { x: 50, y: 50 }, description: ''
           },
           {
             id: 'c2',
             name: 'Single App Server',
             category: 'APPLICATION',
             type: 'APP_SERVER',
-            position: { x: 200, y: 50 }
+            position: { x: 200, y: 50 }, description: ''
           },
           {
             id: 'c3',
             name: 'Single Postgres DB',
             category: 'STORAGE',
             type: 'SQL_DATABASE',
-            position: { x: 400, y: 50 }
+            position: { x: 400, y: 50 }, description: ''
           },
           {
             id: 'c4',
             name: 'Isolated Cache Node',
             category: 'STORAGE',
             type: 'CACHE',
-            position: { x: 600, y: 50 } // Not connected to anything!
+            position: { x: 600, y: 50 }, description: '' // Not connected to anything!
           }
         ],
         connections: [
@@ -467,14 +467,14 @@ describe('Master Interactive System Design Lab E2E Suite', () => {
         title: 'Resilient Microservices',
         description: 'Multi-tier web application with load balancing, caching, and read replicas',
         components: [
-          { id: 'c1', name: 'Web Client', category: 'APPLICATION', type: 'WEB_CLIENT', position: { x: 50, y: 50 } },
-          { id: 'c2', name: 'Nginx ALB', category: 'APPLICATION', type: 'LOAD_BALANCER', position: { x: 200, y: 50 } },
-          { id: 'c3', name: 'App Servers', category: 'APPLICATION', type: 'APP_SERVER', position: { x: 400, y: 50 } },
-          { id: 'c4', name: 'Redis Cache', category: 'STORAGE', type: 'CACHE', position: { x: 600, y: 0 } },
-          { id: 'c5', name: 'Primary DB', category: 'DISTRIBUTED', type: 'PRIMARY_DB', position: { x: 600, y: 100 } },
-          { id: 'c6', name: 'Read Replica', category: 'DISTRIBUTED', type: 'READ_REPLICA', position: { x: 800, y: 100 } },
-          { id: 'c7', name: 'Auth Service', category: 'APPLICATION', type: 'AUTH_SERVICE', position: { x: 400, y: 200 } },
-          { id: 'c8', name: 'Prometheus Monitoring', category: 'INFRASTRUCTURE', type: 'MONITORING_SERVICE', position: { x: 400, y: 300 } }
+          { id: 'c1', name: 'Web Client', category: 'APPLICATION', type: 'WEB_CLIENT', position: { x: 50, y: 50 }, description: '' },
+          { id: 'c2', name: 'Nginx ALB', category: 'APPLICATION', type: 'LOAD_BALANCER', position: { x: 200, y: 50 }, description: '' },
+          { id: 'c3', name: 'App Servers', category: 'APPLICATION', type: 'APP_SERVER', position: { x: 400, y: 50 }, description: '' },
+          { id: 'c4', name: 'Redis Cache', category: 'STORAGE', type: 'CACHE', position: { x: 600, y: 0 }, description: '' },
+          { id: 'c5', name: 'Primary DB', category: 'DISTRIBUTED', type: 'PRIMARY_DB', position: { x: 600, y: 100 }, description: '' },
+          { id: 'c6', name: 'Read Replica', category: 'DISTRIBUTED', type: 'READ_REPLICA', position: { x: 800, y: 100 }, description: '' },
+          { id: 'c7', name: 'Auth Service', category: 'APPLICATION', type: 'AUTH_SERVICE', position: { x: 400, y: 200 }, description: '' },
+          { id: 'c8', name: 'Prometheus Monitoring', category: 'INFRASTRUCTURE', type: 'MONITORING_SERVICE', position: { x: 400, y: 300 }, description: '' }
         ],
         connections: [
           { id: 'cn_1', from: 'c1', to: 'c2', protocol: 'HTTPS' },

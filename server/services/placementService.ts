@@ -509,7 +509,7 @@ export class PlacementService {
 
     // Completeness audit
     const checks = [
-      { name: 'Headline & Target Role', completed: Boolean(profile?.headline || resume?.target_role_id), weight: 15 },
+      { name: 'Headline & Target Role', completed: Boolean(profile?.headline || resume?.target_role), weight: 15 },
       { name: 'Contact & Portfolio Links', completed: Boolean(profile?.email && profile?.phone), weight: 15 },
       { name: 'Education History', completed: educations.length > 0, weight: 20 },
       { name: 'Technical Skills Matrix', completed: skills.length >= 3, weight: 20 },

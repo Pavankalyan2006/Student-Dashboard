@@ -172,7 +172,7 @@ export interface ActiveProjectItem {
 export interface UpcomingCalendarItem {
   id: string;
   title: string;
-  type: 'quiz' | 'assignment' | 'milestone' | 'interview';
+  type: 'quiz' | 'exam' | 'assignment' | 'milestone' | 'interview';
   date: string;
   time: string;
   status: string;
@@ -746,6 +746,9 @@ export interface Document {
   category?: DocumentCategory | string;
   folder_id?: string;
   folder_name?: string;
+  content_indexed?: boolean;
+  current_version?: number;
+  version_count?: number;
   metadata: {
     course_id?: string;
     course_title?: string;

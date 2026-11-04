@@ -107,8 +107,8 @@ export class MockInterviewEngineService {
         const fullResume = await ResumeService.getFullResume(req.resume_id, studentId);
         if (fullResume) {
           const projs = fullResume.projects.map((p) => `${p.title} (${p.technologies.join(', ')})`).join('; ');
-          const skills = fullResume.skills.map((s) => s.skill_name).join(', ');
-          resumeSnippet = `Projects: ${projs}. Skills: ${skills}. Summary: ${fullResume.profile?.summary || 'B.Tech Student'}`;
+          const skills = fullResume.skills.map((s) => s.skill).join(', ');
+          resumeSnippet = `Projects: ${projs}. Skills: ${skills}. Summary: ${fullResume.resume?.summary || 'B.Tech Student'}`;
         }
       } catch (err: any) {
         logger.warn('Failed to load student resume for interview grounding', { error: err.message });

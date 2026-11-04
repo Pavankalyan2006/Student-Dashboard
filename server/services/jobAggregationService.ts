@@ -401,7 +401,7 @@ export class JobAggregationService {
             await db.saveStudentJobAlert(alert);
             break; // One notification per job per student
           } catch (err) {
-            logger.warn('Failed to dispatch job alert notification', err);
+            logger.warn('Failed to dispatch job alert notification', { error: err instanceof Error ? err.message : String(err) });
           }
         }
       }

@@ -63,6 +63,8 @@ import {
   Algorithm,
   DSAProblem,
   DSAProgress,
+  CreateCourseInput,
+  UpdateCourseInput,
 } from '../models/types';
 import { seedProblems, seedTestCases } from './seedCoding';
 import { seedDSATopics, seedAlgorithms, seedDSAProblems } from './seedDsa';
@@ -4778,7 +4780,7 @@ print(power_mod(2, 10, 1000))  # Output: 24
         id: q.id,
         title: q.title,
         description: q.description,
-        total_questions: q.total_questions || 10,
+        total_questions: q.question_count || 10,
         difficulty: q.difficulty || 'MEDIUM',
       }));
 
@@ -4787,7 +4789,7 @@ print(power_mod(2, 10, 1000))  # Output: 24
       id: q.id,
       title: `${course.title} - ${q.title}`,
       description: q.description,
-      total_questions: q.total_questions || 10,
+      total_questions: q.question_count || 10,
       difficulty: q.difficulty || 'MEDIUM',
     }));
 
@@ -10511,7 +10513,7 @@ print(power_mod(2, 10, 1000))  # Output: 24
     let list = Array.from(this.gateQuestions.values());
 
     if (filters.paper_code) {
-      list = list.filter((q) => q.paper_code === filters.paper_code.toUpperCase());
+      list = list.filter((q) => q.paper_code === filters.paper_code!.toUpperCase());
     }
     if (filters.subject) {
       list = list.filter((q) => q.subject.toLowerCase() === filters.subject!.toLowerCase());

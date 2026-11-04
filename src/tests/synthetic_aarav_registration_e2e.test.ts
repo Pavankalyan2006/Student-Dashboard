@@ -115,9 +115,9 @@ describe('SECTION 56: Synthetic Student Registration, Onboarding & Whole-Platfor
         ],
       })),
       academic_dates: [
-        { id: 'ad_1', title: 'AI/ML Slip Test 1', date: '2026-11-10', type: 'SLIP_TEST' },
-        { id: 'ad_2', title: 'Minor 1 Theory Exam', date: '2026-11-25', type: 'INTERNAL_EXAM' },
-        { id: 'ad_3', title: 'End-Semester Final Exams', date: '2026-12-20', type: 'END_SEMESTER' },
+        { id: 'ad_1', label: 'AI/ML Slip Test 1', date: '2026-11-10', type: 'SLIP_TEST' },
+        { id: 'ad_2', label: 'Minor 1 Theory Exam', date: '2026-11-25', type: 'INTERNAL_EXAM' },
+        { id: 'ad_3', label: 'End-Semester Final Exams', date: '2026-12-20', type: 'END_SEMESTER' },
       ],
     });
 
@@ -137,8 +137,7 @@ describe('SECTION 56: Synthetic Student Registration, Onboarding & Whole-Platfor
         { skill_name: 'Data Structures & Algorithms', skill_category: 'CS Fundamentals', self_reported_level: 'INTERMEDIATE', is_custom: false },
         { skill_name: 'PyTorch & Transformers', skill_category: 'AI Frameworks', self_reported_level: 'INTERMEDIATE', is_custom: true },
       ],
-      verified_skills_count: 0,
-      skills_to_learn: ['Distributed Training', 'TensorRT Optimization'],
+      skills_to_improve: ['Distributed Training', 'TensorRT Optimization'],
     });
 
     expect(skills.skills.length).toBe(4);
@@ -321,7 +320,7 @@ describe('SECTION 56: Synthetic Student Registration, Onboarding & Whole-Platfor
     // 3. Project Creation
     const project = await ProjectService.createProject(syntheticStudent.id, {
       title: 'Scalable Distributed Transformer Inference Engine',
-      project_type: 'CAPSTONE_PROJECT',
+      project_type: 'FINAL_YEAR_PROJECT',
       domain: 'AI Systems',
       problem_statement: 'High latency and GPU VRAM exhaustion in distributed LLM serving.',
       objectives: [

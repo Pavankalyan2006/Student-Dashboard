@@ -195,7 +195,7 @@ export function LanguageLearningPage() {
     <PageContainer>
       <PageHeader
         title="Language Learning Platform"
-        subtitle="Master 150+ world & Indian regional languages with interactive lessons, SM-2 spaced repetition, and AI conversational practice."
+        description="Master 150+ world & Indian regional languages with interactive lessons, SM-2 spaced repetition, and AI conversational practice."
         badge="150+ Languages"
       />
 

@@ -3,7 +3,7 @@ import { DocumentService } from '../../server/services/documents';
 import { db } from '../../server/db/database';
 import { StorageService } from '../../server/storage/storage';
 import { VectorStore } from '../../server/rag/vectorStore';
-import { ValidationError, NotFoundError, ForbiddenError } from '../../server/core/exceptions';
+import { ValidationError, NotFoundError, AuthorizationError } from '../../server/core/exceptions';
 import { DOCUMENT_CATEGORIES } from '../../server/api/routes/documents';
 
 describe('Master Documents Page Compliance Test Suite (24 Requirements)', () => {
@@ -246,7 +246,7 @@ describe('Master Documents Page Compliance Test Suite (24 Requirements)', () => 
       category: 'Study Materials',
     });
 
-    const storedFile = await StorageService.download(doc.storage_key, studentA);
+    const storedFile = await StorageService.download(doc.storage_key, studentA, 'STUDENT');
     expect(storedFile.data).toBe('data:text/plain;base64,SGVsbG8gQi5UZWNoIFN0dWRlbnQh');
     expect(storedFile.record.mime_type).toBe('text/plain');
   });
@@ -261,7 +261,7 @@ describe('Master Documents Page Compliance Test Suite (24 Requirements)', () => 
       contentBase64: 'data:application/pdf;base64,ZG93bmxvYWQ=',
     });
 
-    const downloaded = await StorageService.download(doc.storage_key, studentA);
+    const downloaded = await StorageService.download(doc.storage_key, studentA, 'STUDENT');
     expect(downloaded.record.original_name).toBe('download_me.pdf');
     expect(downloaded.data).toBe('data:application/pdf;base64,ZG93bmxvYWQ=');
   });
@@ -277,12 +277,12 @@ describe('Master Documents Page Compliance Test Suite (24 Requirements)', () => 
     });
 
     await expect(
-      StorageService.download(doc.storage_key, studentB)
-    ).rejects.toThrow(ForbiddenError);
+      StorageService.download(doc.storage_key, studentB, 'STUDENT')
+    ).rejects.toThrow(AuthorizationError);
 
     await expect(
       DocumentService.getDocument(doc.id, studentB)
-    ).rejects.toThrow(ForbiddenError);
+    ).rejects.toThrow(AuthorizationError);
   });
 
   // 13. Star and unstar operations
@@ -490,7 +490,7 @@ describe('Master Documents Page Compliance Test Suite (24 Requirements)', () => 
     expect(updatedStats.storage_used_bytes).toBe(initialBytes + 1048576);
     expect(updatedStats.storage_used_mb).toBeGreaterThanOrEqual(1);
     expect(updatedStats.storage_remaining_mb).toBeLessThanOrEqual(500);
-    expect(updatedStats.categories_breakdown['Lecture Notes']).toBeGreaterThanOrEqual(1);
+    expect(updatedStats.category_breakdown['Lecture Notes']).toBeGreaterThanOrEqual(1);
   });
 
   // 22. Preventing cross-student document access
@@ -508,22 +508,22 @@ describe('Master Documents Page Compliance Test Suite (24 Requirements)', () => 
     // Student B cannot get folder A
     await expect(
       DocumentService.getFolder(folderA.id, studentB)
-    ).rejects.toThrow(ForbiddenError);
+    ).rejects.toThrow(AuthorizationError);
 
     // Student B cannot get doc A
     await expect(
       DocumentService.getDocument(docA.id, studentB)
-    ).rejects.toThrow(ForbiddenError);
+    ).rejects.toThrow(AuthorizationError);
 
     // Student B cannot update doc A
     await expect(
       DocumentService.updateDocument(docA.id, studentB, { title: 'Hacked Title' })
-    ).rejects.toThrow(ForbiddenError);
+    ).rejects.toThrow(AuthorizationError);
 
     // Student B cannot delete doc A
     await expect(
       DocumentService.deleteDocument(docA.id, studentB)
-    ).rejects.toThrow(ForbiddenError);
+    ).rejects.toThrow(AuthorizationError);
   });
 
   // 23. Safe preview rendering and Unicode handling

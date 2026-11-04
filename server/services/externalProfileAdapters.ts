@@ -44,7 +44,7 @@ export class GitHubAdapter implements PlatformAdapter {
     try {
       // Check existing GitHub connection status in GitHubService
       const ghStatus = await GitHubService.getConnectionStatus(studentId);
-      const username = ghStatus.connected && ghStatus.username ? ghStatus.username : profile.username;
+      const username = ghStatus.is_connected && ghStatus.connection?.username ? ghStatus.connection.username : profile.username;
 
       // List repositories from GitHubService
       const repos = await GitHubService.listRepositories(studentId, {});
@@ -56,7 +56,7 @@ export class GitHubAdapter implements PlatformAdapter {
 
       const normalizedData = {
         username,
-        connected_oauth: ghStatus.connected,
+        connected_oauth: ghStatus.is_connected,
         public_repositories: repos.length,
         primary_languages: languages.slice(0, 5),
         total_stars: totalStars,

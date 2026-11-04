@@ -336,16 +336,16 @@ export class CareerService {
 
     const defaultProfile: CareerProfileData = {
       student_id: studentId,
-      target_roles: student?.interests && student.interests.length > 0
-        ? student.interests.slice(0, 3)
-        : ['Software Development Engineer', 'Full Stack Developer'],
+      target_roles: ['Software Development Engineer', 'Full Stack Developer'],
       preferred_industries: ['Technology', 'Cloud Computing', 'Artificial Intelligence', 'FinTech'],
       preferred_locations: ['Bengaluru', 'Hyderabad', 'Pune', 'Remote'],
       preferred_work_arrangement: 'FLEXIBLE',
-      graduation_year: student?.graduation_year || 2026,
+      graduation_year: student?.semester
+        ? new Date().getFullYear() + Math.max(0, Math.ceil((8 - student.semester) / 2))
+        : 2026,
       technical_skills: studentSkills.length > 0
         ? studentSkills.map((s) => s.skill_name)
-        : (student?.skills || ['Python', 'TypeScript', 'Data Structures & Algorithms', 'React']),
+        : ['Python', 'TypeScript', 'Data Structures & Algorithms', 'React'],
       career_goals: [
         'Secure product-based technology internship for graduation',
         'Achieve verified competency across Core CS, System Design, and DSA',
@@ -421,7 +421,7 @@ export class CareerService {
         resumeScore = full.completeness_score || 0;
         resumeSections = [
           { section: 'Personal & Contact Info', complete: !!(full.profile?.full_name && full.profile?.email) },
-          { section: 'Professional Summary', complete: !!(full.profile?.summary && full.profile.summary.length > 20) },
+          { section: 'Professional Summary', complete: !!(full.resume?.summary && full.resume.summary.length > 20) },
           { section: 'Academic Education', complete: full.education.length > 0, details: `${full.education.length} degree(s)` },
           { section: 'Technical Skills', complete: full.skills.length >= 3, details: `${full.skills.length} skills` },
           { section: 'Projects', complete: full.projects.length >= 1, details: `${full.projects.length} project(s)` },
@@ -463,7 +463,7 @@ export class CareerService {
     const activePlan = plans[0];
 
     const placementProgress = {
-      topics_practiced: readiness?.category_readiness ? Object.keys(readiness.category_readiness).length * 3 : 8,
+      topics_practiced: readiness?.dimensions ? Object.keys(readiness.dimensions).length * 3 : 8,
       total_topics: 24,
       mock_interviews_count: completedInterviews.length,
       latest_mock_score: latestInterview?.overall_score,
@@ -606,7 +606,7 @@ export class CareerService {
         id: `act_ext_${act.id}`,
         title: act.title,
         subtitle: `${act.provider.toUpperCase()} synced activity`,
-        timestamp: act.timestamp || act.created_at || new Date().toISOString(),
+        timestamp: act.timestamp || new Date().toISOString(),
         category: 'INTEGRATION',
         url: '/sync',
       });

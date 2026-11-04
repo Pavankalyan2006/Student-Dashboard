@@ -28,10 +28,12 @@ describe('AI Flashcards Production & Spaced Repetition Master Test Suite', () =>
 
     it('filters decks by search query across title, description, and tags', async () => {
       const searchRes = await LearningModulesService.getFlashcardDecks(primaryStudentId, {
-        query: 'Deadlock',
+        search: 'Page Replacement',
       });
       expect(searchRes.length).toBeGreaterThanOrEqual(1);
       expect(searchRes[0].title).toContain('Operating Systems');
+      const all = await LearningModulesService.getFlashcardDecks(primaryStudentId);
+      expect(searchRes.length).toBeLessThan(all.length);
     });
 
     it('filters decks by due status and bookmarked status', async () => {
@@ -72,8 +74,6 @@ describe('AI Flashcards Production & Spaced Repetition Master Test Suite', () =>
         title: 'Computer Networks - OSI & TCP/IP Stack',
         description: 'Key protocol invariants, port numbers, and layer responsibilities',
         subject_name: 'Computer Networks',
-        unit: 'Unit 2: Transport & Network Layer',
-        topic: 'Protocols',
         tags: ['Networks', 'TCP/IP', 'B.Tech CS'],
         source_type: 'MANUAL',
         cards: [
@@ -82,15 +82,15 @@ describe('AI Flashcards Production & Spaced Repetition Master Test Suite', () =>
             back: 'TCP is connection-oriented, reliable, and provides flow & congestion control. UDP is connectionless and lightweight without retransmissions.',
             explanation: 'TCP uses a 3-way handshake (SYN, SYN-ACK, ACK), while UDP streams datagrams directly.',
             example: 'TCP is used for HTTP/HTTPS, while UDP is preferred for live video streaming and DNS queries.',
-            type: 'CONCEPTUAL',
-            difficulty: 'INTERMEDIATE',
+            type: 'CONCEPT',
+            difficulty: 'MEDIUM',
             tags: ['Protocols', 'Transport Layer'],
           },
           {
             front: 'What is the purpose of the Address Resolution Protocol (ARP)?',
             back: 'ARP resolves an IP address (Network Layer) into a physical MAC address (Data Link Layer).',
             type: 'DEFINITION',
-            difficulty: 'BEGINNER',
+            difficulty: 'EASY',
             tags: ['ARP', 'Link Layer'],
           },
         ],
@@ -124,7 +124,7 @@ describe('AI Flashcards Production & Spaced Repetition Master Test Suite', () =>
           front: 'What is the default port number for HTTPS?',
           back: 'Port 443 (HTTP uses port 80).',
           type: 'DEFINITION',
-          difficulty: 'BEGINNER',
+          difficulty: 'EASY',
           tags: ['Ports', 'Security'],
         }
       );
@@ -252,7 +252,7 @@ describe('AI Flashcards Production & Spaced Repetition Master Test Suite', () =>
           {
             front: 'What is the time complexity of QuickSelect average case?',
             back: 'O(N) average time complexity, O(N^2) worst case.',
-            difficulty: 'INTERMEDIATE',
+            difficulty: 'MEDIUM',
           },
         ],
       });
@@ -272,7 +272,7 @@ describe('AI Flashcards Production & Spaced Repetition Master Test Suite', () =>
       expect(card.repetition_count).toBe(0);
       expect(card.ease_factor).toBeCloseTo(2.3, 1); // 2.5 - 0.20 = 2.30
       expect(card.confidence).toBe(1);
-      expect(new Date(card.next_review_at).getTime()).toBeGreaterThan(Date.now() - 10000);
+      expect(new Date(card.next_review_at!).getTime()).toBeGreaterThan(Date.now() - 10000);
     });
 
     it('rating 4 (Easy): advances interval with ease bonus and increases ease factor', async () => {
@@ -366,7 +366,7 @@ describe('AI Flashcards Production & Spaced Repetition Master Test Suite', () =>
       expect(stats.rating_distribution).toHaveProperty('hard');
       expect(stats.rating_distribution).toHaveProperty('good');
       expect(stats.rating_distribution).toHaveProperty('easy');
-      expect(stats.recent_activity_7d.length).toBe(7);
+      expect(stats.recent_activity_7d!.length).toBe(7);
     });
 
     it('retrieves due flashcards queue accurately', async () => {
@@ -389,7 +389,7 @@ describe('AI Flashcards Production & Spaced Repetition Master Test Suite', () =>
           topic: 'Operating Systems Virtual Memory and Paging',
           subject: 'Operating Systems',
           difficulty: 'INTERMEDIATE',
-          style: 'CONCEPTUAL',
+          style: 'CONCEPT',
           count: 4,
         }
       );

@@ -596,7 +596,7 @@ ORDER BY budget DESC;`,
     target_roles: ['SDE', 'FULLSTACK_DEV', 'DATA_ANALYST', 'QA_ENGINEER'],
     question: 'Tell me about yourself, your academic engineering background, and why you are interested in this specific software engineering role.',
     context: 'Opening greeting and initial rapport building in standard campus placement drive.',
-    question_type: 'HR',
+    question_type: 'BEHAVIORAL',
     expected_concepts: ['Educational Background', 'Core Engineering Passion', 'Key Technical Projects', 'Relevant Skills', 'Career Goals', 'Why This Role'],
     hints: [
       'Keep it structured: Past (degree/specialization), Present (recent projects/internships), Future (why this role matches your ambitions).',

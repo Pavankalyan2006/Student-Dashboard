@@ -302,6 +302,7 @@ describe('GATE Exam Preparation Master Test Suite', () => {
         date: '2026-10-20',
         duration_minutes: 60,
         notes: 'Target 5 PYQs on Matrix Chain Multiplication',
+        is_completed: false,
       });
 
       expect(newTask.id).toBeDefined();

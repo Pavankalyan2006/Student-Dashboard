@@ -1,7 +1,7 @@
 // src/types/learningModules.ts
 // Frontend TypeScript definitions for the 10 New AI Learning Modules
 
-export type StudyPlanType = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'SEMESTER' | 'EXAM' | 'PLACEMENT' | 'PROJECT' | 'RESEARCH';
+export type StudyPlanType = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'SEMESTER' | 'EXAM' | 'PLACEMENT' | 'PROJECT' | 'RESEARCH' | 'REVISION';
 export type StudyTaskPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 export type StudyTaskStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'SKIPPED' | 'RESCHEDULED';
 
@@ -130,6 +130,8 @@ export interface Flashcard {
   incorrect_count: number;
   last_reviewed?: string;
   next_review: string;
+  next_review_at?: string;
+  last_reviewed_at?: string;
   created_at: string;
   interval_days?: number;
   ease_factor?: number;
@@ -138,7 +140,7 @@ export interface Flashcard {
   explanation?: string;
   example?: string;
   tags?: string[];
-  source_type?: 'MANUAL' | 'AI_GENERATED' | 'NOTES' | 'DOCUMENT' | 'COURSE';
+  source_type?: 'MANUAL' | 'AI_GENERATED' | 'NOTES' | 'DOCUMENT' | 'COURSE' | 'AI_TUTOR';
   source_id?: string;
   source_title?: string;
 }
@@ -161,7 +163,7 @@ export interface FlashcardDeck {
   tags?: string[];
   is_archived?: boolean;
   is_bookmarked?: boolean;
-  source_type?: 'MANUAL' | 'AI_GENERATED' | 'NOTES' | 'DOCUMENT' | 'COURSE';
+  source_type?: 'MANUAL' | 'AI_GENERATED' | 'NOTES' | 'DOCUMENT' | 'COURSE' | 'AI_TUTOR';
   source_id?: string;
   source_title?: string;
 }

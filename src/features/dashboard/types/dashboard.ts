@@ -96,7 +96,7 @@ export interface ActiveProjectItem {
 export interface UpcomingCalendarItem {
   id: string;
   title: string;
-  type: 'quiz' | 'assignment' | 'milestone' | 'interview';
+  type: 'quiz' | 'exam' | 'assignment' | 'milestone' | 'interview';
   date: string;
   time: string;
   status: string;

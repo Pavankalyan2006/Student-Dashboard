@@ -154,9 +154,7 @@ export class DocumentService {
 
     const existingDocs = await db.getStudentDocuments(studentId, { limit: 1000 });
     const duplicate = existingDocs.items.find(
-      (d) =>
-        (d.metadata?.content_hash && d.metadata.content_hash === contentHash) ||
-        (d.original_filename === originalName && d.file_size === sizeBytes && d.status !== 'FAILED')
+      (d) => d.original_filename === originalName && d.file_size === sizeBytes && d.status !== 'FAILED'
     );
 
     if (duplicate) {
@@ -795,7 +793,7 @@ export class DocumentService {
   public static async indexDocumentInKnowledgeBase(
     documentId: string,
     studentId: string
-  ): Promise<{ success: boolean; status: string; chunks_indexed: number }> {
+  ): Promise<{ success: boolean; status: string; chunks_indexed: number; indexed?: boolean; message?: string }> {
     const doc = await this.getDocument(documentId, studentId);
 
     // Get pages

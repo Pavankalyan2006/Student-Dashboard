@@ -296,7 +296,7 @@ describe('GitHub Workspace Master Test Suite — 23 Compliance Assertions', () =
 
       // Evidence files must be actual files in the repository
       const firstComp = analysis.architecture_components[0];
-      expect(firstComp.evidence_files.length).toBeGreaterThan(0);
+      expect(firstComp.evidence_files!.length).toBeGreaterThan(0);
     });
 
     it('19. does not fabricate metrics; languages and counts are derived from real metadata', async () => {
@@ -400,7 +400,7 @@ describe('GitHub Workspace Master Test Suite — 23 Compliance Assertions', () =
       prep.questions.forEach((q) => {
         expect(q.question).toBeDefined();
         expect(q.model_answer).toBeDefined();
-        expect(q.key_points.length).toBeGreaterThan(0);
+        expect(q.key_points!.length).toBeGreaterThan(0);
       });
     });
 

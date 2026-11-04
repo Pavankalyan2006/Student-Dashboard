@@ -250,7 +250,7 @@ export const GateExamPreparationPage: React.FC<GateExamPreparationPageProps> = (
 
   // Ask AI about topic
   const handleAskAiTopic = (topic: GateSyllabusTopic) => {
-    setAiTopicContext(`Topic: ${topic.title} (${topic.subject})`);
+    setAiTopicContext(`Topic: ${topic.name} (GATE ${topic.paper_code})`);
     setIsAiTutorOpen(true);
   };
 
