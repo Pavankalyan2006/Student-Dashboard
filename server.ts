@@ -14,11 +14,64 @@ import { maintenanceMiddleware } from './server/middleware/maintenance';
 import { apiV1Router } from './server/api/router';
 import { healthRouter } from './server/api/routes/health';
 import { logger } from './server/core/logging';
+import { db } from './server/db/database';
+import { LearningModulesService } from './server/services/learningModulesService';
+import { ExternalIntegrationService } from './server/services/externalIntegrationService';
+import {
+  registerPersistentSource,
+  restoreSnapshot,
+  scheduleSnapshotSave,
+  flushSnapshot,
+  getSnapshotPath,
+} from './server/db/persistence';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+async function setupPersistence() {
+  await db.initialize();
+  // Everything below lives only in memory; persist it so restarts do not wipe student data.
+  registerPersistentSource(
+    'db',
+    db as unknown as Record<string, any>,
+    Object.keys(db).filter((k) => {
+      const v = (db as any)[k];
+      return (v instanceof Map || v instanceof Set || Array.isArray(v)) && k !== 'structuredLogs';
+    })
+  );
+  registerPersistentSource('learningModules', LearningModulesService as unknown as Record<string, any>, [
+    'studyPlans',
+    'exams',
+    'doubts',
+    'flashcardDecks',
+    'labs',
+    'mlExperiments',
+    'systemDesigns',
+    'knowledgeItems',
+    'knowledgeCollections',
+    'applications',
+  ]);
+  registerPersistentSource('externalIntegrations', ExternalIntegrationService as unknown as Record<string, any>, [
+    'connections',
+    'activities',
+    'profiles',
+    'jobs',
+  ]);
+  restoreSnapshot();
+  const file = getSnapshotPath();
+  logger.info(file ? `Data persistence enabled: ${file}` : 'Data persistence disabled (DATA_PERSISTENCE=off)');
+
+  const shutdown = (signal: string) => {
+    logger.info(`Received ${signal}; flushing data snapshot`);
+    flushSnapshot();
+    process.exit(0);
+  };
+  process.once('SIGINT', () => shutdown('SIGINT'));
+  process.once('SIGTERM', () => shutdown('SIGTERM'));
+}
+
 async function startServer() {
+  await setupPersistence();
   const app = express();
 
   // Explicit CORS allowlist for production security
@@ -53,6 +106,16 @@ async function startServer() {
   app.use(requestIdMiddleware);
   app.use(requestLogger);
   app.use(authenticate);
+
+  // Persist the store after any request that may have changed data.
+  app.use('/api', (req, res, next) => {
+    if (req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'OPTIONS') {
+      res.on('finish', () => {
+        if (res.statusCode < 400) scheduleSnapshotSave();
+      });
+    }
+    next();
+  });
 
   // Security response headers
   app.use((_req, res, next) => {

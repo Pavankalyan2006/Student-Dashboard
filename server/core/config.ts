@@ -65,3 +65,18 @@ export const config: ServerConfig = {
   ],
 };
 
+
+// Refuse to run in production with the published development JWT secrets: anyone
+// could otherwise forge access tokens for any account, including administrators.
+if (config.nodeEnv === 'production') {
+  const insecure: string[] = [];
+  if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) insecure.push('JWT_SECRET');
+  if (!process.env.JWT_REFRESH_SECRET || process.env.JWT_REFRESH_SECRET.length < 32) {
+    insecure.push('JWT_REFRESH_SECRET');
+  }
+  if (insecure.length > 0) {
+    throw new Error(
+      `Missing or too-short ${insecure.join(' and ')} (min 32 chars). Refusing to start in production with default secrets.`
+    );
+  }
+}

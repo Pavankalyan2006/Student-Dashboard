@@ -1,6 +1,6 @@
 // Regression tests for defects found during the learning-workspace audit.
 // See docs/project-audit/BUG_TRACKER.md for the defect IDs referenced below.
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { db } from '../../server/db/database';
 import { NotesService } from '../../server/services/notes';
 import { CourseService } from '../../server/services/courses';
@@ -98,5 +98,47 @@ describe('BUG-002: AI Tutor context options use existing store methods', () => {
     expect(typeof db.getDocuments).toBe('function');
     expect(typeof db.getNotes).toBe('function');
     expect(Array.isArray(await db.getNotes(studentA))).toBe(true);
+  });
+});
+
+describe('BUG-010: in-memory store can be snapshotted and restored', () => {
+  it('round-trips Maps, Sets and nested Maps through the snapshot file', async () => {
+    const os = await import('os');
+    const fsMod = await import('fs');
+    const pathMod = await import('path');
+    const dir = fsMod.mkdtempSync(pathMod.join(os.tmpdir(), 'snap-'));
+    process.env.DATA_SNAPSHOT_PATH = pathMod.join(dir, 'snap.json');
+    try {
+      vi.resetModules();
+      const persistence = await import('../../server/db/persistence');
+      const source: Record<string, any> = {
+        records: new Map([['a', { id: 'a', tags: ['x'] }]]),
+        follows: new Map([['s1', new Set(['t1', 't2'])]]),
+        nested: new Map([['s1', new Map([['k', { done: true }]])]]),
+        list: [{ id: 1 }],
+      };
+      persistence.registerPersistentSource('test', source);
+      persistence.saveSnapshotNow();
+
+      source.records = new Map([['seed', { id: 'seed' }]]);
+      source.follows = new Map();
+      source.nested = new Map();
+      source.list = [];
+
+      vi.resetModules();
+      const fresh = await import('../../server/db/persistence');
+      fresh.registerPersistentSource('test', source, ['records', 'follows', 'nested', 'list']);
+      expect(fresh.restoreSnapshot()).toBe(true);
+
+      expect(source.records.get('a')).toEqual({ id: 'a', tags: ['x'] });
+      expect(source.records.get('seed')).toEqual({ id: 'seed' }); // seed entries are kept (merge)
+      expect(source.follows.get('s1')).toBeInstanceOf(Set);
+      expect(Array.from(source.follows.get('s1'))).toEqual(['t1', 't2']);
+      expect(source.nested.get('s1').get('k')).toEqual({ done: true });
+      expect(source.list).toEqual([{ id: 1 }]);
+    } finally {
+      delete process.env.DATA_SNAPSHOT_PATH;
+      fsMod.rmSync(dir, { recursive: true, force: true });
+    }
   });
 });

@@ -1,4 +1,5 @@
 import bcrypt from 'bcryptjs';
+import { randomBytes } from 'crypto';
 import {
   Student,
   SafeStudent,
@@ -603,12 +604,36 @@ class DatabaseStore {
     });
   }
 
+  private initializePromise: Promise<void> | null = null;
+
+  /**
+   * Seeds the store once. Every public method awaits this, so concurrent first calls
+   * share a single in-flight seeding run instead of each re-seeding the Maps.
+   */
   public async initialize(): Promise<void> {
+    if (this.isInitialized) return;
+    if (!this.initializePromise) {
+      this.initializePromise = this.seedInitialData().catch((err) => {
+        this.initializePromise = null;
+        throw err;
+      });
+    }
+    return this.initializePromise;
+  }
+
+  private async seedInitialData(): Promise<void> {
     if (this.isInitialized) return;
 
     // Pre-hash default passwords
     const studentPasswordHash = await bcrypt.hash('Password123!', 10);
-    const adminPasswordHash = await bcrypt.hash('AdminPassword123!', 10);
+    // The seeded platform administrator must never ship with a password that is
+    // published in source control. Its password comes from ADMIN_BOOTSTRAP_PASSWORD;
+    // without it, the account gets a random unguessable password and cannot sign in.
+    const adminBootstrapPassword =
+      process.env.ADMIN_BOOTSTRAP_PASSWORD && process.env.ADMIN_BOOTSTRAP_PASSWORD.length >= 12
+        ? process.env.ADMIN_BOOTSTRAP_PASSWORD
+        : randomBytes(32).toString('hex');
+    const adminPasswordHash = await bcrypt.hash(adminBootstrapPassword, 10);
 
     const defaultStudent: Student = {
       id: 'std_01j8k9x2p4',
