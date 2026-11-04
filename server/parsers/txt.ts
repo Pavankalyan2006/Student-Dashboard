@@ -3,16 +3,24 @@ import { DocumentParser, ParsedDocumentResult, ParsedPage } from './base';
 export class TXTParser implements DocumentParser {
   public canParse(mimeType: string, extension: string): boolean {
     const ext = extension.toLowerCase().replace('.', '');
-    return mimeType === 'text/plain' || ext === 'txt' || ext === 'md';
+    return mimeType === 'text/plain' || mimeType === 'text/markdown' || ext === 'txt' || ext === 'md';
   }
 
   public async parse(bufferOrText: Buffer | string, options?: { filename?: string }): Promise<ParsedDocumentResult> {
-    const rawText = typeof bufferOrText === 'string'
-      ? bufferOrText
-      : bufferOrText.toString('utf-8');
+    let rawText = '';
+    if (typeof bufferOrText === 'string') {
+      if (bufferOrText.startsWith('data:')) {
+        const base64Part = bufferOrText.split(',')[1] || '';
+        rawText = Buffer.from(base64Part, 'base64').toString('utf-8');
+      } else {
+        rawText = bufferOrText;
+      }
+    } else {
+      rawText = bufferOrText.toString('utf-8');
+    }
 
     const filename = options?.filename || 'Document.txt';
-    const title = filename.replace(/\.[^/.]+$/, '').replace(/[_\\-]/g, ' ');
+    const title = filename.replace(/\.[^/.]+$/, '').replace(/[_\-]/g, ' ');
 
     // Normalize newlines
     const normalized = rawText.replace(/\r\n/g, '\n');
@@ -24,11 +32,11 @@ export class TXTParser implements DocumentParser {
     } else if (normalized.includes('---PAGE---')) {
       rawPages = normalized.split('---PAGE---');
     } else {
-      // Chunk into logical pages of approx 400 words or 2200 characters preserving paragraph breaks
+      // Chunk into logical pages of approx 400 words or 2000 characters preserving paragraph breaks
       const paragraphs = normalized.split(/\n\s*\n/);
       let currentPageText = '';
       for (const para of paragraphs) {
-        if (currentPageText.length + para.length > 2200 && currentPageText.trim().length > 0) {
+        if (currentPageText.length + para.length > 2000 && currentPageText.trim().length > 0) {
           rawPages.push(currentPageText.trim());
           currentPageText = para + '\n\n';
         } else {
@@ -41,7 +49,7 @@ export class TXTParser implements DocumentParser {
     }
 
     if (rawPages.length === 0) {
-      rawPages = [normalized.trim() || 'No content.'];
+      rawPages = [normalized.trim() || `Study notes for ${title}`];
     }
 
     const pages: ParsedPage[] = rawPages.map((pageContent, idx) => {
@@ -53,7 +61,7 @@ export class TXTParser implements DocumentParser {
         const trimmed = line.trim();
         if (
           trimmed.startsWith('#') ||
-          /^(Chapter|Unit|Section|Module)\s+\d+/i.test(trimmed) ||
+          /^(Chapter|Unit|Section|Module|Topic)\s+\d+/i.test(trimmed) ||
           (trimmed.length > 3 && trimmed.length < 60 && trimmed === trimmed.toUpperCase() && !trimmed.includes('.'))
         ) {
           headings.push(trimmed.replace(/^#+\s*/, ''));
@@ -72,7 +80,7 @@ export class TXTParser implements DocumentParser {
 
     return {
       title,
-      author: 'Author / Contributor',
+      author: 'Academic Faculty',
       pageCount: pages.length,
       pages,
       language: 'en',

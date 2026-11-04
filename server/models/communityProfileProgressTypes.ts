@@ -438,6 +438,10 @@ export interface NotificationPreference {
   system: boolean;
   in_app: boolean;
   in_app_enabled?: boolean;
+  study_reminders?: boolean;
+  revision_reminders?: boolean;
+  goal_deadlines?: boolean;
+  exam_reminders?: boolean;
   email_digest: 'NONE' | 'DAILY' | 'WEEKLY';
   updated_at: string;
 }

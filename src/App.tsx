@@ -13,7 +13,6 @@ import { CodingLabPage } from './features/coding/pages/CodingLabPage';
 import { CodingEditorPage } from './features/coding/pages/CodingEditorPage';
 import { CodingSavedPage } from './features/coding/pages/CodingSavedPage';
 import { CodingHistoryPage } from './features/coding/pages/CodingHistoryPage';
-import { AdminPage } from './pages/AdminPage';
 import { CoursesPage } from './features/courses/pages/CoursesPage';
 import { CourseDetailPage } from './features/courses/pages/CourseDetailPage';
 import { CourseLearningPage } from './features/courses/pages/CourseLearningPage';
@@ -49,6 +48,7 @@ import { MockInterviewSetupPage } from './features/placements/pages/MockIntervie
 import { MockInterviewSessionPage } from './features/placements/pages/MockInterviewSessionPage';
 import { MockInterviewResultPage } from './features/placements/pages/MockInterviewResultPage';
 import { MockInterviewHistoryPage } from './features/placements/pages/MockInterviewHistoryPage';
+import { MockInterviewsPage } from './features/mock-interviews/pages/MockInterviewsPage';
 // Phase 12: Resume Builder, Career Assistant & Skill Assessment Pages
 import { ResumePage } from './features/resume/pages/ResumePage';
 import { ResumeEditorPage } from './features/resume/pages/ResumeEditorPage';
@@ -79,6 +79,7 @@ import { ProfileCertificatesPage } from './features/profile/pages/ProfileCertifi
 import { CertificateVerificationPage } from './features/profile/pages/CertificateVerificationPage';
 import { ProfileBookmarksPage } from './features/profile/pages/ProfileBookmarksPage';
 import { ProfileSettingsPage } from './features/profile/pages/ProfileSettingsPage';
+import { OnboardingPage } from './features/onboarding/pages/OnboardingPage';
 import { ProgressDashboardPage } from './features/progress/pages/ProgressDashboardPage';
 import { SubsystemProgressPage } from './features/progress/pages/SubsystemProgressPage';
 import { GoalsPage } from './features/goals/pages/GoalsPage';
@@ -106,38 +107,31 @@ import { KnowledgeBasePage } from './features/knowledge/pages/KnowledgeBasePage'
 import { ApplicationTrackerPage } from './features/applications/pages/ApplicationTrackerPage';
 import { IntegrationsCenterPage } from './features/integrations/pages/IntegrationsCenterPage';
 import { ExternalProfileHubPage } from './features/profile/pages/ExternalProfileHubPage';
-import { JobDiscoveryPage } from './features/career/pages/JobDiscoveryPage';
+import { JobsDiscoveryPage } from './features/jobs/pages/JobsDiscoveryPage';
 // Academic Semester Command Center
 import { SemesterOverviewPage } from './features/semester-command-center/pages/SemesterOverviewPage';
+import { SemesterSetupWizardPage } from './features/semester-command-center/pages/SemesterSetupWizardPage';
 import { SemesterStudyStreamPage } from './features/semester-command-center/pages/SemesterStudyStreamPage';
 import { SemesterSubjectsSyllabusPage } from './features/semester-command-center/pages/SemesterSubjectsSyllabusPage';
 import { SemesterCalendarEventsPage } from './features/semester-command-center/pages/SemesterCalendarEventsPage';
 import { SemesterExamsSlipTestsPage } from './features/semester-command-center/pages/SemesterExamsSlipTestsPage';
 import { SemesterRecoveryGuidancePage } from './features/semester-command-center/pages/SemesterRecoveryGuidancePage';
-import { SemesterSetupWizardPage } from './features/semester-command-center/pages/SemesterSetupWizardPage';
-// Phase 15: Super Admin Platform Management
-import { AdminLayout } from './features/admin/AdminLayout';
-import { AdminDashboardPage } from './features/admin/pages/AdminDashboardPage';
-import { AdminStudentsPage } from './features/admin/pages/AdminStudentsPage';
-import { AdminStudentDetailPage } from './features/admin/pages/AdminStudentDetailPage';
-import { AdminContentPage } from './features/admin/pages/AdminContentPage';
-import { AdminAiPage } from './features/admin/pages/AdminAiPage';
-import { AdminIntegrationsPage } from './features/admin/pages/AdminIntegrationsPage';
-import { AdminJobsPage } from './features/admin/pages/AdminJobsPage';
-import { AdminSystemPage } from './features/admin/pages/AdminSystemPage';
-import { AdminSecurityPage } from './features/admin/pages/AdminSecurityPage';
-import { AdminCommunityPage } from './features/admin/pages/AdminCommunityPage';
-import { AdminSettingsPage } from './features/admin/pages/AdminSettingsPage';
-import { useAuthStore } from './store/authStore';
+// Public Website Pages
+import { HomePage } from './features/public/pages/HomePage';
+import { AboutPage } from './features/public/pages/AboutPage';
+import { HowItWorksPage } from './features/public/pages/HowItWorksPage';
+import { GateExamPreparationPage } from './features/gate/pages/GateExamPreparationPage';
+import { LanguageLearningPage } from './features/languages/pages/LanguageLearningPage';
 import { useAuth } from './hooks/useAuth';
+import { StudentContextProvider } from './context/StudentContext';
 import { RefreshCw } from 'lucide-react';
 
 function AppContent() {
-  const { student, isAuthenticated, isLoading, isSuperAdmin, checkAuth } = useAuth();
+  const { student, isAuthenticated, isLoading, checkAuth } = useAuth();
   const [currentPath, setCurrentPath] = React.useState<string>(
     typeof window !== 'undefined'
       ? (window.location.pathname + window.location.search)
-      : '/dashboard'
+      : '/'
   );
 
   // Sync with browser navigation
@@ -149,21 +143,9 @@ function AppContent() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  // Check auth and auto-seed demo student if first visit
+  // On mount, verify auth token from storage (no auto-login)
   React.useEffect(() => {
-    const init = async () => {
-      await checkAuth();
-      // If no token exists on first boot, auto-login with default student for seamless preview
-      const token = useAuthStore.getState().token;
-      if (!token) {
-        try {
-          await useAuthStore.getState().login('student@btech.edu', 'Password123!');
-        } catch {
-          // Fallback to login screen
-        }
-      }
-    };
-    init();
+    checkAuth();
   }, [checkAuth]);
 
   const navigate = (path: string) => {
@@ -181,66 +163,80 @@ function AppContent() {
     );
   }
 
-  // Public Certificate Verification bypasses login requirement
   const [initialPathname] = currentPath.split('?');
+
+  // Public Certificate Verification bypasses login requirement
   const publicCertMatch = initialPathname.match(/^\/verify\/certificate\/([^/]+)$/);
   if (publicCertMatch) {
     return <CertificateVerificationPage certificateId={publicCertMatch[1]} onNavigate={navigate} />;
   }
 
-  // If user is not authenticated and is on /login
-  if (!isAuthenticated || currentPath === '/login') {
-    if (isAuthenticated && currentPath === '/login') {
-      navigate('/dashboard');
-    } else {
-      return <LoginPage onLoginSuccess={() => navigate('/dashboard')} />;
-    }
+  // Public Website Pages accessible without login
+  if (initialPathname === '/about') {
+    return <AboutPage onNavigate={navigate} />;
   }
 
-  // ==========================================
-  // Super Admin Isolated Route Rendering (Phase 15)
-  // ==========================================
-  if (initialPathname.startsWith('/admin')) {
-    const renderAdminRoute = () => {
-      const studentDetailMatch = initialPathname.match(/^\/admin\/students\/([^/]+)$/);
-      if (studentDetailMatch) {
-        return <AdminStudentDetailPage studentId={studentDetailMatch[1]} onNavigate={navigate} />;
-      }
-      if (initialPathname === '/admin/students') {
-        return <AdminStudentsPage onNavigate={navigate} />;
-      }
-      if (initialPathname.startsWith('/admin/content')) {
-        return <AdminContentPage />;
-      }
-      if (initialPathname.startsWith('/admin/ai')) {
-        return <AdminAiPage />;
-      }
-      if (initialPathname.startsWith('/admin/integrations')) {
-        return <AdminIntegrationsPage />;
-      }
-      if (initialPathname.startsWith('/admin/jobs')) {
-        return <AdminJobsPage />;
-      }
-      if (initialPathname.startsWith('/admin/system')) {
-        return <AdminSystemPage />;
-      }
-      if (initialPathname.startsWith('/admin/security')) {
-        return <AdminSecurityPage />;
-      }
-      if (initialPathname.startsWith('/admin/community')) {
-        return <AdminCommunityPage />;
-      }
-      if (initialPathname.startsWith('/admin/settings')) {
-        return <AdminSettingsPage />;
-      }
-      return <AdminDashboardPage onNavigate={navigate} />;
-    };
+  if (initialPathname === '/how-it-works') {
+    return <HowItWorksPage onNavigate={navigate} />;
+  }
 
+  // Handle Unauthenticated Visitors
+  if (!isAuthenticated) {
+    if (initialPathname === '/' || initialPathname === '/home') {
+      return <HomePage onNavigate={navigate} />;
+    }
+
+    if (
+      initialPathname === '/register' ||
+      initialPathname === '/signup' ||
+      initialPathname === '/onboarding'
+    ) {
+      return <OnboardingPage onNavigate={navigate} />;
+    }
+
+    // Default unauthenticated fallback (including /login and protected routes)
     return (
-      <AdminLayout currentPath={currentPath} onNavigate={navigate}>
-        {renderAdminRoute()}
-      </AdminLayout>
+      <LoginPage
+        initialMode="signin"
+        onNavigate={navigate}
+        onLoginSuccess={(role?: string) => {
+          if (role === 'STUDENT_NEW') {
+            navigate('/onboarding');
+          } else {
+            const searchParams = new URLSearchParams(window.location.search);
+            const redirect = searchParams.get('redirect');
+            if (redirect) {
+              navigate(decodeURIComponent(redirect));
+            } else if (
+              currentPath &&
+              currentPath !== '/login' &&
+              currentPath !== '/signin' &&
+              currentPath !== '/'
+            ) {
+              navigate(currentPath);
+            } else {
+              navigate('/dashboard');
+            }
+          }
+        }}
+      />
     );
+  }
+
+  // If authenticated user navigates to /login, /register, or /admin*, redirect to student workspace
+  if (
+    initialPathname === '/login' ||
+    initialPathname === '/signin' ||
+    initialPathname === '/register' ||
+    initialPathname === '/signup' ||
+    initialPathname.startsWith('/admin')
+  ) {
+    if (student && student.onboarding_completed === false) {
+      navigate('/onboarding');
+      return null;
+    }
+    navigate('/dashboard');
+    return null;
   }
 
   // Render active route inside AppShell
@@ -250,12 +246,19 @@ function AppContent() {
     const path = cleanPath === '/' ? '/dashboard' : cleanPath;
     const search = rawQuery ? `?${rawQuery}` : '';
 
+    if (path === '/onboarding') {
+      return <OnboardingPage onNavigate={navigate} />;
+    }
+
     if (path === '/dashboard') {
+      if (student && student.onboarding_completed === false) {
+        return <OnboardingPage onNavigate={navigate} />;
+      }
       return <DashboardPage onNavigate={navigate} />;
     }
 
-    if (path === '/ai-agent') {
-      return <AiAgentPage />;
+    if (path === '/ai-agent' || path === '/ai-tutor') {
+      return <AiAgentPage onNavigate={navigate} />;
     }
 
     // Document AI Workspace Routes (Phase 6)
@@ -322,7 +325,7 @@ function AppContent() {
     }
 
     // Coding Lab Routes (Phase 7)
-    if (path === '/coding') {
+    if (path === '/coding' || path === '/coding-lab' || path === '/sandbox') {
       return <CodingLabPage onNavigate={navigate} />;
     }
 
@@ -360,12 +363,6 @@ function AppContent() {
       );
     }
 
-    if (path === '/admin') {
-      if (!isSuperAdmin) {
-        return <ForbiddenPage onNavigate={navigate} />;
-      }
-      return <AdminPage />;
-    }
 
     // Courses & Learning Player Routes
     if (path === '/courses') {
@@ -404,7 +401,7 @@ function AppContent() {
     }
 
     // DSA & Algorithm Visualization Routes (Phase 8)
-    if (path === '/dsa') {
+    if (path === '/dsa' || path === '/dsa-lab') {
       return <DSALabPage onNavigate={navigate} />;
     }
 
@@ -481,7 +478,7 @@ function AppContent() {
       return <ProjectCreatePage search={search} onNavigate={navigate} />;
     }
 
-    if (path === '/projects/documentation') {
+    if (path === '/projects/documentation' || path === '/projects/docs') {
       return (
         <ProjectWorkspacePage
           projectId="proj_seed_ai_health_01"
@@ -510,7 +507,7 @@ function AppContent() {
     }
 
     // Placement Preparation & AI Mock Interview Routes (Phase 11)
-    if (path === '/placements' || path === '/placements/prepare' || path === '/placement') {
+    if (path === '/placements' || path === '/placements/prepare' || path === '/placement' || path === '/placement-preparation') {
       return <PlacementDashboardPage onNavigate={navigate} />;
     }
 
@@ -565,22 +562,60 @@ function AppContent() {
       return <RolePreparationPage onNavigate={navigate} />;
     }
 
-    if (path === '/placements/mock-interview' || path === '/placements/mock-interview/setup' || path === '/interviews' || path === '/interviews/setup') {
-      return <MockInterviewSetupPage onNavigate={navigate} />;
+    // Mock Interview History Routes
+    if (
+      path === '/interviews/history' ||
+      path === '/interview/history' ||
+      path === '/mock-interviews/history' ||
+      path === '/mock-interview/history' ||
+      path === '/placements/history' ||
+      path === '/placements/interviews/history' ||
+      path === '/placements/mock-interview/history'
+    ) {
+      return <MockInterviewsPage onNavigate={navigate} />;
     }
 
-    const mockInterviewResultMatch = path.match(/^(?:\/placements\/mock-interview|\/interviews)\/([^/]+)\/result$/);
+    // Mock Interview Setup & Main Landing Routes
+    if (
+      path === '/interviews' ||
+      path === '/interview' ||
+      path === '/interviews/setup' ||
+      path === '/interview/setup' ||
+      path === '/mock-interviews' ||
+      path === '/mock-interview' ||
+      path === '/mock-interviews/setup' ||
+      path === '/mock-interview/setup' ||
+      path === '/career/interview' ||
+      path === '/career/interviews' ||
+      path === '/career/mock-interview' ||
+      path === '/placements/mock-interview' ||
+      path === '/placements/mock-interview/setup' ||
+      path === '/placements/interview' ||
+      path === '/placements/interview/setup' ||
+      path === '/placements/interviews' ||
+      path === '/placements/interviews/setup'
+    ) {
+      return <MockInterviewsPage onNavigate={navigate} />;
+    }
+
+    // Mock Interview Diagnostic Results Route
+    const mockInterviewResultMatch = path.match(
+      /^(?:\/placements\/mock-interview|\/placements\/interview|\/placements\/interviews|\/interviews|\/interview|\/mock-interviews|\/mock-interview)\/([^/]+)\/(?:result|report)$/
+    );
     if (mockInterviewResultMatch) {
-      return <MockInterviewResultPage sessionId={mockInterviewResultMatch[1]} onNavigate={navigate} />;
+      return <MockInterviewsPage sessionId={mockInterviewResultMatch[1]} isReportView={true} onNavigate={navigate} />;
     }
 
-    const mockInterviewSessionMatch = path.match(/^(?:\/placements\/mock-interview|\/interviews)\/([^/]+)$/);
+    // Active Mock Interview Session Route
+    const mockInterviewSessionMatch = path.match(
+      /^(?:\/placements\/mock-interview|\/placements\/interview|\/placements\/interviews|\/interviews|\/interview|\/mock-interviews|\/mock-interview)\/([^/]+)$/
+    );
     if (mockInterviewSessionMatch) {
-      return <MockInterviewSessionPage sessionId={mockInterviewSessionMatch[1]} onNavigate={navigate} />;
-    }
-
-    if (path === '/placements/history' || path === '/interviews/history') {
-      return <MockInterviewHistoryPage onNavigate={navigate} />;
+      const sessionId = mockInterviewSessionMatch[1];
+      if (sessionId === 'setup' || sessionId === 'new' || sessionId === 'history' || sessionId === 'analytics') {
+        return <MockInterviewsPage onNavigate={navigate} />;
+      }
+      return <MockInterviewsPage sessionId={sessionId} onNavigate={navigate} />;
     }
 
     if (path === '/placements/progress') {
@@ -652,8 +687,13 @@ function AppContent() {
       return <CareerRoleDetailPage roleId={careerRoleMatch[1]} onNavigate={navigate} />;
     }
 
-    if (path === '/career/jobs' || path === '/jobs') {
-      return <JobDiscoveryPage onNavigate={navigate} />;
+    if (
+      path === '/career/jobs' ||
+      path === '/jobs' ||
+      path === '/career/jobs-discovery' ||
+      path === '/jobs-discovery'
+    ) {
+      return <JobsDiscoveryPage onNavigate={navigate} />;
     }
 
     // ==========================================
@@ -693,7 +733,7 @@ function AppContent() {
     // ==========================================
     // Phase 13: GitHub Integration Routes
     // ==========================================
-    if (path === '/github') {
+    if (path === '/github' || path === '/git') {
       return <GitHubDashboardPage onNavigate={navigate} />;
     }
 
@@ -717,7 +757,12 @@ function AppContent() {
       return <ProfilePage onNavigate={navigate} />;
     }
 
-    if (path === '/profile/external') {
+    if (
+      path === '/profile/external' ||
+      path === '/profile/external-profiles' ||
+      path === '/profile/platforms' ||
+      path === '/external-profiles'
+    ) {
       return <ExternalProfileHubPage onNavigate={navigate} />;
     }
 
@@ -733,7 +778,7 @@ function AppContent() {
       return <ProfileAchievementsPage onNavigate={navigate} />;
     }
 
-    if (path === '/profile/certificates') {
+    if (path === '/profile/certificates' || path === '/certificates') {
       return <ProfileCertificatesPage onNavigate={navigate} />;
     }
 
@@ -771,13 +816,10 @@ function AppContent() {
     }
 
     // ==========================================
+    // ==========================================
     // Phase 14: Learning Goals Routes
     // ==========================================
-    if (path === '/goals') {
-      return <GoalsPage onNavigate={navigate} />;
-    }
-
-    if (path === '/goals/create') {
+    if (path === '/goals' || path === '/goals/create' || path === '/learning-goals') {
       return <GoalsPage onNavigate={navigate} />;
     }
 
@@ -855,20 +897,50 @@ function AppContent() {
       return <StudyPlannerPage onNavigate={navigate} />;
     }
 
-    if (path.startsWith('/exams')) {
+    // GATE Exam Preparation (Assessment Category)
+    if (
+      path === '/assessment/gate-preparation' ||
+      path.startsWith('/assessment/gate-preparation') ||
+      path === '/gate' ||
+      path.startsWith('/gate/') ||
+      path === '/gate-preparation' ||
+      path.startsWith('/gate-preparation/') ||
+      path === '/assessment/gate' ||
+      path.startsWith('/assessment/gate/')
+    ) {
+      return <GateExamPreparationPage onNavigate={navigate} />;
+    }
+
+    if (path.startsWith('/exams') || path.startsWith('/exam-preparation')) {
       return <ExamPreparationPage onNavigate={navigate} />;
     }
 
-    if (path.startsWith('/doubts')) {
+    if (path.startsWith('/doubts') || path.startsWith('/doubt-solver')) {
       return <DoubtSolverPage onNavigate={navigate} />;
     }
 
-    if (path.startsWith('/flashcards')) {
+    if (path.startsWith('/flashcards') || path.startsWith('/revision')) {
       return <FlashcardsPage onNavigate={navigate} />;
     }
 
-    if (path.startsWith('/labs')) {
+    if (
+      path.startsWith('/labs') ||
+      path.startsWith('/viva') ||
+      path.startsWith('/lab-assistant') ||
+      path.startsWith('/lab')
+    ) {
       return <LabAssistantPage onNavigate={navigate} />;
+    }
+
+    if (
+      path === '/languages' ||
+      path.startsWith('/languages/') ||
+      path === '/language-learning' ||
+      path.startsWith('/language-learning/') ||
+      path === '/language' ||
+      path.startsWith('/language/')
+    ) {
+      return <LanguageLearningPage />;
     }
 
     if (path.startsWith('/sql-lab')) {
@@ -883,22 +955,42 @@ function AppContent() {
       return <SystemDesignLabPage onNavigate={navigate} />;
     }
 
-    if (path.startsWith('/knowledge')) {
+    if (path.startsWith('/knowledge') || path.startsWith('/knowledge-base') || path.startsWith('/rag')) {
       return <KnowledgeBasePage onNavigate={navigate} />;
     }
 
-    if (path.startsWith('/applications')) {
+    if (
+      path.startsWith('/applications') ||
+      path.startsWith('/application') ||
+      path.startsWith('/internships') ||
+      path.startsWith('/internship') ||
+      path === '/application-tracker' ||
+      path === '/applications-tracker' ||
+      path === '/internship-tracker' ||
+      path === '/internships-tracker' ||
+      path.startsWith('/career/applications') ||
+      path.startsWith('/career/application') ||
+      path.startsWith('/career/internships') ||
+      path.startsWith('/career/internship') ||
+      path === '/career/application-tracker' ||
+      path === '/career/applications-tracker'
+    ) {
       return <ApplicationTrackerPage onNavigate={navigate} />;
     }
 
     // ==========================================
     // External Platform Integrations
     // ==========================================
-    if (path === '/integrations' || path === '/integrations/platforms' || path === '/integrations/connected') {
+    if (
+      path === '/integrations' ||
+      path === '/integrations/platforms' ||
+      path === '/integrations/connected' ||
+      path === '/connected-platforms'
+    ) {
       return <IntegrationsCenterPage initialTab="platforms" onNavigate={navigate} />;
     }
 
-    if (path === '/integrations/activity') {
+    if (path === '/integrations/activity' || path === '/sync') {
       return <IntegrationsCenterPage initialTab="activity" onNavigate={navigate} />;
     }
 
@@ -909,48 +1001,75 @@ function AppContent() {
     // ==========================================
     // Academic Semester Command Center Routes
     // ==========================================
-    if (path === '/semester-command-center' || path === '/semester-command-center/overview' || path === '/semester') {
+    if (path === '/semester-command-center' || path === '/semester-command-center/overview' || path === '/semester' || path === '/semester/overview') {
       return <SemesterOverviewPage onNavigate={navigate} />;
     }
 
-    if (path === '/semester-command-center/setup' || path === '/semester-command-center/settings') {
+    if (path === '/semester-command-center/setup' || path === '/semester-command-center/settings' || path === '/semester/setup' || path === '/semester/settings') {
       return <SemesterSetupWizardPage onNavigate={navigate} />;
     }
 
-    if (path === '/semester-command-center/study-stream') {
+    if (path === '/semester-command-center/study-stream' || path === '/semester/study-stream') {
       return <SemesterStudyStreamPage onNavigate={navigate} />;
     }
 
-    const semesterSubjectDetailMatch = path.match(/^\/semester-command-center\/subjects\/([^/]+)$/);
+    const semesterSubjectDetailMatch = path.match(/^(?:\/semester-command-center|\/semester)\/subjects\/([^/]+)$/);
     if (semesterSubjectDetailMatch) {
       return <SemesterSubjectsSyllabusPage initialSubjectId={semesterSubjectDetailMatch[1]} onNavigate={navigate} />;
     }
 
-    if (path === '/semester-command-center/subjects' || path === '/semester-command-center/syllabus') {
+    if (
+      path === '/semester-command-center/subjects' ||
+      path === '/semester-command-center/syllabus' ||
+      path === '/semester/subjects' ||
+      path === '/semester/syllabus'
+    ) {
       return <SemesterSubjectsSyllabusPage onNavigate={navigate} />;
     }
 
-    if (path === '/semester-command-center/calendar' || path === '/semester-command-center/academic-events') {
+    if (
+      path === '/semester-command-center/calendar' ||
+      path === '/semester-command-center/academic-events' ||
+      path === '/semester/calendar' ||
+      path === '/semester/events'
+    ) {
       return <SemesterCalendarEventsPage onNavigate={navigate} />;
     }
 
-    if (path === '/semester-command-center/slip-tests') {
+    if (path === '/semester-command-center/slip-tests' || path === '/semester/slip-tests') {
       return <SemesterExamsSlipTestsPage initialTab="slip-tests" onNavigate={navigate} />;
     }
 
-    if (path === '/semester-command-center/minors') {
+    if (path === '/semester-command-center/minors' || path === '/semester/minors') {
       return <SemesterExamsSlipTestsPage initialTab="minors" onNavigate={navigate} />;
     }
 
-    if (path === '/semester-command-center/end-semester' || path === '/semester-command-center/exams') {
+    if (
+      path === '/semester-command-center/end-semester' ||
+      path === '/semester-command-center/exams' ||
+      path === '/semester/end-semester' ||
+      path === '/semester/exams'
+    ) {
       return <SemesterExamsSlipTestsPage initialTab="end-sem" onNavigate={navigate} />;
     }
 
-    if (path === '/semester-command-center/daily-plan' || path === '/semester-command-center/recovery') {
+    if (
+      path === '/semester-command-center/daily-plan' ||
+      path === '/semester-command-center/recovery' ||
+      path === '/semester/daily-plan' ||
+      path === '/semester/recovery'
+    ) {
       return <SemesterRecoveryGuidancePage initialTab="daily" onNavigate={navigate} />;
     }
 
-    if (path === '/semester-command-center/weekly-plan' || path === '/semester-command-center/analytics' || path === '/semester-command-center/revision') {
+    if (
+      path === '/semester-command-center/weekly-plan' ||
+      path === '/semester-command-center/analytics' ||
+      path === '/semester-command-center/revision' ||
+      path === '/semester/weekly-plan' ||
+      path === '/semester/analytics' ||
+      path === '/semester/revision'
+    ) {
       return <SemesterRecoveryGuidancePage initialTab="weekly" onNavigate={navigate} />;
     }
 
@@ -972,7 +1091,9 @@ export default function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <AppContent />
+        <StudentContextProvider>
+          <AppContent />
+        </StudentContextProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   );

@@ -4,6 +4,9 @@ import { AgentService } from '../../ai/agent';
 import { db } from '../../db/database';
 import { requireAuth } from '../../middleware/auth';
 import { ValidationError, NotFoundError } from '../../core/exceptions';
+import { LearningModulesService } from '../../services/learningModulesService';
+import { QuizGenerationService } from '../../services/quizGeneration';
+import { NotesService } from '../../services/notes';
 
 export const aiRouter = Router();
 
@@ -383,6 +386,221 @@ aiRouter.post('/ai/tools/execute', requireAuth, async (req, res, next) => {
         toolName,
         result,
       },
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ================= AI TUTOR INTEGRATED MODULE ROUTES =================
+
+// GET /api/v1/ai/tutor/context-options - Fetch real courses, student documents, notes, subjects for Tutor Context Panel
+aiRouter.get('/ai/tutor/context-options', requireAuth, async (req, res, next) => {
+  try {
+    const studentId = req.user!.userId;
+    const coursesResult = await db.getCourses({ limit: 120 });
+    const documents = await db.getDocumentsByStudentId(studentId).catch(() => []);
+    const notes = await db.getNotesByStudentId(studentId).catch(() => []);
+
+    const engineeringSubjects = [
+      'Programming in C / C++ / Python',
+      'Data Structures & Algorithms',
+      'Database Management Systems & SQL',
+      'Operating Systems',
+      'Computer Networks',
+      'Software Engineering & DevOps',
+      'Artificial Intelligence & Expert Systems',
+      'Machine Learning & Deep Learning',
+      'Data Science & Analytics',
+      'Engineering Mathematics & Linear Algebra',
+      'Digital Electronics & Logic Design',
+      'Electrical Engineering Fundamentals',
+      'Mechanical Engineering Sciences',
+      'Civil Engineering Mechanics',
+      'Quantitative Aptitude & Logical Reasoning',
+      'Verbal Ability & Professional Communication',
+      'Technical Interview Preparation',
+    ];
+
+    const teachingModes = [
+      { id: 'EXPLAIN', name: 'Mode A: Explain a Concept', desc: 'Clear, intuitive breakdown with analogies and definitions' },
+      { id: 'STEP_BY_STEP', name: 'Mode B: Teach Me Step by Step', desc: 'Socratic staged learning with comprehension checks' },
+      { id: 'SOLVE', name: 'Mode C: Solve a Problem', desc: 'Intermediate algebraic/computational derivations' },
+      { id: 'EXAM_PREP', name: 'Mode D: Exam Preparation', desc: 'Marks-weightage syllabus blueprints & formula recaps' },
+      { id: 'CODING', name: 'Mode E: Coding Tutor', desc: 'Code inspection, complexity, and bug diagnosis' },
+      { id: 'INTERVIEW', name: 'Mode F: Technical Interview Tutor', desc: 'DSA trade-offs, architecture & viva drills' },
+      { id: 'REVISION', name: 'Mode G: Spaced Revision Tutor', desc: 'Active recall flashcards & retrieval quizzes' },
+    ];
+
+    const difficultyLevels = ['Beginner', 'Intermediate', 'Advanced', 'Exam', 'Interview'];
+
+    res.json({
+      success: true,
+      data: {
+        courses: coursesResult.items.map((c) => ({
+          id: c.id,
+          name: c.name,
+          code: c.code,
+          category: c.category,
+          difficulty: c.difficulty,
+          units_count: c.units_count,
+        })),
+        documents: documents.map((d: any) => ({
+          id: d.id,
+          title: d.title,
+          file_type: d.file_type,
+          page_count: d.page_count,
+        })),
+        notes: notes.map((n: any) => ({
+          id: n.id,
+          title: n.title,
+          note_type: n.note_type,
+        })),
+        subjects: engineeringSubjects,
+        teachingModes,
+        difficultyLevels,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/v1/ai/tutor/generate-flashcards - Generate and save flashcard deck to Flashcards module
+aiRouter.post('/ai/tutor/generate-flashcards', requireAuth, async (req, res, next) => {
+  try {
+    const studentId = req.user!.userId;
+    const { topic, subject, cards, course_id } = req.body;
+
+    if (!topic || !topic.trim()) {
+      throw new ValidationError("Parameter 'topic' is required");
+    }
+
+    const deckCards = Array.isArray(cards) && cards.length > 0
+      ? cards
+      : [
+          {
+            front: `What is the core definition and invariant of ${topic}?`,
+            back: `Formulated during AI Tutor session. Represents core theoretical invariant and boundary correctness for ${topic}.`,
+            topic,
+            type: 'CONCEPT',
+            difficulty: 'MEDIUM',
+          },
+          {
+            front: `What is the primary examination pitfall or common mistake with ${topic}?`,
+            back: `Confusing worst-case asymptotic upper bounds with average behavior, or omitting base cases.`,
+            topic,
+            type: 'DEFINITION',
+            difficulty: 'HARD',
+          },
+        ];
+
+    const deck = await LearningModulesService.createFlashcardDeck(studentId, {
+      title: `${topic} - AI Tutor Deck`,
+      subject: subject || 'Computer Science',
+      description: `Active recall study deck generated from AI Tutor session on ${topic}`,
+      cards: deckCards,
+      course_id,
+      source_type: 'AI_TUTOR',
+    });
+
+    res.status(201).json({
+      success: true,
+      data: deck,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/v1/ai/tutor/generate-quiz - Generate adaptive quiz questions to Quiz module
+aiRouter.post('/ai/tutor/generate-quiz', requireAuth, async (req, res, next) => {
+  try {
+    const studentId = req.user!.userId;
+    const { topic, difficulty, question_count, course_id } = req.body;
+
+    if (!topic || !topic.trim()) {
+      throw new ValidationError("Parameter 'topic' is required");
+    }
+
+    const quizResult = await QuizGenerationService.generateQuiz(studentId, {
+      source_type: 'TOPIC',
+      topic: topic.trim(),
+      difficulty: difficulty || 'MEDIUM',
+      question_count: question_count || 4,
+      course_id,
+    });
+
+    res.status(201).json({
+      success: true,
+      data: quizResult,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/v1/ai/tutor/generate-note - Save AI Tutor explanation to Notes module
+aiRouter.post('/ai/tutor/generate-note', requireAuth, async (req, res, next) => {
+  try {
+    const studentId = req.user!.userId;
+    const { title, content, topic, course_id } = req.body;
+
+    if (!title || !title.trim()) {
+      throw new ValidationError("Parameter 'title' is required");
+    }
+    if (!content || !content.trim()) {
+      throw new ValidationError("Parameter 'content' is required");
+    }
+
+    const note = await NotesService.createManualNote(studentId, {
+      title: title.trim(),
+      content: content.trim(),
+      description: `Generated from AI Tutor learning session on ${topic || title}`,
+      tags: ['AITutor', topic || 'AcademicNote'],
+      note_type: 'STUDY_NOTES',
+      level: 'INTERMEDIATE',
+    });
+
+    res.status(201).json({
+      success: true,
+      data: note,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/v1/ai/tutor/create-study-task - Add AI Tutor recommendation to Study Planner
+aiRouter.post('/ai/tutor/create-study-task', requireAuth, async (req, res, next) => {
+  try {
+    const studentId = req.user!.userId;
+    const { title, description, target_date } = req.body;
+
+    if (!title || !title.trim()) {
+      throw new ValidationError("Parameter 'title' is required");
+    }
+
+    const plan = await LearningModulesService.createStudyPlan(studentId, {
+      title: title.trim(),
+      description: description || 'Study milestone generated from AI Academic Tutor',
+      type: 'REVISION',
+      target_date: target_date || new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
+      total_hours_target: 6,
+      tasks: [
+        {
+          title: title.trim(),
+          subject: 'Academic Tutor Milestone',
+          target_date: target_date || new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
+          estimated_minutes: 60,
+          priority: 'MEDIUM',
+        } as any,
+      ],
+    });
+
+    res.status(201).json({
+      success: true,
+      data: plan,
     });
   } catch (err) {
     next(err);

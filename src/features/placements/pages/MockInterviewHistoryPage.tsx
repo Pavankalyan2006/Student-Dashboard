@@ -63,8 +63,11 @@ export const MockInterviewHistoryPage: React.FC<Props> = ({ onNavigate }) => {
   const completedSessions = sessions.filter(s => s.status === 'COMPLETED');
   const averageScore = completedSessions.length > 0
     ? Math.round(
-        completedSessions.reduce((acc, s) => acc + (s.feedback?.overall_score || 0), 0) /
-          completedSessions.length
+        completedSessions.reduce(
+          (acc, s) =>
+            acc + (s.overall_score ?? s.feedback_summary?.overall_score ?? s.feedback?.overall_score ?? 0),
+          0
+        ) / completedSessions.length
       )
     : 0;
 
@@ -195,7 +198,7 @@ export const MockInterviewHistoryPage: React.FC<Props> = ({ onNavigate }) => {
             {filteredSessions.map(session => {
               const isCompleted = session.status === 'COMPLETED';
               const isInProgress = session.status === 'IN_PROGRESS' || session.status === 'READY';
-              const score = session.feedback?.overall_score;
+              const score = session.overall_score ?? session.feedback_summary?.overall_score ?? session.feedback?.overall_score;
 
               return (
                 <div

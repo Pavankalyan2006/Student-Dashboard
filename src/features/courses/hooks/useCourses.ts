@@ -40,6 +40,60 @@ export function useCourses(params: CourseFilterParams = {}) {
     onError: () => toast.error('Failed to update bookmark'),
   });
 
+  const createCourseMutation = useMutation({
+    mutationFn: (payload: Parameters<typeof coursesApi.createCourse>[0]) => coursesApi.createCourse(payload),
+    onSuccess: (course) => {
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      toast.success(`Course "${course.title}" created successfully!`);
+    },
+    onError: (err: any) => toast.error(err?.message || 'Failed to create course'),
+  });
+
+  const enrollAcademicSubjectMutation = useMutation({
+    mutationFn: (subjectId: string) => coursesApi.enrollAcademicSubject(subjectId),
+    onSuccess: (course) => {
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+      queryClient.invalidateQueries({ queryKey: ['academic-subjects'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      toast.success(`Enrolled in "${course.title}"!`);
+    },
+    onError: (err: any) => toast.error(err?.message || 'Failed to enroll academic subject'),
+  });
+
+  const archiveMutation = useMutation({
+    mutationFn: ({ courseId, archive }: { courseId: string; archive: boolean }) =>
+      archive ? coursesApi.archiveCourse(courseId) : coursesApi.restoreCourse(courseId),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+      queryClient.invalidateQueries({ queryKey: ['course', variables.courseId] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      toast.success(variables.archive ? 'Course archived' : 'Course restored to active workspace');
+    },
+    onError: () => toast.error('Failed to update course archive status'),
+  });
+
+  const removeMutation = useMutation({
+    mutationFn: (courseId: string) => coursesApi.removeCourse(courseId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      toast.success('Course removed from workspace');
+    },
+    onError: () => toast.error('Failed to remove course'),
+  });
+
+  const unenrollMutation = useMutation({
+    mutationFn: (courseId: string) => coursesApi.unenroll(courseId),
+    onSuccess: (_, courseId) => {
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+      queryClient.invalidateQueries({ queryKey: ['course', courseId] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      toast.success('Course removed from enrolled courses');
+    },
+    onError: () => toast.error('Failed to unenroll from course'),
+  });
+
   return {
     categories: categoriesQuery.data,
     courses: coursesQuery.data?.items || [],
@@ -53,6 +107,16 @@ export function useCourses(params: CourseFilterParams = {}) {
     refetch: coursesQuery.refetch,
     enrollCourse: enrollMutation.mutate,
     isEnrolling: enrollMutation.isPending,
+    unenrollCourse: unenrollMutation.mutate,
+    isUnenrolling: unenrollMutation.isPending,
     toggleBookmark: bookmarkMutation.mutate,
+    createCourse: createCourseMutation.mutateAsync,
+    isCreating: createCourseMutation.isPending,
+    enrollAcademicSubject: enrollAcademicSubjectMutation.mutateAsync,
+    isEnrollingSubject: enrollAcademicSubjectMutation.isPending,
+    archiveCourse: (courseId: string, archive: boolean = true) => archiveMutation.mutateAsync({ courseId, archive }),
+    isArchiving: archiveMutation.isPending,
+    removeCourse: removeMutation.mutateAsync,
+    isRemoving: removeMutation.isPending,
   };
 }

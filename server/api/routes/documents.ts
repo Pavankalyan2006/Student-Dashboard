@@ -6,14 +6,144 @@ import { DocumentSummaryService } from '../../services/documentSummary';
 import { DocumentRetrievalService } from '../../rag/retriever';
 import { StorageService } from '../../storage/storage';
 import { ValidationError } from '../../core/exceptions';
+import { eventBus } from '../../events/eventBus';
+import { DocumentCategory } from '../../models/types';
 
 export const documentsRouter = Router();
+
+export const DOCUMENT_CATEGORIES: DocumentCategory[] = [
+  'Lecture Notes',
+  'Study Materials',
+  'Textbooks and References',
+  'Assignments',
+  'Laboratory Manuals',
+  'Lab Reports',
+  'Project Reports',
+  'Research Papers',
+  'Presentations',
+  'Question Papers',
+  'Exam Preparation',
+  'Certificates',
+  'Resumes',
+  'Internship Documents',
+  'Placement Materials',
+  'Programming Resources',
+  'Course Materials',
+  'Other Documents',
+];
+
+// GET /api/v1/documents/categories - List available academic categories
+documentsRouter.get('/documents/categories', requireAuth, (req, res) => {
+  res.json({
+    success: true,
+    data: DOCUMENT_CATEGORIES,
+  });
+});
+
+// GET /api/v1/documents/stats - Real storage stats and document counts
+documentsRouter.get('/documents/stats', requireAuth, async (req, res, next) => {
+  try {
+    const studentId = req.user!.userId;
+    const stats = await DocumentService.getStorageStats(studentId);
+    res.json({
+      success: true,
+      data: stats,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/v1/documents/folders - List student folders
+documentsRouter.get('/documents/folders', requireAuth, async (req, res, next) => {
+  try {
+    const studentId = req.user!.userId;
+    const folders = await DocumentService.listFolders(studentId);
+    res.json({
+      success: true,
+      data: folders,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/v1/documents/folders - Create new folder
+documentsRouter.post('/documents/folders', requireAuth, async (req, res, next) => {
+  try {
+    const studentId = req.user!.userId;
+    const { name, description, color, parent_id } = req.body;
+    const folder = await DocumentService.createFolder(studentId, {
+      name,
+      description,
+      color,
+      parent_id,
+    });
+    res.status(201).json({
+      success: true,
+      data: folder,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/v1/documents/folders/:folderId - Get single folder
+documentsRouter.get('/documents/folders/:folderId', requireAuth, async (req, res, next) => {
+  try {
+    const studentId = req.user!.userId;
+    const { folderId } = req.params;
+    const folder = await DocumentService.getFolder(folderId, studentId);
+    res.json({
+      success: true,
+      data: folder,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PATCH /api/v1/documents/folders/:folderId - Update folder
+documentsRouter.patch('/documents/folders/:folderId', requireAuth, async (req, res, next) => {
+  try {
+    const studentId = req.user!.userId;
+    const { folderId } = req.params;
+    const { name, description, color } = req.body;
+    const folder = await DocumentService.updateFolder(folderId, studentId, {
+      name,
+      description,
+      color,
+    });
+    res.json({
+      success: true,
+      data: folder,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// DELETE /api/v1/documents/folders/:folderId - Delete folder
+documentsRouter.delete('/documents/folders/:folderId', requireAuth, async (req, res, next) => {
+  try {
+    const studentId = req.user!.userId;
+    const { folderId } = req.params;
+    const actionOnDocuments = req.query.actionOnDocuments === 'delete' ? 'delete' : 'unfile';
+    const result = await DocumentService.deleteFolder(folderId, studentId, actionOnDocuments);
+    res.json({
+      success: true,
+      data: result,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
 
 // GET /api/v1/documents - List documents with filtering, search, and pagination
 documentsRouter.get('/documents', requireAuth, async (req, res, next) => {
   try {
     const studentId = req.user!.userId;
-    const { search, filter, sort, page, limit } = req.query;
+    const { search, filter, sort, page, limit, category, folder_id, file_type } = req.query;
 
     const result = await DocumentService.listDocuments(studentId, {
       search: search as string,
@@ -21,6 +151,9 @@ documentsRouter.get('/documents', requireAuth, async (req, res, next) => {
       sort: sort as any,
       page: page ? Number(page) : 1,
       limit: limit ? Number(limit) : 12,
+      category: category as any,
+      folder_id: folder_id as string,
+      file_type: file_type as string,
     });
 
     res.json({
@@ -36,17 +169,24 @@ documentsRouter.get('/documents', requireAuth, async (req, res, next) => {
 documentsRouter.post('/documents', requireAuth, async (req, res, next) => {
   try {
     const studentId = req.user!.userId;
-    const {
-      title,
-      originalName,
-      mimeType,
-      sizeBytes,
-      contentBase64,
-      courseId,
-      courseTitle,
-      tags,
-      description,
-    } = req.body;
+    const originalName = req.body.originalName || req.body.original_filename;
+    const mimeType = req.body.mimeType || req.body.mime_type;
+    const sizeBytes = req.body.sizeBytes !== undefined ? req.body.sizeBytes : req.body.size_bytes;
+    const contentBase64 = req.body.contentBase64 || req.body.file_data_base64;
+    const title = req.body.title;
+    const courseId = req.body.courseId || req.body.course_id;
+    const courseTitle = req.body.courseTitle || req.body.course_title;
+    const subject = req.body.subject;
+    const semester = req.body.semester ? Number(req.body.semester) : undefined;
+    const academicYear = req.body.academicYear || req.body.academic_year;
+    const topic = req.body.topic;
+    const collectionId = req.body.collectionId || req.body.collection_id;
+    const visibility = req.body.visibility;
+    const tags = req.body.tags;
+    const description = req.body.description;
+    const category = req.body.category;
+    const folderId = req.body.folderId || req.body.folder_id;
+    const notes = req.body.notes;
 
     if (!originalName || !mimeType || sizeBytes === undefined) {
       throw new ValidationError('originalName, mimeType, and sizeBytes are required');
@@ -60,13 +200,58 @@ documentsRouter.post('/documents', requireAuth, async (req, res, next) => {
       contentBase64,
       courseId,
       courseTitle,
+      subject,
+      semester,
+      academicYear,
+      topic,
+      collectionId,
+      visibility,
       tags: Array.isArray(tags) ? tags : undefined,
       description,
+      category,
+      folderId,
+      notes,
     });
+
+    await eventBus.publish(
+      'DOCUMENT_UPLOADED',
+      {
+        document_id: document.id,
+        title: document.title,
+        mime_type: document.mime_type,
+        size_bytes: document.file_size,
+      },
+      {
+        student_id: studentId,
+        resource_type: 'Document',
+        resource_id: document.id,
+        source: 'DocumentsRouter',
+      }
+    );
 
     res.status(201).json({
       success: true,
       data: document,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/v1/documents/ai-fetch - Semantically search and fetch documents using Gemini
+documentsRouter.post('/documents/ai-fetch', requireAuth, async (req, res, next) => {
+  try {
+    const studentId = req.user!.userId;
+    const { query } = req.body;
+
+    if (!query || typeof query !== 'string' || !query.trim()) {
+      throw new ValidationError('Search query is required');
+    }
+
+    const result = await DocumentService.aiFetchDocuments(studentId, query.trim());
+    res.json({
+      success: true,
+      data: result,
     });
   } catch (err) {
     next(err);
@@ -95,13 +280,15 @@ documentsRouter.patch('/documents/:documentId', requireAuth, async (req, res, ne
   try {
     const studentId = req.user!.userId;
     const { documentId } = req.params;
-    const { title, description, is_favorite, metadata } = req.body;
+    const { title, description, is_favorite, metadata, category, folder_id, folderId } = req.body;
 
     const updated = await DocumentService.updateDocument(documentId, studentId, {
       title,
       description,
       is_favorite,
       metadata,
+      category,
+      folder_id: folder_id !== undefined ? folder_id : folderId,
     });
 
     res.json({
@@ -179,6 +366,187 @@ documentsRouter.get('/documents/:documentId/pages/:pageNumber', requireAuth, asy
     res.json({
       success: true,
       data: page,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/v1/documents/:documentId/download - Download original uploaded document file
+documentsRouter.get('/documents/:documentId/download', requireAuth, async (req, res, next) => {
+  try {
+    const studentId = req.user!.userId;
+    const role = req.user!.role;
+    const { documentId } = req.params;
+
+    const doc = await DocumentService.getDocument(documentId, studentId, role);
+    const { record, data } = await StorageService.download(doc.storage_key, studentId, role);
+
+    const safeFilename = (record.original_name || doc.original_filename || 'document.pdf').replace(
+      /[^\w.-]/g,
+      '_'
+    );
+    res.setHeader('Content-Type', record.mime_type || doc.mime_type || 'application/octet-stream');
+    res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}"`);
+
+    if (data.startsWith('data:')) {
+      const base64Data = data.split(',')[1] || '';
+      return res.send(Buffer.from(base64Data, 'base64'));
+    }
+    return res.send(Buffer.from(data, 'base64'));
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/v1/documents/:documentId/version - Upload a newer version of the document
+documentsRouter.post('/documents/:documentId/version', requireAuth, async (req, res, next) => {
+  try {
+    const studentId = req.user!.userId;
+    const role = req.user!.role;
+    const { documentId } = req.params;
+
+    const originalName = req.body.originalName || req.body.original_filename;
+    const mimeType = req.body.mimeType || req.body.mime_type;
+    const sizeBytes = req.body.sizeBytes !== undefined ? req.body.sizeBytes : req.body.size_bytes;
+    const contentBase64 = req.body.contentBase64 || req.body.file_data_base64;
+    const changeNotes = req.body.changeNotes || req.body.change_notes;
+
+    if (!originalName || !mimeType || sizeBytes === undefined) {
+      throw new ValidationError('originalName, mimeType, and sizeBytes are required');
+    }
+
+    const updated = await DocumentService.uploadNewVersion(
+      documentId,
+      studentId,
+      {
+        originalName,
+        mimeType,
+        sizeBytes: Number(sizeBytes),
+        contentBase64,
+        changeNotes,
+      },
+      role
+    );
+
+    res.status(201).json({
+      success: true,
+      data: updated,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/v1/documents/:documentId/move - Move document to folder or unfiled
+documentsRouter.post('/documents/:documentId/move', requireAuth, async (req, res, next) => {
+  try {
+    const studentId = req.user!.userId;
+    const { documentId } = req.params;
+    const { folder_id, folderId } = req.body;
+    const targetFolderId = folder_id !== undefined ? folder_id : folderId;
+
+    const updated = await DocumentService.moveDocument(documentId, targetFolderId, studentId);
+    res.json({
+      success: true,
+      data: updated,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/v1/documents/:documentId/versions - Get document version history
+documentsRouter.get('/documents/:documentId/versions', requireAuth, async (req, res, next) => {
+  try {
+    const studentId = req.user!.userId;
+    const { documentId } = req.params;
+
+    const versions = await DocumentService.getDocumentVersions(documentId, studentId);
+    res.json({
+      success: true,
+      data: versions,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/v1/documents/:documentId/versions/:versionNumber/download - Download a previous version
+documentsRouter.get('/documents/:documentId/versions/:versionNumber/download', requireAuth, async (req, res, next) => {
+  try {
+    const studentId = req.user!.userId;
+    const role = req.user!.role;
+    const { documentId, versionNumber } = req.params;
+
+    const versions = await DocumentService.getDocumentVersions(documentId, studentId);
+    const targetVersion = versions.find((v) => v.version_number === Number(versionNumber));
+    if (!targetVersion) {
+      throw new ValidationError(`Version ${versionNumber} not found`);
+    }
+
+    const { record, data } = await StorageService.download(targetVersion.storage_key, studentId, role);
+    const safeFilename = (targetVersion.original_filename || 'document').replace(/[^\w.-]/g, '_');
+    res.setHeader('Content-Type', targetVersion.mime_type || record.mime_type || 'application/octet-stream');
+    res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}"`);
+
+    if (data.startsWith('data:')) {
+      const base64Data = data.split(',')[1] || '';
+      return res.send(Buffer.from(base64Data, 'base64'));
+    }
+    return res.send(Buffer.from(data, 'base64'));
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/v1/documents/:documentId/versions/:versionNumber/restore - Restore a previous version
+documentsRouter.post('/documents/:documentId/versions/:versionNumber/restore', requireAuth, async (req, res, next) => {
+  try {
+    const studentId = req.user!.userId;
+    const { documentId, versionNumber } = req.params;
+
+    const restored = await DocumentService.restoreVersion(documentId, Number(versionNumber), studentId);
+    res.json({
+      success: true,
+      data: restored,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/v1/documents/:documentId/index-knowledge - Index document in Knowledge Base / RAG pipeline
+documentsRouter.post('/documents/:documentId/index-knowledge', requireAuth, async (req, res, next) => {
+  try {
+    const studentId = req.user!.userId;
+    const { documentId } = req.params;
+
+    const result = await DocumentService.indexDocumentInKnowledgeBase(documentId, studentId);
+    res.json({
+      success: true,
+      data: result,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/v1/documents/:documentId/link-lab - Link document as reference lab manual
+documentsRouter.post('/documents/:documentId/link-lab', requireAuth, async (req, res, next) => {
+  try {
+    const studentId = req.user!.userId;
+    const { documentId } = req.params;
+    const { labId, labTitle } = req.body;
+
+    if (!labId) {
+      throw new ValidationError('labId is required');
+    }
+
+    const updated = await DocumentService.linkDocumentToLab(documentId, studentId, labId, labTitle);
+    res.json({
+      success: true,
+      data: updated,
     });
   } catch (err) {
     next(err);

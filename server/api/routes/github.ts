@@ -42,6 +42,30 @@ githubRouter.get('/callback', requireAuth, async (req: Request, res: Response) =
   }
 });
 
+githubRouter.post('/connect-pat', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const studentId = req.user!.userId;
+    const { token, username } = req.body;
+    if (!token) {
+      return res.status(400).json({ success: false, message: 'Personal Access Token is required' });
+    }
+    const connection = await GitHubService.connectWithToken(studentId, token, username);
+    res.json({ success: true, data: connection });
+  } catch (err: any) {
+    res.status(err.status || 500).json({ success: false, message: err.message });
+  }
+});
+
+githubRouter.post('/sync', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const studentId = req.user!.userId;
+    const result = await GitHubService.syncAll(studentId);
+    res.json({ success: true, data: result });
+  } catch (err: any) {
+    res.status(err.status || 500).json({ success: false, message: err.message });
+  }
+});
+
 githubRouter.post('/disconnect', requireAuth, async (req: Request, res: Response) => {
   try {
     const studentId = req.user!.userId;
@@ -75,6 +99,75 @@ githubRouter.get('/repos/:id', requireAuth, async (req: Request, res: Response) 
     res.json({ success: true, data: repo });
   } catch (err: any) {
     res.status(err.status || 404).json({ success: false, message: err.message });
+  }
+});
+
+githubRouter.get('/repos/:id/readme', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const studentId = req.user!.userId;
+    const readme = await GitHubService.getReadme(req.params.id, studentId);
+    res.json({ success: true, data: readme });
+  } catch (err: any) {
+    res.status(err.status || 500).json({ success: false, message: err.message });
+  }
+});
+
+githubRouter.post('/repos/:id/featured', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const studentId = req.user!.userId;
+    const { is_featured, metadata } = req.body;
+    const repo = await GitHubService.toggleFeatured(
+      req.params.id,
+      studentId,
+      is_featured !== undefined ? is_featured : true,
+      metadata
+    );
+    res.json({ success: true, data: repo });
+  } catch (err: any) {
+    res.status(err.status || 500).json({ success: false, message: err.message });
+  }
+});
+
+githubRouter.post('/repos/:id/personal-notes', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const studentId = req.user!.userId;
+    const { notes } = req.body;
+    const repo = await GitHubService.updatePersonalNotes(req.params.id, studentId, notes || '');
+    res.json({ success: true, data: repo });
+  } catch (err: any) {
+    res.status(err.status || 500).json({ success: false, message: err.message });
+  }
+});
+
+githubRouter.get('/featured', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const studentId = req.user!.userId;
+    const repos = await GitHubService.listFeatured(studentId);
+    res.json({ success: true, data: repos });
+  } catch (err: any) {
+    res.status(err.status || 500).json({ success: false, message: err.message });
+  }
+});
+
+githubRouter.get('/languages', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const studentId = req.user!.userId;
+    const summary = await GitHubService.getLanguagesSummary(studentId);
+    res.json({ success: true, data: summary });
+  } catch (err: any) {
+    res.status(err.status || 500).json({ success: false, message: err.message });
+  }
+});
+
+githubRouter.get('/learning-discovery', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const query = req.query.query as string | undefined;
+    const topic = req.query.topic as string | undefined;
+    const language = req.query.language as string | undefined;
+    const results = await GitHubService.searchLearningRepositories({ query, topic, language });
+    res.json({ success: true, data: results });
+  } catch (err: any) {
+    res.status(err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -268,3 +361,47 @@ githubRouter.post('/repos/:id/link-project', requireAuth, async (req: Request, r
     res.status(err.status || 400).json({ success: false, message: err.message });
   }
 });
+
+// ==========================================
+// 7. Career, Resume & Interview Prep
+// ==========================================
+
+githubRouter.post('/repos/:id/resume-bullets', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const studentId = req.user!.userId;
+    const { role_context } = req.body;
+    const bullets = await GitHubService.generateResumeBullets(req.params.id, studentId, role_context);
+    res.json({ success: true, data: bullets });
+  } catch (err: any) {
+    res.status(err.status || 500).json({ success: false, message: err.message });
+  }
+});
+
+githubRouter.post('/repos/:id/resume-export', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const studentId = req.user!.userId;
+    const { bullets, title, tech_stack } = req.body;
+    if (!bullets || !Array.isArray(bullets) || bullets.length === 0) {
+      return res.status(400).json({ success: false, message: 'At least one bullet point is required for resume export' });
+    }
+    const result = await GitHubService.exportToResume(req.params.id, studentId, {
+      bullets,
+      title,
+      tech_stack,
+    });
+    res.json({ success: true, data: result });
+  } catch (err: any) {
+    res.status(err.status || 500).json({ success: false, message: err.message });
+  }
+});
+
+githubRouter.post('/repos/:id/interview-prep', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const studentId = req.user!.userId;
+    const questions = await GitHubService.generateInterviewPrep(req.params.id, studentId);
+    res.json({ success: true, data: questions });
+  } catch (err: any) {
+    res.status(err.status || 500).json({ success: false, message: err.message });
+  }
+});
+

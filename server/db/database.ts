@@ -44,6 +44,10 @@ import {
   DocumentSummary,
   DocumentCardData,
   DocumentProcessingStatus,
+  DocumentFolder,
+  DocumentCategory,
+  DocumentVersion,
+  DocumentStorageStats,
   PaginatedResult,
   CodingSession,
   SavedCode,
@@ -111,6 +115,9 @@ import {
   MockInterviewAnswer,
   PlacementPlan,
   PlacementPlanTask,
+  PlacementPracticeAttempt,
+  PlacementAssessmentResult,
+  GroupDiscussionTopic,
 } from '../models/placementTypes';
 import {
   SEED_PLACEMENT_TOPICS,
@@ -124,6 +131,7 @@ import {
   SEED_MOCK_ANSWERS,
   SEED_PLACEMENT_PLANS,
   SEED_PLACEMENT_PLAN_TASKS,
+  SEED_GROUP_DISCUSSION_TOPICS,
 } from './seedPlacements';
 import {
   Resume,
@@ -280,13 +288,143 @@ import {
   seedAdminAuditLogs,
   seedSecurityEvents,
 } from './seedAdminSecurity';
+import {
+  SystemDesignLesson,
+  SystemDesignChallenge,
+  SystemDesignProject,
+  DesignProjectVersion,
+  ChallengeSubmission,
+  InterviewSession,
+  SystemDesignProgress,
+} from '../models/systemDesignTypes';
+import {
+  SYSTEM_DESIGN_LESSONS,
+  SYSTEM_DESIGN_CHALLENGES,
+  SYSTEM_DESIGN_ROADMAP_LEVELS,
+} from './systemDesignCatalog';
+import {
+  GatePaper,
+  GateSyllabusSection,
+  GateSyllabusTopic,
+  GateQuestion,
+  GateMockTest,
+  GateStudentProfile,
+  GateQuestionAttempt,
+  GateBookmark,
+  GateTestSession,
+  GateTestResult,
+  GateStudyTask,
+  GateDashboardData,
+  TopicStatus,
+  StudentConfidence,
+} from '../models/gateTypes';
+import {
+  GATE_PAPERS,
+  GATE_SYLLABUS_SECTIONS,
+  GATE_QUESTIONS,
+  GATE_MOCK_TESTS,
+} from './gateCatalog';
 import { logger } from '../core/logging';
 import { NotFoundError, AuthorizationError, ValidationError } from '../core/exceptions';
 import { VectorStore } from '../rag/vectorStore';
 import { EmbeddingService } from '../rag/embeddings';
 import { AgentWorkflowRecord } from '../ai/orchestration/types';
+import {
+  SavedMockQuestionEntity,
+  ScheduledMockInterviewEntity,
+} from '../models/mockInterviewTypes';
+import {
+  LabCourse,
+  LabManual,
+  LabExperimentDetail,
+  LabCodeDraft,
+  LabDoubtMessage,
+  LabReportData,
+  StudentLabAnalytics,
+} from '../models/labAssistantTypes';
+import {
+  StudentLanguageEnrollment,
+  SpacedRepetitionCard,
+  WritingSubmission,
+  ConversationSession,
+  QuizSubmissionResult,
+  StudentLanguageAnalytics,
+} from '../models/languageLearningTypes';
+import { MASTER_LANGUAGE_CATALOG } from './languageCatalog';
+import {
+  JobListing,
+  JobSourceConfig,
+  StudentSavedJob,
+  StudentJobAlert,
+  JobSyncRun,
+  JobsDashboardStats,
+  JobPrimaryCategory,
+} from '../models/jobDiscoveryTypes';
+import {
+  INITIAL_JOB_SOURCES,
+  VERIFIED_SEED_JOB_LISTINGS,
+  GOVERNMENT_SUBCATEGORIES,
+  PRIVATE_SUBCATEGORIES,
+} from './jobsCatalog';
+import {
+  StudentExternalProfile,
+  ExternalProfileSnapshot,
+  ExternalProfileSyncRun,
+  ExternalProfilesDashboardStats,
+} from '../models/externalProfileTypes';
+import {
+  KnowledgeCollection,
+  KnowledgeResource,
+  KnowledgeBookmark,
+  KnowledgeAnnotationNote,
+  KnowledgeQuestionRecord,
+  GeneratedStudyMaterial,
+} from '../models/knowledgeBaseTypes';
+import {
+  FlashcardDeck,
+  Flashcard,
+  FlashcardStats,
+  ReviewRating,
+} from '../models/learningModulesTypes';
+import {
+  SEED_100_COURSES,
+  SEED_100_CHAPTERS,
+  SEED_100_LESSONS,
+} from './seedCourses';
 
 class DatabaseStore {
+  // AI Flashcards Storage Maps
+  private flashcardDecksStore: Map<string, FlashcardDeck> = new Map();
+  private flashcardReviewsStore: Map<string, Array<{ id: string; card_id: string; deck_id: string; student_id: string; rating: string; confidence: number; reviewed_at: string }>> = new Map();
+
+  // AI Knowledge Base Storage Maps
+  private knowledgeCollections: Map<string, KnowledgeCollection> = new Map();
+  private knowledgeResources: Map<string, KnowledgeResource> = new Map();
+  private knowledgeBookmarks: Map<string, KnowledgeBookmark> = new Map();
+  private knowledgeNotes: Map<string, KnowledgeAnnotationNote> = new Map();
+  private knowledgeQuestions: Map<string, KnowledgeQuestionRecord> = new Map();
+  private knowledgeStudyMaterials: Map<string, GeneratedStudyMaterial> = new Map();
+
+  // External Profiles Platform Storage Maps
+  private studentExternalProfiles: Map<string, StudentExternalProfile[]> = new Map();
+  private externalProfileSnapshots: Map<string, ExternalProfileSnapshot> = new Map();
+  private externalProfileSyncRuns: Map<string, ExternalProfileSyncRun[]> = new Map();
+
+  // Jobs Discovery Platform Storage Maps
+  private jobListings: Map<string, JobListing> = new Map();
+  private jobSources: Map<string, JobSourceConfig> = new Map();
+  private studentSavedJobs: Map<string, StudentSavedJob[]> = new Map();
+  private studentJobAlerts: Map<string, StudentJobAlert[]> = new Map();
+  private jobSyncRuns: Map<string, JobSyncRun[]> = new Map();
+
+  // Language Learning Platform Storage Maps
+  private languageEnrollments: Map<string, StudentLanguageEnrollment[]> = new Map();
+  private languageLessonProgress: Map<string, { completed_at: string; score?: number; notes?: string }> = new Map();
+  private languageSpacedRepetition: Map<string, SpacedRepetitionCard[]> = new Map();
+  private languageWritingSubmissions: Map<string, WritingSubmission[]> = new Map();
+  private languageConversationSessions: Map<string, ConversationSession[]> = new Map();
+  private languageQuizAttempts: Map<string, QuizSubmissionResult[]> = new Map();
+
   private agentWorkflows: Map<string, AgentWorkflowRecord> = new Map();
   private students: Map<string, Student> = new Map();
   private notifications: Map<string, Notification> = new Map();
@@ -310,6 +448,7 @@ class DatabaseStore {
   private documentPages: Map<string, DocumentPage[]> = new Map();
   private documentChunks: Map<string, DocumentChunk[]> = new Map();
   private documentSummaries: Map<string, DocumentSummary[]> = new Map();
+  private documentFolders: Map<string, DocumentFolder> = new Map();
   private codingProblems: Map<string, CodingProblem> = new Map();
   private codingTestCases: Map<string, CodingTestCase[]> = new Map();
   private codingSessions: Map<string, CodingSession> = new Map();
@@ -344,8 +483,21 @@ class DatabaseStore {
   private mockInterviewSessions: Map<string, MockInterviewSession> = new Map();
   private mockInterviewQuestions: Map<string, MockInterviewQuestion[]> = new Map();
   private mockInterviewAnswers: Map<string, MockInterviewAnswer[]> = new Map();
+  private savedMockQuestions: Map<string, SavedMockQuestionEntity[]> = new Map();
+  private scheduledMockInterviews: Map<string, ScheduledMockInterviewEntity[]> = new Map();
+  // Lab Assistant module maps
+  private labCourses: Map<string, LabCourse> = new Map();
+  private labManuals: Map<string, LabManual> = new Map();
+  private labExperiments: Map<string, LabExperimentDetail> = new Map();
+  private labChecklists: Map<string, { [stepId: string]: boolean }> = new Map();
+  private labCodeDrafts: Map<string, LabCodeDraft> = new Map();
+  private labDoubtHistories: Map<string, LabDoubtMessage[]> = new Map();
+  private labReports: Map<string, LabReportData> = new Map();
   private placementPlans: Map<string, PlacementPlan> = new Map();
   private placementPlanTasks: Map<string, PlacementPlanTask[]> = new Map();
+  private placementPracticeAttempts: Map<string, PlacementPracticeAttempt[]> = new Map();
+  private placementAssessments: Map<string, PlacementAssessmentResult[]> = new Map();
+  private groupDiscussionTopics: Map<string, GroupDiscussionTopic> = new Map();
   // Phase 12: Resume, Career & Skills
   private resumes: Map<string, Resume> = new Map();
   private resumeProfiles: Map<string, ResumeProfile> = new Map();
@@ -423,6 +575,26 @@ class DatabaseStore {
     total_repositories_analyzed: 3,
     last_webhook_event_at: new Date().toISOString(),
   };
+  // Phase 16: Interactive System Design Lab
+  private systemDesignLessons: Map<string, SystemDesignLesson> = new Map();
+  private systemDesignChallenges: Map<string, SystemDesignChallenge> = new Map();
+  private systemDesignProjects: Map<string, SystemDesignProject> = new Map();
+  private systemDesignSubmissions: Map<string, ChallengeSubmission[]> = new Map();
+  private systemDesignInterviews: Map<string, InterviewSession> = new Map();
+  private systemDesignProgress: Map<string, SystemDesignProgress> = new Map();
+
+  // GATE Exam Preparation Storage Maps
+  private gatePapers: Map<string, GatePaper> = new Map();
+  private gateSyllabusSections: Map<string, GateSyllabusSection[]> = new Map();
+  private gateQuestions: Map<string, GateQuestion> = new Map();
+  private gateMockTests: Map<string, GateMockTest> = new Map();
+  private gateStudentProfiles: Map<string, GateStudentProfile> = new Map();
+  private gateTopicProgress: Map<string, Map<string, Partial<GateSyllabusTopic>>> = new Map();
+  private gateQuestionAttempts: Map<string, GateQuestionAttempt[]> = new Map();
+  private gateBookmarks: Map<string, GateBookmark[]> = new Map();
+  private gateTestSessions: Map<string, GateTestSession> = new Map();
+  private gateStudyTasks: Map<string, GateStudyTask[]> = new Map();
+
   private isInitialized = false;
 
   constructor() {
@@ -598,6 +770,23 @@ class DatabaseStore {
         tags: ['github', 'repository', 'typescript', 'express', 'react', 'code'],
       },
     ];
+
+    // Index all 100 persistent curriculum courses in global search
+    for (const course of SEED_100_COURSES) {
+      this.searchIndex.push({
+        id: `search_${course.id}`,
+        title: `${course.title} (${course.code})`,
+        description: course.short_description || course.description.slice(0, 140),
+        type: 'courses',
+        url: `/courses/${course.id}`,
+        tags: [
+          ...course.skills.map((s) => s.toLowerCase()),
+          course.branch.toLowerCase(),
+          course.category ? course.category.toLowerCase() : 'course',
+          course.code.toLowerCase(),
+        ],
+      });
+    }
 
     // Seed default conversations for demo student
     const conv1: AIConversation = {
@@ -1321,6 +1510,30 @@ function dijkstra(n: number, adj: [number, number][][], src: number): number[] {
 
     this.courseResources.set('crs_daa_01', daaResources);
 
+    // ================= SEED 100 B.TECH COURSES, CHAPTERS & LESSONS =================
+    for (const course of SEED_100_COURSES) {
+      if (!this.courses.has(course.id)) {
+        this.courses.set(course.id, course);
+      } else {
+        const existing = this.courses.get(course.id)!;
+        if (!existing.is_custom) {
+          this.courses.set(course.id, { ...existing, ...course });
+        }
+      }
+    }
+
+    for (const chapter of SEED_100_CHAPTERS) {
+      if (!this.chapters.has(chapter.id)) {
+        this.chapters.set(chapter.id, chapter);
+      }
+    }
+
+    for (const lesson of SEED_100_LESSONS) {
+      if (!this.lessons.has(lesson.id)) {
+        this.lessons.set(lesson.id, lesson);
+      }
+    }
+
     // Seed enrollments for the demo student
     const defaultEnrollments: CourseEnrollment[] = [
       {
@@ -1607,6 +1820,54 @@ A state is **safe** if there exists at least one valid execution sequence $\\lan
       ]);
     }
 
+    // Seed Document Folders
+    const seedFolders: DocumentFolder[] = [
+      {
+        id: 'folder_os_01',
+        student_id: defaultStudent.id,
+        name: 'Operating Systems & Systems Architecture',
+        description: 'Kernel concepts, CPU scheduling, concurrency, virtual memory, and distributed systems.',
+        color: '#2563EB',
+        icon: 'Cpu',
+        created_at: new Date('2026-03-01T08:00:00Z').toISOString(),
+        updated_at: new Date('2026-03-01T08:00:00Z').toISOString(),
+      },
+      {
+        id: 'folder_dsa_02',
+        student_id: defaultStudent.id,
+        name: 'Data Structures & Algorithms',
+        description: 'Asymptotic complexity, trees, graphs, dynamic programming, and greedy algorithms.',
+        color: '#7C3AED',
+        icon: 'Binary',
+        created_at: new Date('2026-03-01T08:00:00Z').toISOString(),
+        updated_at: new Date('2026-03-01T08:00:00Z').toISOString(),
+      },
+      {
+        id: 'folder_db_01',
+        student_id: defaultStudent.id,
+        name: 'Database Management Systems',
+        description: 'Relational algebra, SQL query optimization, normalization, transactions, and indexing.',
+        color: '#059669',
+        icon: 'Database',
+        created_at: new Date('2026-03-01T08:00:00Z').toISOString(),
+        updated_at: new Date('2026-03-01T08:00:00Z').toISOString(),
+      },
+      {
+        id: 'folder_lab_01',
+        student_id: defaultStudent.id,
+        name: 'Laboratory Manuals & Practicals',
+        description: 'Official syllabus lab observation notebooks, experiment code drafts, and viva voce sheets.',
+        color: '#D97706',
+        icon: 'FlaskConical',
+        created_at: new Date('2026-03-01T08:00:00Z').toISOString(),
+        updated_at: new Date('2026-03-01T08:00:00Z').toISOString(),
+      },
+    ];
+
+    for (const folder of seedFolders) {
+      this.documentFolders.set(folder.id, folder);
+    }
+
     // Seed Phase 6 Documents
     const seedDocs: Document[] = [
       {
@@ -1623,12 +1884,20 @@ A state is **safe** if there exists at least one valid execution sequence $\\lan
         description: 'Complete university curriculum reference for Operating Systems, process scheduling, synchronization, and memory management.',
         author: 'Silberschatz, Galvin & Gagne',
         language: 'en',
+        category: 'Textbooks and References',
+        folder_id: 'folder_os_01',
+        folder_name: 'Operating Systems & Systems Architecture',
         metadata: {
           course_id: 'crs_os_02',
           course_title: 'Operating Systems & System Architecture',
           tags: ['Operating Systems', 'Processes', 'Deadlock', 'Virtual Memory'],
           subject: 'Operating Systems',
           semester: 4,
+          category: 'Textbooks and References',
+          folder_id: 'folder_os_01',
+          folder_name: 'Operating Systems & Systems Architecture',
+          content_indexed: true,
+          current_version: 1,
         },
         is_favorite: true,
         created_at: new Date('2026-03-01T09:00:00Z').toISOString(),
@@ -1650,12 +1919,20 @@ A state is **safe** if there exists at least one valid execution sequence $\\lan
         description: 'Lecture notes covering asymptotic analysis, balanced search trees, and dynamic programming invariants.',
         author: 'Prof. T. Cormen et al.',
         language: 'en',
+        category: 'Lecture Notes',
+        folder_id: 'folder_dsa_02',
+        folder_name: 'Data Structures & Algorithms',
         metadata: {
           course_id: 'crs_algo_01',
           course_title: 'Design and Analysis of Algorithms',
           tags: ['Algorithms', 'AVL Trees', 'Dynamic Programming', 'Master Theorem'],
           subject: 'Algorithms',
           semester: 4,
+          category: 'Lecture Notes',
+          folder_id: 'folder_dsa_02',
+          folder_name: 'Data Structures & Algorithms',
+          content_indexed: true,
+          current_version: 1,
         },
         is_favorite: true,
         created_at: new Date('2026-03-05T11:00:00Z').toISOString(),
@@ -1677,12 +1954,20 @@ A state is **safe** if there exists at least one valid execution sequence $\\lan
         description: 'Detailed technical specification on relational normal forms (1NF through BCNF) and B+ tree index structures.',
         author: 'Database Engineering Group',
         language: 'en',
+        category: 'Study Materials',
+        folder_id: 'folder_db_01',
+        folder_name: 'Database Management Systems',
         metadata: {
           course_id: 'crs_db_04',
           course_title: 'Database Systems & Distributed Queries',
           tags: ['DBMS', 'BCNF', 'Indexing', 'B+ Trees'],
           subject: 'Database Systems',
           semester: 5,
+          category: 'Study Materials',
+          folder_id: 'folder_db_01',
+          folder_name: 'Database Management Systems',
+          content_indexed: true,
+          current_version: 1,
         },
         is_favorite: false,
         created_at: new Date('2026-03-10T14:00:00Z').toISOString(),
@@ -1853,6 +2138,41 @@ print(power_mod(2, 10, 1000))  # Output: 24
 
     for (const prob of seedDSAProblems) {
       this.dsaProblems.set(prob.id, prob);
+
+      // Seed both public and hidden test cases for real execution
+      const testCases: CodingTestCase[] = [];
+      const publicCases = prob.public_test_cases && prob.public_test_cases.length > 0
+        ? prob.public_test_cases
+        : (prob.examples || []);
+
+      publicCases.forEach((tc, idx) => {
+        testCases.push({
+          id: `${prob.id}_pub_${idx + 1}`,
+          problem_id: prob.id,
+          input: tc.input,
+          expected_output: tc.output,
+          is_hidden: false,
+          explanation: (tc as any).explanation,
+          created_at: prob.created_at || new Date().toISOString(),
+        });
+      });
+
+      const hiddenCases = prob.hidden_test_cases || [];
+      hiddenCases.forEach((tc, idx) => {
+        testCases.push({
+          id: `${prob.id}_hid_${idx + 1}`,
+          problem_id: prob.id,
+          input: tc.input,
+          expected_output: tc.output,
+          is_hidden: true,
+          explanation: (tc as any).explanation,
+          created_at: prob.created_at || new Date().toISOString(),
+        });
+      });
+
+      if (testCases.length > 0) {
+        this.codingTestCases.set(prob.id, testCases);
+      }
     }
 
     this.dsaProgress.set(defaultStudent.id, {
@@ -2022,6 +2342,18 @@ print(power_mod(2, 10, 1000))  # Output: 24
       list.push(task);
       this.placementPlanTasks.set(task.plan_id, list);
     }
+    for (const gd of SEED_GROUP_DISCUSSION_TOPICS) {
+      this.groupDiscussionTopics.set(gd.id, gd);
+      this.searchIndex.push({
+        id: gd.id,
+        title: `${gd.title} (Group Discussion)`,
+        description: gd.description,
+        type: 'courses',
+        url: `/placements?tab=gd&topic=${gd.id}`,
+        tags: ['placement', 'group-discussion', gd.category.toLowerCase()],
+      });
+    }
+
 
     // Phase 12: Seed Career Roles, Skills, and Initial Demo Resume
     for (const cr of SEED_CAREER_ROLES) {
@@ -2307,6 +2639,330 @@ print(power_mod(2, 10, 1000))  # Output: 24
       this.securityEvents.set(ev.id, { ...ev });
     }
 
+    // Seed System Design Lab Lessons & Challenges
+    for (const lesson of SYSTEM_DESIGN_LESSONS) {
+      this.systemDesignLessons.set(lesson.id, { ...lesson });
+    }
+    for (const challenge of SYSTEM_DESIGN_CHALLENGES) {
+      this.systemDesignChallenges.set(challenge.id, { ...challenge });
+    }
+
+    // Seed default student system design project
+    const demoProjectId = 'sd_proj_tinyurl_01';
+    const demoProject: SystemDesignProject = {
+      id: demoProjectId,
+      student_id: 'std_01j8k9x2p4',
+      challenge_id: 'sd_url_shortener',
+      title: 'Global URL Shortener (TinyURL) Architecture',
+      description: 'Production-ready distributed URL shortener designed for 100M daily active users with sub-15ms redirect latency.',
+      components: [
+        {
+          id: 'c1',
+          name: 'Global Anycast DNS',
+          category: 'INFRASTRUCTURE',
+          type: 'DNS',
+          tech_choice: 'Cloudflare Route53',
+          description: 'Geo-DNS routing users to nearest edge PoP',
+          position: { x: 80, y: 150 },
+        },
+        {
+          id: 'c2',
+          name: 'Nginx Reverse Proxy & LB',
+          category: 'APPLICATION',
+          type: 'LOAD_BALANCER',
+          tech_choice: 'Nginx L7 / AWS ALB',
+          description: 'Evenly distributes incoming HTTP redirects and API writes',
+          position: { x: 300, y: 150 },
+          properties: { instances: 4, capacity_rps: 12000 },
+        },
+        {
+          id: 'c3',
+          name: 'URL Shortener App Service',
+          category: 'APPLICATION',
+          type: 'APP_SERVER',
+          tech_choice: 'Go / Gin REST API',
+          description: 'Stateless redirect engine & base62 encoding microservice',
+          position: { x: 550, y: 150 },
+          properties: { instances: 8, capacity_rps: 25000 },
+        },
+        {
+          id: 'c4',
+          name: 'Distributed Key Gen Service (KGS)',
+          category: 'COMMUNICATION',
+          type: 'BACKGROUND_WORKER',
+          tech_choice: 'Zookeeper + KGS Worker',
+          description: 'Pre-generates Base62 7-char hash tokens into distributed queues',
+          position: { x: 550, y: 320 },
+        },
+        {
+          id: 'c5',
+          name: 'Redis Cache Tier',
+          category: 'STORAGE',
+          type: 'CACHE',
+          tech_choice: 'Redis Cluster 7.0',
+          description: 'Sub-millisecond memory store for top 20% hot redirect links',
+          position: { x: 800, y: 80 },
+          properties: { memory_gb: 64, cache_hit_ratio: 0.85 },
+        },
+        {
+          id: 'c6',
+          name: 'Distributed SQL Primary',
+          category: 'DISTRIBUTED',
+          type: 'PRIMARY_DB',
+          tech_choice: 'PostgreSQL 16 Primary',
+          description: 'Handles write transactions for new custom aliases and mapping records',
+          position: { x: 800, y: 220 },
+        },
+        {
+          id: 'c7',
+          name: 'Database Read Replicas',
+          category: 'DISTRIBUTED',
+          type: 'READ_REPLICA',
+          tech_choice: 'PostgreSQL Read Replicas',
+          description: 'Absorbs read queries on cache miss across availability zones',
+          position: { x: 1050, y: 220 },
+          properties: { instances: 3 },
+        },
+      ],
+      connections: [
+        { id: 'conn_1', from: 'c1', to: 'c2', protocol: 'HTTPS', label: 'DNS Resolution', direction: 'UNIDIRECTIONAL' },
+        { id: 'conn_2', from: 'c2', to: 'c3', protocol: 'HTTP/REST', label: 'L7 Load Balance', direction: 'UNIDIRECTIONAL' },
+        { id: 'conn_3', from: 'c3', to: 'c5', protocol: 'Redis/RESP', label: 'Query Hot Cache', direction: 'BIDIRECTIONAL' },
+        { id: 'conn_4', from: 'c3', to: 'c4', protocol: 'gRPC', label: 'Fetch Token Range', direction: 'BIDIRECTIONAL' },
+        { id: 'conn_5', from: 'c3', to: 'c6', protocol: 'SQL', label: 'Write New Alias', direction: 'UNIDIRECTIONAL' },
+        { id: 'conn_6', from: 'c3', to: 'c7', protocol: 'SQL', label: 'Read Miss Fallback', direction: 'UNIDIRECTIONAL' },
+        { id: 'conn_7', from: 'c6', to: 'c7', protocol: 'Replication_Log', label: 'WAL Streaming Replication', direction: 'UNIDIRECTIONAL', is_async: true },
+      ],
+      requirements: {
+        functional: [
+          'Generate unique 7-character Base62 short URL for any long URL',
+          'Fast redirect (HTTP 301/302) to target destination',
+          'Custom vanity URL alias support with collision rejection',
+          'Optional expiration TTL with background garbage collection',
+        ],
+        non_functional: [
+          'Sub-15ms 99th percentile redirect response time',
+          '99.99% high availability across availability zones',
+          '100:1 read to write ratio handling 100M daily clicks',
+        ],
+        assumptions: [
+          'Average long URL is 500 bytes',
+          'Short URL is 50 bytes with metadata',
+          '5-year retention period for persistent links',
+        ],
+      },
+      versions: [
+        {
+          version_number: 1,
+          created_at: new Date(Date.now() - 86400000 * 2).toISOString(),
+          note: 'Initial single database baseline architecture',
+          components: [],
+          connections: [],
+        },
+        {
+          version_number: 2,
+          created_at: new Date(Date.now() - 86400000).toISOString(),
+          note: 'Added Redis cache tier and read replicas to eliminate primary DB bottleneck',
+          components: [],
+          connections: [],
+        },
+      ],
+      tags: ['URL Shortener', 'Distributed Systems', 'Caching', 'High Throughput'],
+      created_at: new Date(Date.now() - 86400000 * 2).toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    this.systemDesignProjects.set(demoProjectId, demoProject);
+
+    // Seed default student progress
+    this.systemDesignProgress.set('std_01j8k9x2p4', {
+      student_id: 'std_01j8k9x2p4',
+      completed_lessons: ['sd_l1_01', 'sd_l1_02', 'sd_l1_03'],
+      passed_knowledge_checks: {
+        sd_l1_01: 100,
+        sd_l1_02: 100,
+        sd_l1_03: 100,
+      },
+      completed_challenges: ['sd_url_shortener'],
+      total_projects_created: 1,
+      interview_sessions_completed: 1,
+      highest_challenge_score: 94,
+      mastered_concepts: [
+        'Capacity Estimation',
+        'Load Balancing',
+        'Distributed Caching',
+        'Functional vs Non-Functional Requirements',
+        'Database Replication (Primary-Replica)',
+      ],
+      weak_concepts: ['Distributed Transactions (2PC vs Saga)', 'Consensus Protocols (Raft/Paxos)'],
+      readiness_score: 82,
+      last_activity_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
+
+    // Seed GATE Exam Preparation Catalog & Demo Data
+    for (const paper of GATE_PAPERS) {
+      this.gatePapers.set(paper.code, { ...paper });
+    }
+    for (const [code, sections] of Object.entries(GATE_SYLLABUS_SECTIONS)) {
+      this.gateSyllabusSections.set(code, JSON.parse(JSON.stringify(sections)));
+    }
+    for (const q of GATE_QUESTIONS) {
+      this.gateQuestions.set(q.id, { ...q });
+    }
+    for (const test of GATE_MOCK_TESTS) {
+      this.gateMockTests.set(test.id, { ...test });
+    }
+
+    // Default student profile for demo student std_01j8k9x2p4
+    const gateDemoStudentId = 'std_01j8k9x2p4';
+    this.gateStudentProfiles.set(gateDemoStudentId, {
+      student_id: gateDemoStudentId,
+      target_paper: 'CS',
+      exam_cycle: 'GATE 2026',
+      target_date: '2026-02-07',
+      target_score: 78,
+      air_goal: '< 500',
+      weekly_study_hours: 20,
+      study_days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+      onboarding_completed: true,
+      created_at: new Date(Date.now() - 86400000 * 14).toISOString(),
+      updated_at: new Date().toISOString(),
+    });
+
+    // Seed topic progress for demo student
+    const demoTopicMap = new Map<string, Partial<GateSyllabusTopic>>();
+    demoTopicMap.set('cs_top_01', {
+      status: 'COMPLETED',
+      confidence: 'HIGH',
+      revision_flag: false,
+      student_notes: 'Reviewed truth tables, Resolution principle and CNF conversion.',
+      last_practiced_at: new Date(Date.now() - 86400000).toISOString(),
+    });
+    demoTopicMap.set('cs_top_31', {
+      status: 'COMPLETED',
+      confidence: 'MEDIUM',
+      revision_flag: true,
+      student_notes: 'Formula: Page table size = (Entries) * (PTE size). EMAT = h*(t + m) + (1-h)*(t + 2m).',
+      last_practiced_at: new Date(Date.now() - 86400000 * 2).toISOString(),
+    });
+    demoTopicMap.set('cs_top_18', {
+      status: 'IN_PROGRESS',
+      confidence: 'HIGH',
+      revision_flag: false,
+      student_notes: 'Master theorem cases 1, 2, 3 verified with Akra-Bazzi method.',
+      last_practiced_at: new Date(Date.now() - 3600000 * 4).toISOString(),
+    });
+    demoTopicMap.set('cs_top_35', {
+      status: 'IN_PROGRESS',
+      confidence: 'LOW',
+      revision_flag: true,
+      student_notes: 'Need to review BCNF vs 3NF dependency preservation rules.',
+      last_practiced_at: new Date(Date.now() - 86400000 * 3).toISOString(),
+    });
+    this.gateTopicProgress.set(gateDemoStudentId, demoTopicMap);
+
+    // Seed question attempts for demo student
+    this.gateQuestionAttempts.set(gateDemoStudentId, [
+      {
+        id: 'att_01',
+        student_id: gateDemoStudentId,
+        question_id: 'gate_q_cs_2024_01',
+        paper_code: 'CS',
+        selected_answer: 'B',
+        is_correct: true,
+        marks_awarded: 1,
+        negative_deducted: 0,
+        time_spent_seconds: 64,
+        attempted_at: new Date(Date.now() - 86400000 * 2).toISOString(),
+      },
+      {
+        id: 'att_02',
+        student_id: gateDemoStudentId,
+        question_id: 'gate_q_cs_2024_02',
+        paper_code: 'CS',
+        selected_answer: 'B',
+        is_correct: true,
+        marks_awarded: 2,
+        negative_deducted: 0,
+        time_spent_seconds: 98,
+        attempted_at: new Date(Date.now() - 86400000).toISOString(),
+      },
+      {
+        id: 'att_03',
+        student_id: gateDemoStudentId,
+        question_id: 'gate_q_cs_2023_04',
+        paper_code: 'CS',
+        selected_answer: ['A', 'B'], // missing C
+        is_correct: false,
+        marks_awarded: 0,
+        negative_deducted: 0,
+        time_spent_seconds: 140,
+        attempted_at: new Date(Date.now() - 3600000 * 5).toISOString(),
+      },
+    ]);
+
+    // Seed bookmarks
+    this.gateBookmarks.set(gateDemoStudentId, [
+      {
+        id: 'bm_01',
+        student_id: gateDemoStudentId,
+        question_id: 'gate_q_cs_2023_04',
+        notes: 'Classic MSQ on Candidate Keys: Remember E is not on RHS so all keys have E.',
+        created_at: new Date().toISOString(),
+      },
+    ]);
+
+    // Seed study tasks
+    const todayStr = new Date().toISOString().split('T')[0];
+    const tomorrowStr = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+    this.gateStudyTasks.set(gateDemoStudentId, [
+      {
+        id: 'gtask_01',
+        student_id: gateDemoStudentId,
+        paper_code: 'CS',
+        date: todayStr,
+        title: 'Revise Virtual Memory & Multi-Level Page Tables',
+        type: 'CONCEPT',
+        subject: 'Operating Systems',
+        topic_id: 'cs_top_31',
+        duration_minutes: 45,
+        is_completed: true,
+        notes: 'Focus on EMAT formulas with 2-level paging and TLB hit ratios.',
+      },
+      {
+        id: 'gtask_02',
+        student_id: gateDemoStudentId,
+        paper_code: 'CS',
+        date: todayStr,
+        title: 'Practice 10 GATE PYQs on Functional Dependencies',
+        type: 'PRACTICE',
+        subject: 'Databases (DBMS)',
+        topic_id: 'cs_top_35',
+        duration_minutes: 60,
+        is_completed: false,
+        notes: 'Solve 2021-2024 MSQs on candidate keys and 3NF decomposition.',
+      },
+      {
+        id: 'gtask_03',
+        student_id: gateDemoStudentId,
+        paper_code: 'CS',
+        date: tomorrowStr,
+        title: 'Take Operating Systems Speed Mock Test',
+        type: 'MOCK_TEST',
+        subject: 'Operating Systems',
+        duration_minutes: 45,
+        is_completed: false,
+      },
+    ]);
+
+    // Seed initial Jobs Discovery sources and verified listings
+    for (const src of INITIAL_JOB_SOURCES) {
+      this.jobSources.set(src.id, { ...src });
+    }
+    for (const job of VERIFIED_SEED_JOB_LISTINGS) {
+      this.jobListings.set(job.id, { ...job });
+    }
+
     this.isInitialized = true;
     logger.info('DatabaseStore successfully initialized with seed data');
   }
@@ -2341,9 +2997,9 @@ print(power_mod(2, 10, 1000))  # Output: 24
     return this.toSafeStudent(student);
   }
 
-  public async createStudent(data: Omit<Student, 'id' | 'created_at' | 'updated_at'>): Promise<SafeStudent> {
+  public async createStudent(data: Omit<Student, 'created_at' | 'updated_at'> | (Omit<Student, 'id' | 'created_at' | 'updated_at'> & { id?: string })): Promise<SafeStudent> {
     await this.initialize();
-    const id = `std_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    const id = (data as any).id || `std_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     const newStudent: Student = {
       ...data,
       id,
@@ -2352,6 +3008,44 @@ print(power_mod(2, 10, 1000))  # Output: 24
     };
     this.students.set(id, newStudent);
     return this.toSafeStudent(newStudent);
+  }
+
+  public async updateStudentPassword(id: string, passwordHash: string): Promise<boolean> {
+    await this.initialize();
+    const student = this.students.get(id);
+    if (!student) return false;
+    student.password_hash = passwordHash;
+    student.updated_at = new Date().toISOString();
+    return true;
+  }
+
+  public async updateStudent(id: string, updates: Partial<Student>): Promise<SafeStudent | null> {
+    await this.initialize();
+    const student = this.students.get(id);
+    if (!student) return null;
+    Object.assign(student, updates);
+    student.updated_at = new Date().toISOString();
+    return this.toSafeStudent(student);
+  }
+
+  public async getTodayTasks(userId: string): Promise<TodayPlanTask[]> {
+    await this.initialize();
+    if (!this.todayPlans.has(userId)) {
+      await this.getStudentDashboardData(userId);
+    }
+    return this.todayPlans.get(userId) || [];
+  }
+
+  public async getTodayPlan(userId: string): Promise<TodayPlanTask[]> {
+    return this.getTodayTasks(userId);
+  }
+
+  public async deleteNotification(id: string, studentId: string): Promise<boolean> {
+    await this.initialize();
+    const notif = this.notifications.get(id);
+    if (!notif || notif.student_id !== studentId) return false;
+    this.notifications.delete(id);
+    return true;
   }
 
   public toSafeStudent(student: Student): SafeStudent {
@@ -3173,12 +3867,89 @@ print(power_mod(2, 10, 1000))  # Output: 24
   }
 
   // ----------------- Courses & Learning Module Methods (Phase 4) -----------------
-  public async getCourseCategories(): Promise<{ branches: string[]; semesters: number[]; difficulties: string[] }> {
+  public async getCourseCategories(): Promise<{
+    branches: string[];
+    semesters: number[];
+    difficulties: string[];
+    categories: string[];
+  }> {
     await this.initialize();
     return {
-      branches: ['All', 'CSE', 'AIML', 'IT', 'ECE', 'EEE', 'Mechanical', 'Civil'],
+      branches: ['All', 'CSE', 'AIML', 'IT', 'ECE', 'EEE', 'Mechanical', 'Civil', 'Common'],
       semesters: [1, 2, 3, 4, 5, 6, 7, 8],
       difficulties: ['Beginner', 'Intermediate', 'Advanced'],
+      categories: [
+        'All',
+        'Programming Fundamentals',
+        'Web Development',
+        'Computer Science Core',
+        'Artificial Intelligence and Machine Learning',
+        'Data Science and Analytics',
+        'Cloud, DevOps, and Software Tools',
+        'Electronics and Communication Engineering',
+        'Electrical Engineering',
+        'Mechanical and Civil Engineering',
+        'Mathematics, Aptitude, and Career Skills',
+        'Core Subject',
+        'Program Elective',
+        'Open Elective',
+        'Laboratory Course',
+      ],
+    };
+  }
+
+  public async getCatalogStats(studentId?: string): Promise<{
+    totalCourses: number;
+    totalModules: number;
+    totalLessons: number;
+    categoryCounts: Record<string, number>;
+    difficultyCounts: Record<string, number>;
+    branchCounts: Record<string, number>;
+    enrolledCount: number;
+    completedCount: number;
+  }> {
+    await this.initialize();
+    const courses = Array.from(this.courses.values()).filter(
+      (c) => c.is_published && (!c.is_custom || (studentId && c.student_id === studentId))
+    );
+    const categoryCounts: Record<string, number> = {};
+    const difficultyCounts: Record<string, number> = {};
+    const branchCounts: Record<string, number> = {};
+
+    for (const c of courses) {
+      const cat = c.category || 'Core Subject';
+      categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+      difficultyCounts[c.difficulty] = (difficultyCounts[c.difficulty] || 0) + 1;
+      branchCounts[c.branch] = (branchCounts[c.branch] || 0) + 1;
+    }
+
+    let enrolledCount = 0;
+    let completedCount = 0;
+    if (studentId) {
+      for (const c of courses) {
+        if (this.enrollments.has(`${studentId}_${c.id}`)) {
+          enrolledCount++;
+          const courseLessons = Array.from(this.lessons.values()).filter((l) => l.course_id === c.id);
+          const completedLessons = courseLessons.filter((l) => {
+            const prog = this.lessonProgress.get(`${studentId}_${l.id}`);
+            return prog && prog.status === 'COMPLETED';
+          }).length;
+          if (completedLessons === courseLessons.length && courseLessons.length > 0) {
+            completedCount++;
+          }
+        }
+      }
+    }
+
+    return {
+      totalCourses: courses.length,
+      totalModules: this.chapters.size,
+      totalLessons: this.lessons.size,
+      categoryCounts,
+      difficultyCounts,
+      branchCounts,
+      enrolledCount,
+      completedCount,
     };
   }
 
@@ -3188,6 +3959,11 @@ print(power_mod(2, 10, 1000))  # Output: 24
       semester?: number;
       difficulty?: string;
       search?: string;
+      category?: string;
+      status?: string;
+      is_archived?: boolean;
+      academic_year?: string;
+      search?: string;
       sort?: string;
       page?: number;
       limit?: number;
@@ -3196,6 +3972,9 @@ print(power_mod(2, 10, 1000))  # Output: 24
   ): Promise<{ items: CourseCardData[]; total: number; page: number; limit: number; totalPages: number }> {
     await this.initialize();
     let list = Array.from(this.courses.values()).filter((c) => c.is_published);
+
+    // Security: Filter out custom courses belonging to other students
+    list = list.filter((c) => !c.is_custom || (studentId && c.student_id === studentId));
 
     // Filters
     if (filters.branch && filters.branch !== 'All') {
@@ -3210,75 +3989,107 @@ print(power_mod(2, 10, 1000))  # Output: 24
       list = list.filter((c) => c.difficulty.toLowerCase() === filters.difficulty!.toLowerCase());
     }
 
+    if (filters.category && filters.category !== 'All') {
+      list = list.filter((c) => (c.category || '').toLowerCase() === filters.category!.toLowerCase());
+    }
+
+    if (filters.academic_year) {
+      list = list.filter((c) => c.academic_year === filters.academic_year);
+    }
+
     if (filters.search) {
       const q = filters.search.toLowerCase().trim();
-      list = list.filter(
-        (c) =>
+      list = list.filter((c) => {
+        const matchesBasic =
           c.title.toLowerCase().includes(q) ||
           c.code.toLowerCase().includes(q) ||
           c.description.toLowerCase().includes(q) ||
           c.branch.toLowerCase().includes(q) ||
-          c.skills.some((s) => s.toLowerCase().includes(q))
-      );
-    }
+          (c.category && c.category.toLowerCase().includes(q)) ||
+          c.skills.some((s) => s.toLowerCase().includes(q));
 
-    // Sorting
-    if (filters.sort === 'newest') {
-      list.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    } else if (filters.sort === 'duration') {
-      list.sort((a, b) => b.estimated_minutes - a.estimated_minutes);
-    } else if (filters.sort === 'difficulty') {
-      const diffOrder: Record<string, number> = { Beginner: 1, Intermediate: 2, Advanced: 3 };
-      list.sort((a, b) => diffOrder[a.difficulty] - diffOrder[b.difficulty]);
-    } else {
-      // Default: recommended (matches student semester/branch first if authenticated)
-      if (studentId) {
-        const student = this.students.get(studentId);
-        if (student) {
-          list.sort((a, b) => {
-            const aMatch = a.branch.includes('CSE') || a.branch.includes('AI') ? 1 : 0;
-            const bMatch = b.branch.includes('CSE') || b.branch.includes('AI') ? 1 : 0;
-            return bMatch - aMatch;
-          });
-        }
-      }
-    }
+        if (matchesBasic) return true;
 
-    const total = list.length;
-    const page = filters.page && filters.page > 0 ? filters.page : 1;
-    const limit = filters.limit && filters.limit > 0 ? filters.limit : 12;
-    const totalPages = Math.ceil(total / limit) || 1;
-    const startIndex = (page - 1) * limit;
-    const paginated = list.slice(startIndex, startIndex + limit);
+        // Search chapter titles
+        const chaptersForCourse = Array.from(this.chapters.values()).filter((ch) => ch.course_id === c.id);
+        const matchesChapter = chaptersForCourse.some(
+          (ch) => ch.title.toLowerCase().includes(q) || ch.description.toLowerCase().includes(q)
+        );
+        if (matchesChapter) return true;
+
+        // Search lesson/topic titles
+        const lessonsForCourse = Array.from(this.lessons.values()).filter((l) => l.course_id === c.id);
+        const matchesLesson = lessonsForCourse.some(
+          (l) => l.title.toLowerCase().includes(q) || l.description.toLowerCase().includes(q)
+        );
+        if (matchesLesson) return true;
+
+        return false;
+      });
+    }
 
     // Hydrate each course card with lesson counts and student progress
-    const items: CourseCardData[] = paginated.map((c) => {
-      const courseLessons = Array.from(this.lessons.values()).filter((l) => l.course_id === c.id);
-      const totalLessons = courseLessons.length || 7;
+    let hydrated: CourseCardData[] = list.map((c) => {
+      const courseLessons = Array.from(this.lessons.values())
+        .filter((l) => l.course_id === c.id)
+        .sort((a, b) => a.order_index - b.order_index);
+      const totalLessons = courseLessons.length;
+      const totalChapters = Array.from(this.chapters.values()).filter((ch) => ch.course_id === c.id).length;
 
       let completedLessons = 0;
       let progressPercentage = 0;
       let isEnrolled = false;
       let isBookmarked = false;
+      let isArchived = false;
+      let lastStudiedAt: string | undefined = undefined;
+      let nextRecommendedLesson: { id: string; title: string } | undefined = undefined;
 
       if (studentId) {
         const enrollment = this.enrollments.get(`${studentId}_${c.id}`);
         isEnrolled = !!enrollment;
+        isArchived = !!enrollment?.is_archived;
 
         const bookmark = this.courseBookmarks.get(`${studentId}_${c.id}`);
         isBookmarked = !!bookmark;
 
-        // Calculate actual completed lessons
+        // Calculate actual completed lessons and find next recommended lesson
         for (const lsn of courseLessons) {
           const prog = this.lessonProgress.get(`${studentId}_${lsn.id}`);
-          if (prog && prog.status === 'COMPLETED') {
-            completedLessons++;
+          if (prog) {
+            if (prog.status === 'COMPLETED') {
+              completedLessons++;
+            }
+            if (prog.last_accessed_at) {
+              if (!lastStudiedAt || new Date(prog.last_accessed_at).getTime() > new Date(lastStudiedAt).getTime()) {
+                lastStudiedAt = prog.last_accessed_at;
+              }
+            }
+          } else if (!nextRecommendedLesson) {
+            nextRecommendedLesson = { id: lsn.id, title: lsn.title };
           }
         }
 
         if (totalLessons > 0) {
           progressPercentage = Math.round((completedLessons / totalLessons) * 100);
         }
+      }
+
+      if (!nextRecommendedLesson && courseLessons.length > 0) {
+        const uncompleted = courseLessons.find((l) => {
+          if (!studentId) return true;
+          const prog = this.lessonProgress.get(`${studentId}_${l.id}`);
+          return !prog || prog.status !== 'COMPLETED';
+        });
+        nextRecommendedLesson = uncompleted
+          ? { id: uncompleted.id, title: uncompleted.title }
+          : { id: courseLessons[0].id, title: courseLessons[0].title };
+      }
+
+      let status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' = 'NOT_STARTED';
+      if (completedLessons === totalLessons && totalLessons > 0) {
+        status = 'COMPLETED';
+      } else if (completedLessons > 0 || isEnrolled) {
+        status = 'IN_PROGRESS';
       }
 
       return {
@@ -3288,11 +4099,100 @@ print(power_mod(2, 10, 1000))  # Output: 24
         progress_percentage: progressPercentage,
         is_enrolled: isEnrolled,
         is_bookmarked: isBookmarked,
+        is_archived: isArchived,
+        last_studied_at: lastStudiedAt,
+        next_recommended_lesson: nextRecommendedLesson,
+        status,
+        total_chapters: totalChapters,
       };
     });
 
+    // Filter by archived status
+    if (filters.is_archived !== undefined) {
+      hydrated = hydrated.filter((c) => !!c.is_archived === !!filters.is_archived);
+    } else {
+      // By default, hide archived courses
+      hydrated = hydrated.filter((c) => !c.is_archived);
+    }
+
+    // Filter by course status
+    if (filters.status && filters.status !== 'All') {
+      if (filters.status === 'NOT_STARTED') {
+        hydrated = hydrated.filter((c) => c.status === 'NOT_STARTED');
+      } else if (filters.status === 'IN_PROGRESS') {
+        hydrated = hydrated.filter((c) => c.status === 'IN_PROGRESS');
+      } else if (filters.status === 'COMPLETED') {
+        hydrated = hydrated.filter((c) => c.status === 'COMPLETED');
+      } else if (filters.status === 'BOOKMARKED') {
+        hydrated = hydrated.filter((c) => c.is_bookmarked);
+      } else if (filters.status === 'ENROLLED') {
+        hydrated = hydrated.filter((c) => c.is_enrolled);
+      } else if (filters.status === 'RECENT') {
+        hydrated = hydrated.filter((c) => !!c.last_studied_at);
+      }
+    }
+
+    // Sorting
+    if (filters.sort === 'newest') {
+      hydrated.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    } else if (filters.sort === 'duration') {
+      hydrated.sort((a, b) => b.estimated_minutes - a.estimated_minutes);
+    } else if (filters.sort === 'difficulty') {
+      const diffOrder: Record<string, number> = { Beginner: 1, Intermediate: 2, Advanced: 3 };
+      hydrated.sort((a, b) => diffOrder[a.difficulty] - diffOrder[b.difficulty]);
+    } else if (filters.sort === 'name') {
+      hydrated.sort((a, b) => a.title.localeCompare(b.title));
+    } else if (filters.sort === 'progress') {
+      hydrated.sort((a, b) => (b.progress_percentage || 0) - (a.progress_percentage || 0));
+    } else if (filters.sort === 'semester') {
+      hydrated.sort((a, b) => a.semester - b.semester);
+    } else if (filters.sort === 'recent' || filters.sort === 'recently_accessed') {
+      hydrated.sort((a, b) => {
+        const aTime = a.last_studied_at ? new Date(a.last_studied_at).getTime() : 0;
+        const bTime = b.last_studied_at ? new Date(b.last_studied_at).getTime() : 0;
+        return bTime - aTime;
+      });
+    } else {
+      // Default: recommended (matches student semester/branch first if authenticated)
+      if (studentId) {
+        const student = this.students.get(studentId);
+        if (student) {
+          const sBranch = (student.branch || '').toLowerCase();
+          const sSem = Number(student.semester) || 1;
+          hydrated.sort((a, b) => {
+            const aHasChapters = (a.total_chapters || 0) > 0 ? 2 : 0;
+            const bHasChapters = (b.total_chapters || 0) > 0 ? 2 : 0;
+            if (aHasChapters !== bHasChapters) return bHasChapters - aHasChapters;
+
+            const aBranchMatch =
+              sBranch &&
+              (a.branch.toLowerCase().includes(sBranch.substring(0, 3)) ||
+                sBranch.includes(a.branch.toLowerCase().substring(0, 3)))
+                ? 2
+                : 0;
+            const bBranchMatch =
+              sBranch &&
+              (b.branch.toLowerCase().includes(sBranch.substring(0, 3)) ||
+                sBranch.includes(b.branch.toLowerCase().substring(0, 3)))
+                ? 2
+                : 0;
+            const aSemMatch = a.semester === sSem ? 1 : 0;
+            const bSemMatch = b.semester === sSem ? 1 : 0;
+            return bBranchMatch + bSemMatch - (aBranchMatch + aSemMatch);
+          });
+        }
+      }
+    }
+
+    const total = hydrated.length;
+    const page = filters.page && filters.page > 0 ? filters.page : 1;
+    const limit = filters.limit && filters.limit > 0 ? filters.limit : 12;
+    const totalPages = Math.ceil(total / limit) || 1;
+    const startIndex = (page - 1) * limit;
+    const paginated = hydrated.slice(startIndex, startIndex + limit);
+
     return {
-      items,
+      items: paginated,
       total,
       page,
       limit,
@@ -3305,6 +4205,11 @@ print(power_mod(2, 10, 1000))  # Output: 24
     const course = this.courses.get(courseId);
     if (!course) return null;
 
+    // Security: custom course privacy
+    if (course.is_custom && (!studentId || course.student_id !== studentId)) {
+      throw new AuthorizationError('You do not have permission to access this private course');
+    }
+
     // Get chapters
     const chapters = Array.from(this.chapters.values())
       .filter((ch) => ch.course_id === courseId)
@@ -3316,6 +4221,8 @@ print(power_mod(2, 10, 1000))  # Output: 24
       .sort((a, b) => a.order_index - b.order_index);
 
     let completedLessonsCount = 0;
+    let lastStudiedAt: string | undefined = undefined;
+    let nextRecommendedLesson: { id: string; title: string } | undefined = undefined;
 
     const chaptersWithLessons = chapters.map((ch) => {
       const chapterLessons = courseLessons
@@ -3330,6 +4237,13 @@ print(power_mod(2, 10, 1000))  # Output: 24
               isCompleted = prog.status === 'COMPLETED';
               progressPct = prog.progress_percentage;
               if (isCompleted) completedLessonsCount++;
+              if (prog.last_accessed_at) {
+                if (!lastStudiedAt || new Date(prog.last_accessed_at).getTime() > new Date(lastStudiedAt).getTime()) {
+                  lastStudiedAt = prog.last_accessed_at;
+                }
+              }
+            } else if (!nextRecommendedLesson) {
+              nextRecommendedLesson = { id: l.id, title: l.title };
             }
           }
 
@@ -3351,17 +4265,30 @@ print(power_mod(2, 10, 1000))  # Output: 24
 
     let enrollment: CourseEnrollment | null = null;
     let isBookmarked = false;
+    let isArchived = false;
 
     if (studentId) {
       enrollment = this.enrollments.get(`${studentId}_${courseId}`) || null;
+      isArchived = !!enrollment?.is_archived;
       isBookmarked = !!this.courseBookmarks.get(`${studentId}_${courseId}`);
+    }
+
+    if (!nextRecommendedLesson && courseLessons.length > 0) {
+      const uncompleted = courseLessons.find((l) => {
+        if (!studentId) return true;
+        const prog = this.lessonProgress.get(`${studentId}_${l.id}`);
+        return !prog || prog.status !== 'COMPLETED';
+      });
+      nextRecommendedLesson = uncompleted
+        ? { id: uncompleted.id, title: uncompleted.title }
+        : { id: courseLessons[0].id, title: courseLessons[0].title };
     }
 
     const resources = this.courseResources.get(courseId) || [];
 
     // Related courses (same branch or difficulty, excluding self)
     const related = Array.from(this.courses.values())
-      .filter((c) => c.id !== courseId && (c.branch === course.branch || c.difficulty === course.difficulty))
+      .filter((c) => c.id !== courseId && (c.branch === course.branch || c.difficulty === course.difficulty) && !c.is_custom)
       .slice(0, 3)
       .map((c) => ({
         ...c,
@@ -3372,10 +4299,14 @@ print(power_mod(2, 10, 1000))  # Output: 24
       ...course,
       chapters: chaptersWithLessons,
       enrollment,
+      is_enrolled: !!enrollment,
       progress_percentage: progressPercentage,
       completed_lessons: completedLessonsCount,
       total_lessons: totalLessons,
       is_bookmarked: isBookmarked,
+      is_archived: isArchived,
+      last_studied_at: lastStudiedAt,
+      next_recommended_lesson: nextRecommendedLesson,
       resources,
       related_courses: related,
     };
@@ -3420,6 +4351,415 @@ print(power_mod(2, 10, 1000))  # Output: 24
     return course;
   }
 
+  public async createCustomCourse(studentId: string, data: CreateCourseInput): Promise<Course> {
+    await this.initialize();
+    if (!data.title || !data.title.trim()) {
+      throw new ValidationError('Course title is required');
+    }
+
+    const id = `crs_cst_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    const slug = data.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const student = this.students.get(studentId);
+    const branch = data.branch || student?.branch || 'CSE';
+    const semester = data.semester || student?.semester || 6;
+    const now = new Date().toISOString();
+
+    const course: Course = {
+      id,
+      title: data.title.trim(),
+      slug,
+      code: data.code?.trim() || `CST-${Math.floor(100 + Math.random() * 900)}`,
+      description: data.description?.trim() || `Custom student course for ${data.title}`,
+      short_description: (data.description || data.title).slice(0, 120),
+      branch,
+      semester,
+      academic_year: data.academic_year || '2025-2026',
+      difficulty: data.difficulty || 'Intermediate',
+      category: data.category || 'Core Subject',
+      instructor: data.instructor || student?.name || 'Self-Directed',
+      syllabus_overview: data.syllabus_overview,
+      learning_objectives: data.learning_objectives || [
+        `Master the core principles of ${data.title}`,
+        'Apply foundational algorithms to real-world engineering challenges',
+      ],
+      thumbnail: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&auto=format&fit=crop&q=80',
+      estimated_minutes: (data.estimated_hours || 10) * 60,
+      is_published: true,
+      is_custom: true,
+      student_id: studentId,
+      linked_subject_id: data.linked_subject_id,
+      prerequisites: [],
+      skills: [branch, `Semester ${semester}`],
+      created_at: now,
+      updated_at: now,
+    };
+
+    this.courses.set(id, course);
+
+    // Create default Chapter 1
+    const chapterId = `ch_${id}_1`;
+    const defaultChapter: CourseChapter = {
+      id: chapterId,
+      course_id: id,
+      title: 'Unit 1: Foundations & Core Concepts',
+      description: `Core academic fundamentals, definitions, and scope of ${data.title}`,
+      order_index: 1,
+      created_at: now,
+      updated_at: now,
+    };
+    this.chapters.set(chapterId, defaultChapter);
+
+    // Create default Lesson 1
+    const lessonId = `lsn_${id}_1`;
+    const defaultLesson: CourseLesson = {
+      id: lessonId,
+      chapter_id: chapterId,
+      course_id: id,
+      title: 'Lesson 1.1: Course Introduction & Objectives',
+      slug: 'intro-objectives',
+      description: 'Orientation, learning outcomes, and foundational overview',
+      content: `# ${data.title}\n\n## Overview\nWelcome to **${data.title}**. This course provides an in-depth study of engineering concepts, system constraints, and practical methodologies.\n\n### Learning Objectives\n- Understand core architecture and theoretical invariants\n- Solve foundational problems and analyze trade-offs\n- Prepare for viva, semester examinations, and technical interviews.`,
+      lesson_type: 'TEXT',
+      order_index: 1,
+      estimated_minutes: 30,
+      is_published: true,
+      created_at: now,
+      updated_at: now,
+    };
+    this.lessons.set(lessonId, defaultLesson);
+
+    // Link documents if provided
+    const resList: CourseResource[] = [];
+    if (Array.isArray(data.linked_document_ids)) {
+      for (const docId of data.linked_document_ids) {
+        const doc = this.documents.get(docId);
+        if (doc) {
+          resList.push({
+            id: `cres_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+            course_id: id,
+            chapter_id: chapterId,
+            title: doc.title,
+            type: 'DOCUMENT',
+            url: `/documents/${doc.id}`,
+            document_id: doc.id,
+            size_bytes: doc.file_size,
+            processing_status: 'READY',
+          });
+        }
+      }
+    }
+
+    // Link notes if provided
+    if (Array.isArray(data.linked_note_ids)) {
+      for (const noteId of data.linked_note_ids) {
+        const note = this.notes.get(noteId);
+        if (note) {
+          resList.push({
+            id: `cres_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+            course_id: id,
+            chapter_id: chapterId,
+            title: note.title,
+            type: 'NOTES',
+            url: `/notes/${note.id}`,
+            note_id: note.id,
+            processing_status: 'READY',
+          });
+        }
+      }
+    }
+
+    if (resList.length > 0) {
+      this.courseResources.set(id, resList);
+    }
+
+    // Auto-enroll student
+    await this.enrollStudentInCourse(studentId, id);
+
+    logger.info(`Custom course created: ${data.title} (${id}) for student ${studentId}`);
+    return course;
+  }
+
+  public async updateCourse(
+    courseId: string,
+    studentId: string,
+    updates: UpdateCourseInput
+  ): Promise<Course> {
+    await this.initialize();
+    const course = this.courses.get(courseId);
+    if (!course) {
+      throw new NotFoundError(`Course '${courseId}' not found`);
+    }
+
+    // Only creator can edit custom courses
+    if (course.is_custom && course.student_id !== studentId) {
+      throw new AuthorizationError('You do not have permission to edit this course');
+    }
+
+    if (updates.title !== undefined) course.title = updates.title.trim();
+    if (updates.code !== undefined) course.code = updates.code.trim();
+    if (updates.description !== undefined) {
+      course.description = updates.description.trim();
+      course.short_description = updates.description.slice(0, 120);
+    }
+    if (updates.branch !== undefined) course.branch = updates.branch;
+    if (updates.semester !== undefined) course.semester = updates.semester;
+    if (updates.academic_year !== undefined) course.academic_year = updates.academic_year;
+    if (updates.difficulty !== undefined) course.difficulty = updates.difficulty;
+    if (updates.category !== undefined) course.category = updates.category;
+    if (updates.instructor !== undefined) course.instructor = updates.instructor;
+    if (updates.syllabus_overview !== undefined) course.syllabus_overview = updates.syllabus_overview;
+    if (updates.learning_objectives !== undefined) course.learning_objectives = updates.learning_objectives;
+
+    course.updated_at = new Date().toISOString();
+    return course;
+  }
+
+  public async archiveCourse(
+    courseId: string,
+    studentId: string,
+    archive: boolean = true
+  ): Promise<{ success: boolean; is_archived: boolean }> {
+    await this.initialize();
+    const course = this.courses.get(courseId);
+    if (!course) {
+      throw new NotFoundError(`Course '${courseId}' not found`);
+    }
+
+    const key = `${studentId}_${courseId}`;
+    let enrollment = this.enrollments.get(key);
+    if (!enrollment) {
+      enrollment = await this.enrollStudentInCourse(studentId, courseId);
+    }
+
+    enrollment.is_archived = archive;
+    enrollment.archived_at = archive ? new Date().toISOString() : undefined;
+    this.enrollments.set(key, enrollment);
+
+    logger.info(`Course ${courseId} archived status set to ${archive} for student ${studentId}`);
+    return { success: true, is_archived: archive };
+  }
+
+  public async removeCourseFromWorkspace(
+    courseId: string,
+    studentId: string
+  ): Promise<{ success: boolean }> {
+    await this.initialize();
+    const course = this.courses.get(courseId);
+    if (!course) {
+      throw new NotFoundError(`Course '${courseId}' not found`);
+    }
+
+    if (course.is_custom && course.student_id === studentId) {
+      // Purge custom course owned by student
+      this.courses.delete(courseId);
+
+      // Clean up chapters & lessons
+      const chs = Array.from(this.chapters.values()).filter((ch) => ch.course_id === courseId);
+      for (const ch of chs) this.chapters.delete(ch.id);
+
+      const lsns = Array.from(this.lessons.values()).filter((l) => l.course_id === courseId);
+      for (const l of lsns) {
+        this.lessons.delete(l.id);
+        this.lessonProgress.delete(`${studentId}_${l.id}`);
+      }
+
+      this.courseResources.delete(courseId);
+      this.enrollments.delete(`${studentId}_${courseId}`);
+      this.courseBookmarks.delete(`${studentId}_${courseId}`);
+    } else {
+      // System catalog course: remove enrollment and bookmarks only
+      this.enrollments.delete(`${studentId}_${courseId}`);
+      this.courseBookmarks.delete(`${studentId}_${courseId}`);
+    }
+
+    logger.info(`Course ${courseId} removed from workspace for student ${studentId}`);
+    return { success: true };
+  }
+
+  public async addCourseChapter(
+    courseId: string,
+    studentId: string,
+    data: { title: string; description?: string }
+  ): Promise<CourseChapter> {
+    await this.initialize();
+    const course = this.courses.get(courseId);
+    if (!course) {
+      throw new NotFoundError(`Course '${courseId}' not found`);
+    }
+
+    if (course.is_custom && course.student_id !== studentId) {
+      throw new AuthorizationError('You do not have permission to add chapters to this course');
+    }
+
+    const existingChapters = Array.from(this.chapters.values()).filter((ch) => ch.course_id === courseId);
+    const id = `ch_${courseId}_${Date.now()}`;
+    const chapter: CourseChapter = {
+      id,
+      course_id: courseId,
+      title: data.title.trim(),
+      description: data.description?.trim() || '',
+      order_index: existingChapters.length + 1,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    this.chapters.set(id, chapter);
+    return chapter;
+  }
+
+  public async addCourseLesson(
+    courseId: string,
+    chapterId: string,
+    studentId: string,
+    data: { title: string; description?: string; content?: string; estimated_minutes?: number }
+  ): Promise<CourseLesson> {
+    await this.initialize();
+    const course = this.courses.get(courseId);
+    if (!course) {
+      throw new NotFoundError(`Course '${courseId}' not found`);
+    }
+
+    const chapter = this.chapters.get(chapterId);
+    if (!chapter || chapter.course_id !== courseId) {
+      throw new NotFoundError(`Chapter '${chapterId}' not found in course`);
+    }
+
+    if (course.is_custom && course.student_id !== studentId) {
+      throw new AuthorizationError('You do not have permission to add lessons to this course');
+    }
+
+    const existingLessons = Array.from(this.lessons.values()).filter((l) => l.chapter_id === chapterId);
+    const id = `lsn_${courseId}_${Date.now()}`;
+    const lesson: CourseLesson = {
+      id,
+      chapter_id: chapterId,
+      course_id: courseId,
+      title: data.title.trim(),
+      slug: data.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      description: data.description?.trim() || '',
+      content: data.content?.trim() || `# ${data.title}\n\nLesson content for ${data.title}.`,
+      lesson_type: 'TEXT',
+      order_index: existingLessons.length + 1,
+      estimated_minutes: data.estimated_minutes || 25,
+      is_published: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    this.lessons.set(id, lesson);
+    return lesson;
+  }
+
+  public async addCourseResource(
+    courseId: string,
+    studentId: string,
+    data: {
+      title: string;
+      type: 'PDF' | 'NOTES' | 'CODE' | 'LINK' | 'DOCUMENT';
+      url: string;
+      chapter_id?: string;
+      document_id?: string;
+      note_id?: string;
+      size_bytes?: number;
+    }
+  ): Promise<CourseResource> {
+    await this.initialize();
+    const course = this.courses.get(courseId);
+    if (!course) {
+      throw new NotFoundError(`Course '${courseId}' not found`);
+    }
+
+    // Verify document or note ownership if linked
+    if (data.document_id) {
+      const doc = this.documents.get(data.document_id);
+      if (!doc || doc.student_id !== studentId) {
+        throw new AuthorizationError('Cannot link document: not found or unauthorized');
+      }
+    }
+    if (data.note_id) {
+      const note = this.notes.get(data.note_id);
+      if (!note || note.student_id !== studentId) {
+        throw new AuthorizationError('Cannot link note: not found or unauthorized');
+      }
+    }
+
+    const resList = this.courseResources.get(courseId) || [];
+    const resource: CourseResource = {
+      id: `cres_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      course_id: courseId,
+      chapter_id: data.chapter_id,
+      title: data.title.trim(),
+      type: data.type,
+      url: data.url,
+      size_bytes: data.size_bytes,
+      document_id: data.document_id,
+      note_id: data.note_id,
+      processing_status: 'READY',
+    };
+
+    resList.push(resource);
+    this.courseResources.set(courseId, resList);
+    logger.info(`Resource '${resource.title}' linked to course ${courseId}`);
+    return resource;
+  }
+
+  public async removeCourseResource(
+    courseId: string,
+    resourceId: string,
+    studentId: string
+  ): Promise<{ success: boolean }> {
+    await this.initialize();
+    const resList = this.courseResources.get(courseId) || [];
+    const updated = resList.filter((r) => r.id !== resourceId);
+    this.courseResources.set(courseId, updated);
+    return { success: true };
+  }
+
+  public async getCourseAssessments(
+    courseId: string,
+    studentId?: string
+  ): Promise<{ quizzes: any[]; flashcards: any[] }> {
+    await this.initialize();
+    const course = this.courses.get(courseId);
+    if (!course) {
+      throw new NotFoundError(`Course '${courseId}' not found`);
+    }
+
+    const courseTitleLower = course.title.toLowerCase();
+    const courseCodeLower = course.code.toLowerCase();
+
+    const relatedQuizzes = Array.from(this.quizzes.values())
+      .filter((q) => {
+        const titleMatch = q.title.toLowerCase().includes(courseTitleLower) || courseTitleLower.includes(q.title.toLowerCase());
+        const codeMatch = q.title.toLowerCase().includes(courseCodeLower);
+        return titleMatch || codeMatch;
+      })
+      .map((q) => ({
+        id: q.id,
+        title: q.title,
+        description: q.description,
+        total_questions: q.total_questions || 10,
+        difficulty: q.difficulty || 'MEDIUM',
+      }));
+
+    // If no exact match, return general branch quizzes
+    const fallbackQuizzes = relatedQuizzes.length > 0 ? relatedQuizzes : Array.from(this.quizzes.values()).slice(0, 2).map((q) => ({
+      id: q.id,
+      title: `${course.title} - ${q.title}`,
+      description: q.description,
+      total_questions: q.total_questions || 10,
+      difficulty: q.difficulty || 'MEDIUM',
+    }));
+
+    return {
+      quizzes: fallbackQuizzes,
+      flashcards: [
+        { id: `fc_${courseId}_1`, deck_name: `${course.title} - Core Invariants`, card_count: 15 },
+        { id: `fc_${courseId}_2`, deck_name: `${course.title} - Viva & Exam Questions`, card_count: 20 },
+      ],
+    };
+  }
+
   public async enrollStudentInCourse(studentId: string, courseId: string): Promise<CourseEnrollment> {
     await this.initialize();
     const course = this.courses.get(courseId);
@@ -3445,6 +4785,15 @@ print(power_mod(2, 10, 1000))  # Output: 24
     this.enrollments.set(key, enrollment);
     logger.info(`Student ${studentId} successfully enrolled in course ${courseId}`);
     return enrollment;
+  }
+
+  public async unenrollStudentFromCourse(studentId: string, courseId: string): Promise<{ success: boolean }> {
+    await this.initialize();
+    const key = `${studentId}_${courseId}`;
+    this.enrollments.delete(key);
+    this.courseBookmarks.delete(key);
+    logger.info(`Student ${studentId} unenrolled from course ${courseId}`);
+    return { success: true };
   }
 
   public async toggleCourseBookmark(studentId: string, courseId: string): Promise<{ bookmarked: boolean }> {
@@ -3474,6 +4823,9 @@ print(power_mod(2, 10, 1000))  # Output: 24
     if (!lesson) return null;
 
     const course = this.courses.get(lesson.course_id);
+    if (course?.is_custom && (!studentId || course.student_id !== studentId)) {
+      throw new AuthorizationError('You do not have permission to access this private course lesson');
+    }
     const chapter = this.chapters.get(lesson.chapter_id);
 
     // Get all lessons in this course sorted to calculate prev and next
@@ -3831,6 +5183,9 @@ print(power_mod(2, 10, 1000))  # Output: 24
       search?: string;
       filter?: string;
       sort?: string;
+      category?: string;
+      folder_id?: string;
+      file_type?: string;
       page?: number;
       limit?: number;
     } = {}
@@ -3841,6 +5196,9 @@ print(power_mod(2, 10, 1000))  # Output: 24
     const search = (params.search || '').toLowerCase().trim();
     const filter = params.filter || 'all';
     const sort = params.sort || 'recent_upload';
+    const category = params.category;
+    const folderId = params.folder_id;
+    const fileType = params.file_type;
 
     let list: Document[] = Array.from(this.documents.values()).filter(
       (d) => d.student_id === studentId
@@ -3850,7 +5208,7 @@ print(power_mod(2, 10, 1000))  # Output: 24
     if (filter === 'pdf') {
       list = list.filter((d) => d.file_extension === 'pdf');
     } else if (filter === 'document') {
-      list = list.filter((d) => ['docx', 'doc', 'pptx', 'ppt', 'txt', 'md'].includes(d.file_extension));
+      list = list.filter((d) => ['docx', 'doc', 'pptx', 'ppt', 'txt', 'md', 'xlsx', 'csv'].includes(d.file_extension));
     } else if (filter === 'favorites') {
       list = list.filter((d) => d.is_favorite);
     } else if (filter === 'processing') {
@@ -3863,15 +5221,42 @@ print(power_mod(2, 10, 1000))  # Output: 24
       list = list.filter((d) => d.status === 'FAILED');
     }
 
+    // Apply Category Filter
+    if (category && category !== 'all') {
+      list = list.filter(
+        (d) =>
+          d.category?.toLowerCase() === category.toLowerCase() ||
+          d.metadata?.category?.toLowerCase() === category.toLowerCase()
+      );
+    }
+
+    // Apply Folder Filter
+    if (folderId) {
+      if (folderId === 'unfiled') {
+        list = list.filter((d) => !d.folder_id && !d.metadata?.folder_id);
+      } else {
+        list = list.filter(
+          (d) => d.folder_id === folderId || d.metadata?.folder_id === folderId || d.metadata?.collection_id === folderId
+        );
+      }
+    }
+
+    // Apply File Type Filter
+    if (fileType && fileType !== 'all') {
+      list = list.filter((d) => d.file_extension?.toLowerCase() === fileType.toLowerCase());
+    }
+
     // Apply Search
     if (search) {
       list = list.filter((d) => {
         const inTitle = d.title.toLowerCase().includes(search);
         const inDesc = (d.description || '').toLowerCase().includes(search);
         const inFilename = d.original_filename.toLowerCase().includes(search);
-        const inTags = (d.metadata.tags || []).some((t: string) => t.toLowerCase().includes(search));
-        const inCourse = (d.metadata.course_title || '').toLowerCase().includes(search);
-        return inTitle || inDesc || inFilename || inTags || inCourse;
+        const inTags = (d.metadata?.tags || []).some((t: string) => t.toLowerCase().includes(search));
+        const inCourse = (d.metadata?.course_title || '').toLowerCase().includes(search);
+        const inSubject = (d.metadata?.subject || '').toLowerCase().includes(search);
+        const inCategory = (d.category || d.metadata?.category || '').toLowerCase().includes(search);
+        return inTitle || inDesc || inFilename || inTags || inCourse || inSubject || inCategory;
       });
     }
 
@@ -3913,10 +5298,16 @@ print(power_mod(2, 10, 1000))  # Output: 24
       updated_at: d.updated_at,
       last_opened_at: d.last_opened_at,
       description: d.description,
-      course_id: d.metadata.course_id,
-      course_title: d.metadata.course_title,
-      tags: d.metadata.tags || [],
+      category: d.category || d.metadata?.category || 'Other Documents',
+      folder_id: d.folder_id || d.metadata?.folder_id,
+      folder_name: d.folder_name || d.metadata?.folder_name,
+      course_id: d.metadata?.course_id,
+      course_title: d.metadata?.course_title,
+      tags: d.metadata?.tags || [],
       processing_error: d.processing_error,
+      content_indexed: Boolean(d.metadata?.content_indexed || d.status === 'READY'),
+      current_version: d.metadata?.current_version || 1,
+      version_count: Array.isArray(d.metadata?.versions) ? d.metadata.versions.length + 1 : 1,
     }));
 
     return {
@@ -3943,6 +5334,9 @@ print(power_mod(2, 10, 1000))  # Output: 24
     if (studentId && doc.student_id !== studentId) {
       throw new AuthorizationError('You do not have permission to access this document');
     }
+    if (doc.content_indexed === undefined && doc.metadata?.content_indexed !== undefined) {
+      doc.content_indexed = doc.metadata.content_indexed;
+    }
     return doc;
   }
 
@@ -3961,6 +5355,15 @@ print(power_mod(2, 10, 1000))  # Output: 24
     const id = `doc_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     const now = new Date().toISOString();
 
+    const category = data.category || data.metadata?.category || 'Other Documents';
+    const folderId = data.folder_id || data.metadata?.folder_id;
+    let folderName = data.folder_name || data.metadata?.folder_name;
+
+    if (folderId && !folderName) {
+      const folder = this.documentFolders.get(folderId);
+      if (folder) folderName = folder.name;
+    }
+
     const newDoc: Document = {
       id,
       student_id: data.student_id,
@@ -3975,7 +5378,19 @@ print(power_mod(2, 10, 1000))  # Output: 24
       description: data.description || '',
       author: data.author || 'Unknown',
       language: data.language || 'en',
-      metadata: data.metadata || {},
+      category,
+      folder_id: folderId,
+      folder_name: folderName,
+      current_version: data.current_version || data.metadata?.current_version || 1,
+      version_count: data.version_count || 1,
+      metadata: {
+        ...(data.metadata || {}),
+        category,
+        folder_id: folderId,
+        folder_name: folderName,
+        current_version: data.metadata?.current_version || 1,
+        versions: data.metadata?.versions || [],
+      },
       is_favorite: data.is_favorite || false,
       created_at: now,
       updated_at: now,
@@ -4021,9 +5436,50 @@ print(power_mod(2, 10, 1000))  # Output: 24
     if (updates.status !== undefined) doc.status = updates.status;
     if (updates.is_favorite !== undefined) doc.is_favorite = updates.is_favorite;
     if (updates.last_opened_at !== undefined) doc.last_opened_at = updates.last_opened_at;
+    if (updates.original_filename !== undefined) doc.original_filename = updates.original_filename;
+    if (updates.mime_type !== undefined) doc.mime_type = updates.mime_type;
+    if (updates.file_extension !== undefined) doc.file_extension = updates.file_extension;
+    if (updates.file_size !== undefined) doc.file_size = updates.file_size;
+    if (updates.storage_key !== undefined) doc.storage_key = updates.storage_key;
+    if (updates.content_indexed !== undefined) {
+      doc.content_indexed = updates.content_indexed;
+      if (!doc.metadata) doc.metadata = {};
+      doc.metadata.content_indexed = updates.content_indexed;
+    }
+    if (updates.category !== undefined) {
+      doc.category = updates.category;
+      if (!doc.metadata) doc.metadata = {};
+      doc.metadata.category = updates.category;
+    }
+    if (updates.folder_id !== undefined) {
+      doc.folder_id = updates.folder_id;
+      if (!doc.metadata) doc.metadata = {};
+      doc.metadata.folder_id = updates.folder_id;
+      if (updates.folder_id) {
+        const fld = this.documentFolders.get(updates.folder_id);
+        if (fld) {
+          doc.folder_name = fld.name;
+          doc.metadata.folder_name = fld.name;
+        }
+      } else {
+        doc.folder_name = undefined;
+        doc.metadata.folder_name = undefined;
+      }
+    }
+    if (updates.folder_name !== undefined) {
+      doc.folder_name = updates.folder_name;
+      if (!doc.metadata) doc.metadata = {};
+      doc.metadata.folder_name = updates.folder_name;
+    }
     if (updates.processing_started_at !== undefined) doc.processing_started_at = updates.processing_started_at;
     if (updates.processing_completed_at !== undefined) doc.processing_completed_at = updates.processing_completed_at;
     if (updates.processing_error !== undefined) doc.processing_error = updates.processing_error;
+    if (updates.current_version !== undefined) {
+      doc.current_version = updates.current_version;
+      if (!doc.metadata) doc.metadata = {};
+      doc.metadata.current_version = updates.current_version;
+    }
+    if (updates.version_count !== undefined) doc.version_count = updates.version_count;
     if (updates.metadata !== undefined) doc.metadata = { ...doc.metadata, ...updates.metadata };
 
     doc.updated_at = new Date().toISOString();
@@ -4044,6 +5500,331 @@ print(power_mod(2, 10, 1000))  # Output: 24
     this.searchIndex = this.searchIndex.filter((item) => item.id !== id);
 
     return true;
+  }
+
+  // ----------------- Document Folders, Versions & Storage Stats -----------------
+  public async getStudentFolders(studentId: string): Promise<DocumentFolder[]> {
+    await this.initialize();
+    const folders = Array.from(this.documentFolders.values()).filter(
+      (f) => f.student_id === studentId
+    );
+    const studentDocs = Array.from(this.documents.values()).filter(
+      (d) => d.student_id === studentId
+    );
+    return folders
+      .map((folder) => {
+        const docCount = studentDocs.filter(
+          (d) =>
+            d.folder_id === folder.id ||
+            d.metadata?.folder_id === folder.id ||
+            d.metadata?.collection_id === folder.id
+        ).length;
+        return {
+          ...folder,
+          document_count: docCount,
+        };
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  public async getFolderById(id: string, studentId?: string): Promise<DocumentFolder | null> {
+    await this.initialize();
+    const folder = this.documentFolders.get(id);
+    if (!folder) return null;
+    if (studentId && folder.student_id !== studentId) {
+      throw new AuthorizationError('You do not have permission to access this folder');
+    }
+    const studentDocs = Array.from(this.documents.values()).filter(
+      (d) => d.student_id === folder.student_id
+    );
+    const docCount = studentDocs.filter(
+      (d) =>
+        d.folder_id === folder.id ||
+        d.metadata?.folder_id === folder.id ||
+        d.metadata?.collection_id === folder.id
+    ).length;
+    return {
+      ...folder,
+      document_count: docCount,
+    };
+  }
+
+  public async createFolder(
+    studentId: string,
+    data: {
+      name: string;
+      description?: string;
+      parent_folder_id?: string;
+      color?: string;
+      icon?: string;
+    }
+  ): Promise<DocumentFolder> {
+    await this.initialize();
+    if (!data.name || !data.name.trim()) {
+      throw new ValidationError('Folder name is required');
+    }
+    const id = `fld_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    const now = new Date().toISOString();
+
+    const folder: DocumentFolder = {
+      id,
+      student_id: studentId,
+      name: data.name.trim(),
+      description: data.description?.trim() || '',
+      parent_folder_id: data.parent_folder_id,
+      color: data.color || '#2563EB',
+      icon: data.icon || 'Folder',
+      document_count: 0,
+      created_at: now,
+      updated_at: now,
+    };
+
+    this.documentFolders.set(id, folder);
+    return folder;
+  }
+
+  public async updateFolder(
+    id: string,
+    studentId: string,
+    updates: Partial<DocumentFolder>
+  ): Promise<DocumentFolder> {
+    await this.initialize();
+    const folder = this.documentFolders.get(id);
+    if (!folder) {
+      throw new NotFoundError(`Folder '${id}' not found`);
+    }
+    if (folder.student_id !== studentId) {
+      throw new AuthorizationError('You do not have permission to modify this folder');
+    }
+
+    if (updates.name !== undefined) folder.name = updates.name.trim();
+    if (updates.description !== undefined) folder.description = updates.description.trim();
+    if (updates.color !== undefined) folder.color = updates.color;
+    if (updates.icon !== undefined) folder.icon = updates.icon;
+    if (updates.parent_folder_id !== undefined) folder.parent_folder_id = updates.parent_folder_id;
+
+    folder.updated_at = new Date().toISOString();
+
+    // If folder name changed, update folder_name in documents
+    if (updates.name) {
+      for (const doc of this.documents.values()) {
+        if (doc.student_id === studentId && (doc.folder_id === id || doc.metadata?.folder_id === id)) {
+          doc.folder_name = updates.name;
+          if (doc.metadata) doc.metadata.folder_name = updates.name;
+        }
+      }
+    }
+
+    return folder;
+  }
+
+  public async deleteFolder(
+    id: string,
+    studentId: string,
+    actionOnDocuments: 'unfile' | 'delete' = 'unfile'
+  ): Promise<boolean> {
+    await this.initialize();
+    const folder = this.documentFolders.get(id);
+    if (!folder) return false;
+    if (folder.student_id !== studentId) {
+      throw new AuthorizationError('You do not have permission to delete this folder');
+    }
+
+    // Process documents inside the folder
+    for (const [docId, doc] of this.documents.entries()) {
+      if (doc.student_id === studentId && (doc.folder_id === id || doc.metadata?.folder_id === id)) {
+        if (actionOnDocuments === 'delete') {
+          await this.deleteDocument(docId, studentId);
+        } else {
+          doc.folder_id = undefined;
+          doc.folder_name = undefined;
+          if (doc.metadata) {
+            doc.metadata.folder_id = undefined;
+            doc.metadata.folder_name = undefined;
+          }
+        }
+      }
+    }
+
+    return this.documentFolders.delete(id);
+  }
+
+  public async moveDocumentToFolder(
+    documentId: string,
+    folderId: string | null,
+    studentId: string
+  ): Promise<Document> {
+    await this.initialize();
+    const doc = this.documents.get(documentId);
+    if (!doc) {
+      throw new NotFoundError(`Document '${documentId}' not found`);
+    }
+    if (doc.student_id !== studentId) {
+      throw new AuthorizationError('You do not have permission to move this document');
+    }
+
+    let folderName: string | undefined;
+    if (folderId) {
+      const folder = this.documentFolders.get(folderId);
+      if (!folder || folder.student_id !== studentId) {
+        throw new NotFoundError(`Target folder '${folderId}' not found`);
+      }
+      folderName = folder.name;
+    }
+
+    doc.folder_id = folderId || undefined;
+    doc.folder_name = folderName;
+    doc.metadata = {
+      ...(doc.metadata || {}),
+      folder_id: folderId || undefined,
+      folder_name: folderName,
+    };
+    doc.updated_at = new Date().toISOString();
+
+    return doc;
+  }
+
+  public async getDocumentVersions(documentId: string, studentId: string): Promise<DocumentVersion[]> {
+    await this.initialize();
+    const doc = this.documents.get(documentId);
+    if (!doc) {
+      throw new NotFoundError(`Document '${documentId}' not found`);
+    }
+    if (doc.student_id !== studentId) {
+      throw new AuthorizationError('You do not have permission to view versions for this document');
+    }
+
+    const versions: DocumentVersion[] = [];
+    if (Array.isArray(doc.metadata?.versions)) {
+      versions.push(...doc.metadata.versions);
+    }
+    // Include current active version
+    versions.push({
+      version_number: doc.metadata?.current_version || 1,
+      storage_key: doc.storage_key,
+      file_hash: doc.metadata?.content_hash || '',
+      file_size: doc.file_size,
+      original_filename: doc.original_filename,
+      mime_type: doc.mime_type,
+      uploaded_at: doc.updated_at || doc.created_at,
+      change_notes: doc.metadata?.last_change_notes || 'Current active version',
+      uploader_student_id: doc.student_id,
+    });
+
+    return versions.sort((a, b) => b.version_number - a.version_number);
+  }
+
+  public async restoreDocumentVersion(
+    documentId: string,
+    versionNumber: number,
+    studentId: string
+  ): Promise<Document> {
+    await this.initialize();
+    const doc = this.documents.get(documentId);
+    if (!doc) {
+      throw new NotFoundError(`Document '${documentId}' not found`);
+    }
+    if (doc.student_id !== studentId) {
+      throw new AuthorizationError('You do not have permission to restore this document');
+    }
+
+    const currentVer = doc.metadata?.current_version || 1;
+    if (versionNumber === currentVer) {
+      return doc;
+    }
+
+    const pastVersions: DocumentVersion[] = Array.isArray(doc.metadata?.versions)
+      ? [...doc.metadata.versions]
+      : [];
+
+    const targetVersion = pastVersions.find((v) => v.version_number === versionNumber);
+    if (!targetVersion) {
+      throw new NotFoundError(`Version ${versionNumber} not found for document ${documentId}`);
+    }
+
+    // Snapshot current active version before restoring
+    pastVersions.push({
+      version_number: currentVer,
+      storage_key: doc.storage_key,
+      file_hash: doc.metadata?.content_hash || '',
+      file_size: doc.file_size,
+      original_filename: doc.original_filename,
+      mime_type: doc.mime_type,
+      uploaded_at: new Date().toISOString(),
+      change_notes: `Snapshot before restoring version ${versionNumber}`,
+      uploader_student_id: doc.student_id,
+    });
+
+    doc.storage_key = targetVersion.storage_key;
+    doc.file_size = targetVersion.file_size;
+    doc.original_filename = targetVersion.original_filename || doc.original_filename;
+    doc.mime_type = targetVersion.mime_type || doc.mime_type;
+    doc.file_extension =
+      (targetVersion.original_filename || doc.original_filename).split('.').pop()?.toLowerCase() ||
+      doc.file_extension;
+    doc.current_version = pastVersions.length + 1;
+    doc.version_count = pastVersions.length + 1;
+    doc.updated_at = new Date().toISOString();
+    doc.metadata = {
+      ...(doc.metadata || {}),
+      current_version: pastVersions.length + 1,
+      content_hash: targetVersion.file_hash,
+      versions: pastVersions,
+      restored_from_version: versionNumber,
+      restored_at: new Date().toISOString(),
+    };
+
+    return doc;
+  }
+
+  public async getStorageStats(studentId: string): Promise<DocumentStorageStats> {
+    await this.initialize();
+    const studentDocs = Array.from(this.documents.values()).filter(
+      (d) => d.student_id === studentId
+    );
+    const studentFolders = Array.from(this.documentFolders.values()).filter(
+      (f) => f.student_id === studentId
+    );
+
+    const totalDocs = studentDocs.length;
+    const totalFolders = studentFolders.length;
+    const usedBytes = studentDocs.reduce((acc, d) => acc + (d.file_size || 0), 0);
+    const usedMb = Number((usedBytes / (1024 * 1024)).toFixed(2));
+    const limitMb = 500;
+    const remainingMb = Math.max(0, Number((limitMb - usedMb).toFixed(2)));
+    const usagePct = Math.min(100, Number(((usedMb / limitMb) * 100).toFixed(1)));
+
+    const awaitingProc = studentDocs.filter((d) =>
+      ['QUEUED', 'PROCESSING', 'UPLOADING', 'EXTRACTING', 'CHUNKING', 'EMBEDDING'].includes(d.status)
+    ).length;
+
+    const sevenDaysAgo = Date.now() - 7 * 24 * 3600 * 1000;
+    const recentUploads = studentDocs.filter(
+      (d) => new Date(d.created_at).getTime() > sevenDaysAgo
+    ).length;
+
+    const categoryBreakdown: Record<string, number> = {};
+    for (const d of studentDocs) {
+      const cat = d.category || d.metadata?.category || 'Other Documents';
+      categoryBreakdown[cat] = (categoryBreakdown[cat] || 0) + 1;
+    }
+
+    return {
+      total_documents: totalDocs,
+      total_folders: totalFolders,
+      storage_used_bytes: usedBytes,
+      storage_used_mb: usedMb,
+      storage_limit_mb: limitMb,
+      storage_remaining_mb: remainingMb,
+      storage_usage_percentage: usagePct,
+      percentage_used: usagePct,
+      documents_awaiting_processing: awaitingProc,
+      awaiting_processing: awaitingProc,
+      recent_uploads_count: recentUploads,
+      recent_uploads_7d: recentUploads,
+      category_breakdown: categoryBreakdown,
+      categories_breakdown: categoryBreakdown,
+    };
   }
 
   public async createDocumentPages(
@@ -4500,6 +6281,27 @@ print(power_mod(2, 10, 1000))  # Output: 24
     await this.initialize();
     const byId = this.dsaTopics.get(idOrSlug);
     if (byId) return byId;
+
+    const legacyAliases: Record<string, string> = {
+      dsa_topic_arrays: 'topic_arrays_hashing',
+      dsa_topic_searching: 'topic_binary_search',
+      dsa_topic_sorting: 'topic_sorting_searching',
+      dsa_topic_linked_lists: 'topic_linked_lists',
+      dsa_topic_stacks_queues: 'topic_stacks_queues',
+      dsa_topic_trees: 'topic_trees_bst',
+      dsa_topic_graphs: 'topic_graphs',
+      dsa_topic_recursion: 'topic_recursion_backtracking',
+      dsa_topic_dp: 'topic_dynamic_programming',
+      dsa_topic_heaps: 'topic_heaps',
+      dsa_topic_two_pointers: 'topic_two_pointers',
+      dsa_topic_bit_manipulation: 'topic_bit_manipulation',
+      dsa_topic_greedy: 'topic_greedy',
+      dsa_topic_tries: 'topic_tries_advanced',
+    };
+    if (legacyAliases[idOrSlug] && this.dsaTopics.has(legacyAliases[idOrSlug])) {
+      return this.dsaTopics.get(legacyAliases[idOrSlug]);
+    }
+
     for (const t of this.dsaTopics.values()) {
       if (t.slug === idOrSlug) return t;
     }
@@ -4527,6 +6329,11 @@ print(power_mod(2, 10, 1000))  # Output: 24
     topic_id?: string;
     difficulty?: string;
     search?: string;
+    subtopic?: string;
+    company?: string;
+    roadmap_stage?: string;
+    status?: string;
+    student_id?: string;
   }): Promise<DSAProblem[]> {
     await this.initialize();
     let result = Array.from(this.dsaProblems.values());
@@ -4539,12 +6346,42 @@ print(power_mod(2, 10, 1000))  # Output: 24
       result = result.filter((p) => p.difficulty === filters.difficulty);
     }
 
+    if (filters?.subtopic && filters.subtopic !== 'ALL') {
+      result = result.filter((p) => p.subtopic === filters.subtopic);
+    }
+
+    if (filters?.roadmap_stage && filters.roadmap_stage !== 'ALL') {
+      result = result.filter((p) => p.roadmap_stage === filters.roadmap_stage);
+    }
+
+    if (filters?.company && filters.company !== 'ALL') {
+      const targetCompany = filters.company.toLowerCase();
+      result = result.filter((p) => p.companies?.some((c) => c.toLowerCase().includes(targetCompany)));
+    }
+
+    if (filters?.student_id && filters?.status && filters.status !== 'ALL') {
+      const prog = this.dsaProgress.get(filters.student_id);
+      const solved = prog?.problems_solved || [];
+      const attempted = prog?.problems_attempted || [];
+
+      if (filters.status === 'SOLVED') {
+        result = result.filter((p) => solved.includes(p.id));
+      } else if (filters.status === 'ATTEMPTED') {
+        result = result.filter((p) => attempted.includes(p.id) && !solved.includes(p.id));
+      } else if (filters.status === 'UNSOLVED') {
+        result = result.filter((p) => !solved.includes(p.id) && !attempted.includes(p.id));
+      }
+    }
+
     if (filters?.search && filters.search.trim()) {
       const q = filters.search.toLowerCase().trim();
       result = result.filter(
         (p) =>
           p.title.toLowerCase().includes(q) ||
-          p.description.toLowerCase().includes(q)
+          p.description.toLowerCase().includes(q) ||
+          p.subtopic?.toLowerCase().includes(q) ||
+          p.companies?.some((c) => c.toLowerCase().includes(q)) ||
+          p.tags?.some((t) => t.toLowerCase().includes(q))
       );
     }
 
@@ -4574,6 +6411,9 @@ print(power_mod(2, 10, 1000))  # Output: 24
         problems_solved: [],
         hints_used: 0,
         weak_topics: [],
+        bookmarked_problems: [],
+        code_drafts: {},
+        daily_streak: 1,
         last_activity_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -4596,6 +6436,17 @@ print(power_mod(2, 10, 1000))  # Output: 24
     return prog;
   }
 
+  public async recordDSAProblemAttempted(studentId: string, problemId: string): Promise<DSAProgress> {
+    const prog = await this.getDSAProgress(studentId);
+    if (!prog.problems_attempted.includes(problemId)) {
+      prog.problems_attempted.push(problemId);
+    }
+    prog.last_activity_at = new Date().toISOString();
+    prog.updated_at = new Date().toISOString();
+    this.dsaProgress.set(studentId, prog);
+    return prog;
+  }
+
   public async recordDSAProblemSolved(studentId: string, problemId: string): Promise<DSAProgress> {
     const prog = await this.getDSAProgress(studentId);
     if (!prog.problems_attempted.includes(problemId)) {
@@ -4608,6 +6459,55 @@ print(power_mod(2, 10, 1000))  # Output: 24
     prog.updated_at = new Date().toISOString();
     this.dsaProgress.set(studentId, prog);
     return prog;
+  }
+
+  public async toggleDSABookmark(studentId: string, problemId: string): Promise<{ bookmarked: boolean; bookmarks: string[] }> {
+    const prog = await this.getDSAProgress(studentId);
+    if (!prog.bookmarked_problems) {
+      prog.bookmarked_problems = [];
+    }
+    const idx = prog.bookmarked_problems.indexOf(problemId);
+    let bookmarked = false;
+    if (idx >= 0) {
+      prog.bookmarked_problems.splice(idx, 1);
+    } else {
+      prog.bookmarked_problems.push(problemId);
+      bookmarked = true;
+    }
+    prog.updated_at = new Date().toISOString();
+    this.dsaProgress.set(studentId, prog);
+    return { bookmarked, bookmarks: prog.bookmarked_problems };
+  }
+
+  public async getDSABookmarks(studentId: string): Promise<string[]> {
+    const prog = await this.getDSAProgress(studentId);
+    return prog.bookmarked_problems || [];
+  }
+
+  public async saveDSADraft(
+    studentId: string,
+    problemId: string,
+    draft: { code: string; language: string }
+  ): Promise<void> {
+    const prog = await this.getDSAProgress(studentId);
+    if (!prog.code_drafts) {
+      prog.code_drafts = {};
+    }
+    prog.code_drafts[problemId] = {
+      code: draft.code,
+      language: draft.language,
+      updated_at: new Date().toISOString(),
+    };
+    prog.updated_at = new Date().toISOString();
+    this.dsaProgress.set(studentId, prog);
+  }
+
+  public async getDSADraft(
+    studentId: string,
+    problemId: string
+  ): Promise<{ code: string; language: string; updated_at: string } | null> {
+    const prog = await this.getDSAProgress(studentId);
+    return prog.code_drafts?.[problemId] || null;
   }
 
   // ================= QUIZ & ASSESSMENT METHODS =================
@@ -5240,11 +7140,176 @@ print(power_mod(2, 10, 1000))  # Output: 24
     );
   }
 
-  public async getMockInterviewSessions(studentId: string): Promise<MockInterviewSession[]> {
+  public async recordPlacementPractice(attempt: PlacementPracticeAttempt): Promise<PlacementPracticeAttempt> {
     await this.initialize();
-    return Array.from(this.mockInterviewSessions.values())
+    const list = this.placementPracticeAttempts.get(attempt.student_id) || [];
+    list.unshift(attempt);
+    this.placementPracticeAttempts.set(attempt.student_id, list);
+    return attempt;
+  }
+
+  public async getPlacementPractice(studentId: string): Promise<PlacementPracticeAttempt[]> {
+    await this.initialize();
+    return this.placementPracticeAttempts.get(studentId) || [];
+  }
+
+  public async savePlacementAssessment(result: PlacementAssessmentResult): Promise<PlacementAssessmentResult> {
+    await this.initialize();
+    const list = this.placementAssessments.get(result.student_id) || [];
+    list.unshift(result);
+    this.placementAssessments.set(result.student_id, list);
+    return result;
+  }
+
+  public async getPlacementAssessments(studentId: string): Promise<PlacementAssessmentResult[]> {
+    await this.initialize();
+    return this.placementAssessments.get(studentId) || [];
+  }
+
+  public async getGroupDiscussionTopics(category?: string): Promise<GroupDiscussionTopic[]> {
+    await this.initialize();
+    let topics = Array.from(this.groupDiscussionTopics.values());
+    if (category) {
+      topics = topics.filter((t) => t.category.toLowerCase() === category.toLowerCase());
+    }
+    return topics;
+  }
+
+  public async getGroupDiscussionTopicById(id: string): Promise<GroupDiscussionTopic | null> {
+    await this.initialize();
+    return this.groupDiscussionTopics.get(id) || null;
+  }
+
+  public async getMockInterviewSessions(studentId: string, autoSeed: boolean = false): Promise<MockInterviewSession[]> {
+    await this.initialize();
+    let sessions = Array.from(this.mockInterviewSessions.values())
       .filter((s) => s.student_id === studentId)
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    if (sessions.length === 0 && autoSeed) {
+      await this.seedDefaultMockInterview(studentId);
+      sessions = Array.from(this.mockInterviewSessions.values())
+        .filter((s) => s.student_id === studentId)
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    }
+    return sessions;
+  }
+
+  public async seedDefaultMockInterview(studentId: string): Promise<void> {
+    const sessionId = `mock_seed_demo_${studentId}`;
+    if (this.mockInterviewSessions.has(sessionId)) return;
+
+    const sampleSession: MockInterviewSession = {
+      id: sessionId,
+      student_id: studentId,
+      interview_type: 'TECHNICAL',
+      role_id: 'role_sde',
+      company_id: 'comp_google',
+      difficulty: 'MEDIUM',
+      mode: 'SIMULATION',
+      duration_minutes: 30,
+      status: 'COMPLETED',
+      current_question_index: 2,
+      max_questions: 2,
+      overall_score: 85,
+      created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
+      completed_at: new Date(Date.now() - 2 * 86400000 + 1800000).toISOString(),
+      feedback: {
+        overall_score: 85,
+        summary: 'Excellent demonstration of database indexing and concurrency control concepts. Solid foundational knowledge of system design trade-offs.',
+        topics_covered: ['Database Systems', 'Concurrency & Locks', 'Algorithms'],
+        concepts_explained_well: ['B+ Tree Indexing', 'ACID Transactions', 'Optimistic Locking'],
+        concepts_to_review: ['Distributed Consensus (Raft / Paxos)', 'Database Sharding Hotspots'],
+        communication_observations: [
+          'Articulate explanation of trade-offs between B+ Trees and Hash Indexing.',
+          'Structured answers effectively using technical terminology.',
+        ],
+        technical_gaps: ['Review distributed multi-master replication edge cases.'],
+        concept_coverage_stat: {
+          covered: 4,
+          total: 5,
+          percentage: 80,
+        },
+        recommended_practice: {
+          quizzes: [{ id: 'quiz_dbms_01', title: 'DBMS Transactions & Indexing', topic: 'DBMS' }],
+          dsa_problems: [{ id: 'two_pointers', title: 'Two Pointers Traversal', difficulty: 'MEDIUM' }],
+          coding_challenges: [{ id: 'coding_api_pool', title: 'Connection Pooling' }],
+          courses: [{ id: 'crs_db_04', title: 'Database Systems & Distributed Queries' }],
+        },
+      },
+      feedback_summary: {
+        overall_score: 85,
+        summary: 'Excellent demonstration of database indexing and concurrency control concepts. Solid foundational knowledge of system design trade-offs.',
+        topics_covered: ['Database Systems', 'Concurrency & Locks', 'Algorithms'],
+        concepts_explained_well: ['B+ Tree Indexing', 'ACID Transactions', 'Optimistic Locking'],
+        concepts_to_review: ['Distributed Consensus (Raft / Paxos)', 'Database Sharding Hotspots'],
+        communication_observations: [
+          'Articulate explanation of trade-offs between B+ Trees and Hash Indexing.',
+          'Structured answers effectively using technical terminology.',
+        ],
+        technical_gaps: ['Review distributed multi-master replication edge cases.'],
+        concept_coverage_stat: {
+          covered: 4,
+          total: 5,
+          percentage: 80,
+        },
+        recommended_practice: {
+          quizzes: [{ id: 'quiz_dbms_01', title: 'DBMS Transactions & Indexing', topic: 'DBMS' }],
+          dsa_problems: [{ id: 'two_pointers', title: 'Two Pointers Traversal', difficulty: 'MEDIUM' }],
+          coding_challenges: [{ id: 'coding_api_pool', title: 'Connection Pooling' }],
+          courses: [{ id: 'crs_db_04', title: 'Database Systems & Distributed Queries' }],
+        },
+      },
+    };
+
+    this.mockInterviewSessions.set(sessionId, sampleSession);
+
+    const questions: MockInterviewQuestion[] = [
+      {
+        id: `q_seed_1_${studentId}`,
+        session_id: sessionId,
+        question_number: 1,
+        question: 'Explain how B+ Tree index structures work in relational databases like PostgreSQL, and why they are preferred over Hash Indexes for range queries.',
+        question_type: 'TECHNICAL',
+        topic: 'Database Management Systems',
+        difficulty: 'MEDIUM',
+        expected_concepts: ['B+ Tree Node Fan-out', 'Range Scan Efficiency', 'Leaf Linked List Pointer'],
+        created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
+      },
+      {
+        id: `q_seed_2_${studentId}`,
+        session_id: sessionId,
+        question_number: 2,
+        question: 'What is the difference between Optimistic Concurrency Control (OCC) and Pessimistic Locking in high-throughput transactional backends?',
+        question_type: 'TECHNICAL',
+        topic: 'Concurrency & Transactions',
+        difficulty: 'MEDIUM',
+        expected_concepts: ['Version Check on Commit', 'Lock Overhead vs Conflict Rate', 'Deadlock Avoidance'],
+        created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
+      },
+    ];
+    this.mockInterviewQuestions.set(sessionId, questions);
+
+    const answers: MockInterviewAnswer[] = [
+      {
+        id: `ans_seed_1_${studentId}`,
+        session_id: sessionId,
+        question_id: `q_seed_1_${studentId}`,
+        student_id: studentId,
+        answer_text: 'B+ Trees maintain sorted order with high fan-out, reducing I/O operations. Since the leaf nodes are connected via a bidirectional linked list, range scans like BETWEEN or inequality comparisons require O(log N) search to find the lower bound, followed by sequential traversal through the leaf pointers.',
+        duration_seconds: 120,
+        evaluation: {
+          covered_concepts: ['B+ Tree Node Fan-out', 'Range Scan Efficiency', 'Leaf Linked List Pointer'],
+          missing_concepts: [],
+          strengths: ['Clear explanation of leaf linked lists and range queries', 'Correct complexity notation'],
+          improvements: ['Mention cache-line alignment in modern SSD storage'],
+          score: 90,
+          clarity_feedback: 'Structured and technically precise explanation.',
+          follow_up_needed: false,
+        },
+        created_at: new Date(Date.now() - 2 * 86400000 + 180000).toISOString(),
+      },
+    ];
+    this.mockInterviewAnswers.set(sessionId, answers);
   }
 
   public async getMockInterviewSessionById(id: string, studentId?: string): Promise<MockInterviewSession | null> {
@@ -5318,6 +7383,58 @@ print(power_mod(2, 10, 1000))  # Output: 24
       list.push(answer);
     }
     this.mockInterviewAnswers.set(answer.session_id, list);
+  }
+
+  public async getSavedMockQuestions(studentId: string): Promise<SavedMockQuestionEntity[]> {
+    await this.initialize();
+    return this.savedMockQuestions.get(studentId) || [];
+  }
+
+  public async saveMockQuestion(item: SavedMockQuestionEntity): Promise<SavedMockQuestionEntity> {
+    await this.initialize();
+    const list = this.savedMockQuestions.get(item.student_id) || [];
+    const idx = list.findIndex((q) => q.id === item.id || (q.question_id === item.question_id && q.student_id === item.student_id));
+    if (idx >= 0) {
+      list[idx] = item;
+    } else {
+      list.unshift(item);
+    }
+    this.savedMockQuestions.set(item.student_id, list);
+    return item;
+  }
+
+  public async deleteSavedMockQuestion(id: string, studentId: string): Promise<boolean> {
+    await this.initialize();
+    const list = this.savedMockQuestions.get(studentId) || [];
+    const filtered = list.filter((q) => q.id !== id && q.question_id !== id);
+    this.savedMockQuestions.set(studentId, filtered);
+    return filtered.length < list.length;
+  }
+
+  public async getScheduledMockInterviews(studentId: string): Promise<ScheduledMockInterviewEntity[]> {
+    await this.initialize();
+    return this.scheduledMockInterviews.get(studentId) || [];
+  }
+
+  public async saveScheduledMockInterview(item: ScheduledMockInterviewEntity): Promise<ScheduledMockInterviewEntity> {
+    await this.initialize();
+    const list = this.scheduledMockInterviews.get(item.student_id) || [];
+    const idx = list.findIndex((s) => s.id === item.id);
+    if (idx >= 0) {
+      list[idx] = item;
+    } else {
+      list.push(item);
+    }
+    this.scheduledMockInterviews.set(item.student_id, list);
+    return item;
+  }
+
+  public async deleteScheduledMockInterview(id: string, studentId: string): Promise<boolean> {
+    await this.initialize();
+    const list = this.scheduledMockInterviews.get(studentId) || [];
+    const filtered = list.filter((s) => s.id !== id);
+    this.scheduledMockInterviews.set(studentId, filtered);
+    return filtered.length < list.length;
   }
 
   // ==========================================
@@ -5924,6 +8041,11 @@ print(power_mod(2, 10, 1000))  # Output: 24
     return commits || [];
   }
 
+  public async saveGitHubCommits(repoId: string, commits: GitHubCommit[]): Promise<void> {
+    await this.initialize();
+    this.githubRepoCommits.set(repoId, commits);
+  }
+
   public async getGitHubIssues(repoId: string, studentId?: string): Promise<GitHubIssue[]> {
     await this.initialize();
     if (studentId) {
@@ -5937,6 +8059,11 @@ print(power_mod(2, 10, 1000))  # Output: 24
     return issues || [];
   }
 
+  public async saveGitHubIssues(repoId: string, issues: GitHubIssue[]): Promise<void> {
+    await this.initialize();
+    this.githubRepoIssues.set(repoId, issues);
+  }
+
   public async getGitHubPullRequests(repoId: string, studentId?: string): Promise<GitHubPullRequest[]> {
     await this.initialize();
     if (studentId) {
@@ -5948,6 +8075,11 @@ print(power_mod(2, 10, 1000))  # Output: 24
       else if (repoId === 'gh_repo_01') pulls = this.githubRepoPulls.get('repo_seed_01');
     }
     return pulls || [];
+  }
+
+  public async saveGitHubPullRequests(repoId: string, pulls: GitHubPullRequest[]): Promise<void> {
+    await this.initialize();
+    this.githubRepoPulls.set(repoId, pulls);
   }
 
   public async getGitHubRepositoryAnalysis(
@@ -6143,6 +8275,10 @@ print(power_mod(2, 10, 1000))  # Output: 24
         career: true,
         system: true,
         in_app: true,
+        study_reminders: true,
+        revision_reminders: true,
+        goal_deadlines: true,
+        exam_reminders: true,
         email_digest: 'WEEKLY',
         updated_at: new Date().toISOString(),
       };
@@ -6153,13 +8289,15 @@ print(power_mod(2, 10, 1000))  # Output: 24
 
   public async updateNotificationPreferences(
     studentId: string,
-    updates: Partial<NotificationPreference>
+    updates: Partial<NotificationPreference> | any
   ): Promise<NotificationPreference> {
     await this.initialize();
     const pref = await this.getNotificationPreferences(studentId);
+    const categoryUpdates = updates.categories || {};
     const updated: NotificationPreference = {
       ...pref,
       ...updates,
+      ...categoryUpdates,
       student_id: studentId,
       updated_at: new Date().toISOString(),
     };
@@ -6466,6 +8604,14 @@ print(power_mod(2, 10, 1000))  # Output: 24
       throw new ValidationError('Goal title is required');
     }
 
+    const sanitizedMilestones = (data.milestones || []).map((m: any, idx: number) => ({
+      id: m.id || `ms_${idx + 1}`,
+      title: m.title || `Milestone ${idx + 1}`,
+      completed: Boolean(m.completed || m.is_completed),
+      is_completed: Boolean(m.completed || m.is_completed),
+      completed_at: m.completed_at,
+    }));
+
     const newGoal: LearningGoal = {
       id: `goal_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       student_id: studentId,
@@ -6474,15 +8620,20 @@ print(power_mod(2, 10, 1000))  # Output: 24
       category: data.category || 'GENERAL',
       target_value: data.target_value || 10,
       current_value: data.current_value || 0,
+      progress_percentage: data.progress_percentage ?? 0,
       unit: data.unit || 'tasks',
       start_date: data.start_date || new Date().toISOString().split('T')[0],
       target_date: data.target_date || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       status: data.status || 'ACTIVE',
-      milestones: data.milestones || [],
       related_resource_ids: data.related_resource_ids || [],
+      ...data,
+      milestones: sanitizedMilestones,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
+    if (newGoal.progress_percentage === undefined) {
+      newGoal.progress_percentage = 0;
+    }
 
     const list = this.learningGoals.get(studentId) || [];
     list.unshift(newGoal);
@@ -6491,11 +8642,13 @@ print(power_mod(2, 10, 1000))  # Output: 24
   }
 
   public async updateGoal(
-    goalId: string,
-    studentId: string,
+    arg1: string,
+    arg2: string,
     updates: Partial<LearningGoal>
   ): Promise<LearningGoal> {
     await this.initialize();
+    const goalId = (typeof arg1 === 'string' && arg1.startsWith('goal_')) ? arg1 : arg2;
+    const studentId = (typeof arg1 === 'string' && arg1.startsWith('goal_')) ? arg2 : arg1;
     const list = this.learningGoals.get(studentId) || [];
     const idx = list.findIndex((g) => g.id === goalId);
     if (idx === -1) {
@@ -6524,8 +8677,10 @@ print(power_mod(2, 10, 1000))  # Output: 24
     return updated;
   }
 
-  public async deleteGoal(goalId: string, studentId: string): Promise<boolean> {
+  public async deleteGoal(arg1: string, arg2?: string): Promise<boolean> {
     await this.initialize();
+    const goalId = (typeof arg1 === 'string' && arg1.startsWith('goal_')) ? arg1 : arg2 || '';
+    const studentId = (typeof arg1 === 'string' && arg1.startsWith('goal_')) ? (arg2 || '') : arg1;
     const list = this.learningGoals.get(studentId) || [];
     const filtered = list.filter((g) => g.id !== goalId);
     if (filtered.length === list.length) {
@@ -7871,7 +10026,2931 @@ print(power_mod(2, 10, 1000))  # Output: 24
     await this.initialize();
     return this.agentWorkflows.get(id) || null;
   }
+
+  // 19. Interactive System Design Lab Methods
+  public async getSystemDesignLessons(level?: number): Promise<SystemDesignLesson[]> {
+    await this.initialize();
+    const all = Array.from(this.systemDesignLessons.values());
+    if (level !== undefined) {
+      return all.filter((l) => l.level === level).sort((a, b) => a.order_index - b.order_index);
+    }
+    return all.sort((a, b) => (a.level - b.level) || (a.order_index - b.order_index));
+  }
+
+  public async getSystemDesignLessonById(id: string): Promise<SystemDesignLesson | null> {
+    await this.initialize();
+    return this.systemDesignLessons.get(id) || Array.from(this.systemDesignLessons.values()).find((l) => l.slug === id) || null;
+  }
+
+  public async getSystemDesignRoadmap(studentId: string): Promise<{
+    levels: any[];
+    overall_progress_percentage: number;
+    completed_lessons_count: number;
+    total_lessons_count: number;
+  }> {
+    await this.initialize();
+    const progress = await this.getStudentSystemDesignProgress(studentId);
+    const completedSet = new Set(progress.completed_lessons);
+    const totalLessons = this.systemDesignLessons.size;
+
+    const levels = SYSTEM_DESIGN_ROADMAP_LEVELS.map((lvl) => {
+      const lessonsForLevel = Array.from(this.systemDesignLessons.values())
+        .filter((l) => l.level === lvl.level)
+        .sort((a, b) => a.order_index - b.order_index);
+      const completedForLevel = lessonsForLevel.filter((l) => completedSet.has(l.id)).length;
+      return {
+        ...lvl,
+        completed_lessons: completedForLevel,
+        is_completed: completedForLevel === lessonsForLevel.length && lessonsForLevel.length > 0,
+        lessons: lessonsForLevel.map((l) => ({
+          ...l,
+          is_completed: completedSet.has(l.id),
+          quiz_score: progress.passed_knowledge_checks[l.id] || null,
+        })),
+      };
+    });
+
+    return {
+      levels,
+      overall_progress_percentage: totalLessons > 0 ? Math.round((completedSet.size / totalLessons) * 100) : 0,
+      completed_lessons_count: completedSet.size,
+      total_lessons_count: totalLessons,
+    };
+  }
+
+  public async completeSystemDesignLesson(
+    studentId: string,
+    lessonId: string,
+    quizScore?: number
+  ): Promise<{ success: boolean; progress: SystemDesignProgress }> {
+    await this.initialize();
+    const lesson = await this.getSystemDesignLessonById(lessonId);
+    if (!lesson) throw new NotFoundError(`Lesson '${lessonId}' not found`);
+
+    let progress = await this.getStudentSystemDesignProgress(studentId);
+    const completedSet = new Set(progress.completed_lessons);
+    completedSet.add(lesson.id);
+
+    const passedChecks = { ...progress.passed_knowledge_checks };
+    if (quizScore !== undefined) {
+      passedChecks[lesson.id] = quizScore;
+    }
+
+    const readiness = Math.min(100, Math.round(50 + (completedSet.size / Math.max(1, this.systemDesignLessons.size)) * 40 + (progress.completed_challenges.length * 2)));
+
+    progress = {
+      ...progress,
+      completed_lessons: Array.from(completedSet),
+      passed_knowledge_checks: passedChecks,
+      readiness_score: readiness,
+      last_activity_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    this.systemDesignProgress.set(studentId, progress);
+    return { success: true, progress };
+  }
+
+  public async getSystemDesignChallenges(): Promise<SystemDesignChallenge[]> {
+    await this.initialize();
+    return Array.from(this.systemDesignChallenges.values()).sort((a, b) => a.number - b.number);
+  }
+
+  public async getSystemDesignChallengeById(id: string): Promise<SystemDesignChallenge | null> {
+    await this.initialize();
+    return (
+      this.systemDesignChallenges.get(id) ||
+      Array.from(this.systemDesignChallenges.values()).find(
+        (c) =>
+          c.slug === id ||
+          c.id === id ||
+          (id === 'sd_url_shortener' && (c.number === 1 || c.id === 'sd_chal_01')) ||
+          (id === 'sd_chat_app' && (c.number === 6 || c.id === 'sd_chal_06'))
+      ) ||
+      null
+    );
+  }
+
+  public async getSystemDesignProjects(studentId: string): Promise<SystemDesignProject[]> {
+    await this.initialize();
+    return Array.from(this.systemDesignProjects.values())
+      .filter((p) => p.student_id === studentId)
+      .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+  }
+
+  public async getSystemDesignProjectById(projectId: string, studentId: string): Promise<SystemDesignProject | null> {
+    await this.initialize();
+    const project = this.systemDesignProjects.get(projectId);
+    if (!project || project.student_id !== studentId) {
+      return null;
+    }
+    return project;
+  }
+
+  public async createSystemDesignProject(project: SystemDesignProject): Promise<SystemDesignProject> {
+    await this.initialize();
+    this.systemDesignProjects.set(project.id, project);
+
+    // Update progress project count
+    const prog = await this.getStudentSystemDesignProgress(project.student_id);
+    prog.total_projects_created = Array.from(this.systemDesignProjects.values()).filter((p) => p.student_id === project.student_id).length;
+    prog.updated_at = new Date().toISOString();
+    this.systemDesignProgress.set(project.student_id, prog);
+
+    return project;
+  }
+
+  public async updateSystemDesignProject(
+    projectId: string,
+    studentId: string,
+    updates: Partial<SystemDesignProject>
+  ): Promise<SystemDesignProject> {
+    await this.initialize();
+    const existing = await this.getSystemDesignProjectById(projectId, studentId);
+    if (!existing) {
+      throw new NotFoundError(`System design project '${projectId}' not found or access denied`);
+    }
+
+    const updated: SystemDesignProject = {
+      ...existing,
+      ...updates,
+      id: existing.id,
+      student_id: existing.student_id,
+      updated_at: new Date().toISOString(),
+    };
+    this.systemDesignProjects.set(projectId, updated);
+    return updated;
+  }
+
+  public async deleteSystemDesignProject(projectId: string, studentId: string): Promise<boolean> {
+    await this.initialize();
+    const existing = await this.getSystemDesignProjectById(projectId, studentId);
+    if (!existing) {
+      throw new NotFoundError(`System design project '${projectId}' not found or access denied`);
+    }
+    this.systemDesignProjects.delete(projectId);
+    return true;
+  }
+
+  public async createProjectVersion(
+    projectId: string,
+    studentId: string,
+    note: string
+  ): Promise<DesignProjectVersion> {
+    await this.initialize();
+    const project = await this.getSystemDesignProjectById(projectId, studentId);
+    if (!project) throw new NotFoundError(`Project '${projectId}' not found`);
+
+    const newVersionNumber = (project.versions?.length || 0) + 1;
+    const version: DesignProjectVersion = {
+      version_number: newVersionNumber,
+      created_at: new Date().toISOString(),
+      note: note || `Snapshot version ${newVersionNumber}`,
+      components: JSON.parse(JSON.stringify(project.components || [])),
+      connections: JSON.parse(JSON.stringify(project.connections || [])),
+    };
+
+    project.versions = [...(project.versions || []), version];
+    project.updated_at = new Date().toISOString();
+    this.systemDesignProjects.set(projectId, project);
+    return version;
+  }
+
+  public async saveChallengeSubmission(submission: ChallengeSubmission): Promise<ChallengeSubmission> {
+    await this.initialize();
+    const list = this.systemDesignSubmissions.get(submission.student_id) || [];
+    list.push(submission);
+    this.systemDesignSubmissions.set(submission.student_id, list);
+
+    // Update progress
+    const progress = await this.getStudentSystemDesignProgress(submission.student_id);
+    if (submission.passed && !progress.completed_challenges.includes(submission.challenge_id)) {
+      progress.completed_challenges.push(submission.challenge_id);
+    }
+    if (submission.score > progress.highest_challenge_score) {
+      progress.highest_challenge_score = submission.score;
+    }
+    progress.readiness_score = Math.min(100, Math.round(progress.readiness_score + 3));
+    progress.updated_at = new Date().toISOString();
+    this.systemDesignProgress.set(submission.student_id, progress);
+
+    return submission;
+  }
+
+  public async getChallengeSubmissions(studentId: string, challengeId?: string): Promise<ChallengeSubmission[]> {
+    await this.initialize();
+    const list = this.systemDesignSubmissions.get(studentId) || [];
+    if (challengeId) {
+      return list.filter((s) => s.challenge_id === challengeId).sort((a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime());
+    }
+    return list.sort((a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime());
+  }
+
+  public async createSystemDesignInterview(session: InterviewSession): Promise<InterviewSession> {
+    await this.initialize();
+    this.systemDesignInterviews.set(session.id, session);
+    return session;
+  }
+
+  public async getSystemDesignInterview(sessionId: string, studentId: string): Promise<InterviewSession | null> {
+    await this.initialize();
+    const session = this.systemDesignInterviews.get(sessionId);
+    if (!session || session.student_id !== studentId) {
+      return null;
+    }
+    return session;
+  }
+
+  public async getSystemDesignInterviews(studentId: string): Promise<InterviewSession[]> {
+    await this.initialize();
+    return Array.from(this.systemDesignInterviews.values())
+      .filter((s) => s.student_id === studentId)
+      .sort((a, b) => new Date(b.started_at).getTime() - new Date(a.started_at).getTime());
+  }
+
+  public async updateSystemDesignInterview(
+    sessionId: string,
+    studentId: string,
+    updates: Partial<InterviewSession>
+  ): Promise<InterviewSession> {
+    await this.initialize();
+    const existing = await this.getSystemDesignInterview(sessionId, studentId);
+    if (!existing) {
+      throw new NotFoundError(`Interview session '${sessionId}' not found`);
+    }
+    const updated: InterviewSession = {
+      ...existing,
+      ...updates,
+      id: existing.id,
+      student_id: existing.student_id,
+    };
+    this.systemDesignInterviews.set(sessionId, updated);
+
+    if (updated.status === 'COMPLETED') {
+      const progress = await this.getStudentSystemDesignProgress(studentId);
+      progress.interview_sessions_completed = Array.from(this.systemDesignInterviews.values()).filter((s) => s.student_id === studentId && s.status === 'COMPLETED').length;
+      progress.updated_at = new Date().toISOString();
+      this.systemDesignProgress.set(studentId, progress);
+    }
+
+    return updated;
+  }
+
+  public async getStudentSystemDesignProgress(studentId: string): Promise<SystemDesignProgress> {
+    await this.initialize();
+    let prog = this.systemDesignProgress.get(studentId);
+    if (!prog) {
+      prog = {
+        student_id: studentId,
+        completed_lessons: [],
+        passed_knowledge_checks: {},
+        completed_challenges: [],
+        total_projects_created: 0,
+        interview_sessions_completed: 0,
+        highest_challenge_score: 0,
+        mastered_concepts: [],
+        weak_concepts: [],
+        readiness_score: 45,
+        last_activity_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      this.systemDesignProgress.set(studentId, prog);
+    }
+    return prog;
+  }
+
+  public async updateStudentSystemDesignProgress(
+    studentId: string,
+    updates: Partial<SystemDesignProgress>
+  ): Promise<SystemDesignProgress> {
+    await this.initialize();
+    const existing = await this.getStudentSystemDesignProgress(studentId);
+    const updated: SystemDesignProgress = {
+      ...existing,
+      ...updates,
+      student_id: existing.student_id,
+      updated_at: new Date().toISOString(),
+    };
+    this.systemDesignProgress.set(studentId, updated);
+    return updated;
+  }
+
+  // ==========================================
+  // GATE EXAM PREPARATION ENGINE METHODS
+  // ==========================================
+
+  public async getGatePapers(): Promise<GatePaper[]> {
+    await this.initialize();
+    return Array.from(this.gatePapers.values()).filter((p) => p.is_active);
+  }
+
+  public async getGatePaperByCode(code: string): Promise<GatePaper | null> {
+    await this.initialize();
+    return this.gatePapers.get(code.toUpperCase()) || null;
+  }
+
+  public async getGateSyllabus(paperCode: string, studentId?: string): Promise<GateSyllabusSection[]> {
+    await this.initialize();
+    const code = paperCode.toUpperCase();
+    const rawSections = this.gateSyllabusSections.get(code) || [];
+    const studentProgressMap = studentId ? this.gateTopicProgress.get(studentId) : undefined;
+
+    // Deep clone and hydrate each topic with student's progress
+    return rawSections.map((sec) => ({
+      ...sec,
+      topics: sec.topics.map((top) => {
+        const studentData = studentProgressMap?.get(top.id);
+        return {
+          ...top,
+          status: studentData?.status || 'NOT_STARTED',
+          confidence: studentData?.confidence || 'MEDIUM',
+          revision_flag: studentData?.revision_flag || false,
+          student_notes: studentData?.student_notes || '',
+          last_practiced_at: studentData?.last_practiced_at,
+          mastery_percentage:
+            studentData?.status === 'COMPLETED'
+              ? studentData?.confidence === 'HIGH'
+                ? 100
+                : 80
+              : studentData?.status === 'IN_PROGRESS'
+              ? 45
+              : 0,
+        };
+      }),
+    }));
+  }
+
+  public async getGateStudentProfile(studentId: string): Promise<GateStudentProfile> {
+    await this.initialize();
+    let profile = this.gateStudentProfiles.get(studentId);
+    if (!profile) {
+      profile = {
+        student_id: studentId,
+        target_paper: 'CS',
+        exam_cycle: 'GATE 2026',
+        target_date: '2026-02-07',
+        target_score: 75,
+        air_goal: '< 500',
+        weekly_study_hours: 18,
+        study_days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+        onboarding_completed: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      this.gateStudentProfiles.set(studentId, profile);
+    }
+    return profile;
+  }
+
+  public async saveGateStudentProfile(
+    studentId: string,
+    updates: Partial<GateStudentProfile>
+  ): Promise<GateStudentProfile> {
+    await this.initialize();
+    const existing = await this.getGateStudentProfile(studentId);
+    const updated: GateStudentProfile = {
+      ...existing,
+      ...updates,
+      student_id: studentId,
+      target_paper: (updates.target_paper || existing.target_paper).toUpperCase(),
+      updated_at: new Date().toISOString(),
+    };
+    this.gateStudentProfiles.set(studentId, updated);
+    return updated;
+  }
+
+  public async saveGateTopicStatus(
+    studentId: string,
+    topicId: string,
+    data: {
+      status?: TopicStatus;
+      confidence?: StudentConfidence;
+      revision_flag?: boolean;
+      student_notes?: string;
+    }
+  ): Promise<any> {
+    await this.initialize();
+    let studentMap = this.gateTopicProgress.get(studentId);
+    if (!studentMap) {
+      studentMap = new Map();
+      this.gateTopicProgress.set(studentId, studentMap);
+    }
+    const current = studentMap.get(topicId) || {};
+    const updated = {
+      ...current,
+      ...data,
+      last_practiced_at: new Date().toISOString(),
+    };
+    studentMap.set(topicId, updated);
+    return { success: true, topic_id: topicId, data: updated };
+  }
+
+  public async getGateQuestions(filters: {
+    paper_code?: string;
+    subject?: string;
+    topic_id?: string;
+    difficulty?: string;
+    question_type?: string;
+    is_pyq?: boolean;
+    search?: string;
+  }): Promise<GateQuestion[]> {
+    await this.initialize();
+    let list = Array.from(this.gateQuestions.values());
+
+    if (filters.paper_code) {
+      list = list.filter((q) => q.paper_code === filters.paper_code.toUpperCase());
+    }
+    if (filters.subject) {
+      list = list.filter((q) => q.subject.toLowerCase() === filters.subject!.toLowerCase());
+    }
+    if (filters.topic_id) {
+      list = list.filter((q) => q.topic_id === filters.topic_id);
+    }
+    if (filters.difficulty) {
+      list = list.filter((q) => q.difficulty === filters.difficulty);
+    }
+    if (filters.question_type) {
+      list = list.filter((q) => q.question_type === filters.question_type);
+    }
+    if (filters.is_pyq !== undefined) {
+      list = list.filter((q) => q.is_pyq === filters.is_pyq);
+    }
+    if (filters.search) {
+      const q = filters.search.toLowerCase();
+      list = list.filter(
+        (x) =>
+          x.question_statement.toLowerCase().includes(q) ||
+          x.subject.toLowerCase().includes(q) ||
+          x.source_attribution.toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }
+
+  public async getGateQuestionById(id: string): Promise<GateQuestion | null> {
+    await this.initialize();
+    return this.gateQuestions.get(id) || null;
+  }
+
+  public async recordGateQuestionAttempt(attempt: GateQuestionAttempt): Promise<GateQuestionAttempt> {
+    await this.initialize();
+    const list = this.gateQuestionAttempts.get(attempt.student_id) || [];
+    list.unshift(attempt);
+    this.gateQuestionAttempts.set(attempt.student_id, list);
+
+    // Also update topic's last practiced date
+    const question = this.gateQuestions.get(attempt.question_id);
+    if (question) {
+      let studentMap = this.gateTopicProgress.get(attempt.student_id);
+      if (!studentMap) {
+        studentMap = new Map();
+        this.gateTopicProgress.set(attempt.student_id, studentMap);
+      }
+      const existing = studentMap.get(question.topic_id) || {};
+      studentMap.set(question.topic_id, {
+        ...existing,
+        status: existing.status === 'COMPLETED' ? 'COMPLETED' : 'IN_PROGRESS',
+        last_practiced_at: new Date().toISOString(),
+      });
+    }
+
+    return attempt;
+  }
+
+  public async getGateQuestionAttempts(studentId: string, paperCode?: string): Promise<GateQuestionAttempt[]> {
+    await this.initialize();
+    const list = this.gateQuestionAttempts.get(studentId) || [];
+    if (paperCode) {
+      return list.filter((a) => a.paper_code === paperCode.toUpperCase());
+    }
+    return list;
+  }
+
+  public async toggleGateBookmark(
+    studentId: string,
+    questionId: string,
+    notes?: string
+  ): Promise<{ bookmarked: boolean; bookmark?: GateBookmark }> {
+    await this.initialize();
+    const list = this.gateBookmarks.get(studentId) || [];
+    const index = list.findIndex((b) => b.question_id === questionId);
+    if (index >= 0) {
+      list.splice(index, 1);
+      this.gateBookmarks.set(studentId, list);
+      return { bookmarked: false };
+    } else {
+      const bookmark: GateBookmark = {
+        id: `bm_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+        student_id: studentId,
+        question_id: questionId,
+        notes: notes || '',
+        created_at: new Date().toISOString(),
+      };
+      list.unshift(bookmark);
+      this.gateBookmarks.set(studentId, list);
+      return { bookmarked: true, bookmark };
+    }
+  }
+
+  public async getGateBookmarks(studentId: string): Promise<(GateBookmark & { question: GateQuestion | null })[]> {
+    await this.initialize();
+    const list = this.gateBookmarks.get(studentId) || [];
+    return list.map((b) => ({
+      ...b,
+      question: this.gateQuestions.get(b.question_id) || null,
+    }));
+  }
+
+  public async getGateMockTests(paperCode?: string, type?: string): Promise<GateMockTest[]> {
+    await this.initialize();
+    let list = Array.from(this.gateMockTests.values());
+    if (paperCode) {
+      list = list.filter((t) => t.paper_code === paperCode.toUpperCase());
+    }
+    if (type) {
+      list = list.filter((t) => t.type === type);
+    }
+    return list;
+  }
+
+  public async getGateMockTestById(id: string): Promise<GateMockTest | null> {
+    await this.initialize();
+    return this.gateMockTests.get(id) || null;
+  }
+
+  public async startGateTestSession(studentId: string, testId: string): Promise<GateTestSession> {
+    await this.initialize();
+    const test = this.gateMockTests.get(testId);
+    if (!test) {
+      throw new NotFoundError(`GATE Mock Test ${testId} not found`);
+    }
+
+    const sessionId = `gts_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const answers: Record<string, any> = {};
+    for (const qid of test.question_ids) {
+      answers[qid] = {
+        question_id: qid,
+        status: 'NOT_VISITED',
+        time_spent_seconds: 0,
+        visited: false,
+      };
+    }
+
+    const session: GateTestSession = {
+      id: sessionId,
+      student_id: studentId,
+      test_id: testId,
+      paper_code: test.paper_code,
+      status: 'IN_PROGRESS',
+      start_time: new Date().toISOString(),
+      duration_minutes: test.duration_minutes,
+      remaining_seconds: test.duration_minutes * 60,
+      answers,
+    };
+
+    this.gateTestSessions.set(sessionId, session);
+    return session;
+  }
+
+  public async saveGateTestSessionAnswers(
+    sessionId: string,
+    studentId: string,
+    answers: Record<string, any>,
+    remainingSeconds: number
+  ): Promise<GateTestSession> {
+    await this.initialize();
+    const session = this.gateTestSessions.get(sessionId);
+    if (!session) {
+      throw new NotFoundError(`GATE Test session ${sessionId} not found`);
+    }
+    if (session.student_id !== studentId) {
+      throw new AuthorizationError('Unauthorized to update this test session');
+    }
+
+    session.answers = { ...session.answers, ...answers };
+    session.remaining_seconds = Math.max(0, remainingSeconds);
+    this.gateTestSessions.set(sessionId, session);
+    return session;
+  }
+
+  public async submitGateTestSession(sessionId: string, studentId: string): Promise<GateTestResult> {
+    await this.initialize();
+    const session = this.gateTestSessions.get(sessionId);
+    if (!session) {
+      throw new NotFoundError(`GATE Test session ${sessionId} not found`);
+    }
+    if (session.student_id !== studentId) {
+      throw new AuthorizationError('Unauthorized to submit this test session');
+    }
+
+    if (session.status === 'COMPLETED' && session.result) {
+      return session.result;
+    }
+
+    const test = this.gateMockTests.get(session.test_id);
+    if (!test) {
+      throw new NotFoundError(`Test ${session.test_id} not found`);
+    }
+
+    let totalMarks = 0;
+    let correctCount = 0;
+    let incorrectCount = 0;
+    let unattemptedCount = 0;
+    let negativeLost = 0;
+
+    const subjectBreakdown: Record<string, { total: number; scored: number; correct: number; incorrect: number }> = {};
+    const topicBreakdown: Record<string, { correct: number; incorrect: number }> = {};
+    const questionReviews: any[] = [];
+
+    for (const qid of test.question_ids) {
+      const q = this.gateQuestions.get(qid);
+      if (!q) continue;
+
+      if (!subjectBreakdown[q.subject]) {
+        subjectBreakdown[q.subject] = { total: 0, scored: 0, correct: 0, incorrect: 0 };
+      }
+      subjectBreakdown[q.subject].total += q.marks;
+
+      if (!topicBreakdown[q.topic_id]) {
+        topicBreakdown[q.topic_id] = { correct: 0, incorrect: 0 };
+      }
+
+      const userAns = session.answers[qid]?.selected_answer;
+      let isCorrect = false;
+      let awarded = 0;
+
+      if (userAns === undefined || userAns === null || userAns === '' || (Array.isArray(userAns) && userAns.length === 0)) {
+        unattemptedCount++;
+      } else {
+        // Evaluation logic
+        if (q.question_type === 'MCQ') {
+          if (String(userAns).trim().toUpperCase() === String(q.correct_answer).trim().toUpperCase()) {
+            isCorrect = true;
+            awarded = q.marks;
+          } else {
+            isCorrect = false;
+            awarded = -q.negative_marks;
+            negativeLost += q.negative_marks;
+          }
+        } else if (q.question_type === 'MSQ') {
+          // Multiple select: exact match required, no negative marks
+          const correctArr = Array.isArray(q.correct_answer) ? q.correct_answer.slice().sort() : [q.correct_answer];
+          const userArr = Array.isArray(userAns) ? userAns.slice().sort() : [userAns];
+          if (correctArr.length === userArr.length && correctArr.every((v, i) => v === userArr[i])) {
+            isCorrect = true;
+            awarded = q.marks;
+          } else {
+            isCorrect = false;
+            awarded = 0;
+          }
+        } else if (q.question_type === 'NAT') {
+          // Numerical Answer Type: decimal tolerance range
+          const val = parseFloat(userAns);
+          if (!isNaN(val)) {
+            let minVal = 0;
+            let maxVal = 0;
+            if (typeof q.correct_answer === 'object' && 'min' in q.correct_answer) {
+              minVal = q.correct_answer.min;
+              maxVal = q.correct_answer.max;
+            } else if (q.tolerance_range) {
+              minVal = q.tolerance_range[0];
+              maxVal = q.tolerance_range[1];
+            } else {
+              const exact = parseFloat(String(q.correct_answer));
+              minVal = exact - 0.05;
+              maxVal = exact + 0.05;
+            }
+
+            if (val >= minVal && val <= maxVal) {
+              isCorrect = true;
+              awarded = q.marks;
+            } else {
+              isCorrect = false;
+              awarded = 0;
+            }
+          } else {
+            isCorrect = false;
+            awarded = 0;
+          }
+        }
+
+        if (isCorrect) {
+          correctCount++;
+          subjectBreakdown[q.subject].correct++;
+          topicBreakdown[q.topic_id].correct++;
+        } else {
+          incorrectCount++;
+          subjectBreakdown[q.subject].incorrect++;
+          topicBreakdown[q.topic_id].incorrect++;
+        }
+      }
+
+      totalMarks += awarded;
+      subjectBreakdown[q.subject].scored += awarded;
+
+      questionReviews.push({
+        question_id: q.id,
+        statement: q.question_statement,
+        question_type: q.question_type,
+        marks: q.marks,
+        user_answer: userAns,
+        correct_answer: q.correct_answer,
+        is_correct: isCorrect,
+        marks_awarded: awarded,
+        explanation: q.explanation,
+        topic_id: q.topic_id,
+        subject: q.subject,
+      });
+
+      // Record question attempt
+      const attempt: GateQuestionAttempt = {
+        id: `att_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+        student_id: studentId,
+        question_id: q.id,
+        paper_code: q.paper_code,
+        selected_answer: userAns,
+        is_correct: isCorrect,
+        marks_awarded: awarded > 0 ? awarded : 0,
+        negative_deducted: awarded < 0 ? Math.abs(awarded) : 0,
+        time_spent_seconds: session.answers[qid]?.time_spent_seconds || 45,
+        attempted_at: new Date().toISOString(),
+      };
+      const curList = this.gateQuestionAttempts.get(studentId) || [];
+      curList.unshift(attempt);
+      this.gateQuestionAttempts.set(studentId, curList);
+    }
+
+    const maxMarks = test.total_marks || 100;
+    const finalMarks = Math.max(0, Math.round(totalMarks * 100) / 100);
+    const attemptedTotal = correctCount + incorrectCount;
+    const accuracy = attemptedTotal > 0 ? Math.round((correctCount / attemptedTotal) * 100) : 0;
+    const timeTaken = Math.max(0, test.duration_minutes * 60 - session.remaining_seconds);
+
+    // Standard normalized GATE score formula approximation (scale 100 - 1000)
+    // S = Sq + (St - Sq) * (M - Mq) / (Mt - Mq)
+    // where Mq ~ 25 (qualifying mark), Mt ~ 75 (top 0.1% mark), Sq = 350, St = 900
+    const Mq = 25;
+    const Mt = 75;
+    const Sq = 350;
+    const St = 900;
+    let estScore = 200;
+    if (finalMarks >= Mq) {
+      estScore = Math.min(1000, Math.round(Sq + ((St - Sq) * (finalMarks - Mq)) / (Mt - Mq)));
+    } else {
+      estScore = Math.max(100, Math.round((finalMarks / Mq) * Sq));
+    }
+
+    const result: GateTestResult = {
+      id: `gtr_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      session_id: sessionId,
+      student_id: studentId,
+      test_id: test.id,
+      test_title: test.title,
+      paper_code: test.paper_code,
+      total_marks_obtained: finalMarks,
+      total_score: finalMarks,
+      max_marks: maxMarks,
+      max_score: maxMarks,
+      correct_count: correctCount,
+      incorrect_count: incorrectCount,
+      unattempted_count: unattemptedCount,
+      negative_marks_lost: Math.round(negativeLost * 100) / 100,
+      accuracy_percentage: accuracy,
+      time_taken_seconds: timeTaken,
+      estimated_gate_score: estScore,
+      gate_score_estimate: estScore,
+      subject_breakdown: subjectBreakdown,
+      topic_breakdown: topicBreakdown,
+      question_reviews: questionReviews,
+      completed_at: new Date().toISOString(),
+    };
+
+    session.status = 'COMPLETED';
+    session.end_time = new Date().toISOString();
+    session.result = result;
+    this.gateTestSessions.set(sessionId, session);
+
+    return result;
+  }
+
+  public async getGateTestSession(sessionId: string, studentId: string): Promise<GateTestSession | null> {
+    await this.initialize();
+    const session = this.gateTestSessions.get(sessionId);
+    if (!session || session.student_id !== studentId) return null;
+    return session;
+  }
+
+  public async getGateTestResults(studentId: string): Promise<GateTestResult[]> {
+    await this.initialize();
+    const list: GateTestResult[] = [];
+    for (const session of this.gateTestSessions.values()) {
+      if (session.student_id === studentId && session.result) {
+        list.push(session.result);
+      }
+    }
+    return list.sort((a, b) => new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime());
+  }
+
+  public async getGateStudyPlan(studentId: string, paperCode?: string): Promise<GateStudyTask[]> {
+    await this.initialize();
+    const tasks = this.gateStudyTasks.get(studentId) || [];
+    if (paperCode) {
+      return tasks.filter((t) => t.paper_code === paperCode.toUpperCase());
+    }
+    return tasks.sort((a, b) => a.date.localeCompare(b.date));
+  }
+
+  public async toggleGateStudyTask(studentId: string, taskId: string): Promise<GateStudyTask | null> {
+    await this.initialize();
+    const tasks = this.gateStudyTasks.get(studentId) || [];
+    const found = tasks.find((t) => t.id === taskId);
+    if (found) {
+      found.is_completed = !found.is_completed;
+      this.gateStudyTasks.set(studentId, tasks);
+      return found;
+    }
+    return null;
+  }
+
+  public async addGateStudyTask(task: GateStudyTask): Promise<GateStudyTask> {
+    await this.initialize();
+    const tasks = this.gateStudyTasks.get(task.student_id) || [];
+    tasks.push(task);
+    this.gateStudyTasks.set(task.student_id, tasks);
+    return task;
+  }
+
+  public async getGateDashboardData(studentId: string): Promise<GateDashboardData> {
+    await this.initialize();
+    const profile = await this.getGateStudentProfile(studentId);
+    const paper = this.gatePapers.get(profile.target_paper) || this.gatePapers.get('CS')!;
+    const syllabus = await this.getGateSyllabus(profile.target_paper, studentId);
+
+    // Calculate topics count
+    let totalTopics = 0;
+    let completedTopics = 0;
+    let inProgressTopics = 0;
+    const topicMap: Record<string, GateSyllabusTopic> = {};
+
+    for (const sec of syllabus) {
+      for (const top of sec.topics) {
+        totalTopics++;
+        topicMap[top.id] = top;
+        if (top.status === 'COMPLETED') completedTopics++;
+        else if (top.status === 'IN_PROGRESS') inProgressTopics++;
+      }
+    }
+
+    const syllabusPct = totalTopics > 0 ? Math.round((completedTopics / totalTopics) * 100) : 0;
+
+    // Attempts and accuracy
+    const attempts = this.gateQuestionAttempts.get(studentId) || [];
+    const paperAttempts = attempts.filter((a) => a.paper_code === profile.target_paper);
+    const totalPracticed = paperAttempts.length;
+    const totalCorrect = paperAttempts.filter((a) => a.is_correct).length;
+    const accuracy = totalPracticed > 0 ? Math.round((totalCorrect / totalPracticed) * 100) : 0;
+
+    // Test results
+    const results = await this.getGateTestResults(studentId);
+    const paperResults = results.filter((r) => r.paper_code === profile.target_paper);
+    const testsTaken = paperResults.length;
+    const avgScore = testsTaken > 0 ? Math.round(paperResults.reduce((acc, r) => acc + r.total_marks_obtained, 0) / testsTaken) : 0;
+    const highestScore = testsTaken > 0 ? Math.max(...paperResults.map((r) => r.total_marks_obtained)) : 0;
+
+    // Weak topics calculation (from repeated wrong attempts or low confidence)
+    const topicMistakes: Record<string, { attempts: number; wrong: number }> = {};
+    for (const att of paperAttempts) {
+      const q = this.gateQuestions.get(att.question_id);
+      if (q) {
+        if (!topicMistakes[q.topic_id]) {
+          topicMistakes[q.topic_id] = { attempts: 0, wrong: 0 };
+        }
+        topicMistakes[q.topic_id].attempts++;
+        if (!att.is_correct) {
+          topicMistakes[q.topic_id].wrong++;
+        }
+      }
+    }
+
+    const weakTopics: GateDashboardData['weak_topics'] = [];
+    for (const [tid, stats] of Object.entries(topicMistakes)) {
+      if (stats.wrong > 0 && stats.attempts >= 1) {
+        const top = topicMap[tid];
+        const acc = Math.round(((stats.attempts - stats.wrong) / stats.attempts) * 100);
+        if (acc < 65) {
+          weakTopics.push({
+            topic_id: tid,
+            topic_name: top?.name || tid,
+            subject: top?.name || 'Core Topic',
+            accuracy: acc,
+            attempts_count: stats.attempts,
+            recommendation: `Revise foundational concepts and solve 5 PYQs on ${top?.name || tid}.`,
+          });
+        }
+      }
+    }
+
+    // If no attempt-derived weak topics yet, add flagged topics
+    if (weakTopics.length === 0) {
+      for (const sec of syllabus) {
+        for (const top of sec.topics) {
+          if (top.confidence === 'LOW' || top.revision_flag) {
+            weakTopics.push({
+              topic_id: top.id,
+              topic_name: top.name,
+              subject: sec.name,
+              accuracy: 40,
+              attempts_count: 2,
+              recommendation: `Recommended revision: ${top.name} (${top.pyq_frequency}).`,
+            });
+            if (weakTopics.length >= 3) break;
+          }
+        }
+        if (weakTopics.length >= 3) break;
+      }
+    }
+
+    const bookmarks = this.gateBookmarks.get(studentId) || [];
+    const tasks = await this.getGateStudyPlan(studentId, profile.target_paper);
+
+    // Estimated GATE Score
+    const estGateScore = highestScore > 0 ? Math.round(350 + (highestScore / 100) * 550) : 480;
+
+    const recentAttemptsWithMeta = paperAttempts.slice(0, 5).map((att) => {
+      const q = this.gateQuestions.get(att.question_id);
+      return {
+        ...att,
+        statement: q?.question_statement || 'GATE Question',
+        subject: q?.subject || 'Engineering',
+      };
+    });
+
+    return {
+      profile,
+      paper_info: paper,
+      metrics: {
+        syllabus_completion_percentage: syllabusPct,
+        total_topics: totalTopics,
+        completed_topics: completedTopics,
+        in_progress_topics: inProgressTopics,
+        total_questions_practiced: totalPracticed,
+        total_correct: totalCorrect,
+        overall_accuracy_percentage: accuracy,
+        total_mock_tests_taken: testsTaken,
+        avg_mock_test_score: avgScore,
+        highest_mock_test_score: highestScore,
+        estimated_gate_score: estGateScore,
+        saved_questions_count: bookmarks.length,
+      },
+      weak_topics: weakTopics,
+      upcoming_tasks: tasks.slice(0, 4),
+      recent_attempts: recentAttemptsWithMeta,
+      recent_tests: paperResults.slice(0, 3).map((r) => ({ ...r, title: r.test_title })),
+    };
+  }
+
+  // ==========================================
+  // Lab Assistant Methods
+  // ==========================================
+  public async getLabCourses(studentId: string): Promise<LabCourse[]> {
+    await this.initialize();
+    return Array.from(this.labCourses.values())
+      .filter((c) => c.student_id === studentId)
+      .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+  }
+
+  public async getLabCourseById(labId: string, studentId: string): Promise<LabCourse | null> {
+    await this.initialize();
+    const course = this.labCourses.get(labId);
+    if (!course || course.student_id !== studentId) return null;
+    return course;
+  }
+
+  public async saveLabCourse(course: LabCourse): Promise<LabCourse> {
+    await this.initialize();
+    const now = new Date().toISOString();
+    const existing = this.labCourses.get(course.id);
+    const updated: LabCourse = {
+      ...course,
+      created_at: existing?.created_at || course.created_at || now,
+      updated_at: now,
+    };
+    this.labCourses.set(course.id, updated);
+    return updated;
+  }
+
+  public async deleteLabCourse(labId: string, studentId: string): Promise<boolean> {
+    await this.initialize();
+    const course = this.labCourses.get(labId);
+    if (!course || course.student_id !== studentId) return false;
+    this.labCourses.delete(labId);
+    // Cascade delete associated experiments, manuals, and reports
+    for (const [expId, exp] of this.labExperiments.entries()) {
+      if (exp.lab_id === labId && exp.student_id === studentId) {
+        this.labExperiments.delete(expId);
+      }
+    }
+    for (const [manId, man] of this.labManuals.entries()) {
+      if (man.lab_id === labId && man.student_id === studentId) {
+        this.labManuals.delete(manId);
+      }
+    }
+    for (const [repId, rep] of this.labReports.entries()) {
+      if (rep.lab_id === labId && rep.student_id === studentId) {
+        this.labReports.delete(repId);
+      }
+    }
+    return true;
+  }
+
+  public async getLabManuals(studentId: string, labId?: string): Promise<LabManual[]> {
+    await this.initialize();
+    return Array.from(this.labManuals.values())
+      .filter((m) => m.student_id === studentId && (!labId || m.lab_id === labId))
+      .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+  }
+
+  public async getLabManualById(manualId: string, studentId: string): Promise<LabManual | null> {
+    await this.initialize();
+    const manual = this.labManuals.get(manualId);
+    if (!manual || manual.student_id !== studentId) return null;
+    return manual;
+  }
+
+  public async saveLabManual(manual: LabManual): Promise<LabManual> {
+    await this.initialize();
+    const now = new Date().toISOString();
+    const existing = this.labManuals.get(manual.id);
+    const updated: LabManual = {
+      ...manual,
+      version: (existing?.version || 0) + 1,
+      created_at: existing?.created_at || manual.created_at || now,
+      updated_at: now,
+    };
+    this.labManuals.set(manual.id, updated);
+
+    // Link to lab course if present
+    if (manual.lab_id) {
+      const course = this.labCourses.get(manual.lab_id);
+      if (course && course.student_id === manual.student_id) {
+        course.manual_id = manual.id;
+        course.manual_title = manual.title;
+        course.updated_at = now;
+        this.labCourses.set(course.id, course);
+      }
+    }
+    return updated;
+  }
+
+  public async getLabExperiments(labId: string, studentId: string): Promise<LabExperimentDetail[]> {
+    await this.initialize();
+    const exps = Array.from(this.labExperiments.values())
+      .filter((e) => e.lab_id === labId && e.student_id === studentId)
+      .sort((a, b) => a.experiment_number - b.experiment_number);
+
+    // Attach checklist state
+    for (const exp of exps) {
+      const key = `${studentId}:${exp.id}`;
+      const cl = this.labChecklists.get(key) || {};
+      if (exp.procedure_steps) {
+        exp.procedure_steps = exp.procedure_steps.map((st) => ({
+          ...st,
+          is_completed: !!cl[st.id],
+        }));
+      }
+    }
+    return exps;
+  }
+
+  public async getLabExperimentById(expId: string, studentId: string): Promise<LabExperimentDetail | null> {
+    await this.initialize();
+    const exp = this.labExperiments.get(expId);
+    if (!exp || exp.student_id !== studentId) return null;
+
+    // Attach checklist state
+    const key = `${studentId}:${exp.id}`;
+    const cl = this.labChecklists.get(key) || {};
+    if (exp.procedure_steps) {
+      exp.procedure_steps = exp.procedure_steps.map((st) => ({
+        ...st,
+        is_completed: !!cl[st.id],
+      }));
+    }
+    return exp;
+  }
+
+  public async saveLabExperiment(exp: LabExperimentDetail): Promise<LabExperimentDetail> {
+    await this.initialize();
+    const now = new Date().toISOString();
+    const existing = this.labExperiments.get(exp.id);
+    const updated: LabExperimentDetail = {
+      ...exp,
+      aim: exp.aim || exp.objective || '',
+      objective: exp.aim || exp.objective || '',
+      result_conclusion: exp.result_conclusion || exp.conclusion || '',
+      conclusion: exp.result_conclusion || exp.conclusion || '',
+      implementation_code: exp.implementation_code || exp.source_code || '',
+      source_code: exp.implementation_code || exp.source_code || '',
+      created_at: existing?.created_at || exp.created_at || now,
+      updated_at: now,
+    };
+    this.labExperiments.set(exp.id, updated);
+
+    // Update parent lab metrics
+    if (updated.lab_id) {
+      const course = this.labCourses.get(updated.lab_id);
+      if (course && course.student_id === updated.student_id) {
+        const exps = Array.from(this.labExperiments.values()).filter(
+          (e) => e.lab_id === updated.lab_id && e.student_id === updated.student_id
+        );
+        course.experiments_count = exps.length;
+        course.completed_experiments_count = exps.filter((e) => e.status === 'COMPLETED').length;
+        course.in_progress_experiments_count = exps.filter((e) => e.status === 'IN_PROGRESS').length;
+        course.updated_at = now;
+        this.labCourses.set(course.id, course);
+      }
+    }
+    return updated;
+  }
+
+  public async deleteLabExperiment(expId: string, studentId: string): Promise<boolean> {
+    await this.initialize();
+    const exp = this.labExperiments.get(expId);
+    if (!exp || exp.student_id !== studentId) return false;
+    this.labExperiments.delete(expId);
+    const key = `${studentId}:${expId}`;
+    this.labChecklists.delete(key);
+    this.labCodeDrafts.delete(key);
+    this.labDoubtHistories.delete(key);
+
+    // Update parent lab metrics
+    if (exp.lab_id) {
+      const course = this.labCourses.get(exp.lab_id);
+      if (course && course.student_id === studentId) {
+        const exps = Array.from(this.labExperiments.values()).filter(
+          (e) => e.lab_id === exp.lab_id && e.student_id === studentId
+        );
+        course.experiments_count = exps.length;
+        course.completed_experiments_count = exps.filter((e) => e.status === 'COMPLETED').length;
+        course.in_progress_experiments_count = exps.filter((e) => e.status === 'IN_PROGRESS').length;
+        course.updated_at = new Date().toISOString();
+        this.labCourses.set(course.id, course);
+      }
+    }
+    return true;
+  }
+
+  public async reorderLabExperiments(studentId: string, labId: string, expIds: string[]): Promise<void> {
+    await this.initialize();
+    expIds.forEach((id, index) => {
+      const exp = this.labExperiments.get(id);
+      if (exp && exp.student_id === studentId && exp.lab_id === labId) {
+        exp.experiment_number = index + 1;
+        exp.updated_at = new Date().toISOString();
+        this.labExperiments.set(id, exp);
+      }
+    });
+  }
+
+  public async saveLabChecklist(
+    studentId: string,
+    expId: string,
+    stepId: string,
+    completed: boolean
+  ): Promise<Record<string, boolean>> {
+    await this.initialize();
+    const key = `${studentId}:${expId}`;
+    const map = this.labChecklists.get(key) || {};
+    map[stepId] = completed;
+    this.labChecklists.set(key, map);
+
+    // Update experiment status based on checklist progress
+    const exp = this.labExperiments.get(expId);
+    if (exp && exp.student_id === studentId) {
+      const totalSteps = exp.procedure_steps?.length || 0;
+      const completedSteps = Object.values(map).filter(Boolean).length;
+      if (totalSteps > 0) {
+        if (completedSteps === totalSteps && exp.status !== 'COMPLETED') {
+          exp.status = 'COMPLETED';
+          exp.completed_at = new Date().toISOString();
+        } else if (completedSteps > 0 && exp.status === 'NOT_STARTED') {
+          exp.status = 'IN_PROGRESS';
+        }
+        exp.updated_at = new Date().toISOString();
+        this.labExperiments.set(expId, exp);
+
+        // Update parent lab course stats
+        if (exp.lab_id) {
+          const course = this.labCourses.get(exp.lab_id);
+          if (course && course.student_id === studentId) {
+            const exps = Array.from(this.labExperiments.values()).filter(
+              (e) => e.lab_id === exp.lab_id && e.student_id === studentId
+            );
+            course.completed_experiments_count = exps.filter((e) => e.status === 'COMPLETED').length;
+            course.in_progress_experiments_count = exps.filter((e) => e.status === 'IN_PROGRESS').length;
+            this.labCourses.set(course.id, course);
+          }
+        }
+      }
+    }
+    return map;
+  }
+
+  public async getLabChecklist(studentId: string, expId: string): Promise<Record<string, boolean>> {
+    await this.initialize();
+    const key = `${studentId}:${expId}`;
+    return this.labChecklists.get(key) || {};
+  }
+
+  public async resetLabChecklist(studentId: string, expId: string): Promise<Record<string, boolean>> {
+    await this.initialize();
+    const key = `${studentId}:${expId}`;
+    this.labChecklists.set(key, {});
+    const exp = this.labExperiments.get(expId);
+    if (exp && exp.student_id === studentId) {
+      exp.status = 'NOT_STARTED';
+      exp.completed_at = undefined;
+      exp.updated_at = new Date().toISOString();
+      this.labExperiments.set(expId, exp);
+
+      if (exp.lab_id) {
+        const course = this.labCourses.get(exp.lab_id);
+        if (course && course.student_id === studentId) {
+          const exps = Array.from(this.labExperiments.values()).filter(
+            (e) => e.lab_id === exp.lab_id && e.student_id === studentId
+          );
+          course.completed_experiments_count = exps.filter((e) => e.status === 'COMPLETED').length;
+          course.in_progress_experiments_count = exps.filter((e) => e.status === 'IN_PROGRESS').length;
+          this.labCourses.set(course.id, course);
+        }
+      }
+    }
+    return {};
+  }
+
+  public async saveLabCodeDraft(draft: LabCodeDraft): Promise<LabCodeDraft> {
+    await this.initialize();
+    const key = `${draft.student_id}:${draft.experiment_id}`;
+    const now = new Date().toISOString();
+    const updated = { ...draft, updated_at: now };
+    this.labCodeDrafts.set(key, updated);
+
+    // Also sync with experiment implementation_code
+    const exp = this.labExperiments.get(draft.experiment_id);
+    if (exp && exp.student_id === draft.student_id) {
+      exp.implementation_code = draft.code;
+      exp.source_code = draft.code;
+      exp.code_language = draft.language;
+      if (draft.last_output) {
+        exp.actual_output = draft.last_output;
+      }
+      exp.updated_at = now;
+      this.labExperiments.set(exp.id, exp);
+    }
+    return updated;
+  }
+
+  public async getLabCodeDraft(studentId: string, expId: string): Promise<LabCodeDraft | null> {
+    await this.initialize();
+    const key = `${studentId}:${expId}`;
+    return this.labCodeDrafts.get(key) || null;
+  }
+
+  public async saveLabDoubtMessage(msg: LabDoubtMessage): Promise<LabDoubtMessage> {
+    await this.initialize();
+    const key = `${msg.student_id}:${msg.experiment_id}`;
+    const list = this.labDoubtHistories.get(key) || [];
+    list.push(msg);
+    this.labDoubtHistories.set(key, list);
+    return msg;
+  }
+
+  public async getLabDoubtHistory(studentId: string, expId: string): Promise<LabDoubtMessage[]> {
+    await this.initialize();
+    const key = `${studentId}:${expId}`;
+    return this.labDoubtHistories.get(key) || [];
+  }
+
+  public async clearLabDoubtHistory(studentId: string, expId: string): Promise<void> {
+    await this.initialize();
+    const key = `${studentId}:${expId}`;
+    this.labDoubtHistories.delete(key);
+  }
+
+  public async saveLabReport(report: LabReportData): Promise<LabReportData> {
+    await this.initialize();
+    this.labReports.set(report.report_id, report);
+    return report;
+  }
+
+  public async getLabReports(studentId: string, labId?: string): Promise<LabReportData[]> {
+    await this.initialize();
+    return Array.from(this.labReports.values())
+      .filter((r) => r.student_id === studentId && (!labId || r.lab_id === labId))
+      .sort((a, b) => new Date(b.generated_at).getTime() - new Date(a.generated_at).getTime());
+  }
+
+  public async getLabReportById(reportId: string, studentId: string): Promise<LabReportData | null> {
+    await this.initialize();
+    const report = this.labReports.get(reportId);
+    if (!report || report.student_id !== studentId) return null;
+    return report;
+  }
+
+  public async getStudentLabAnalytics(studentId: string): Promise<StudentLabAnalytics> {
+    await this.initialize();
+    const courses = Array.from(this.labCourses.values()).filter((c) => c.student_id === studentId);
+    const exps = Array.from(this.labExperiments.values()).filter((e) => e.student_id === studentId);
+    const manuals = Array.from(this.labManuals.values()).filter((m) => m.student_id === studentId);
+    const reports = Array.from(this.labReports.values()).filter((r) => r.student_id === studentId);
+
+    const completed = exps.filter((e) => e.status === 'COMPLETED').length;
+    const inProgress = exps.filter((e) => e.status === 'IN_PROGRESS').length;
+    const notStarted = exps.filter((e) => e.status === 'NOT_STARTED').length;
+
+    let totalVivaAttempted = 0;
+    let totalVivaScore = 0;
+    let vivaScoresCount = 0;
+
+    for (const exp of exps) {
+      if (exp.viva_questions) {
+        for (const vq of exp.viva_questions) {
+          if (vq.student_answer && vq.student_answer.trim().length > 0) {
+            totalVivaAttempted++;
+            if (vq.ai_evaluation?.score !== undefined) {
+              totalVivaScore += vq.ai_evaluation.score;
+              vivaScoresCount++;
+            }
+          }
+        }
+      }
+    }
+
+    const codeDraftsCount = Array.from(this.labCodeDrafts.values()).filter(
+      (d) => d.student_id === studentId && (d.last_output || d.last_error)
+    ).length;
+
+    const avgViva = vivaScoresCount > 0 ? Math.round((totalVivaScore / vivaScoresCount) * 10) / 10 : 0;
+
+    return {
+      total_labs: courses.length,
+      total_experiments: exps.length,
+      completed_experiments: completed,
+      in_progress_experiments: inProgress,
+      not_started_experiments: notStarted,
+      total_manuals_uploaded: manuals.filter((m) => !!m.source_file).length,
+      total_code_runs: codeDraftsCount,
+      total_viva_attempted: totalVivaAttempted,
+      average_viva_score: avgViva,
+      reports_generated: reports.length,
+      is_onboarding: courses.length === 0,
+    };
+  }
+
+  // =========================================================================
+  // Language Learning Platform Storage Methods
+  // =========================================================================
+
+  public async getLanguageEnrollments(studentId: string): Promise<StudentLanguageEnrollment[]> {
+    await this.initialize();
+    return this.languageEnrollments.get(studentId) || [];
+  }
+
+  public async getLanguageEnrollment(studentId: string, langCode: string): Promise<StudentLanguageEnrollment | null> {
+    await this.initialize();
+    const list = this.languageEnrollments.get(studentId) || [];
+    return list.find((e) => e.language_code.toLowerCase() === langCode.toLowerCase()) || null;
+  }
+
+  public async saveLanguageEnrollment(enrollment: StudentLanguageEnrollment): Promise<StudentLanguageEnrollment> {
+    await this.initialize();
+    const list = this.languageEnrollments.get(enrollment.student_id) || [];
+    const idx = list.findIndex((e) => e.language_code.toLowerCase() === enrollment.language_code.toLowerCase());
+    if (idx >= 0) {
+      list[idx] = { ...list[idx], ...enrollment };
+    } else {
+      list.push(enrollment);
+    }
+    this.languageEnrollments.set(enrollment.student_id, list);
+    return enrollment;
+  }
+
+  public async deleteLanguageEnrollment(studentId: string, langCode: string): Promise<boolean> {
+    await this.initialize();
+    const list = this.languageEnrollments.get(studentId) || [];
+    const filtered = list.filter((e) => e.language_code.toLowerCase() !== langCode.toLowerCase());
+    this.languageEnrollments.set(studentId, filtered);
+    return true;
+  }
+
+  public async saveLanguageLessonProgress(
+    studentId: string,
+    langCode: string,
+    lessonId: string,
+    data: { completed_at: string; score?: number; notes?: string }
+  ): Promise<void> {
+    await this.initialize();
+    const key = `${studentId}:${langCode.toLowerCase()}:${lessonId}`;
+    this.languageLessonProgress.set(key, data);
+
+    // Update student enrollment counts and streak
+    const enrollment = await this.getLanguageEnrollment(studentId, langCode);
+    if (enrollment) {
+      const allCompleted = await this.getAllStudentLanguageLessonProgress(studentId, langCode);
+      enrollment.completed_lessons_count = allCompleted.length;
+      enrollment.last_studied_at = new Date().toISOString();
+      enrollment.current_streak_days = Math.max(1, enrollment.current_streak_days || 1);
+      await this.saveLanguageEnrollment(enrollment);
+    }
+  }
+
+  public async getLanguageLessonProgress(
+    studentId: string,
+    langCode: string,
+    lessonId: string
+  ): Promise<{ completed_at: string; score?: number; notes?: string } | null> {
+    await this.initialize();
+    const key = `${studentId}:${langCode.toLowerCase()}:${lessonId}`;
+    return this.languageLessonProgress.get(key) || null;
+  }
+
+  public async getAllStudentLanguageLessonProgress(
+    studentId: string,
+    langCode: string
+  ): Promise<Array<{ lesson_id: string; completed_at: string; notes?: string }>> {
+    await this.initialize();
+    const prefix = `${studentId}:${langCode.toLowerCase()}:`;
+    const results: Array<{ lesson_id: string; completed_at: string; notes?: string }> = [];
+    for (const [key, val] of this.languageLessonProgress.entries()) {
+      if (key.startsWith(prefix)) {
+        const lessonId = key.substring(prefix.length);
+        results.push({ lesson_id: lessonId, completed_at: val.completed_at, notes: val.notes });
+      }
+    }
+    return results;
+  }
+
+  public async getSpacedRepetitionCards(studentId: string, langCode?: string): Promise<SpacedRepetitionCard[]> {
+    await this.initialize();
+    const list = this.languageSpacedRepetition.get(studentId) || [];
+    if (!langCode) return list;
+    return list.filter((c) => c.language_code.toLowerCase() === langCode.toLowerCase());
+  }
+
+  public async saveSpacedRepetitionCard(card: SpacedRepetitionCard): Promise<SpacedRepetitionCard> {
+    await this.initialize();
+    const list = this.languageSpacedRepetition.get(card.student_id) || [];
+    const idx = list.findIndex((c) => c.id === card.id || (c.vocab_id === card.vocab_id && c.language_code === card.language_code));
+    if (idx >= 0) {
+      list[idx] = card;
+    } else {
+      list.push(card);
+    }
+    this.languageSpacedRepetition.set(card.student_id, list);
+
+    // Update mastered count on enrollment
+    if (card.is_mastered) {
+      const enrollment = await this.getLanguageEnrollment(card.student_id, card.language_code);
+      if (enrollment) {
+        enrollment.mastered_vocab_count = list.filter((c) => c.language_code === card.language_code && c.is_mastered).length;
+        await this.saveLanguageEnrollment(enrollment);
+      }
+    }
+    return card;
+  }
+
+  public async getWritingSubmissions(studentId: string, langCode?: string): Promise<WritingSubmission[]> {
+    await this.initialize();
+    const list = this.languageWritingSubmissions.get(studentId) || [];
+    if (!langCode) return list;
+    return list.filter((w) => w.language_code.toLowerCase() === langCode.toLowerCase());
+  }
+
+  public async saveWritingSubmission(sub: WritingSubmission): Promise<WritingSubmission> {
+    await this.initialize();
+    const list = this.languageWritingSubmissions.get(sub.student_id) || [];
+    list.unshift(sub);
+    this.languageWritingSubmissions.set(sub.student_id, list);
+    return sub;
+  }
+
+  public async getConversationSessions(studentId: string, langCode?: string): Promise<ConversationSession[]> {
+    await this.initialize();
+    const list = this.languageConversationSessions.get(studentId) || [];
+    if (!langCode) return list;
+    return list.filter((s) => s.language_code.toLowerCase() === langCode.toLowerCase());
+  }
+
+  public async getConversationSession(studentId: string, sessionId: string): Promise<ConversationSession | null> {
+    await this.initialize();
+    const list = this.languageConversationSessions.get(studentId) || [];
+    return list.find((s) => s.id === sessionId) || null;
+  }
+
+  public async saveConversationSession(sess: ConversationSession): Promise<ConversationSession> {
+    await this.initialize();
+    const list = this.languageConversationSessions.get(sess.student_id) || [];
+    const idx = list.findIndex((s) => s.id === sess.id);
+    if (idx >= 0) {
+      list[idx] = sess;
+    } else {
+      list.unshift(sess);
+    }
+    this.languageConversationSessions.set(sess.student_id, list);
+    return sess;
+  }
+
+  public async deleteConversationSession(studentId: string, sessionId: string): Promise<boolean> {
+    await this.initialize();
+    const list = this.languageConversationSessions.get(studentId) || [];
+    const filtered = list.filter((s) => s.id !== sessionId);
+    this.languageConversationSessions.set(studentId, filtered);
+    return true;
+  }
+
+  public async getLanguageQuizAttempts(studentId: string, langCode?: string): Promise<QuizSubmissionResult[]> {
+    await this.initialize();
+    const list = this.languageQuizAttempts.get(studentId) || [];
+    if (!langCode) return list;
+    return list.filter((q) => q.language_code.toLowerCase() === langCode.toLowerCase());
+  }
+
+  public async saveLanguageQuizAttempt(studentId: string, attempt: QuizSubmissionResult): Promise<void> {
+    await this.initialize();
+    const list = this.languageQuizAttempts.get(studentId) || [];
+    list.unshift(attempt);
+    this.languageQuizAttempts.set(studentId, list);
+  }
+
+  public async getStudentLanguageAnalytics(studentId: string): Promise<StudentLanguageAnalytics> {
+    await this.initialize();
+    const enrollments = this.languageEnrollments.get(studentId) || [];
+    const cards = this.languageSpacedRepetition.get(studentId) || [];
+    const quizzes = this.languageQuizAttempts.get(studentId) || [];
+
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+    const dueToday = cards.filter((c) => !c.next_review_date || c.next_review_date <= todayStr).length;
+
+    let totalMastered = 0;
+    let totalLessons = 0;
+    let totalMinutes = 0;
+
+    const activeList = enrollments.map((enr) => {
+      const langMeta = MASTER_LANGUAGE_CATALOG.find((l) => l.code.toLowerCase() === enr.language_code.toLowerCase());
+      totalMastered += enr.mastered_vocab_count || 0;
+      totalLessons += enr.completed_lessons_count || 0;
+      totalMinutes += enr.total_minutes_studied || (enr.completed_lessons_count * 15);
+
+      return {
+        code: enr.language_code,
+        name: langMeta ? langMeta.name : enr.language_code.toUpperCase(),
+        flag: langMeta ? langMeta.flag_emoji : '🌐',
+        level: enr.cefr_level || 'A1',
+        streak_days: enr.current_streak_days || 0,
+        completed_lessons: enr.completed_lessons_count || 0,
+        total_lessons: langMeta ? langMeta.total_lessons_count : 15,
+        mastered_vocab: enr.mastered_vocab_count || 0,
+      };
+    });
+
+    const avgScore = quizzes.length > 0
+      ? Math.round(quizzes.reduce((acc, q) => acc + q.score_percentage, 0) / quizzes.length)
+      : 0;
+
+    return {
+      enrolled_languages_count: enrollments.length,
+      active_languages: activeList,
+      total_vocabulary_mastered: totalMastered,
+      total_lessons_completed: totalLessons,
+      total_study_minutes: totalMinutes,
+      total_quizzes_taken: quizzes.length,
+      average_quiz_score: avgScore,
+      vocabulary_due_today: dueToday,
+      is_onboarding: enrollments.length === 0,
+    };
+  }
+
+  // =========================================================================
+  // Jobs Discovery Platform Database Access Methods
+  // =========================================================================
+
+  public async getJobListings(filters?: {
+    query?: string;
+    category?: JobPrimaryCategory | 'ALL';
+    subcategory?: string;
+    source_id?: string;
+    location?: string;
+    remote_only?: boolean;
+    freshers_only?: boolean;
+    status?: string;
+    min_experience?: number;
+    sort_by?: 'newest' | 'deadline' | 'relevance';
+    limit?: number;
+    offset?: number;
+  }): Promise<{ jobs: JobListing[]; total: number }> {
+    await this.initialize();
+    let list = Array.from(this.jobListings.values());
+
+    if (filters?.category && filters.category !== 'ALL') {
+      list = list.filter((j) => j.category === filters.category);
+    }
+    if (filters?.subcategory && filters.subcategory !== 'ALL') {
+      list = list.filter((j) => j.subcategory.toLowerCase() === filters.subcategory!.toLowerCase());
+    }
+    if (filters?.source_id && filters.source_id !== 'ALL') {
+      list = list.filter((j) => j.source_id === filters.source_id);
+    }
+    if (filters?.remote_only) {
+      list = list.filter((j) => j.remote_eligible || j.work_arrangement === 'REMOTE');
+    }
+    if (filters?.freshers_only) {
+      list = list.filter((j) => j.is_freshers_friendly || (j.experience_min !== undefined && j.experience_min === 0));
+    }
+    if (filters?.location && filters.location !== 'ALL') {
+      const locQ = filters.location.toLowerCase();
+      list = list.filter((j) => j.location.toLowerCase().includes(locQ) || (j.city && j.city.toLowerCase().includes(locQ)) || (j.state && j.state.toLowerCase().includes(locQ)));
+    }
+    if (filters?.query) {
+      const q = filters.query.toLowerCase();
+      list = list.filter((j) =>
+        j.title.toLowerCase().includes(q) ||
+        j.organization.toLowerCase().includes(q) ||
+        j.description.toLowerCase().includes(q) ||
+        j.required_skills.some((s) => s.toLowerCase().includes(q)) ||
+        (j.notification_number && j.notification_number.toLowerCase().includes(q))
+      );
+    }
+    if (filters?.status && filters.status !== 'ALL') {
+      list = list.filter((j) => j.status === filters.status);
+    }
+
+    // Dynamic closing date evaluation
+    const now = new Date();
+    list.forEach((j) => {
+      if (j.application_deadline) {
+        const deadlineDate = new Date(j.application_deadline);
+        const daysLeft = (deadlineDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+        if (daysLeft < 0) {
+          j.status = 'EXPIRED';
+        } else if (daysLeft <= 7 && j.status !== 'CANCELLED') {
+          j.status = 'CLOSING_SOON';
+        }
+      }
+    });
+
+    // Sorting
+    if (filters?.sort_by === 'deadline') {
+      list.sort((a, b) => {
+        if (!a.application_deadline) return 1;
+        if (!b.application_deadline) return -1;
+        return new Date(a.application_deadline).getTime() - new Date(b.application_deadline).getTime();
+      });
+    } else {
+      // Default: newest publication date
+      list.sort((a, b) => new Date(b.publication_date).getTime() - new Date(a.publication_date).getTime());
+    }
+
+    const total = list.length;
+    const offset = filters?.offset || 0;
+    const limit = filters?.limit || 50;
+    const paginated = list.slice(offset, offset + limit);
+
+    return { jobs: paginated, total };
+  }
+
+  public async getJobListingById(id: string): Promise<JobListing | null> {
+    await this.initialize();
+    return this.jobListings.get(id) || null;
+  }
+
+  public async saveJobListing(job: JobListing): Promise<JobListing> {
+    await this.initialize();
+    job.updated_at = new Date().toISOString();
+    this.jobListings.set(job.id, job);
+    return job;
+  }
+
+  public async saveJobListingsBatch(jobs: JobListing[]): Promise<{ added: number; updated: number; duplicates: number }> {
+    await this.initialize();
+    let added = 0;
+    let updated = 0;
+    let duplicates = 0;
+
+    for (const job of jobs) {
+      if (this.jobListings.has(job.id)) {
+        const existing = this.jobListings.get(job.id)!;
+        if (existing.publication_date === job.publication_date && existing.title === job.title) {
+          duplicates++;
+        } else {
+          this.jobListings.set(job.id, { ...existing, ...job, updated_at: new Date().toISOString() });
+          updated++;
+        }
+      } else {
+        this.jobListings.set(job.id, job);
+        added++;
+      }
+    }
+    return { added, updated, duplicates };
+  }
+
+  public async getJobSources(): Promise<JobSourceConfig[]> {
+    await this.initialize();
+    return Array.from(this.jobSources.values());
+  }
+
+  public async getJobSourceById(id: string): Promise<JobSourceConfig | null> {
+    await this.initialize();
+    return this.jobSources.get(id) || null;
+  }
+
+  public async updateJobSource(source: JobSourceConfig): Promise<JobSourceConfig> {
+    await this.initialize();
+    this.jobSources.set(source.id, source);
+    return source;
+  }
+
+  public async recordJobSyncRun(run: JobSyncRun): Promise<JobSyncRun> {
+    await this.initialize();
+    const runs = this.jobSyncRuns.get(run.source_id) || [];
+    runs.unshift(run);
+    this.jobSyncRuns.set(run.source_id, runs.slice(0, 20));
+    return run;
+  }
+
+  public async getJobSyncRuns(limit: number = 20): Promise<JobSyncRun[]> {
+    await this.initialize();
+    const all: JobSyncRun[] = [];
+    for (const runs of this.jobSyncRuns.values()) {
+      all.push(...runs);
+    }
+    all.sort((a, b) => new Date(b.started_at).getTime() - new Date(a.started_at).getTime());
+    return all.slice(0, limit);
+  }
+
+  public async getStudentSavedJobs(studentId: string): Promise<StudentSavedJob[]> {
+    await this.initialize();
+    const list = this.studentSavedJobs.get(studentId) || [];
+    return list.map((saved) => ({
+      ...saved,
+      job: this.jobListings.get(saved.job_id) || undefined,
+    }));
+  }
+
+  public async saveStudentJob(
+    studentId: string,
+    jobId: string,
+    notes?: string,
+    isInterested: boolean = true,
+    applicationStatus?: string
+  ): Promise<StudentSavedJob> {
+    await this.initialize();
+    const list = this.studentSavedJobs.get(studentId) || [];
+    const existingIdx = list.findIndex((s) => s.job_id === jobId);
+
+    const savedEntry: StudentSavedJob = {
+      id: existingIdx >= 0 ? list[existingIdx].id : `saved_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      student_id: studentId,
+      job_id: jobId,
+      saved_at: existingIdx >= 0 ? list[existingIdx].saved_at : new Date().toISOString(),
+      notes: notes !== undefined ? notes : existingIdx >= 0 ? list[existingIdx].notes : undefined,
+      is_interested: isInterested,
+      application_status: applicationStatus || (existingIdx >= 0 ? list[existingIdx].application_status : 'SAVED'),
+    };
+
+    if (existingIdx >= 0) {
+      list[existingIdx] = savedEntry;
+    } else {
+      list.push(savedEntry);
+    }
+    this.studentSavedJobs.set(studentId, list);
+    return {
+      ...savedEntry,
+      job: this.jobListings.get(jobId),
+    };
+  }
+
+  public async deleteStudentSavedJob(studentId: string, jobId: string): Promise<boolean> {
+    await this.initialize();
+    const list = this.studentSavedJobs.get(studentId) || [];
+    const filtered = list.filter((s) => s.job_id !== jobId);
+    this.studentSavedJobs.set(studentId, filtered);
+    return true;
+  }
+
+  public async getStudentJobAlerts(studentId: string): Promise<StudentJobAlert[]> {
+    await this.initialize();
+    return this.studentJobAlerts.get(studentId) || [];
+  }
+
+  public async saveStudentJobAlert(alert: StudentJobAlert): Promise<StudentJobAlert> {
+    await this.initialize();
+    const list = this.studentJobAlerts.get(alert.student_id) || [];
+    const idx = list.findIndex((a) => a.id === alert.id);
+    if (idx >= 0) {
+      list[idx] = { ...list[idx], ...alert };
+    } else {
+      list.push(alert);
+    }
+    this.studentJobAlerts.set(alert.student_id, list);
+    return alert;
+  }
+
+  public async deleteStudentJobAlert(studentId: string, alertId: string): Promise<boolean> {
+    await this.initialize();
+    const list = this.studentJobAlerts.get(studentId) || [];
+    this.studentJobAlerts.set(studentId, list.filter((a) => a.id !== alertId));
+    return true;
+  }
+
+  public async getJobsDashboardStats(studentId?: string): Promise<JobsDashboardStats> {
+    await this.initialize();
+    const jobs = Array.from(this.jobListings.values());
+    const sources = Array.from(this.jobSources.values());
+    const saved = studentId ? (this.studentSavedJobs.get(studentId) || []).length : 0;
+
+    let govtCount = 0;
+    let pvtCount = 0;
+    let closingSoon = 0;
+    const now = new Date();
+
+    for (const j of jobs) {
+      if (j.category === 'GOVERNMENT') govtCount++;
+      if (j.category === 'PRIVATE') pvtCount++;
+      if (j.application_deadline) {
+        const diff = (new Date(j.application_deadline).getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+        if (diff >= 0 && diff <= 7) closingSoon++;
+      }
+    }
+
+    let latestSync: string | undefined;
+    for (const s of sources) {
+      if (s.last_successful_sync && (!latestSync || new Date(s.last_successful_sync) > new Date(latestSync))) {
+        latestSync = s.last_successful_sync;
+      }
+    }
+
+    return {
+      total_jobs: jobs.length,
+      government_jobs: govtCount,
+      private_jobs: pvtCount,
+      closing_soon_count: closingSoon,
+      saved_jobs_count: saved,
+      matching_profile_count: Math.min(jobs.length, 6),
+      last_sync_time: latestSync || new Date().toISOString(),
+      active_sources_count: sources.filter((s) => s.enabled).length,
+      healthy_sources_count: sources.filter((s) => s.health_status === 'HEALTHY').length,
+    };
+  }
+
+  // =========================================================================
+  // External Profiles Management Database Access Methods
+  // =========================================================================
+
+  private seedExternalProfiles(studentId: string): void {
+    if (studentId !== 'std_demo_1' && studentId !== 'std_01j8k9x2p4') return;
+    if (this.studentExternalProfiles.has(studentId)) return;
+
+    const demoProfiles: StudentExternalProfile[] = [
+      {
+        id: `prof_gh_${studentId}`,
+        student_id: studentId,
+        platform_id: 'github',
+        platform_name: 'GitHub',
+        username: 'aaravsharma-dev',
+        display_name: 'Aarav Sharma',
+        original_profile_url: 'https://github.com/aaravsharma-dev',
+        normalized_profile_url: 'https://github.com/aaravsharma-dev',
+        avatar_url: 'https://avatars.githubusercontent.com/u/10293847?v=4',
+        headline: 'B.Tech CSE Undergraduate | Full-Stack & ML Specialist',
+        bio: 'Passionate about distributed systems, microservices, and AI inference engines.',
+        connection_method: 'OAUTH2',
+        verification_status: 'CONNECTED_OAUTH',
+        connection_status: 'CONNECTED',
+        last_successful_sync: new Date(Date.now() - 3600000 * 2).toISOString(),
+        last_attempted_sync: new Date(Date.now() - 3600000 * 2).toISOString(),
+        sharing_settings: {
+          use_for_resume: true,
+          use_for_career: true,
+          use_for_job_matching: true,
+          use_for_skill_gap: true,
+          include_in_resume_links: true,
+          include_in_public_portfolio: true,
+        },
+        categories: ['DEVELOPER_CODE_HOSTING', 'PORTFOLIO_PROJECT'],
+        data_categories: ['Repositories (14)', 'Stars (42)', 'Languages (Python, TypeScript, Go)'],
+        metrics_summary: {
+          'Public Repositories': 14,
+          'Total Stars': 42,
+          'Primary Language': 'TypeScript',
+        },
+        created_at: new Date(Date.now() - 30 * 86400000).toISOString(),
+        updated_at: new Date(Date.now() - 3600000 * 2).toISOString(),
+      },
+      {
+        id: `prof_lc_${studentId}`,
+        student_id: studentId,
+        platform_id: 'leetcode',
+        platform_name: 'LeetCode',
+        username: 'aarav_code',
+        display_name: 'Aarav Sharma',
+        original_profile_url: 'https://leetcode.com/u/aarav_code',
+        normalized_profile_url: 'https://leetcode.com/u/aarav_code',
+        headline: 'LeetCode Knight | Contest Rating 1685',
+        connection_method: 'PUBLIC_PROFILE_URL',
+        verification_status: 'VERIFIED',
+        connection_status: 'SYNCED',
+        last_successful_sync: new Date(Date.now() - 86400000).toISOString(),
+        last_attempted_sync: new Date(Date.now() - 86400000).toISOString(),
+        sharing_settings: {
+          use_for_resume: true,
+          use_for_career: true,
+          use_for_job_matching: true,
+          use_for_skill_gap: true,
+          include_in_resume_links: true,
+          include_in_public_portfolio: true,
+        },
+        categories: ['CODING_PRACTICE', 'COMPETITIVE_PROGRAMMING'],
+        data_categories: ['Problems Solved (184)', 'Contest Rating (1685)', 'Rank (Top 8.4%)'],
+        metrics_summary: {
+          'Total Solved': 184,
+          'Medium Problems': 94,
+          'Contest Rating': 1685,
+        },
+        created_at: new Date(Date.now() - 25 * 86400000).toISOString(),
+        updated_at: new Date(Date.now() - 86400000).toISOString(),
+      },
+      {
+        id: `prof_li_${studentId}`,
+        student_id: studentId,
+        platform_id: 'linkedin',
+        platform_name: 'LinkedIn',
+        username: 'aarav-sharma-btech',
+        display_name: 'Aarav Sharma',
+        original_profile_url: 'https://www.linkedin.com/in/aarav-sharma-btech',
+        normalized_profile_url: 'https://www.linkedin.com/in/aarav-sharma-btech',
+        headline: 'B.Tech CSE Undergraduate | Software Engineering Intern Aspirant',
+        connection_method: 'OAUTH2',
+        verification_status: 'CONNECTED_OAUTH',
+        connection_status: 'CONNECTED',
+        last_successful_sync: new Date(Date.now() - 12 * 3600000).toISOString(),
+        last_attempted_sync: new Date(Date.now() - 12 * 3600000).toISOString(),
+        sharing_settings: {
+          use_for_resume: true,
+          use_for_career: true,
+          use_for_job_matching: true,
+          use_for_skill_gap: false,
+          include_in_resume_links: true,
+          include_in_public_portfolio: true,
+        },
+        categories: ['PROFESSIONAL_NETWORKING'],
+        data_categories: ['Headline', 'Education Verification', 'Public Profile'],
+        metrics_summary: {
+          'Headline': 'B.Tech CSE Undergraduate',
+          'Status': 'OAuth Connected',
+        },
+        created_at: new Date(Date.now() - 20 * 86400000).toISOString(),
+        updated_at: new Date(Date.now() - 12 * 3600000).toISOString(),
+      },
+      {
+        id: `prof_kg_${studentId}`,
+        student_id: studentId,
+        platform_id: 'kaggle',
+        platform_name: 'Kaggle',
+        username: 'aarav_ml',
+        display_name: 'Aarav Sharma',
+        original_profile_url: 'https://www.kaggle.com/aarav_ml',
+        normalized_profile_url: 'https://www.kaggle.com/aarav_ml',
+        headline: 'Kaggle Notebooks Expert | 1 Silver Medal',
+        connection_method: 'PUBLIC_PROFILE_URL',
+        verification_status: 'VERIFIED',
+        connection_status: 'SYNCED',
+        last_successful_sync: new Date(Date.now() - 3600000 * 5).toISOString(),
+        last_attempted_sync: new Date(Date.now() - 3600000 * 5).toISOString(),
+        sharing_settings: {
+          use_for_resume: true,
+          use_for_career: true,
+          use_for_job_matching: true,
+          use_for_skill_gap: true,
+          include_in_resume_links: true,
+          include_in_public_portfolio: true,
+        },
+        categories: ['DESIGN_DATA_SPECIALIZED', 'CODING_PRACTICE'],
+        data_categories: ['Notebooks Expert', 'Datasets (2)', 'Silver Medal (1)'],
+        metrics_summary: {
+          'Tier': 'Expert',
+          'Notebooks': 8,
+          'Silver Medals': 1,
+        },
+        created_at: new Date(Date.now() - 15 * 86400000).toISOString(),
+        updated_at: new Date(Date.now() - 3600000 * 5).toISOString(),
+      },
+    ];
+    this.studentExternalProfiles.set(studentId, demoProfiles);
+  }
+
+  public async getExternalProfiles(studentId: string): Promise<StudentExternalProfile[]> {
+    await this.initialize();
+    this.seedExternalProfiles(studentId);
+    return this.studentExternalProfiles.get(studentId) || [];
+  }
+
+  public async getExternalProfileById(studentId: string, profileId: string): Promise<StudentExternalProfile | null> {
+    await this.initialize();
+    this.seedExternalProfiles(studentId);
+    const profiles = this.studentExternalProfiles.get(studentId) || [];
+    return profiles.find((p) => p.id === profileId) || null;
+  }
+
+  public async saveExternalProfile(profile: StudentExternalProfile): Promise<StudentExternalProfile> {
+    await this.initialize();
+    this.seedExternalProfiles(profile.student_id);
+    const list = this.studentExternalProfiles.get(profile.student_id) || [];
+    const idx = list.findIndex((p) => p.id === profile.id);
+    if (idx >= 0) {
+      list[idx] = { ...profile, updated_at: new Date().toISOString() };
+    } else {
+      list.push(profile);
+    }
+    this.studentExternalProfiles.set(profile.student_id, list);
+    return profile;
+  }
+
+  public async deleteExternalProfile(studentId: string, profileId: string): Promise<boolean> {
+    await this.initialize();
+    this.seedExternalProfiles(studentId);
+    const list = this.studentExternalProfiles.get(studentId) || [];
+    const filtered = list.filter((p) => p.id !== profileId);
+    this.studentExternalProfiles.set(studentId, filtered);
+    return true;
+  }
+
+  public async saveProfileSnapshot(snapshot: ExternalProfileSnapshot): Promise<void> {
+    await this.initialize();
+    this.externalProfileSnapshots.set(snapshot.profile_id, snapshot);
+  }
+
+  public async getProfileSnapshot(profileId: string): Promise<ExternalProfileSnapshot | null> {
+    await this.initialize();
+    return this.externalProfileSnapshots.get(profileId) || null;
+  }
+
+  public async recordProfileSyncRun(run: ExternalProfileSyncRun): Promise<void> {
+    await this.initialize();
+    const runs = this.externalProfileSyncRuns.get(run.profile_id) || [];
+    runs.unshift(run);
+    this.externalProfileSyncRuns.set(run.profile_id, runs.slice(0, 30));
+  }
+
+  public async getProfileSyncRuns(profileId: string): Promise<ExternalProfileSyncRun[]> {
+    await this.initialize();
+    return this.externalProfileSyncRuns.get(profileId) || [];
+  }
+
+  public async getExternalProfilesStats(studentId: string): Promise<ExternalProfilesDashboardStats> {
+    await this.initialize();
+    this.seedExternalProfiles(studentId);
+    const profiles = this.studentExternalProfiles.get(studentId) || [];
+    const verified = profiles.filter(
+      (p) => p.verification_status === 'VERIFIED' || p.verification_status === 'CONNECTED_OAUTH'
+    ).length;
+    const reconnection = profiles.filter(
+      (p) =>
+        p.verification_status === 'RECONNECTION_REQUIRED' ||
+        p.verification_status === 'CONNECTION_EXPIRED' ||
+        p.connection_status === 'REAUTH_REQUIRED'
+    ).length;
+    const neverSynced = profiles.filter((p) => !p.last_successful_sync).length;
+
+    let latestSync: string | undefined;
+    for (const p of profiles) {
+      if (p.last_successful_sync && (!latestSync || new Date(p.last_successful_sync) > new Date(latestSync))) {
+        latestSync = p.last_successful_sync;
+      }
+    }
+
+    return {
+      total_connected: profiles.length,
+      verified_profiles: verified,
+      reconnection_required: reconnection,
+      never_synced: neverSynced,
+      last_successful_sync: latestSync,
+    };
+  }
+
+  // ==========================================
+  // AI Knowledge Base Storage Methods
+  // ==========================================
+  public async getKnowledgeCollections(studentId: string): Promise<KnowledgeCollection[]> {
+    await this.initialize();
+    return Array.from(this.knowledgeCollections.values())
+      .filter((c) => c.student_id === studentId)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }
+
+  public async getKnowledgeCollectionById(id: string, studentId?: string): Promise<KnowledgeCollection | null> {
+    await this.initialize();
+    const coll = this.knowledgeCollections.get(id);
+    if (!coll) return null;
+    if (studentId && coll.student_id !== studentId && coll.visibility === 'PRIVATE') {
+      throw new AuthorizationError('You do not have permission to access this knowledge collection');
+    }
+    return coll;
+  }
+
+  public async saveKnowledgeCollection(collection: KnowledgeCollection): Promise<void> {
+    await this.initialize();
+    this.knowledgeCollections.set(collection.id, collection);
+  }
+
+  public async deleteKnowledgeCollection(
+    id: string,
+    studentId: string,
+    deleteDocuments: boolean = false
+  ): Promise<boolean> {
+    await this.initialize();
+    const coll = this.knowledgeCollections.get(id);
+    if (!coll || coll.student_id !== studentId) return false;
+
+    if (deleteDocuments) {
+      for (const docId of coll.document_ids) {
+        await this.deleteDocument(docId, studentId);
+      }
+      for (const resId of coll.resource_ids) {
+        this.knowledgeResources.delete(resId);
+      }
+    } else {
+      // Disassociate collection from documents
+      for (const docId of coll.document_ids) {
+        const doc = this.documents.get(docId);
+        if (doc && doc.student_id === studentId && doc.metadata?.collection_id === id) {
+          doc.metadata.collection_id = undefined;
+          doc.metadata.collection_name = undefined;
+          this.documents.set(docId, doc);
+        }
+      }
+    }
+
+    return this.knowledgeCollections.delete(id);
+  }
+
+  public async getKnowledgeResources(studentId: string, collectionId?: string): Promise<KnowledgeResource[]> {
+    await this.initialize();
+    return Array.from(this.knowledgeResources.values())
+      .filter((r) => r.student_id === studentId && (!collectionId || r.collection_id === collectionId))
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }
+
+  public async getKnowledgeResourceById(id: string, studentId?: string): Promise<KnowledgeResource | null> {
+    await this.initialize();
+    const res = this.knowledgeResources.get(id);
+    if (!res) return null;
+    if (studentId && res.student_id !== studentId) {
+      throw new AuthorizationError('You do not have permission to access this resource');
+    }
+    return res;
+  }
+
+  public async saveKnowledgeResource(resource: KnowledgeResource): Promise<void> {
+    await this.initialize();
+    this.knowledgeResources.set(resource.id, resource);
+  }
+
+  public async deleteKnowledgeResource(id: string, studentId: string): Promise<boolean> {
+    await this.initialize();
+    const res = this.knowledgeResources.get(id);
+    if (!res || res.student_id !== studentId) return false;
+    return this.knowledgeResources.delete(id);
+  }
+
+  public async getKnowledgeBookmarks(studentId: string, documentId?: string): Promise<KnowledgeBookmark[]> {
+    await this.initialize();
+    return Array.from(this.knowledgeBookmarks.values())
+      .filter((b) => b.student_id === studentId && (!documentId || b.document_id === documentId))
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }
+
+  public async saveKnowledgeBookmark(bookmark: KnowledgeBookmark): Promise<void> {
+    await this.initialize();
+    this.knowledgeBookmarks.set(bookmark.id, bookmark);
+  }
+
+  public async deleteKnowledgeBookmark(id: string, studentId: string): Promise<boolean> {
+    await this.initialize();
+    const bm = this.knowledgeBookmarks.get(id);
+    if (!bm || bm.student_id !== studentId) return false;
+    return this.knowledgeBookmarks.delete(id);
+  }
+
+  public async getKnowledgeNotes(studentId: string, documentId?: string): Promise<KnowledgeAnnotationNote[]> {
+    await this.initialize();
+    return Array.from(this.knowledgeNotes.values())
+      .filter((n) => n.student_id === studentId && (!documentId || n.document_id === documentId))
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }
+
+  public async saveKnowledgeNote(note: KnowledgeAnnotationNote): Promise<void> {
+    await this.initialize();
+    this.knowledgeNotes.set(note.id, note);
+  }
+
+  public async deleteKnowledgeNote(id: string, studentId: string): Promise<boolean> {
+    await this.initialize();
+    const n = this.knowledgeNotes.get(id);
+    if (!n || n.student_id !== studentId) return false;
+    return this.knowledgeNotes.delete(id);
+  }
+
+  public async getKnowledgeQuestions(studentId: string, limit: number = 25): Promise<KnowledgeQuestionRecord[]> {
+    await this.initialize();
+    return Array.from(this.knowledgeQuestions.values())
+      .filter((q) => q.student_id === studentId)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, limit);
+  }
+
+  public async saveKnowledgeQuestion(record: KnowledgeQuestionRecord): Promise<void> {
+    await this.initialize();
+    this.knowledgeQuestions.set(record.id, record);
+  }
+
+  public async getKnowledgeStudyMaterials(
+    studentId: string,
+    documentId?: string
+  ): Promise<GeneratedStudyMaterial[]> {
+    await this.initialize();
+    return Array.from(this.knowledgeStudyMaterials.values())
+      .filter((m) => m.student_id === studentId && (!documentId || m.source_document_id === documentId))
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }
+
+  public async saveKnowledgeStudyMaterial(material: GeneratedStudyMaterial): Promise<void> {
+    await this.initialize();
+    this.knowledgeStudyMaterials.set(material.id, material);
+  }
+
+  // =========================================================================
+  // AI Flashcards & Spaced Repetition Persistence
+  // =========================================================================
+
+  public seedDefaultFlashcards(studentId: string): void {
+    const existing = Array.from(this.flashcardDecksStore.values()).filter((d) => d.student_id === studentId);
+    if (existing.length > 0) return;
+
+    const today = new Date().toISOString().split('T')[0];
+    const pastDate = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+    const futureDate = new Date(Date.now() + 6 * 86400000).toISOString().split('T')[0];
+
+    // Deck 1: Operating Systems
+    const osDeckId = `deck_os_${studentId}`;
+    const osDeck: FlashcardDeck = {
+      id: osDeckId,
+      student_id: studentId,
+      title: 'Operating Systems: Virtual Memory & Page Replacement',
+      subject: 'Operating Systems',
+      description: 'High-yield active recall flashcards covering paging, translation lookaside buffer (TLB), inverted page tables, and LRU algorithms.',
+      total_cards: 4,
+      due_count: 2,
+      mastered_count: 1,
+      source_type: 'COURSE',
+      source_title: 'Operating Systems (CS402)',
+      tags: ['Operating Systems', 'Memory Management', 'TLB', 'B.Tech Core'],
+      is_archived: false,
+      is_bookmarked: true,
+      created_at: new Date(Date.now() - 3 * 86400000).toISOString(),
+      updated_at: new Date().toISOString(),
+      last_reviewed_at: new Date().toISOString(),
+      cards: [
+        {
+          id: `fc_os_1_${studentId}`,
+          deck_id: osDeckId,
+          student_id: studentId,
+          front: "What causes Belady's Anomaly in page replacement algorithms?",
+          back: "Belady's Anomaly occurs when allocating more page frames results in MORE page faults. It occurs in non-stack algorithms such as FIFO, where the set of pages in memory for n frames is not a subset of pages in memory for n+1 frames.",
+          type: 'CONCEPT',
+          topic: 'Page Replacement',
+          difficulty: 'MEDIUM',
+          state: 'REVIEW',
+          confidence: 3,
+          review_count: 4,
+          correct_count: 3,
+          incorrect_count: 1,
+          interval_days: 3,
+          ease_factor: 2.36,
+          repetition_count: 3,
+          is_bookmarked: false,
+          last_reviewed: new Date(Date.now() - 3 * 86400000).toISOString(),
+          next_review: today,
+          created_at: new Date(Date.now() - 10 * 86400000).toISOString(),
+        },
+        {
+          id: `fc_os_2_${studentId}`,
+          deck_id: osDeckId,
+          student_id: studentId,
+          front: 'Calculate Effective Memory Access Time (EMAT) formula with TLB.',
+          back: 'EMAT = (TLB Hit Ratio * (TLB Access Time + Memory Access Time)) + ((1 - TLB Hit Ratio) * (TLB Access Time + 2 * Memory Access Time))\n\nNote: For multi-level paging with k levels, miss penalty involves (k + 1) memory accesses.',
+          type: 'FORMULA',
+          topic: 'Virtual Memory',
+          difficulty: 'HARD',
+          state: 'LEARNING',
+          confidence: 2,
+          review_count: 2,
+          correct_count: 1,
+          incorrect_count: 1,
+          interval_days: 1,
+          ease_factor: 2.2,
+          repetition_count: 1,
+          is_bookmarked: true,
+          last_reviewed: pastDate,
+          next_review: today,
+          created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
+        },
+        {
+          id: `fc_os_3_${studentId}`,
+          deck_id: osDeckId,
+          student_id: studentId,
+          front: 'Define Thrashing and state how it can be detected.',
+          back: "Thrashing occurs when a computer's CPU spends more time swapping pages in and out of secondary storage than executing user instructions (paging overhead exceeds 90%). It is detected when CPU utilization drops while disk paging traffic spikes to near 100%.",
+          type: 'DEFINITION',
+          topic: 'Thrashing',
+          difficulty: 'EASY',
+          state: 'MASTERED',
+          confidence: 5,
+          review_count: 6,
+          correct_count: 6,
+          incorrect_count: 0,
+          interval_days: 7,
+          ease_factor: 2.6,
+          repetition_count: 4,
+          is_bookmarked: false,
+          last_reviewed: new Date(Date.now() - 86400000).toISOString(),
+          next_review: futureDate,
+          created_at: new Date(Date.now() - 14 * 86400000).toISOString(),
+        },
+        {
+          id: `fc_os_4_${studentId}`,
+          deck_id: osDeckId,
+          student_id: studentId,
+          front: 'What is an Inverted Page Table and what is its primary benefit?',
+          back: 'An Inverted Page Table has only one entry per physical frame in memory rather than one per virtual page per process. Each entry stores (process_id, virtual_page_number). Primary benefit: drastically reduces page table memory footprint.',
+          type: 'CONCEPT',
+          topic: 'Inverted Page Table',
+          difficulty: 'MEDIUM',
+          state: 'NEW',
+          confidence: 1,
+          review_count: 0,
+          correct_count: 0,
+          incorrect_count: 0,
+          interval_days: 1,
+          ease_factor: 2.5,
+          repetition_count: 0,
+          is_bookmarked: false,
+          next_review: today,
+          created_at: new Date().toISOString(),
+        },
+      ],
+    };
+
+    // Deck 2: Database Systems
+    const dbmsDeckId = `deck_dbms_${studentId}`;
+    const dbmsDeck: FlashcardDeck = {
+      id: dbmsDeckId,
+      student_id: studentId,
+      title: 'Database Management Systems: Transactions & Concurrency Control',
+      subject: 'Database Systems',
+      description: 'ACID guarantees, conflict serializability, Two-Phase Locking (2PL), deadlock prevention, and Write-Ahead Logging (WAL).',
+      total_cards: 4,
+      due_count: 1,
+      mastered_count: 1,
+      source_type: 'COURSE',
+      source_title: 'Database Systems (CS311)',
+      tags: ['DBMS', 'Transactions', 'ACID', 'Concurrency', 'B.Tech Core'],
+      is_archived: false,
+      is_bookmarked: false,
+      created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
+      updated_at: new Date().toISOString(),
+      last_reviewed_at: new Date(Date.now() - 86400000).toISOString(),
+      cards: [
+        {
+          id: `fc_dbms_1_${studentId}`,
+          deck_id: dbmsDeckId,
+          student_id: studentId,
+          front: 'Explain the Two-Phase Locking (2PL) protocol rule and its guarantee.',
+          back: 'Rule: In 2PL, a transaction must acquire all locks during a Growing Phase and cannot acquire any new locks once it begins releasing locks in the Shrinking Phase.\n\nGuarantee: Strict 2PL guarantees Conflict Serializability and prevents cascading aborts.',
+          type: 'CONCEPT',
+          topic: 'Concurrency Control',
+          difficulty: 'MEDIUM',
+          state: 'MASTERED',
+          confidence: 5,
+          review_count: 5,
+          correct_count: 5,
+          incorrect_count: 0,
+          interval_days: 8,
+          ease_factor: 2.65,
+          repetition_count: 4,
+          is_bookmarked: false,
+          last_reviewed: new Date(Date.now() - 86400000).toISOString(),
+          next_review: futureDate,
+          created_at: new Date(Date.now() - 15 * 86400000).toISOString(),
+        },
+        {
+          id: `fc_dbms_2_${studentId}`,
+          deck_id: dbmsDeckId,
+          student_id: studentId,
+          front: 'What is the Write-Ahead Logging (WAL) protocol rule?',
+          back: 'Rule: The log record for an update must be written to stable storage before the corresponding modified database page is written to disk. Guarantee: Enables Atomicity and Durability during system crash recovery using ARIES.',
+          type: 'DEFINITION',
+          topic: 'Recovery System',
+          difficulty: 'MEDIUM',
+          state: 'REVIEW',
+          confidence: 4,
+          review_count: 3,
+          correct_count: 3,
+          incorrect_count: 0,
+          interval_days: 4,
+          ease_factor: 2.5,
+          repetition_count: 2,
+          is_bookmarked: true,
+          last_reviewed: new Date(Date.now() - 4 * 86400000).toISOString(),
+          next_review: today,
+          created_at: new Date(Date.now() - 8 * 86400000).toISOString(),
+        },
+        {
+          id: `fc_dbms_3_${studentId}`,
+          deck_id: dbmsDeckId,
+          student_id: studentId,
+          front: 'State the difference between Conflict Serializability and View Serializability.',
+          back: 'Conflict serializable schedules can be transformed into a serial schedule by swapping non-conflicting concurrent operations (tested via Precedence Graph cycle check in polynomial time O(V+E)). View serializability considers blind writes and is NP-complete to test.',
+          type: 'COMPARISON',
+          topic: 'Serializability',
+          difficulty: 'HARD',
+          state: 'LEARNING',
+          confidence: 3,
+          review_count: 2,
+          correct_count: 1,
+          incorrect_count: 1,
+          interval_days: 1,
+          ease_factor: 2.3,
+          repetition_count: 1,
+          is_bookmarked: false,
+          next_review: today,
+          created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
+        },
+        {
+          id: `fc_dbms_4_${studentId}`,
+          deck_id: dbmsDeckId,
+          student_id: studentId,
+          front: 'Compare B-Tree and B+ Tree indexing architectures.',
+          back: 'In B-Trees, data pointers are stored in both internal and leaf nodes. In B+ Trees, data records/pointers are stored exclusively in leaf nodes linked as a doubly-linked list. B+ Trees provide faster range queries and higher fan-out in disk blocks.',
+          type: 'COMPARISON',
+          topic: 'Indexing',
+          difficulty: 'MEDIUM',
+          state: 'NEW',
+          confidence: 1,
+          review_count: 0,
+          correct_count: 0,
+          incorrect_count: 0,
+          interval_days: 1,
+          ease_factor: 2.5,
+          repetition_count: 0,
+          is_bookmarked: false,
+          next_review: today,
+          created_at: new Date().toISOString(),
+        },
+      ],
+    };
+
+    // Deck 3: Data Structures & Algorithms
+    const dsaDeckId = `deck_dsa_${studentId}`;
+    const dsaDeck: FlashcardDeck = {
+      id: dsaDeckId,
+      student_id: studentId,
+      title: 'Data Structures & Algorithms: Graphs & Dynamic Programming',
+      subject: 'Data Structures',
+      description: 'Shortest path invariants (Dijkstra vs Bellman-Ford), Master Theorem recurrences, topological sorting, and DP state transitions.',
+      total_cards: 4,
+      due_count: 2,
+      mastered_count: 0,
+      source_type: 'AI_GENERATED',
+      source_title: 'Syllabus Extracted Concepts',
+      tags: ['DSA', 'Graphs', 'Dynamic Programming', 'Algorithms', 'GATE'],
+      is_archived: false,
+      is_bookmarked: true,
+      created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
+      updated_at: new Date().toISOString(),
+      last_reviewed_at: new Date(Date.now() - 86400000).toISOString(),
+      cards: [
+        {
+          id: `fc_dsa_1_${studentId}`,
+          deck_id: dsaDeckId,
+          student_id: studentId,
+          front: 'When does Dijkstra algorithm fail and what should be used instead?',
+          back: 'Dijkstra fails on graphs with negative edge weights because its greedy choice assumption is violated once a vertex is finalized. Use Bellman-Ford algorithm (O(V * E)) or Floyd-Warshall (O(V^3)) instead.',
+          type: 'CONCEPT',
+          topic: 'Graph Algorithms',
+          difficulty: 'MEDIUM',
+          state: 'LEARNING',
+          confidence: 2,
+          review_count: 2,
+          correct_count: 1,
+          incorrect_count: 1,
+          interval_days: 1,
+          ease_factor: 2.35,
+          repetition_count: 1,
+          is_bookmarked: true,
+          last_reviewed: new Date(Date.now() - 86400000).toISOString(),
+          next_review: today,
+          created_at: new Date(Date.now() - 4 * 86400000).toISOString(),
+        },
+        {
+          id: `fc_dsa_2_${studentId}`,
+          deck_id: dsaDeckId,
+          student_id: studentId,
+          front: 'State Master Theorem Case 2 for T(n) = aT(n/b) + Theta(n^c * log^k(n)).',
+          back: 'If c = log_b(a) and k >= 0, then T(n) = Theta(n^(log_b(a)) * log^(k+1)(n)).\n\nExample: Merge Sort T(n) = 2T(n/2) + Theta(n) -> a=2, b=2, c=1, k=0 -> Theta(n * log(n)).',
+          type: 'FORMULA',
+          topic: 'Recurrence Relations',
+          difficulty: 'HARD',
+          state: 'REVIEW',
+          confidence: 3,
+          review_count: 3,
+          correct_count: 2,
+          incorrect_count: 1,
+          interval_days: 2,
+          ease_factor: 2.4,
+          repetition_count: 2,
+          is_bookmarked: false,
+          last_reviewed: new Date(Date.now() - 2 * 86400000).toISOString(),
+          next_review: today,
+          created_at: new Date(Date.now() - 6 * 86400000).toISOString(),
+        },
+        {
+          id: `fc_dsa_3_${studentId}`,
+          deck_id: dsaDeckId,
+          student_id: studentId,
+          front: 'What is the necessary and sufficient condition for a graph to have a Topological Sort?',
+          back: 'The graph must be a Directed Acyclic Graph (DAG). If a cycle exists, no linear ordering can satisfy the precedence condition u -> v.',
+          type: 'DEFINITION',
+          topic: 'Graph Theory',
+          difficulty: 'EASY',
+          state: 'REVIEW',
+          confidence: 4,
+          review_count: 2,
+          correct_count: 2,
+          incorrect_count: 0,
+          interval_days: 4,
+          ease_factor: 2.5,
+          repetition_count: 2,
+          is_bookmarked: false,
+          last_reviewed: new Date(Date.now() - 86400000).toISOString(),
+          next_review: futureDate,
+          created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
+        },
+        {
+          id: `fc_dsa_4_${studentId}`,
+          deck_id: dsaDeckId,
+          student_id: studentId,
+          front: 'Compare Memoization (Top-Down) versus Tabulation (Bottom-Up) Dynamic Programming.',
+          back: 'Memoization solves recursively on-demand and caches results; avoids computing unnecessary subproblems but incurs call-stack overhead. Tabulation fills a DP table iteratively starting from base cases; avoids recursion stack and allows space optimization.',
+          type: 'COMPARISON',
+          topic: 'Dynamic Programming',
+          difficulty: 'MEDIUM',
+          state: 'NEW',
+          confidence: 1,
+          review_count: 0,
+          correct_count: 0,
+          incorrect_count: 0,
+          interval_days: 1,
+          ease_factor: 2.5,
+          repetition_count: 0,
+          is_bookmarked: false,
+          next_review: today,
+          created_at: new Date().toISOString(),
+        },
+      ],
+    };
+
+    this.flashcardDecksStore.set(osDeckId, osDeck);
+    this.flashcardDecksStore.set(dbmsDeckId, dbmsDeck);
+    this.flashcardDecksStore.set(dsaDeckId, dsaDeck);
+
+    // Initial review records for analytics
+    const pastRev1 = {
+      id: `rev_seed_1_${studentId}`,
+      deck_id: osDeckId,
+      card_id: `fc_os_3_${studentId}`,
+      student_id: studentId,
+      rating: 'EASY',
+      confidence: 5,
+      reviewed_at: new Date(Date.now() - 86400000).toISOString(),
+    };
+    const pastRev2 = {
+      id: `rev_seed_2_${studentId}`,
+      deck_id: dbmsDeckId,
+      card_id: `fc_dbms_1_${studentId}`,
+      student_id: studentId,
+      rating: 'GOOD',
+      confidence: 4,
+      reviewed_at: new Date(Date.now() - 86400000).toISOString(),
+    };
+    this.flashcardReviewsStore.set(studentId, [pastRev1, pastRev2]);
+  }
+
+  public async getFlashcardDecks(
+    studentId: string,
+    options?: { search?: string; subject?: string; course_id?: string; status?: string; sortBy?: string }
+  ): Promise<FlashcardDeck[]> {
+    await this.initialize();
+    this.seedDefaultFlashcards(studentId);
+
+    const today = new Date().toISOString().split('T')[0];
+    let decks = Array.from(this.flashcardDecksStore.values()).filter((d) => d.student_id === studentId);
+
+    // Recalculate dynamic counts
+    decks.forEach((deck) => {
+      deck.total_cards = deck.cards?.length || 0;
+      deck.due_count = (deck.cards || []).filter((c) => (c.next_review || today) <= today).length;
+      deck.mastered_count = (deck.cards || []).filter((c) => c.state === 'MASTERED').length;
+    });
+
+    const status = options?.status || 'all';
+
+    // Status filtering
+    if (status === 'archived') {
+      decks = decks.filter((d) => d.is_archived === true);
+    } else {
+      decks = decks.filter((d) => !d.is_archived);
+      if (status === 'due') {
+        decks = decks.filter((d) => d.due_count > 0);
+      } else if (status === 'recent') {
+        const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString();
+        decks = decks.filter((d) => (d.last_reviewed_at || d.created_at) >= sevenDaysAgo);
+      } else if (status === 'not_studied') {
+        decks = decks.filter((d) => d.cards.every((c) => c.review_count === 0));
+      } else if (status === 'mastered') {
+        decks = decks.filter((d) => d.mastered_count > 0);
+      } else if (status === 'bookmarked') {
+        decks = decks.filter((d) => d.is_bookmarked === true);
+      }
+    }
+
+    // Subject filtering
+    if (options?.subject && options.subject !== 'all') {
+      const sub = options.subject.toLowerCase();
+      decks = decks.filter((d) => d.subject.toLowerCase() === sub);
+    }
+
+    // Course ID filtering
+    if (options?.course_id) {
+      decks = decks.filter((d) => d.course_id === options.course_id);
+    }
+
+    // Search query filtering across deck metadata, tags, and cards
+    if (options?.search && options.search.trim()) {
+      const q = options.search.toLowerCase().trim();
+      decks = decks.filter(
+        (d) =>
+          d.title.toLowerCase().includes(q) ||
+          d.description.toLowerCase().includes(q) ||
+          d.subject.toLowerCase().includes(q) ||
+          (d.tags && d.tags.some((t) => t.toLowerCase().includes(q))) ||
+          (d.cards && d.cards.some((c) => c.front.toLowerCase().includes(q) || c.back.toLowerCase().includes(q) || c.topic.toLowerCase().includes(q)))
+      );
+    }
+
+    // Sorting
+    const sortBy = options?.sortBy || 'recent';
+    if (sortBy === 'title') {
+      decks.sort((a, b) => a.title.localeCompare(b.title));
+    } else if (sortBy === 'card_count') {
+      decks.sort((a, b) => b.total_cards - a.total_cards);
+    } else if (sortBy === 'due_count') {
+      decks.sort((a, b) => b.due_count - a.due_count);
+    } else {
+      // Recent activity
+      decks.sort(
+        (a, b) =>
+          new Date(b.last_reviewed_at || b.updated_at || b.created_at).getTime() -
+          new Date(a.last_reviewed_at || a.updated_at || a.created_at).getTime()
+      );
+    }
+
+    return decks;
+  }
+
+  public async getFlashcardDeckById(deckId: string, studentId?: string): Promise<FlashcardDeck | null> {
+    await this.initialize();
+    const deck = this.flashcardDecksStore.get(deckId);
+    if (!deck) return null;
+    if (studentId && deck.student_id !== studentId) return null;
+
+    const today = new Date().toISOString().split('T')[0];
+    deck.total_cards = deck.cards?.length || 0;
+    deck.due_count = (deck.cards || []).filter((c) => (c.next_review || today) <= today).length;
+    deck.mastered_count = (deck.cards || []).filter((c) => c.state === 'MASTERED').length;
+    return deck;
+  }
+
+  public async saveFlashcardDeck(deck: FlashcardDeck): Promise<FlashcardDeck> {
+    await this.initialize();
+    const today = new Date().toISOString().split('T')[0];
+    deck.total_cards = deck.cards?.length || 0;
+    deck.due_count = (deck.cards || []).filter((c) => (c.next_review || today) <= today).length;
+    deck.mastered_count = (deck.cards || []).filter((c) => c.state === 'MASTERED').length;
+    deck.updated_at = new Date().toISOString();
+
+    this.flashcardDecksStore.set(deck.id, deck);
+    return deck;
+  }
+
+  public async deleteFlashcardDeck(deckId: string, studentId: string): Promise<boolean> {
+    await this.initialize();
+    const deck = this.flashcardDecksStore.get(deckId);
+    if (!deck || deck.student_id !== studentId) return false;
+    return this.flashcardDecksStore.delete(deckId);
+  }
+
+  public async duplicateFlashcardDeck(deckId: string, studentId: string): Promise<FlashcardDeck | null> {
+    await this.initialize();
+    const original = await this.getFlashcardDeckById(deckId, studentId);
+    if (!original) return null;
+
+    const today = new Date().toISOString().split('T')[0];
+    const newDeckId = `deck_copy_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+
+    const clonedCards: Flashcard[] = (original.cards || []).map((c, idx) => ({
+      ...c,
+      id: `fc_${newDeckId}_${idx + 1}`,
+      deck_id: newDeckId,
+      student_id: studentId,
+      confidence: 1,
+      review_count: 0,
+      correct_count: 0,
+      incorrect_count: 0,
+      interval_days: 1,
+      ease_factor: 2.5,
+      repetition_count: 0,
+      state: 'NEW',
+      last_reviewed: undefined,
+      next_review: today,
+      created_at: new Date().toISOString(),
+    }));
+
+    const copy: FlashcardDeck = {
+      ...original,
+      id: newDeckId,
+      student_id: studentId,
+      title: `${original.title} (Copy)`,
+      total_cards: clonedCards.length,
+      due_count: clonedCards.length,
+      mastered_count: 0,
+      cards: clonedCards,
+      is_archived: false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      last_reviewed_at: undefined,
+    };
+
+    return this.saveFlashcardDeck(copy);
+  }
+
+  public async recordFlashcardReview(review: {
+    student_id: string;
+    deck_id: string;
+    card_id: string;
+    rating: string;
+    confidence: number;
+  }): Promise<void> {
+    await this.initialize();
+    const list = this.flashcardReviewsStore.get(review.student_id) || [];
+    list.push({
+      id: `rev_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      card_id: review.card_id,
+      deck_id: review.deck_id,
+      student_id: review.student_id,
+      rating: review.rating,
+      confidence: review.confidence,
+      reviewed_at: new Date().toISOString(),
+    });
+    this.flashcardReviewsStore.set(review.student_id, list);
+  }
+
+  public async getDueFlashcards(
+    studentId: string,
+    options?: { deck_id?: string; course_id?: string; limit?: number }
+  ): Promise<Flashcard[]> {
+    await this.initialize();
+    const decks = await this.getFlashcardDecks(studentId, {
+      course_id: options?.course_id,
+      status: 'all',
+    });
+
+    const today = new Date().toISOString().split('T')[0];
+    const candidateDecks = options?.deck_id ? decks.filter((d) => d.id === options.deck_id) : decks;
+
+    const dueCards: Flashcard[] = [];
+    for (const d of candidateDecks) {
+      for (const c of d.cards || []) {
+        if ((c.next_review || today) <= today || c.state === 'NEW') {
+          dueCards.push(c);
+        }
+      }
+    }
+
+    return dueCards.slice(0, options?.limit || 100);
+  }
+
+  public async getFlashcardStats(studentId: string): Promise<FlashcardStats> {
+    await this.initialize();
+    const decks = await this.getFlashcardDecks(studentId, { status: 'all' });
+    const today = new Date().toISOString().split('T')[0];
+
+    let totalCards = 0;
+    let dueToday = 0;
+    let masteredCards = 0;
+    let learningCards = 0;
+    let newCards = 0;
+
+    for (const d of decks) {
+      totalCards += d.cards?.length || 0;
+      for (const c of d.cards || []) {
+        if ((c.next_review || today) <= today) dueToday++;
+        if (c.state === 'MASTERED') masteredCards++;
+        else if (c.state === 'LEARNING' || c.state === 'REVIEW') learningCards++;
+        else if (c.state === 'NEW') newCards++;
+      }
+    }
+
+    const reviews = this.flashcardReviewsStore.get(studentId) || [];
+    const reviewedToday = reviews.filter((r) => r.reviewed_at.startsWith(today)).length;
+
+    // Rating distribution
+    const dist = { again: 0, hard: 0, good: 0, easy: 0 };
+    reviews.forEach((r) => {
+      const rat = (r.rating || '').toLowerCase();
+      if (rat === 'again' || r.confidence === 1) dist.again++;
+      else if (rat === 'hard' || r.confidence === 2 || r.confidence === 3) dist.hard++;
+      else if (rat === 'good' || r.confidence === 4) dist.good++;
+      else if (rat === 'easy' || r.confidence === 5) dist.easy++;
+    });
+
+    // Consecutive streak calculation
+    const uniqueDays = Array.from(new Set(reviews.map((r) => r.reviewed_at.split('T')[0]))).sort().reverse();
+    let streakDays = 0;
+    let checkDate = new Date();
+
+    for (let i = 0; i < 30; i++) {
+      const dateStr = checkDate.toISOString().split('T')[0];
+      if (uniqueDays.includes(dateStr)) {
+        streakDays++;
+        checkDate.setDate(checkDate.getDate() - 1);
+      } else if (i === 0) {
+        // If haven't reviewed today yet, check if reviewed yesterday to maintain ongoing streak
+        checkDate.setDate(checkDate.getDate() - 1);
+        const yestStr = checkDate.toISOString().split('T')[0];
+        if (uniqueDays.includes(yestStr)) {
+          streakDays++;
+          checkDate.setDate(checkDate.getDate() - 1);
+        } else {
+          break;
+        }
+      } else {
+        break;
+      }
+    }
+
+    // 7-day timeline
+    const recentActivity = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const ds = d.toISOString().split('T')[0];
+      const count = reviews.filter((r) => r.reviewed_at.startsWith(ds)).length;
+      recentActivity.push({ date: ds, count });
+    }
+
+    const reviewedCount = totalCards - newCards;
+    const overallCoveragePct = totalCards > 0 ? Math.round((reviewedCount / totalCards) * 100) : 0;
+    const masteryPct = totalCards > 0 ? Math.round((masteredCards / totalCards) * 100) : 0;
+
+    return {
+      total_decks: decks.length,
+      total_cards: totalCards,
+      due_today: dueToday,
+      reviewed_today: reviewedToday,
+      mastered_cards: masteredCards,
+      learning_cards: learningCards,
+      new_cards: newCards,
+      streak_days: streakDays,
+      overall_coverage_pct: overallCoveragePct,
+      mastery_pct: masteryPct,
+      coverage_percentage: overallCoveragePct,
+      mastery_percentage: masteryPct,
+      rating_distribution: dist,
+      recent_activity: recentActivity,
+      recent_activity_7d: recentActivity,
+    };
+  }
 }
 
 export const db = new DatabaseStore();
-
+export const database = db;

@@ -4,6 +4,7 @@ import { DSAService } from '../../services/dsa';
 import { CodingService } from '../../services/coding';
 import { DSATutorService } from '../../services/dsaTutorService';
 import { ValidationError } from '../../core/exceptions';
+import { eventBus } from '../../events/eventBus';
 
 export const dsaRouter = Router();
 
@@ -128,14 +129,117 @@ dsaRouter.post('/dsa/tutor/chat', async (req, res, next) => {
   }
 });
 
+// ================= DAILY CHALLENGE, ROADMAP & ANALYTICS =================
+dsaRouter.get('/dsa/daily-challenge', async (req, res, next) => {
+  try {
+    const studentId = (req as any).user?.userId;
+    const challenge = await DSAService.getDailyChallenge(studentId);
+    res.json({
+      success: true,
+      data: challenge,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+dsaRouter.get('/dsa/roadmap', requireAuth, async (req, res, next) => {
+  try {
+    const studentId = req.user!.userId;
+    const roadmap = await DSAService.getRoadmap(studentId);
+    res.json({
+      success: true,
+      data: roadmap,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+dsaRouter.get('/dsa/analytics', requireAuth, async (req, res, next) => {
+  try {
+    const studentId = req.user!.userId;
+    const analytics = await DSAService.getAnalytics(studentId);
+    res.json({
+      success: true,
+      data: analytics,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ================= BOOKMARKS & DRAFTS =================
+dsaRouter.get('/dsa/bookmarks', requireAuth, async (req, res, next) => {
+  try {
+    const studentId = req.user!.userId;
+    const bookmarks = await DSAService.getBookmarks(studentId);
+    res.json({
+      success: true,
+      data: bookmarks,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+dsaRouter.post('/dsa/bookmarks/:problem_id', requireAuth, async (req, res, next) => {
+  try {
+    const studentId = req.user!.userId;
+    const result = await DSAService.toggleBookmark(studentId, req.params.problem_id);
+    res.json({
+      success: true,
+      data: result,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+dsaRouter.get('/dsa/drafts/:problem_id', requireAuth, async (req, res, next) => {
+  try {
+    const studentId = req.user!.userId;
+    const draft = await DSAService.getDraft(studentId, req.params.problem_id);
+    res.json({
+      success: true,
+      data: draft,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+dsaRouter.post('/dsa/drafts/:problem_id', requireAuth, async (req, res, next) => {
+  try {
+    const studentId = req.user!.userId;
+    const { code, language } = req.body;
+    if (!code || !language) {
+      throw new ValidationError('code and language are required for draft save.');
+    }
+    await DSAService.saveDraft(studentId, req.params.problem_id, { code, language });
+    res.json({
+      success: true,
+      message: 'Draft saved successfully.',
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ================= PROBLEMS =================
 dsaRouter.get('/dsa/problems', async (req, res, next) => {
   try {
-    const { topic_id, difficulty, search } = req.query;
+    const { topic_id, difficulty, search, subtopic, company, roadmap_stage, status } = req.query;
+    const studentId = (req as any).user?.userId;
     const problems = await DSAService.getProblems({
       topic_id: topic_id as string,
       difficulty: difficulty as string,
       search: search as string,
+      subtopic: subtopic as string,
+      company: company as string,
+      roadmap_stage: roadmap_stage as string,
+      status: status as string,
+      student_id: studentId,
     });
     res.json({
       success: true,
@@ -158,25 +262,40 @@ dsaRouter.get('/dsa/problems/:problem_id', async (req, res, next) => {
   }
 });
 
-// Submit Problem Solution (Reuses Coding Lab execution sandbox!)
+// Run Code: Real execution against sample/public test cases only (No problem solved mark)
+dsaRouter.post('/dsa/problems/:problem_id/run', async (req, res, next) => {
+  try {
+    const { language, source_code } = req.body;
+    if (!language) throw new ValidationError('Language is required.');
+    if (!source_code) throw new ValidationError('Source code is required.');
+
+    const result = await DSAService.runCode(req.params.problem_id, {
+      language,
+      source_code,
+    });
+
+    res.json({
+      success: true,
+      data: result,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Submit Problem Solution: Real evaluation against all public and hidden test cases
 dsaRouter.post('/dsa/problems/:problem_id/submit', requireAuth, async (req, res, next) => {
   try {
     const studentId = req.user!.userId;
-    const problem = await DSAService.getProblem(req.params.problem_id);
     const { language, source_code } = req.body;
 
     if (!language) throw new ValidationError('Language is required.');
     if (!source_code) throw new ValidationError('Source code is required.');
 
-    // Execute through existing sandbox test runner
-    const submission = await CodingService.submitSolution(studentId, problem.id, {
+    const submission = await DSAService.submitSolution(studentId, req.params.problem_id, {
       language,
       source_code,
     });
-
-    if (submission.status === 'ACCEPTED') {
-      await DSAService.recordProblemSolved(studentId, problem.id);
-    }
 
     res.json({
       success: true,

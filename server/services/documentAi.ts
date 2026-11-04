@@ -107,12 +107,19 @@ Respond with valid JSON conforming to:
     // 4. Generate AI completion
     let parsedResponse: any = null;
     try {
-      const completion = await AIService.generate([
+            const completion = await AIService.generate([
         { role: 'system', content: systemPrompt },
         { role: 'user', content: question },
       ]);
 
-      const jsonMatch = completion.text.match(/\{[\s\S]*\}/);
+      let raw = completion.text.trim();
+      if (raw.startsWith('```json')) {
+        raw = raw.replace(/^\`\`\`json\s*/i, '').replace(/\s*\`\`\`$/, '');
+      } else if (raw.startsWith('```')) {
+        raw = raw.replace(/^\`\`\`\s*/, '').replace(/\s*\`\`\`$/, '');
+      }
+
+      const jsonMatch = raw.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         parsedResponse = JSON.parse(jsonMatch[0]);
       }

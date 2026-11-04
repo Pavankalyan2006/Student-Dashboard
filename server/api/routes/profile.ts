@@ -119,6 +119,50 @@ profileRouter.get('/profile/settings', requireAuth, async (req: Request, res: Re
   }
 });
 
+// GET /api/v1/profile/privacy
+profileRouter.get('/profile/privacy', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const studentId = req.user!.userId;
+    const privacy = await ProfileService.getPrivacy(studentId);
+    res.json({ success: true, data: privacy });
+  } catch (err: any) {
+    res.status(err.status || 500).json({ success: false, message: err.message });
+  }
+});
+
+// PATCH /api/v1/profile/privacy
+profileRouter.patch('/profile/privacy', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const studentId = req.user!.userId;
+    const updated = await ProfileService.updatePrivacy(studentId, req.body);
+    res.json({ success: true, data: updated });
+  } catch (err: any) {
+    res.status(err.status || 500).json({ success: false, message: err.message });
+  }
+});
+
+// GET /api/v1/profile/preferences
+profileRouter.get('/profile/preferences', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const studentId = req.user!.userId;
+    const prefs = await ProfileService.getPreferences(studentId);
+    res.json({ success: true, data: prefs });
+  } catch (err: any) {
+    res.status(err.status || 500).json({ success: false, message: err.message });
+  }
+});
+
+// PATCH /api/v1/profile/preferences
+profileRouter.patch('/profile/preferences', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const studentId = req.user!.userId;
+    const updated = await ProfileService.updatePreferences(studentId, req.body);
+    res.json({ success: true, data: updated });
+  } catch (err: any) {
+    res.status(err.status || 500).json({ success: false, message: err.message });
+  }
+});
+
 // PATCH /api/v1/profile/settings/privacy
 profileRouter.patch('/profile/settings/privacy', requireAuth, async (req: Request, res: Response) => {
   try {
@@ -140,6 +184,43 @@ profileRouter.patch('/profile/settings/notifications', requireAuth, async (req: 
     res.status(err.status || 500).json({ success: false, message: err.message });
   }
 });
+
+// GET /api/v1/profile/export (Data export request)
+profileRouter.get('/profile/export', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const studentId = req.user!.userId;
+    const [profile, privacy, preferences, goals, activities, certificates, portfolio] = await Promise.all([
+      ProfileService.getProfile(studentId),
+      ProfileService.getPrivacy(studentId),
+      ProfileService.getPreferences(studentId),
+      db.getStudentGoals(studentId),
+      db.getStudentActivities(studentId),
+      db.getCertificates(studentId),
+      ProfileService.getPortfolio(studentId),
+    ]);
+
+    const exportPayload = {
+      export_version: '1.0',
+      exported_at: new Date().toISOString(),
+      student_id: studentId,
+      profile,
+      privacy,
+      preferences,
+      learning_goals: goals,
+      activity_history: activities,
+      certificates,
+      portfolio,
+    };
+
+    res.json({
+      success: true,
+      data: exportPayload,
+    });
+  } catch (err: any) {
+    res.status(err.status || 500).json({ success: false, message: err.message });
+  }
+});
+
 
 // GET /api/v1/portfolio
 profileRouter.get('/portfolio', requireAuth, async (req: Request, res: Response) => {

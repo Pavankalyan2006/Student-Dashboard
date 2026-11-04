@@ -7,10 +7,13 @@ import {
   BookOpen,
   Sparkles,
   Trophy,
+  Bookmark,
+  Share2,
 } from 'lucide-react';
 import { LessonWithNavigation } from '../types/courses';
 import { MarkdownContent } from '../../../components/content/MarkdownContent';
 import { Button } from '../../../components/ui/button';
+import { toast } from 'sonner';
 
 export function LessonContent({
   lesson,
@@ -18,39 +21,71 @@ export function LessonContent({
   isCompleting,
   onNavigateLesson,
   onOpenAI,
+  onBackToCourse,
 }: {
   lesson: LessonWithNavigation;
   onComplete: () => void;
   isCompleting: boolean;
   onNavigateLesson: (lessonId: string) => void;
   onOpenAI: () => void;
+  onBackToCourse?: () => void;
 }) {
+  const [isBookmarked, setIsBookmarked] = React.useState(false);
+
+  const toggleBookmark = () => {
+    setIsBookmarked((prev) => !prev);
+    toast.success(!isBookmarked ? 'Lesson bookmarked' : 'Bookmark removed');
+  };
+
   return (
     <div className="flex flex-col h-full bg-white overflow-y-auto">
       {/* Top Banner / Breadcrumb */}
-      <div className="border-b border-[#E4E7EC] bg-slate-50/50 px-6 py-3 flex items-center justify-between text-xs text-slate-500">
+      <div className="border-b border-[#E4E7EC] bg-slate-50/70 px-6 py-2.5 flex items-center justify-between text-xs text-slate-500 shrink-0">
         <div className="flex items-center gap-2 truncate">
+          {onBackToCourse && (
+            <button
+              onClick={onBackToCourse}
+              className="text-[#2563EB] hover:underline font-semibold cursor-pointer truncate max-w-[120px]"
+            >
+              {lesson.course_title}
+            </button>
+          )}
           <span className="font-mono font-semibold text-[#2563EB] bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
             {lesson.course_code}
           </span>
           <span className="text-slate-400">/</span>
-          <span className="truncate">{lesson.chapter_title}</span>
+          <span className="truncate max-w-[180px]">{lesson.chapter_title}</span>
         </div>
 
-        <button
-          onClick={onOpenAI}
-          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-700 font-semibold text-xs hover:bg-indigo-100 transition-colors cursor-pointer shrink-0"
-        >
-          <Sparkles className="h-3.5 w-3.5 text-[#4F46E5]" />
-          <span>Ask AI About Lesson</span>
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={toggleBookmark}
+            title={isBookmarked ? 'Remove Bookmark' : 'Bookmark Lesson'}
+            className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:text-amber-500 hover:bg-slate-100 transition-colors cursor-pointer"
+          >
+            <Bookmark
+              className={`h-3.5 w-3.5 ${
+                isBookmarked ? 'fill-amber-400 text-amber-400' : ''
+              }`}
+            />
+          </button>
+
+          <button
+            onClick={onOpenAI}
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-700 font-semibold text-xs hover:bg-indigo-100 transition-colors cursor-pointer"
+          >
+            <Sparkles className="h-3.5 w-3.5 text-[#4F46E5]" />
+            <span>AI Assistant</span>
+          </button>
+        </div>
       </div>
 
-      {/* Main Reading Container (Optimal typographical line length) */}
+      {/* Main Reading Container */}
       <div className="flex-1 max-w-3xl w-full mx-auto p-6 sm:p-10 space-y-8">
         {/* Lesson Header */}
         <div className="space-y-3 pb-6 border-b border-slate-100">
-          <div className="flex items-center gap-3 text-xs text-slate-500">
+          <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
             <span className="flex items-center gap-1">
               <Clock className="h-3.5 w-3.5 text-slate-400" />
               <span>{lesson.estimated_minutes} min read</span>
@@ -72,22 +107,38 @@ export function LessonContent({
             {lesson.title}
           </h1>
 
-          <p className="text-sm text-[#475467] leading-relaxed">
-            {lesson.description}
-          </p>
+          {lesson.description && (
+            <p className="text-sm text-[#475467] leading-relaxed">
+              {lesson.description}
+            </p>
+          )}
         </div>
 
-        {/* Formatted Technical Content (Markdown + KaTeX + Code Blocks) */}
-        <div className="prose prose-slate max-w-none text-slate-800 leading-relaxed text-sm sm:text-base">
-          <MarkdownContent content={lesson.content} />
-        </div>
+        {/* Technical Content / Empty State */}
+        {!lesson.content || !lesson.content.trim() ? (
+          <div className="py-12 text-center space-y-3 border border-dashed rounded-2xl p-8 bg-slate-50/50">
+            <BookOpen className="h-8 w-8 text-slate-300 mx-auto" />
+            <h3 className="text-sm font-bold text-slate-800">No content uploaded for this lesson</h3>
+            <p className="text-xs text-slate-500 max-w-md mx-auto">
+              This module is part of the curriculum structure. You can ask the AI Assistant to generate study notes or practical code examples.
+            </p>
+            <Button variant="primary" size="sm" onClick={onOpenAI} className="gap-1.5 text-xs">
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>Generate Lesson Content with AI</span>
+            </Button>
+          </div>
+        ) : (
+          <div className="prose prose-slate max-w-none text-slate-800 leading-relaxed text-sm sm:text-base">
+            <MarkdownContent content={lesson.content} />
+          </div>
+        )}
 
         {/* Bottom Interactive Complete & Navigation Bar */}
         <div className="pt-8 border-t border-slate-200 space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
             <div>
               <h4 className="text-xs font-bold text-slate-900">
-                {lesson.is_completed ? 'Lesson Completed' : 'Finished this lesson?'}
+                {lesson.is_completed ? 'Lesson Completed' : 'Finished studying this lesson?'}
               </h4>
               <p className="text-[11px] text-slate-500">
                 {lesson.is_completed
@@ -118,8 +169,12 @@ export function LessonContent({
               >
                 <ArrowLeft className="h-4 w-4 text-slate-400 group-hover:text-slate-700 shrink-0" />
                 <div className="min-w-0">
-                  <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Previous</div>
-                  <div className="text-xs font-semibold text-slate-800 truncate">{lesson.prev_lesson.title}</div>
+                  <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                    Previous
+                  </div>
+                  <div className="text-xs font-semibold text-slate-800 truncate">
+                    {lesson.prev_lesson.title}
+                  </div>
                 </div>
               </button>
             ) : (
@@ -133,8 +188,12 @@ export function LessonContent({
                 className="flex items-center gap-2 p-3 rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-all text-right max-w-xs ml-auto cursor-pointer group"
               >
                 <div className="min-w-0">
-                  <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Next Lesson</div>
-                  <div className="text-xs font-semibold text-slate-800 truncate">{lesson.next_lesson.title}</div>
+                  <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                    Next Lesson
+                  </div>
+                  <div className="text-xs font-semibold text-slate-800 truncate">
+                    {lesson.next_lesson.title}
+                  </div>
                 </div>
                 <ArrowRight className="h-4 w-4 text-[#2563EB] group-hover:translate-x-0.5 transition-transform shrink-0" />
               </button>

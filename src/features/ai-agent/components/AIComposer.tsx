@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Send, StopCircle, Paperclip, Mic, Sparkles } from 'lucide-react';
+import { Send, StopCircle, Paperclip, Sparkles } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import { toast } from 'sonner';
 
@@ -7,6 +7,8 @@ export function AIComposer({
   input,
   setInput,
   isGenerating,
+  activeMode = 'EXPLAIN',
+  onModeChange,
   onSend,
   onStop,
   onSelectPrompt,
@@ -14,13 +16,19 @@ export function AIComposer({
   input: string;
   setInput: (val: string) => void;
   isGenerating: boolean;
+  activeMode?: string;
+  onModeChange?: (mode: string) => void;
   onSend: (text?: string, mode?: string) => void;
   onStop: () => void;
   onSelectPrompt: (prompt: string) => void;
 }) {
-  const [selectedMode, setSelectedMode] = React.useState<string>('Auto');
+  const [selectedMode, setSelectedMode] = React.useState<string>(activeMode);
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    if (activeMode) setSelectedMode(activeMode);
+  }, [activeMode]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -42,12 +50,25 @@ export function AIComposer({
 
   const suggestedPills = [
     'Explain binary search tree balancing',
-    'Create an Operating Systems quiz',
-    'Show me my weak DSA topics',
-    'Generate a 7-day placement plan',
+    'Derive Banker’s Safety Algorithm step-by-step',
+    'Generate an Operating Systems exam revision quiz',
+    'Help me debug this pointer segmentation fault',
   ];
 
-  const modes = ['Auto', 'Learning', 'Coding', 'Research', 'Project', 'Career'];
+  const modes = [
+    { label: 'Explain', id: 'EXPLAIN' },
+    { label: 'Step-by-Step', id: 'STEP_BY_STEP' },
+    { label: 'Solve Problem', id: 'SOLVE' },
+    { label: 'Exam Prep', id: 'EXAM_PREP' },
+    { label: 'Coding Tutor', id: 'CODING' },
+    { label: 'Interview', id: 'INTERVIEW' },
+    { label: 'Revision', id: 'REVISION' },
+  ];
+
+  const handleModeSelect = (id: string) => {
+    setSelectedMode(id);
+    onModeChange?.(id);
+  };
 
   return (
     <div className="border-t border-[#E4E7EC] bg-white p-3 space-y-2.5">
@@ -55,25 +76,25 @@ export function AIComposer({
       <div className="flex items-center justify-between gap-2 overflow-x-auto pb-0.5">
         <div className="flex items-center gap-1.5">
           <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 shrink-0">
-            AI Mode:
+            Teaching Mode:
           </span>
           {modes.map((m) => (
             <button
-              key={m}
+              key={m.id}
               type="button"
-              onClick={() => setSelectedMode(m)}
+              onClick={() => handleModeSelect(m.id)}
               className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-all shrink-0 cursor-pointer ${
-                selectedMode === m
-                  ? 'bg-blue-600 text-white shadow-xs'
+                selectedMode === m.id
+                  ? 'bg-[#2563EB] text-white shadow-xs'
                   : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
               }`}
             >
-              {m}
+              {m.label}
             </button>
           ))}
         </div>
         <span className="hidden sm:inline-block text-[10px] text-slate-400 font-mono">
-          {selectedMode === 'Auto' ? 'Master Orchestrator Active' : `${selectedMode} Specialist Mode`}
+          Gemini 2.5 Flash · Verified Grounding
         </span>
       </div>
 
@@ -81,14 +102,14 @@ export function AIComposer({
       {!input && (
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
           <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 shrink-0">
-            Prompts:
+            Quick Prompts:
           </span>
           {suggestedPills.map((p, i) => (
             <button
               key={i}
               type="button"
               onClick={() => onSelectPrompt(p)}
-              className="text-[11px] px-2.5 py-1 rounded-full bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 transition-colors shrink-0 border border-slate-200 cursor-pointer"
+              className="text-[11px] px-2.5 py-1 rounded-full bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 transition-colors shrink-0 border border-slate-200 cursor-pointer"
             >
               {p}
             </button>
@@ -103,7 +124,7 @@ export function AIComposer({
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Ask anything about your B.Tech learning, algorithms, syllabus, or capstone..."
+          placeholder="Ask your AI Tutor about engineering concepts, problem steps, exam preparation, or code debugging..."
           rows={2}
           className="w-full resize-none bg-transparent px-2 py-1 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none"
         />
@@ -122,20 +143,10 @@ export function AIComposer({
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            title="Attach textbook, PDF, or code file"
+            title="Attach study material, PDF, or code file"
             className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-200/60 cursor-pointer transition-colors"
           >
             <Paperclip className="h-4 w-4" />
-          </button>
-
-          {/* Voice input button placeholder */}
-          <button
-            type="button"
-            onClick={() => toast.info('Voice input module scheduled for Phase 11')}
-            title="Voice input (Speech to Text)"
-            className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-200/60 cursor-pointer transition-colors"
-          >
-            <Mic className="h-4 w-4" />
           </button>
 
           {/* Send / Stop button */}
@@ -168,7 +179,7 @@ export function AIComposer({
 
       <div className="flex items-center justify-between px-1 text-[11px] text-slate-400">
         <span>Enter to send · Shift+Enter for new line</span>
-        <span className="font-mono text-[10px]">Gemini 2.5 Flash · Safe Tool Execution</span>
+        <span className="font-mono text-[10px]">Context-Aware · Real-Time Persistence</span>
       </div>
     </div>
   );

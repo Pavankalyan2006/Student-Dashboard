@@ -14,6 +14,10 @@ export class ProjectService {
   /**
    * List projects belonging to a student with optional domain/type/status filters
    */
+  public static async getProjects(studentId: string): Promise<Project[]> {
+    return this.listProjects(studentId);
+  }
+
   public static async listProjects(
     studentId: string,
     filters?: {

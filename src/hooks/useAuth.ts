@@ -1,7 +1,7 @@
 import { useAuthStore } from '../store/authStore';
 
 export function useAuth() {
-  const { student, isAuthenticated, isLoading, error, login, logout, checkAuth } = useAuthStore();
+  const { student, isAuthenticated, isLoading, error, login, register, logout, checkAuth, refreshStudent } = useAuthStore();
 
   const isSuperAdmin = student?.role === 'SUPER_ADMIN';
 
@@ -12,7 +12,9 @@ export function useAuth() {
     error,
     isSuperAdmin,
     login,
+    register,
     logout,
     checkAuth,
+    refreshStudent,
   };
 }

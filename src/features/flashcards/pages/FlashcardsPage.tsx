@@ -1,5 +1,5 @@
 // src/features/flashcards/pages/FlashcardsPage.tsx
-// Complete Flashcard and Spaced Repetition Learning Hub with 3D Flip Card and Mastery State Tracking
+// Complete AI Flashcard and Spaced Repetition Learning Hub with SuperMemo-2 Active Recall
 
 import * as React from 'react';
 import {
@@ -7,21 +7,25 @@ import {
   Sparkles,
   RotateCw,
   Plus,
+  Play,
   CheckCircle2,
   Calendar,
   BrainCircuit,
-  ArrowRight,
+  Filter,
+  ArrowUpDown,
   BookOpen,
-  Volume2,
-  ChevronLeft,
-  ChevronRight,
-  Eye,
-  EyeOff,
+  Search,
 } from 'lucide-react';
-import { PageContainer, PageHeader, LoadingState, EmptyState } from '../../../components/layout/PageComponents';
+import { PageContainer } from '../../../components/layout/PageComponents';
 import { Button } from '../../../components/ui/button';
 import { learningModulesApi } from '../../../api/learningModulesApi';
-import { FlashcardDeck, Flashcard } from '../../../types/learningModules';
+import { FlashcardDeck, Flashcard, FlashcardStats, ReviewRating } from '../../../types/learningModules';
+import { FlashcardHeader } from '../components/FlashcardHeader';
+import { FlashcardOverviewStats } from '../components/FlashcardOverviewStats';
+import { FlashcardDeckCard } from '../components/FlashcardDeckCard';
+import { FlashcardStudyModal } from '../components/FlashcardStudyModal';
+import { FlashcardDeckDetailModal } from '../components/FlashcardDeckDetailModal';
+import { CreateFlashcardsModal } from '../components/CreateFlashcardsModal';
 import { toast } from 'sonner';
 
 interface FlashcardsPageProps {
@@ -30,403 +34,442 @@ interface FlashcardsPageProps {
 
 export function FlashcardsPage({ onNavigate }: FlashcardsPageProps) {
   const [decks, setDecks] = React.useState<FlashcardDeck[]>([]);
+  const [stats, setStats] = React.useState<FlashcardStats | null>(null);
   const [loading, setLoading] = React.useState(true);
-  const [activeDeck, setActiveDeck] = React.useState<FlashcardDeck | null>(null);
-  const [currentCardIndex, setCurrentCardIndex] = React.useState(0);
-  const [isFlipped, setIsFlipped] = React.useState(false);
-  const [viewMode, setViewMode] = React.useState<'decks' | 'study' | 'create'>('decks');
 
-  // Form State
-  const [newTitle, setNewTitle] = React.useState('');
-  const [newSubject, setNewSubject] = React.useState('Database Management Systems');
-  const [newDescription, setNewDescription] = React.useState('');
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  // Search & Filtering State
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [activeTab, setActiveTab] = React.useState<
+    'ALL' | 'RECENT' | 'DUE' | 'NOT_STUDIED' | 'MASTERED' | 'BOOKMARKED' | 'ARCHIVED'
+  >('ALL');
+  const [selectedSubject, setSelectedSubject] = React.useState('all');
+  const [sortBy, setSortBy] = React.useState<'recent' | 'title' | 'card_count' | 'due_count'>('recent');
 
-  const loadDecks = React.useCallback(async () => {
+  // Modals State
+  const [studyModalOpen, setStudyModalOpen] = React.useState(false);
+  const [studyingDeck, setStudyingDeck] = React.useState<FlashcardDeck | null>(null);
+  const [studyInitialCards, setStudyInitialCards] = React.useState<Flashcard[] | undefined>(undefined);
+
+  const [detailModalOpen, setDetailModalOpen] = React.useState(false);
+  const [selectedDetailDeck, setSelectedDetailDeck] = React.useState<FlashcardDeck | null>(null);
+
+  const [createModalOpen, setCreateModalOpen] = React.useState(false);
+  const [createDefaultTab, setCreateDefaultTab] = React.useState<'manual' | 'ai' | 'notes' | 'course'>('manual');
+
+  // Load Decks & Statistics
+  const loadData = React.useCallback(async () => {
     try {
       setLoading(true);
-      const data = await learningModulesApi.flashcards.getDecks();
-      setDecks(data);
-      if (data.length > 0 && !activeDeck) {
-        setActiveDeck(data[0]);
+      const statusParam = activeTab.toLowerCase();
+      const [decksData, statsData] = await Promise.all([
+        learningModulesApi.flashcards.getDecks({
+          search: searchQuery.trim() || undefined,
+          subject: selectedSubject !== 'all' ? selectedSubject : undefined,
+          status: statusParam,
+          sortBy,
+        }),
+        learningModulesApi.flashcards.getStats(),
+      ]);
+
+      setDecks(decksData);
+      setStats(statsData);
+
+      // Keep detail modal synced if open
+      if (selectedDetailDeck) {
+        const refreshed = decksData.find((d) => d.id === selectedDetailDeck.id);
+        if (refreshed) setSelectedDetailDeck(refreshed);
       }
     } catch (err: any) {
-      toast.error('Failed to load flashcard decks: ' + err.message);
+      toast.error('Failed to load flashcard decks: ' + (err.message || err));
     } finally {
       setLoading(false);
     }
-  }, [activeDeck]);
+  }, [searchQuery, activeTab, selectedSubject, sortBy, selectedDetailDeck?.id]);
 
   React.useEffect(() => {
-    loadDecks();
-  }, [loadDecks]);
+    loadData();
+  }, [searchQuery, activeTab, selectedSubject, sortBy]);
 
-  const handleCreateDeck = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTitle.trim()) {
-      toast.error('Please enter a deck title');
+  // Unique subjects for dropdown
+  const uniqueSubjects = React.useMemo(() => {
+    const subs = new Set<string>();
+    decks.forEach((d) => {
+      if (d.subject) subs.add(d.subject);
+    });
+    return Array.from(subs);
+  }, [decks]);
+
+  // Launch Study for a specific deck
+  const handleStudyDeck = (deck: FlashcardDeck) => {
+    setStudyingDeck(deck);
+    setStudyInitialCards(undefined);
+    setStudyModalOpen(true);
+  };
+
+  // Launch Study for All Due Cards
+  const handleStartReviewDue = async () => {
+    try {
+      const dueCards = await learningModulesApi.flashcards.getDueCards();
+      if (dueCards.length === 0) {
+        toast.info('No cards are currently due for review! Good job.');
+        return;
+      }
+
+      // Create a virtual deck for all due cards
+      const virtualDueDeck: FlashcardDeck = {
+        id: 'virtual_due_deck',
+        student_id: '',
+        title: 'Daily Spaced Repetition Due Queue',
+        subject: 'All Subjects',
+        description: `Reviewing ${dueCards.length} cards due across your active curriculum tracks.`,
+        total_cards: dueCards.length,
+        due_count: dueCards.length,
+        mastered_count: 0,
+        cards: dueCards,
+        created_at: new Date().toISOString(),
+      };
+
+      setStudyingDeck(virtualDueDeck);
+      setStudyInitialCards(dueCards);
+      setStudyModalOpen(true);
+    } catch (err: any) {
+      toast.error('Failed to fetch due queue: ' + (err.message || err));
+    }
+  };
+
+  // Open Detail / Card Manager
+  const handleOpenDetail = (deck: FlashcardDeck) => {
+    setSelectedDetailDeck(deck);
+    setDetailModalOpen(true);
+  };
+
+  // Edit Deck Details
+  const handleEditDeck = async (deck: FlashcardDeck) => {
+    const newTitle = window.prompt('Enter new deck title:', deck.title);
+    if (!newTitle || !newTitle.trim() || newTitle === deck.title) return;
+
+    try {
+      await learningModulesApi.flashcards.updateDeck(deck.id, { title: newTitle.trim() });
+      toast.success('Deck title updated');
+      loadData();
+    } catch (err: any) {
+      toast.error('Failed to update deck: ' + (err.message || err));
+    }
+  };
+
+  // Duplicate Deck
+  const handleDuplicateDeck = async (deck: FlashcardDeck) => {
+    try {
+      await learningModulesApi.flashcards.duplicateDeck(deck.id);
+      toast.success(`Duplicated "${deck.title}" without past review history`);
+      loadData();
+    } catch (err: any) {
+      toast.error('Failed to duplicate deck: ' + (err.message || err));
+    }
+  };
+
+  // Archive / Restore Deck
+  const handleArchiveDeck = async (deck: FlashcardDeck) => {
+    try {
+      const targetState = !deck.is_archived;
+      await learningModulesApi.flashcards.archiveDeck(deck.id, targetState);
+      toast.success(targetState ? 'Deck moved to archive' : 'Deck restored to active library');
+      loadData();
+    } catch (err: any) {
+      toast.error('Failed to update archive status: ' + (err.message || err));
+    }
+  };
+
+  // Bookmark Deck
+  const handleBookmarkDeck = async (deck: FlashcardDeck) => {
+    try {
+      const targetState = !deck.is_bookmarked;
+      await learningModulesApi.flashcards.bookmarkDeck(deck.id, targetState);
+      toast.success(targetState ? 'Deck bookmarked' : 'Bookmark removed');
+      loadData();
+    } catch (err: any) {
+      toast.error('Failed to bookmark deck: ' + (err.message || err));
+    }
+  };
+
+  // Delete Deck
+  const handleDeleteDeck = async (deck: FlashcardDeck) => {
+    if (!window.confirm(`Are you sure you want to permanently delete "${deck.title}" and its ${deck.total_cards} cards?`)) {
       return;
     }
     try {
-      setIsSubmitting(true);
-      const created = await learningModulesApi.flashcards.createDeck({
-        title: newTitle,
-        subject: newSubject,
-        description: newDescription,
-        cards: [
-          {
-            id: `card_${Date.now()}_1`,
-            deck_id: '',
-            student_id: '',
-            front: `What is the core definition of ${newTitle}?`,
-            back: `Essential engineering principles and properties defining ${newTitle}.`,
-            type: 'CONCEPT',
-            topic: newSubject,
-            difficulty: 'MEDIUM',
-            state: 'NEW',
-            confidence: 0,
-            review_count: 0,
-            correct_count: 0,
-            incorrect_count: 0,
-            next_review: new Date().toISOString().split('T')[0],
-            created_at: new Date().toISOString(),
-          },
-        ],
-      });
-      toast.success('Flashcard deck created with active recall prompts!');
-      setNewTitle('');
-      setNewDescription('');
-      setActiveDeck(created);
-      setViewMode('study');
-      loadDecks();
+      await learningModulesApi.flashcards.deleteDeck(deck.id);
+      toast.success('Deck deleted');
+      if (selectedDetailDeck?.id === deck.id) setDetailModalOpen(false);
+      loadData();
     } catch (err: any) {
-      toast.error('Failed to create deck: ' + err.message);
-    } finally {
-      setIsSubmitting(false);
+      toast.error('Failed to delete deck: ' + (err.message || err));
     }
   };
 
-  const handleReviewCard = async (qualityConfidence: number) => {
-    if (!activeDeck || !activeDeck.cards[currentCardIndex]) return;
-    const card = activeDeck.cards[currentCardIndex];
+  // Schedule in Planner
+  const handleSchedulePlanner = async (deck: FlashcardDeck) => {
     try {
-      await learningModulesApi.flashcards.reviewCard(activeDeck.id, card.id, qualityConfidence);
-      toast.success(
-        qualityConfidence >= 4 ? 'Great active recall! Scheduled for later.' : 'Card marked for prompt re-review.'
-      );
-      setIsFlipped(false);
-      if (currentCardIndex < activeDeck.cards.length - 1) {
-        setCurrentCardIndex(currentCardIndex + 1);
-      } else {
-        toast.info('Completed all cards in this review round!');
-        setCurrentCardIndex(0);
-      }
-      loadDecks();
+      const task = await learningModulesApi.flashcards.scheduleStudyTask(deck.id);
+      toast.success(`Scheduled review task: "${task.title}" for ${task.scheduled_date}`);
     } catch (err: any) {
-      toast.error('Failed to submit review: ' + err.message);
+      toast.error('Failed to schedule in planner: ' + (err.message || err));
     }
   };
 
-  const currentCard = activeDeck?.cards[currentCardIndex];
-  const totalCardsDue = decks.reduce((sum, d) => sum + (d.due_count || 0), 0);
-  const totalMastered = decks.reduce((sum, d) => sum + (d.mastered_count || 0), 0);
+  // Submit Review Rating
+  const handleReviewCard = async (deckId: string, cardId: string, rating: ReviewRating): Promise<Flashcard | null> => {
+    try {
+      const updatedCard = await learningModulesApi.flashcards.reviewCard(deckId, cardId, rating);
+      // Refresh background stats without flashing UI
+      learningModulesApi.flashcards.getStats().then((s) => setStats(s)).catch(() => {});
+      return updatedCard;
+    } catch (err: any) {
+      toast.error('Failed to record review: ' + (err.message || err));
+      return null;
+    }
+  };
 
-  if (loading) {
-    return (
-      <PageContainer>
-        <PageHeader title="Flashcards + Spaced Revision" description="Loading spaced repetition intervals..." />
-        <LoadingState message="FlashcardAgent calculating active recall memory decay..." />
-      </PageContainer>
-    );
-  }
+  // Card Management handlers
+  const handleAddCard = async (deckId: string, card: Partial<Flashcard>) => {
+    const created = await learningModulesApi.flashcards.addCard(deckId, card);
+    loadData();
+    return created;
+  };
+
+  const handleUpdateCard = async (deckId: string, cardId: string, updates: Partial<Flashcard>, resetSchedule?: boolean) => {
+    const updated = await learningModulesApi.flashcards.updateCard(deckId, cardId, updates, resetSchedule);
+    loadData();
+    return updated;
+  };
+
+  const handleDeleteCard = async (deckId: string, cardId: string) => {
+    await learningModulesApi.flashcards.deleteCard(deckId, cardId);
+    loadData();
+  };
+
+  const handleBookmarkCard = async (deckId: string, cardId: string, isBookmarked: boolean) => {
+    const updated = await learningModulesApi.flashcards.bookmarkCard(deckId, cardId, isBookmarked);
+    loadData();
+    return updated;
+  };
 
   return (
     <PageContainer>
-      <PageHeader
-        title="Flashcards + Spaced Revision"
-        description="Spaced repetition (SM-2 algorithm) ensures weak cards appear frequently while mastered cards are spaced out."
-        badge={
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-            <BrainCircuit className="w-3.5 h-3.5 text-emerald-600" />
-            Spaced Repetition Active
-          </span>
-        }
-        actions={
-          <div className="flex items-center gap-2">
-            <Button
-              variant={viewMode === 'decks' ? 'primary' : 'outline'}
-              size="sm"
-              onClick={() => setViewMode('decks')}
-              className={viewMode === 'decks' ? 'bg-[#2563EB] text-white' : ''}
-            >
-              Deck Library
-            </Button>
-            <Button
-              size="sm"
-              onClick={() => setViewMode(viewMode === 'create' ? 'decks' : 'create')}
-              className="gap-1.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white"
-            >
-              <Plus className="w-4 h-4" />
-              {viewMode === 'create' ? 'View Decks' : 'New Deck'}
-            </Button>
-          </div>
-        }
-      />
+      <div className="space-y-6">
+        {/* Header */}
+        <FlashcardHeader
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onCreateOpen={(tab = 'manual') => {
+            setCreateDefaultTab(tab);
+            setCreateModalOpen(true);
+          }}
+          onStartReviewDue={handleStartReviewDue}
+          dueCardsCount={stats?.due_today || 0}
+        />
 
-      {/* Metrics Row */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="p-4 rounded-xl border border-[#E4E7EC] bg-white shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-xs font-medium text-[#475467]">Due for Review Today</p>
-            <h3 className="text-2xl font-bold text-amber-600 mt-1">{totalCardsDue} Cards</h3>
-            <p className="text-xs text-[#475467] mt-0.5">Spaced repetition priority</p>
-          </div>
-          <div className="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
-            <RotateCw className="w-6 h-6" />
-          </div>
-        </div>
+        {/* Learning Overview Statistics */}
+        <FlashcardOverviewStats stats={stats} loading={loading && !stats} />
 
-        <div className="p-4 rounded-xl border border-[#E4E7EC] bg-white shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-xs font-medium text-[#475467]">Mastered Cards</p>
-            <h3 className="text-2xl font-bold text-emerald-600 mt-1">{totalMastered} Cards</h3>
-            <p className="text-xs text-emerald-700 mt-0.5">Consolidated long-term memory</p>
-          </div>
-          <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
-            <CheckCircle2 className="w-6 h-6" />
-          </div>
-        </div>
+        {/* Filter Tabs & Controls */}
+        <div className="space-y-3">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-[#E4E7EC] pb-2">
+            {/* Filter Tabs */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+              {(
+                [
+                  { id: 'ALL', label: 'All Decks' },
+                  { id: 'DUE', label: 'Due for Review' },
+                  { id: 'RECENT', label: 'Recent Activity' },
+                  { id: 'NOT_STUDIED', label: 'Not Studied' },
+                  { id: 'MASTERED', label: 'Mastered' },
+                  { id: 'BOOKMARKED', label: 'Bookmarked' },
+                  { id: 'ARCHIVED', label: 'Archived' },
+                ] as const
+              ).map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                    activeTab === tab.id
+                      ? 'bg-[#2563EB] text-white shadow-sm'
+                      : 'text-[#475467] hover:bg-gray-100'
+                  }`}
+                >
+                  {tab.label}
+                  {tab.id === 'DUE' && (stats?.due_today || 0) > 0 && (
+                    <span className="ml-1.5 px-1.5 py-0.2 text-[10px] rounded-full bg-amber-400 text-amber-950 font-bold">
+                      {stats?.due_today}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
 
-        <div className="p-4 rounded-xl border border-[#E4E7EC] bg-white shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-xs font-medium text-[#475467]">Total Decks</p>
-            <h3 className="text-2xl font-bold text-[#101828] mt-1">{decks.length} Decks</h3>
-            <p className="text-xs text-purple-600 mt-0.5">Curriculum aligned</p>
-          </div>
-          <div className="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600">
-            <Layers className="w-6 h-6" />
-          </div>
-        </div>
+            {/* Subject and Sort Dropdowns */}
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Subject Filter */}
+              <div className="flex items-center gap-1.5 text-xs text-[#344054]">
+                <Filter className="w-3.5 h-3.5 text-gray-400" />
+                <select
+                  value={selectedSubject}
+                  onChange={(e) => setSelectedSubject(e.target.value)}
+                  className="px-2.5 py-1.5 text-xs rounded-xl border border-[#D0D5DD] bg-white text-[#344054] focus:outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                  <option value="all">All Subjects</option>
+                  {uniqueSubjects.map((sub) => (
+                    <option key={sub} value={sub}>
+                      {sub}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-        <div className="p-4 rounded-xl border border-[#E4E7EC] bg-white shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-xs font-medium text-[#475467]">Interval Pace</p>
-            <h3 className="text-sm font-bold text-[#101828] mt-1">1d → 3d → 7d → 14d</h3>
-            <p className="text-xs text-blue-600 mt-0.5">SuperMemo-2 Curve</p>
+              {/* Sort Dropdown */}
+              <div className="flex items-center gap-1.5 text-xs text-[#344054]">
+                <ArrowUpDown className="w-3.5 h-3.5 text-gray-400" />
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as any)}
+                  className="px-2.5 py-1.5 text-xs rounded-xl border border-[#D0D5DD] bg-white text-[#344054] focus:outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                  <option value="recent">Recently Studied</option>
+                  <option value="title">Deck Title A-Z</option>
+                  <option value="due_count">Most Due for Review</option>
+                  <option value="card_count">Most Cards</option>
+                </select>
+              </div>
+            </div>
           </div>
-          <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
-            <Calendar className="w-6 h-6" />
-          </div>
-        </div>
-      </div>
 
-      {/* Mode: Study (Active Flashcard Flip Interface) */}
-      {viewMode === 'study' && activeDeck && (
-        <div className="space-y-4 max-w-2xl mx-auto">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => setViewMode('decks')}
-              className="text-xs font-semibold text-blue-600 flex items-center gap-1 hover:underline"
-            >
-              <ChevronLeft className="w-4 h-4" /> Back to Decks
-            </button>
-            <span className="text-xs font-medium text-[#475467]">
-              Card {currentCardIndex + 1} of {activeDeck.cards?.length || 0}
+          <div className="flex items-center justify-between text-xs text-[#667085]">
+            <span>
+              Showing {decks.length} {decks.length === 1 ? 'deck' : 'decks'}
+              {searchQuery && ` matching "${searchQuery}"`}
             </span>
           </div>
-
-          {currentCard ? (
-            <div className="space-y-4">
-              {/* Card Container */}
-              <div
-                onClick={() => setIsFlipped(!isFlipped)}
-                className={`min-h-[280px] p-8 rounded-2xl border cursor-pointer select-none transition-all duration-300 flex flex-col justify-between shadow-md relative ${
-                  isFlipped
-                    ? 'bg-gradient-to-br from-purple-50 via-white to-blue-50 border-purple-300'
-                    : 'bg-white border-[#E4E7EC] hover:border-blue-400'
-                }`}
-              >
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-md">
-                    {currentCard.type} • {currentCard.topic}
-                  </span>
-                  <span className="text-gray-400 flex items-center gap-1">
-                    {isFlipped ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-                    {isFlipped ? 'Answer View' : 'Prompt (Click to Flip)'}
-                  </span>
-                </div>
-
-                <div className="my-auto py-6 text-center">
-                  {!isFlipped ? (
-                    <h2 className="text-xl font-bold text-[#101828] leading-relaxed px-4">
-                      {currentCard.front}
-                    </h2>
-                  ) : (
-                    <div className="space-y-2">
-                      <p className="text-xs uppercase font-bold tracking-wider text-purple-700">Explanation</p>
-                      <p className="text-base font-semibold text-[#101828] leading-relaxed whitespace-pre-line px-4">
-                        {currentCard.back}
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex items-center justify-between text-xs text-[#475467] border-t border-gray-100 pt-3">
-                  <span>State: {currentCard.state}</span>
-                  <span className="text-[11px] text-gray-400">Click anywhere on card to flip</span>
-                </div>
-              </div>
-
-              {/* SM-2 Recall Rating Buttons */}
-              {isFlipped ? (
-                <div className="space-y-2">
-                  <p className="text-xs font-semibold text-center text-[#475467]">
-                    How well did you remember this concept?
-                  </p>
-                  <div className="grid grid-cols-4 gap-2">
-                    <button
-                      onClick={() => handleReviewCard(1)}
-                      className="p-2.5 rounded-lg border border-rose-300 bg-rose-50 text-rose-800 text-xs font-bold hover:bg-rose-100 transition-colors"
-                    >
-                      Again (1d)
-                    </button>
-                    <button
-                      onClick={() => handleReviewCard(2)}
-                      className="p-2.5 rounded-lg border border-amber-300 bg-amber-50 text-amber-800 text-xs font-bold hover:bg-amber-100 transition-colors"
-                    >
-                      Hard (2d)
-                    </button>
-                    <button
-                      onClick={() => handleReviewCard(3)}
-                      className="p-2.5 rounded-lg border border-blue-300 bg-blue-50 text-blue-800 text-xs font-bold hover:bg-blue-100 transition-colors"
-                    >
-                      Good (4d)
-                    </button>
-                    <button
-                      onClick={() => handleReviewCard(5)}
-                      className="p-2.5 rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-800 text-xs font-bold hover:bg-emerald-100 transition-colors"
-                    >
-                      Easy (7d)
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex justify-center">
-                  <Button
-                    onClick={() => setIsFlipped(true)}
-                    variant="outline"
-                    className="gap-2 text-xs font-semibold"
-                  >
-                    <RotateCw className="w-3.5 h-3.5" />
-                    Reveal Answer
-                  </Button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <EmptyState
-              title="No Cards in This Deck"
-              description="Add concepts or generate flashcards using FlashcardAgent."
-            />
-          )}
         </div>
-      )}
 
-      {/* Mode: Deck Library */}
-      {viewMode === 'decks' && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {decks.map((deck) => (
-            <div
-              key={deck.id}
-              className="p-5 rounded-xl border border-[#E4E7EC] bg-white shadow-sm space-y-4 hover:border-blue-400 transition-all flex flex-col justify-between"
-            >
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded">
-                    {deck.subject}
-                  </span>
-                  <span className="text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
-                    {deck.due_count || 0} due
-                  </span>
-                </div>
-                <h3 className="text-base font-bold text-[#101828]">{deck.title}</h3>
-                <p className="text-xs text-[#475467] line-clamp-2">{deck.description}</p>
-              </div>
-
-              <div className="pt-2 border-t border-gray-100 flex items-center justify-between">
-                <span className="text-xs text-[#475467] font-medium">
-                  {deck.cards?.length || 0} total cards
-                </span>
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    setActiveDeck(deck);
-                    setCurrentCardIndex(0);
-                    setIsFlipped(false);
-                    setViewMode('study');
-                  }}
-                  className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs gap-1"
-                >
-                  Review Deck
-                  <ArrowRight className="w-3.5 h-3.5" />
+        {/* Decks Collection Grid */}
+        {loading && decks.length === 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 animate-pulse">
+            {[...Array(6)].map((_, idx) => (
+              <div key={idx} className="p-6 rounded-2xl border border-[#E4E7EC] bg-white h-60" />
+            ))}
+          </div>
+        ) : decks.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {decks.map((deck) => (
+              <FlashcardDeckCard
+                key={deck.id}
+                deck={deck}
+                onStudy={handleStudyDeck}
+                onOpenDetail={handleOpenDetail}
+                onEdit={handleEditDeck}
+                onDuplicate={handleDuplicateDeck}
+                onArchive={handleArchiveDeck}
+                onBookmark={handleBookmarkDeck}
+                onDelete={handleDeleteDeck}
+                onSchedulePlanner={handleSchedulePlanner}
+              />
+            ))}
+          </div>
+        ) : (
+          /* Empty State */
+          <div className="p-12 text-center rounded-3xl border-2 border-dashed border-[#E4E7EC] bg-white space-y-4 max-w-xl mx-auto my-8">
+            <div className="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto shadow-sm">
+              <Layers className="w-8 h-8" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-[#101828]">No Flashcard Decks Found</h3>
+              <p className="text-xs text-[#667085] mt-1 max-w-md mx-auto leading-relaxed">
+                {searchQuery
+                  ? `No decks or active recall cards matched "${searchQuery}". Try clearing search or filter constraints.`
+                  : activeTab === 'ARCHIVED'
+                  ? 'No archived decks found. Decks you archive will appear here.'
+                  : 'Start learning with active recall by creating your first deck or generating cards from syllabus topics.'}
+              </p>
+            </div>
+            <div className="flex items-center justify-center gap-3 pt-2">
+              {searchQuery && (
+                <Button size="sm" variant="outline" onClick={() => setSearchQuery('')}>
+                  Clear Search
                 </Button>
-              </div>
+              )}
+              <Button
+                size="sm"
+                onClick={() => {
+                  setCreateDefaultTab('ai');
+                  setCreateModalOpen(true);
+                }}
+                className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs gap-1.5"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                Generate with AI
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setCreateDefaultTab('manual');
+                  setCreateModalOpen(true);
+                }}
+                className="text-xs gap-1.5"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Create Manually
+              </Button>
             </div>
-          ))}
-        </div>
-      )}
+          </div>
+        )}
 
-      {/* Mode: Create Deck */}
-      {viewMode === 'create' && (
-        <div className="p-6 rounded-xl border border-[#E4E7EC] bg-white shadow-sm space-y-4 max-w-2xl">
-          <h2 className="text-lg font-bold text-[#101828] flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-purple-600" />
-            Create New Flashcard Deck
-          </h2>
-          <form onSubmit={handleCreateDeck} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-[#344054] mb-1">Deck Title</label>
-              <input
-                type="text"
-                placeholder="e.g. Operating Systems: Process Scheduling & Mutexes"
-                value={newTitle}
-                onChange={(e) => setNewTitle(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-[#D0D5DD] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-[#344054] mb-1">Subject Area</label>
-              <input
-                type="text"
-                placeholder="e.g. Operating Systems"
-                value={newSubject}
-                onChange={(e) => setNewSubject(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-[#D0D5DD] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-[#344054] mb-1">Description / Syllabus Scope</label>
-              <textarea
-                placeholder="High-yield definitions, semaphore operations, deadlock conditions..."
-                value={newDescription}
-                onChange={(e) => setNewDescription(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-[#D0D5DD] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                rows={3}
-              />
-            </div>
-            <div className="flex justify-end gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={() => setViewMode('decks')}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isSubmitting} className="bg-[#2563EB] text-white">
-                {isSubmitting ? 'Generating Flashcards...' : 'Generate Deck'}
-              </Button>
-            </div>
-          </form>
-        </div>
-      )}
+        {/* Interactive Flashcard Study Modal */}
+        <FlashcardStudyModal
+          isOpen={studyModalOpen}
+          onClose={() => {
+            setStudyModalOpen(false);
+            setStudyingDeck(null);
+            setStudyInitialCards(undefined);
+            loadData();
+          }}
+          deck={studyingDeck}
+          initialCards={studyInitialCards}
+          onReviewCard={handleReviewCard}
+          onBookmarkCard={handleBookmarkCard}
+        />
+
+        {/* Deck Detail & Card Manager Modal */}
+        <FlashcardDeckDetailModal
+          isOpen={detailModalOpen}
+          onClose={() => {
+            setDetailModalOpen(false);
+            setSelectedDetailDeck(null);
+            loadData();
+          }}
+          deck={selectedDetailDeck}
+          onStudy={(d) => {
+            setDetailModalOpen(false);
+            handleStudyDeck(d);
+          }}
+          onAddCard={handleAddCard}
+          onUpdateCard={handleUpdateCard}
+          onDeleteCard={handleDeleteCard}
+          onBookmarkCard={handleBookmarkCard}
+        />
+
+        {/* Create Flashcards Modal (Manual, AI, Notes, Courses) */}
+        <CreateFlashcardsModal
+          isOpen={createModalOpen}
+          onClose={() => setCreateModalOpen(false)}
+          defaultTab={createDefaultTab}
+          onDeckCreated={(newDeck) => {
+            loadData();
+            handleStudyDeck(newDeck);
+          }}
+        />
+      </div>
     </PageContainer>
   );
 }
+export default FlashcardsPage;

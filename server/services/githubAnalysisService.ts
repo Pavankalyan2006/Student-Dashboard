@@ -104,28 +104,45 @@ export class GitHubAnalysisService {
     // 2. Identify Architecture Components
     const components: GitHubArchitectureComponent[] = [];
     if (filePaths.some((p) => p.startsWith('src') || p.includes('react') || p.includes('client'))) {
+      const cFiles = filePaths.filter((p) => p.startsWith('src'));
       components.push({
         name: 'Client Interface Layer',
         type: 'frontend',
         description: 'Single-page client components and user interaction management.',
-        files: filePaths.filter((p) => p.startsWith('src')),
-      });
+        files: cFiles,
+        evidence_files: cFiles,
+      } as any);
     }
     if (filePaths.some((p) => p.startsWith('server') || p.includes('backend') || p.includes('api'))) {
+      const cFiles = filePaths.filter((p) => p.startsWith('server'));
       components.push({
         name: 'API Service & Routing Core',
         type: 'backend',
         description: 'REST routing, middleware, and domain business operations.',
-        files: filePaths.filter((p) => p.startsWith('server')),
-      });
+        files: cFiles,
+        evidence_files: cFiles,
+      } as any);
     }
     if (filePaths.some((p) => p.includes('db') || p.includes('database') || p.includes('sql') || p.includes('vector'))) {
+      const cFiles = filePaths.filter((p) => p.includes('db') || p.includes('vector'));
       components.push({
         name: 'Relational & Vector Data Store',
         type: 'database',
         description: 'Data models, persistence repositories, and semantic search indices.',
-        files: filePaths.filter((p) => p.includes('db') || p.includes('vector')),
-      });
+        files: cFiles,
+        evidence_files: cFiles,
+      } as any);
+    }
+
+    if (components.length === 0) {
+      const fallbackFiles = filePaths.slice(0, 3);
+      components.push({
+        name: 'Core Application Module',
+        type: 'backend',
+        description: 'Central project logic, entry routines, and configuration files.',
+        files: fallbackFiles,
+        evidence_files: fallbackFiles,
+      } as any);
     }
 
     // 3. Security & Maintainability Observations

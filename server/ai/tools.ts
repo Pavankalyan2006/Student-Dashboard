@@ -50,6 +50,8 @@ import { PortfolioService } from '../services/portfolioService';
 import { LearningInsightService } from '../services/learningInsightService';
 import { RecommendationService } from '../services/recommendationService';
 import { NotificationService } from '../services/notificationService';
+import { OnboardingService } from '../services/onboardingService';
+import { StudentContextEngine } from './studentContextEngine';
 import { AuthorizationError, ValidationError } from '../core/exceptions';
 import { logger } from '../core/logging';
 
@@ -188,6 +190,48 @@ ToolRegistry.register({
     } catch {
       return safeStudent;
     }
+  },
+});
+
+ToolRegistry.register({
+  name: 'get_student_context',
+  description: 'Retrieves unified, domain-scoped intelligence context for the authenticated student including education, semester subjects, learning preferences, skills, and career goals.',
+  parameters: {
+    domain: { type: 'string', description: 'Context domain (GENERAL, ACADEMIC, LEARNING, CODING, PROJECT, CAREER, EXAM)', required: false },
+  },
+  permissions: ['STUDENT', 'SUPER_ADMIN'],
+  timeoutMs: 5000,
+  confirmationRequired: false,
+  category: 'READ_ONLY',
+  handler: async (params, context) => {
+    return await StudentContextEngine.buildContext(context.studentId, { domain: params.domain || 'GENERAL' });
+  },
+});
+
+ToolRegistry.register({
+  name: 'get_semester_subjects',
+  description: 'Retrieves active semester subjects, credits, and syllabus units configured for the student.',
+  parameters: {},
+  permissions: ['STUDENT', 'SUPER_ADMIN'],
+  timeoutMs: 3000,
+  confirmationRequired: false,
+  category: 'READ_ONLY',
+  handler: async (_params, context) => {
+    const syllabus = await OnboardingService.getSemesterSyllabus(context.studentId);
+    return syllabus ? syllabus.subjects : [];
+  },
+});
+
+ToolRegistry.register({
+  name: 'get_student_recommendations',
+  description: 'Retrieves personalized, evidence-backed learning recommendations based on weak areas, upcoming deadlines, and career targets.',
+  parameters: {},
+  permissions: ['STUDENT', 'SUPER_ADMIN'],
+  timeoutMs: 4000,
+  confirmationRequired: false,
+  category: 'READ_ONLY',
+  handler: async (_params, context) => {
+    return await OnboardingService.generateRecommendations(context.studentId);
   },
 });
 

@@ -5,6 +5,7 @@ interface TreeVisualizerProps {
   step: VisualizationStep;
 }
 
+
 interface TreeNode {
   val: number;
   left?: TreeNode;
@@ -32,6 +33,7 @@ export const TreeVisualizer: React.FC<TreeVisualizerProps> = ({ step }) => {
 
     const width = 600;
     const height = 300;
+
     const levelHeight = 65;
 
     const layout = (

@@ -19,6 +19,7 @@ import {
   PriorityLevel,
   FocusMode,
 } from '../models/semesterCommandCenterTypes';
+import { OnboardingService } from './onboardingService';
 
 // Initial realistic default state for B.Tech Semester 6/7 student
 let currentSemesterConfig: AcademicSemesterConfig = {
@@ -606,15 +607,107 @@ let recoveryPlans: AcademicRecoveryPlan[] = [
 
 export const semesterCommandCenterService = {
   // 1. Get Complete Semester Overview & Dashboard Data
-  getOverview: (): SemesterOverviewDashboardData => {
-    const activePhase = academicPhases.find((p) => p.is_current) || academicPhases[5];
+  getOverview: (studentId?: string): SemesterOverviewDashboardData => {
+    let activeSubjects = semesterSubjects;
+    let config = currentSemesterConfig;
+    let events = academicEvents.filter((e) => e.status === 'UPCOMING');
 
-    // Compute progress metrics
-    const totalSyllabus = semesterSubjects.reduce((acc, s) => acc + s.progress_percent, 0);
-    const avgSyllabusProgress = Math.round(totalSyllabus / Math.max(semesterSubjects.length, 1));
+    if (studentId) {
+      try {
+        const edu = OnboardingService.getEducationProfileSync(studentId);
+        const syllabus = OnboardingService.getSemesterSyllabusSync(studentId);
+
+        if (edu) {
+          config = {
+            ...config,
+            semester_number: edu.current_semester || config.semester_number,
+            branch: edu.branch || config.branch,
+          };
+        }
+
+        if (syllabus && syllabus.subjects && syllabus.subjects.length > 0) {
+          const colors = ['#2563EB', '#4F46E5', '#7C3AED', '#0891B2', '#059669', '#D97706'];
+          activeSubjects = syllabus.subjects.map((s, idx) => ({
+            id: s.id,
+            semester_id: config.id,
+            name: s.name,
+            code: s.code || `CS${config.semester_number}0${idx + 1}`,
+            credits: s.credits || 4,
+            faculty_name: s.faculty_name || 'Prof. Faculty Member',
+            subject_type: (s.subject_type as any) || 'THEORY',
+            difficulty: (s.difficulty as any) || 'MODERATE',
+            progress_percent: s.progress_percent || Math.min(95, Math.max(30, (idx + 1) * 20)),
+            syllabus_remaining_percent: Math.max(5, 100 - (s.progress_percent || Math.min(95, Math.max(30, (idx + 1) * 20)))),
+            target_grade: 'A',
+            units: ((s.units && s.units.length > 0) ? s.units : (s as any).syllabus_units && (s as any).syllabus_units.length > 0 ? (s as any).syllabus_units : null)
+              ? (((s.units && s.units.length > 0) ? s.units : (s as any).syllabus_units) as any[]).map((u, ui) => ({
+                  id: u.id || `unit_${s.id}_${ui}`,
+                  subject_id: s.id,
+                  unit_number: u.unit_number || ui + 1,
+                  name: u.name || u.title || `Unit ${ui + 1}`,
+                  estimated_hours: 10,
+                  progress_percent: 50,
+                  topics: (u.topics || []).map((t: any, ti: number) => ({
+                    id: `topic_${s.id}_${ui}_${ti}`,
+                    unit_id: `unit_${s.id}_${ui}`,
+                    name: typeof t === 'string' ? t : t.name || `Topic ${ti + 1}`,
+                    status: 'IN_PROGRESS' as const,
+                    difficulty: 'MEDIUM' as const,
+                    revision_count: 1,
+                  })),
+                }))
+              : [
+                  {
+                    id: `unit_${s.id}_1`,
+                    subject_id: s.id,
+                    unit_number: 1,
+                    name: 'Core Theory & Mathematical Invariants',
+                    estimated_hours: 12,
+                    progress_percent: 70,
+                    topics: [
+                      { id: `top_${s.id}_1`, unit_id: `unit_${s.id}_1`, name: 'Fundamental Concepts', status: 'COMPLETED', difficulty: 'EASY', revision_count: 2 },
+                      { id: `top_${s.id}_2`, unit_id: `unit_${s.id}_1`, name: 'Analytical Formulations', status: 'IN_PROGRESS', difficulty: 'MEDIUM', revision_count: 1 },
+                    ],
+                  },
+                ],
+            slip_tests_count: 2,
+            minor_exams_count: 2,
+            labs_count: 8,
+            assignments_count: 4,
+            is_priority: idx < 2,
+            color: colors[idx % colors.length],
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          }));
+
+          if (syllabus.academic_dates && syllabus.academic_dates.length > 0) {
+            events = syllabus.academic_dates.map((d, i) => ({
+              id: d.id,
+              semester_id: config.id,
+              subject_id: activeSubjects[i % activeSubjects.length]?.id || 'sub_default',
+              title: d.title,
+              event_type: (d.event_type as any) || 'INTERNAL_EXAM',
+              weightage_percent: 25,
+              total_marks: 50,
+              passing_marks: 20,
+              start_date: d.date,
+              end_date: d.date,
+              status: 'UPCOMING',
+              priority: 'HIGH',
+              syllabus_coverage: 'Units 1-3 Comprehensive',
+              created_at: new Date().toISOString(),
+            }));
+          }
+        }
+      } catch {}
+    }
+
+    const activePhase = academicPhases.find((p) => p.is_current) || academicPhases[5];
+    const totalSyllabus = activeSubjects.reduce((acc, s) => acc + s.progress_percent, 0);
+    const avgSyllabusProgress = Math.round(totalSyllabus / Math.max(activeSubjects.length, 1));
 
     return {
-      config: currentSemesterConfig,
+      config,
       overall_progress_percent: 71,
       syllabus_progress_percent: avgSyllabusProgress,
       revision_progress_percent: 54,
@@ -624,8 +717,8 @@ export const semesterCommandCenterService = {
       exam_prep_progress_percent: 62,
       current_phase: activePhase,
       all_phases: academicPhases,
-      subjects: semesterSubjects,
-      upcoming_events: academicEvents.filter((e) => e.status === 'UPCOMING'),
+      subjects: activeSubjects,
+      upcoming_events: events,
       today_guidance: semesterCommandCenterService.getTodayGuidance(),
       active_recovery_plans: recoveryPlans.filter((r) => !r.is_resolved),
       latest_weekly_review: semesterCommandCenterService.getLatestWeeklyReview(),
@@ -643,7 +736,17 @@ export const semesterCommandCenterService = {
   },
 
   // 3. Subject Management
-  getSubjects: (): SemesterSubject[] => semesterSubjects,
+  getSubjects: (studentId?: string): SemesterSubject[] => {
+    if (studentId) {
+      try {
+        const overview = semesterCommandCenterService.getOverview(studentId);
+        if (overview.subjects && overview.subjects.length > 0) {
+          return overview.subjects;
+        }
+      } catch {}
+    }
+    return semesterSubjects;
+  },
 
   getSubjectById: (subjectId: string): SemesterSubject | undefined => {
     return semesterSubjects.find((s) => s.id === subjectId);

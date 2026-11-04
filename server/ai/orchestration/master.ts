@@ -3,9 +3,12 @@ import { AgentRouter } from './router';
 import { TaskPlanner } from './planner';
 import { AgentExecutor } from './executor';
 import { ResponseSynthesizer } from './synthesizer';
-import { AgentContext, AgentWorkflowRecord } from './types';
+import { AgentContext, AgentWorkflowRecord, SourceProvenance } from './types';
 import { AIMessageRecord, ToolExecutionSummary, AgentPlanItem, AICitationItem } from '../../models/types';
 import { logger } from '../../core/logging';
+import { AIService } from '../service';
+import { AIMessage } from '../provider';
+import { PromptService } from '../prompts';
 
 export interface MultiAgentStreamEvent {
   type:
@@ -45,16 +48,81 @@ export class MasterAgent {
       const studentContext = await db.getStudentLearningContext(studentId);
       const student = studentContext.student;
 
+      const additionalSources: SourceProvenance[] = [];
+      let activeCourseData: any = null;
+      let activeLessonData: any = null;
+
+      // Ingest course context if selected in clientContext
+      if (clientContext?.courseId) {
+        try {
+          const course = await db.getCourseById(clientContext.courseId, studentId);
+          if (course) {
+            activeCourseData = course;
+            additionalSources.push({
+              sourceType: 'COURSE_DATABASE',
+              sourceId: course.id,
+              title: `${course.name} (${course.code}) Syllabus`,
+              link: `/courses/${course.id}`,
+              retrievedAt: new Date().toISOString(),
+              confidence: 1.0,
+            });
+          }
+        } catch {}
+      }
+
+      // Ingest lesson context if selected in clientContext
+      if (clientContext?.lessonId) {
+        try {
+          const lesson = await db.getLessonById(clientContext.lessonId, studentId);
+          if (lesson) {
+            activeLessonData = lesson;
+            additionalSources.push({
+              sourceType: 'COURSE_DATABASE',
+              sourceId: lesson.id,
+              title: `${lesson.title} - ${lesson.course_title || 'Curriculum Lesson'}`,
+              link: `/courses/${lesson.course_id}`,
+              retrievedAt: new Date().toISOString(),
+              confidence: 1.0,
+            });
+          }
+        } catch {}
+      }
+
+      // Ingest student documents for RAG grounding
+      let documentExcerpts = '';
+      const docIds = clientContext?.documentIds || (clientContext?.documentId ? [clientContext.documentId] : (clientContext?.document_id ? [clientContext.document_id] : []));
+      for (const dId of docIds) {
+        try {
+          const doc = await db.getDocumentById(dId, studentId);
+          if (doc) {
+            documentExcerpts += `\n[DOCUMENT: "${doc.title}"]\n${(doc.extracted_text || doc.summary || '').slice(0, 2500)}\n`;
+            additionalSources.push({
+              sourceType: 'DOCUMENT_RAG',
+              sourceId: doc.id,
+              title: `${doc.title} (Verified Student Material)`,
+              page: 1,
+              link: `/documents/${doc.id}`,
+              retrievedAt: new Date().toISOString(),
+              confidence: 0.96,
+            });
+          }
+        } catch {}
+      }
+
       // 2. Build secure scoped AgentContext
       const agentContext: AgentContext = {
         student_id: studentId,
         role: student.role,
         conversation_id: conversationId,
         request_id: workflowId,
-        current_course: studentContext.current_course,
-        current_lesson: studentContext.current_lesson,
+        current_course: activeCourseData
+          ? { name: activeCourseData.name, code: activeCourseData.code, progress: activeCourseData.progress || 0 }
+          : studentContext.current_course,
+        current_lesson: activeLessonData
+          ? { title: activeLessonData.title, topic: activeLessonData.chapter_title || 'Core Topic', progress: 0 }
+          : studentContext.current_lesson,
         client_metadata: clientContext,
-        selected_documents: clientContext?.document_id ? [clientContext.document_id] : [],
+        selected_documents: docIds,
         selected_repository: clientContext?.repository,
       };
 
@@ -144,8 +212,69 @@ export class MasterAgent {
         };
       }
 
-      // 6. Synthesize final response
-      const synthesized = ResponseSynthesizer.synthesize(userMessage, plan, agentResults);
+      // 6. Invoke AI Provider with conversation history and enriched academic context
+      let promptKey = 'student_learning_agent';
+      const mUpper = (explicitMode || clientContext?.mode || '').toUpperCase();
+      if (mUpper.includes('EXPLAIN') || mUpper === 'MODE_A') promptKey = 'tutor_explain';
+      else if (mUpper.includes('STEP') || mUpper === 'MODE_B') promptKey = 'tutor_step_by_step';
+      else if (mUpper.includes('SOLVE') || mUpper === 'MODE_C') promptKey = 'tutor_problem_solve';
+      else if (mUpper.includes('EXAM') || mUpper === 'MODE_D') promptKey = 'tutor_exam_prep';
+      else if (mUpper.includes('CODING') || mUpper === 'CODE' || mUpper === 'MODE_E') promptKey = 'tutor_coding';
+      else if (mUpper.includes('INTERVIEW') || mUpper === 'MODE_F') promptKey = 'tutor_interview';
+      else if (mUpper.includes('REVISION') || mUpper === 'MODE_G') promptKey = 'tutor_revision';
+
+      let systemInstruction = PromptService.getPrompt(promptKey);
+      systemInstruction += `\n\nACADEMIC STUDENT PROFILE:
+- Degree: B.Tech Engineering
+- Branch: ${student.branch || 'Engineering'}
+- Current Semester: Semester ${student.semester || 6}
+- Student Name: ${student.name || 'Student'}`;
+
+      if (studentContext.weak_areas?.length) {
+        systemInstruction += `\n- Weak / Remedial Focus Areas: ${studentContext.weak_areas.join(', ')}`;
+      }
+      if (agentContext.current_course) {
+        systemInstruction += `\n- Active Course: ${agentContext.current_course.name} (${agentContext.current_course.code})`;
+      }
+      if (activeLessonData) {
+        systemInstruction += `\n- Active Lesson: "${activeLessonData.title}" in Chapter "${activeLessonData.chapter_title}"
+Lesson Content / Syllabus Objectives:
+${activeLessonData.content?.slice(0, 1500) || 'Core Lesson Curriculum'}`;
+      }
+      if (documentExcerpts) {
+        systemInstruction += `\n\nGROUNDING TEXTBOOK / DOCUMENT EXCERPTS (Base explanation on these authorized passages where relevant and cite them):\n${documentExcerpts}`;
+      }
+
+      // Fetch last 8 messages for true multi-turn context
+      const historyMsgs = await db.getMessagesByConversationId(conversationId, studentId);
+      const conversationContext: AIMessage[] = historyMsgs
+        .slice(-8)
+        .map((m) => ({
+          role: m.role === 'assistant' ? 'assistant' : 'user',
+          content: m.content,
+        }));
+      conversationContext.push({ role: 'user', content: userMessage });
+
+      let llmGeneratedAnswer = '';
+      try {
+        const genResult = await AIService.generate(
+          [{ role: 'system', content: systemInstruction }, ...conversationContext],
+          promptKey,
+          0.7
+        );
+        llmGeneratedAnswer = genResult.text;
+      } catch (err: any) {
+        logger.warn('Direct AIService generation failed in MasterAgent, using rule synthesizer', err);
+      }
+
+      // 7. Synthesize final response incorporating LLM answer and tool findings
+      const synthesized = ResponseSynthesizer.synthesize(
+        userMessage,
+        plan,
+        agentResults,
+        llmGeneratedAnswer,
+        additionalSources
+      );
 
       // Convert citations to frontend format
       const citations: AICitationItem[] = synthesized.sources.map((s, idx) => ({
@@ -156,7 +285,7 @@ export class MasterAgent {
         link: s.link,
       }));
 
-      // 7. Stream markdown content progressively
+      // 8. Stream markdown content progressively
       let fullContent = '';
       const words = synthesized.markdownContent.split(' ');
 

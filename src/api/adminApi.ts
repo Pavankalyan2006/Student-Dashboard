@@ -171,6 +171,24 @@ export const adminApi = {
       body: JSON.stringify({ status, reason }),
     }),
 
+  createStudent: (data: {
+    name: string;
+    email: string;
+    password: string;
+    branch: string;
+    semester: number;
+    role?: 'STUDENT' | 'SUPER_ADMIN';
+  }) =>
+    apiClient.request<AdminStudentItem>('/admin/students', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  deleteStudent: (studentId: string) =>
+    apiClient.request<{ message: string }>(`/admin/students/${studentId}`, {
+      method: 'DELETE',
+    }),
+
   getAuditLogs: (params: { limit?: number; targetType?: string } = {}) => {
     const query = new URLSearchParams(params as any).toString();
     return apiClient.request<AdminAuditLogItem[]>(`/admin/audit-logs?${query}`);

@@ -17,7 +17,7 @@ export class AgentRegistry {
         category: 'CORE_LEARNING',
         description: 'Delivers conceptual explanations, analogies, step-by-step mathematical reasoning, and curriculum learning guidance.',
         capabilities: ['explain_concept', 'simplify_explanation', 'generate_learning_examples', 'curriculum_guidance'],
-        allowedTools: ['get_course_details', 'get_lesson_content', 'get_academic_notes', 'retrieve_document_context', 'visualize_algorithm'],
+        allowedTools: ['get_student_context', 'get_student_recommendations', 'get_student_profile', 'get_course_details', 'get_lesson_content', 'get_academic_notes', 'retrieve_document_context', 'visualize_algorithm'],
         permissions: ['STUDENT', 'SUPER_ADMIN'],
         timeoutMs: 15000,
         maxRetries: 2,
@@ -570,6 +570,10 @@ export class AgentRegistry {
 
   public static get(name: AgentName): AgentDefinition | undefined {
     return this.agents.get(name);
+  }
+
+  public static getAgent(name: AgentName): AgentDefinition | undefined {
+    return this.get(name);
   }
 
   public static getAll(): AgentDefinition[] {

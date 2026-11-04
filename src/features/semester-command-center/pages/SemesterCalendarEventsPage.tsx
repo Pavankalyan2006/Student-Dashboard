@@ -201,7 +201,7 @@ export function SemesterCalendarEventsPage({ onNavigate }: SemesterCalendarEvent
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-bold text-white">{ev.title}</span>
                         <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-indigo-300 font-semibold border border-slate-700">
-                          {ev.event_type.replace('_', ' ')}
+                          {(ev.event_type || 'ACADEMIC_EVENT').replace(/_/g, ' ')}
                         </span>
                         <span
                           className={`text-[9px] font-bold px-1.5 py-0.2 rounded ${

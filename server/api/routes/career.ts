@@ -5,6 +5,38 @@ import { logger } from '../../core/logging';
 
 export const careerRouter = Router();
 
+// 0. Career Dashboard Summary
+careerRouter.get('/dashboard-summary', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const studentId = req.user!.userId;
+    const summary = await CareerService.getCareerDashboardSummary(studentId);
+    res.json({ success: true, data: summary });
+  } catch (err: any) {
+    res.status(err.status || 500).json({ success: false, message: err.message });
+  }
+});
+
+// 0.1 Career Profile
+careerRouter.get('/profile', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const studentId = req.user!.userId;
+    const profile = await CareerService.getCareerProfile(studentId);
+    res.json({ success: true, data: profile });
+  } catch (err: any) {
+    res.status(err.status || 500).json({ success: false, message: err.message });
+  }
+});
+
+careerRouter.patch('/profile', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const studentId = req.user!.userId;
+    const updated = await CareerService.updateCareerProfile(studentId, req.body);
+    res.json({ success: true, data: updated });
+  } catch (err: any) {
+    res.status(err.status || 500).json({ success: false, message: err.message });
+  }
+});
+
 // 1. Career Roles
 careerRouter.get('/roles', requireAuth, async (_req: Request, res: Response) => {
   try {

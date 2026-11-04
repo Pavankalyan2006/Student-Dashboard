@@ -13,6 +13,7 @@ export interface ServerConfig {
   corsOrigin: string;
   aiProvider: 'gemini' | 'openai' | 'mock';
   geminiApiKey?: string;
+  geminiModel?: string;
   openaiApiKey?: string;
   githubClientId?: string;
   githubClientSecret?: string;
@@ -38,6 +39,7 @@ export const config: ServerConfig = {
   corsOrigin: process.env.CORS_ORIGIN || process.env.CORS_ORIGINS || '*',
   aiProvider: (process.env.AI_PROVIDER as any) || 'gemini',
   geminiApiKey: process.env.GEMINI_API_KEY,
+  geminiModel: process.env.GEMINI_MODEL || 'gemini-flash-lite-latest',
   openaiApiKey: process.env.OPENAI_API_KEY,
   githubClientId: process.env.GITHUB_CLIENT_ID,
   githubClientSecret: process.env.GITHUB_CLIENT_SECRET,
@@ -55,6 +57,11 @@ export const config: ServerConfig = {
     'text/markdown',
     'image/png',
     'image/jpeg',
+    'application/octet-stream',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'application/vnd.ms-powerpoint',
+    'text/csv',
+    'application/rtf',
   ],
 };
 

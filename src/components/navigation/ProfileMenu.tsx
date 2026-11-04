@@ -12,7 +12,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { toast } from 'sonner';
 
 export function ProfileMenu({ onNavigate }: { onNavigate: (url: string) => void }) {
-  const { student, logout, isSuperAdmin } = useAuth();
+  const { student, logout } = useAuth();
 
   const handleLogout = async () => {
     try {
@@ -52,13 +52,11 @@ export function ProfileMenu({ onNavigate }: { onNavigate: (url: string) => void 
         {/* Profile Card Summary */}
         <div className="px-2.5 py-2">
           <div className="flex items-center justify-between">
-            <h4 className="text-xs font-semibold text-[#101828] truncate">{student?.name || 'B.Tech Student'}</h4>
-            {isSuperAdmin && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-bold uppercase">
-                Admin
-              </span>
-            )}
+            <h4 className="text-xs font-semibold text-[#101828] truncate">{student?.display_name || student?.name || 'B.Tech Student'}</h4>
           </div>
+          {student?.display_name && student?.name && student.display_name !== student.name && (
+            <p className="text-[10px] text-[#475467] truncate">{student.name}</p>
+          )}
           <p className="text-[11px] text-[#667085] truncate">{student?.email || 'student@btech.edu'}</p>
           {student?.branch && (
             <div className="mt-1 text-[10px] font-medium text-[#475467] bg-slate-50 p-1 rounded border border-slate-100 truncate">
@@ -78,13 +76,6 @@ export function ProfileMenu({ onNavigate }: { onNavigate: (url: string) => void 
           <TrendingUp className="mr-2 h-3.5 w-3.5 text-slate-500" />
           <span>Academic Progress</span>
         </DropdownMenuItem>
-
-        {isSuperAdmin && (
-          <DropdownMenuItem onClick={() => onNavigate('/admin')}>
-            <ShieldCheck className="mr-2 h-3.5 w-3.5 text-amber-600" />
-            <span className="font-semibold text-amber-900">Admin Platform Shell</span>
-          </DropdownMenuItem>
-        )}
 
         <DropdownMenuItem onClick={() => onNavigate('/settings')}>
           <Settings className="mr-2 h-3.5 w-3.5 text-slate-500" />

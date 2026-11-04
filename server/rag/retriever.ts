@@ -8,6 +8,7 @@ export interface RetrievalQueryOptions {
   studentId: string;
   query: string;
   documentId?: string;
+  documentIds?: string[];
   pageNumbers?: number[];
   topK?: number;
   minScore?: number;
@@ -18,11 +19,11 @@ export class DocumentRetrievalService {
    * Performs hybrid semantic and keyword retrieval over indexed document chunks.
    */
   public static async retrieve(options: RetrievalQueryOptions): Promise<DocumentSearchResult[]> {
-    const { studentId, query, documentId, pageNumbers, topK = 5, minScore = 0.15 } = options;
+    const { studentId, query, documentId, documentIds, pageNumbers, topK = 5, minScore = 0.15 } = options;
 
     logger.info(`Retrieving document chunks for student ${studentId}`, {
       userId: studentId,
-      context: { query, documentId, pageNumbers, topK },
+      context: { query, documentId, documentIds, pageNumbers, topK },
     });
 
     // 1. Generate query embedding
@@ -32,6 +33,7 @@ export class DocumentRetrievalService {
     const vectorMatches = await VectorStore.search(queryVector, {
       studentId,
       documentId,
+      documentIds,
       pageNumbers,
       topK: topK * 2,
       minScore,

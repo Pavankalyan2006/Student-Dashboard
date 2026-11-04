@@ -9,6 +9,7 @@ import {
   MoreVertical,
   X,
   Sparkles,
+  Archive,
 } from 'lucide-react';
 import { AIConversation } from '../types/ai';
 import { Button } from '../../../components/ui/button';
@@ -48,6 +49,9 @@ export function ConversationSidebar({
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const [editTitle, setEditTitle] = React.useState('');
 
+  const [deleteConfirmId, setDeleteConfirmId] = React.useState<string | null>(null);
+  const [activeTab, setActiveTab] = React.useState<'all' | 'pinned' | 'archived'>('all');
+
   const handleStartRename = (conv: AIConversation) => {
     setEditingId(conv.id);
     setEditTitle(conv.title);
@@ -62,6 +66,34 @@ export function ConversationSidebar({
 
   const renderConversationItem = (conv: AIConversation) => {
     const isSelected = conv.id === selectedId;
+
+    if (deleteConfirmId === conv.id) {
+      return (
+        <div
+          key={conv.id}
+          className="p-2.5 rounded-xl border border-rose-200 bg-rose-50 text-xs space-y-1.5"
+        >
+          <p className="font-semibold text-rose-900">Delete this learning session?</p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                onDelete(conv.id);
+                setDeleteConfirmId(null);
+              }}
+              className="px-2 py-1 bg-rose-600 text-white rounded font-medium text-[11px] hover:bg-rose-700 cursor-pointer"
+            >
+              Confirm
+            </button>
+            <button
+              onClick={() => setDeleteConfirmId(null)}
+              className="px-2 py-1 bg-white border border-slate-200 text-slate-700 rounded font-medium text-[11px] hover:bg-slate-50 cursor-pointer"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      );
+    }
 
     return (
       <div
@@ -106,6 +138,13 @@ export function ConversationSidebar({
           <Pin className="h-3 w-3 text-amber-500 fill-amber-500 shrink-0 mr-1" />
         )}
 
+        {/* Message count badge */}
+        {typeof conv.message_count === 'number' && conv.message_count > 0 && (
+          <span className="text-[10px] text-slate-400 font-mono px-1 rounded bg-slate-100 mr-1">
+            {conv.message_count}
+          </span>
+        )}
+
         {/* Item action menu */}
         <div
           onClick={(e) => e.stopPropagation()}
@@ -131,8 +170,14 @@ export function ConversationSidebar({
                 <Pin className="h-3.5 w-3.5 mr-2 text-amber-500" />
                 <span>{conv.is_pinned ? 'Unpin' : 'Pin to Top'}</span>
               </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => onUpdate(conv.id, { is_archived: !conv.is_archived })}
+              >
+                <Archive className="h-3.5 w-3.5 mr-2 text-slate-500" />
+                <span>{conv.is_archived ? 'Unarchive' : 'Archive'}</span>
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => onDelete(conv.id)} danger>
+              <DropdownMenuItem onClick={() => setDeleteConfirmId(conv.id)} danger>
                 <Trash2 className="h-3.5 w-3.5 mr-2" />
                 <span>Delete</span>
               </DropdownMenuItem>
@@ -188,43 +233,101 @@ export function ConversationSidebar({
             className="w-full pl-8 pr-2.5 py-1.5 bg-slate-50 border border-[#E4E7EC] rounded-lg text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#2563EB] focus:bg-white transition-all"
           />
         </div>
+        {/* Filter Tabs */}
+        <div className="flex items-center gap-1 p-0.5 bg-slate-100 rounded-lg text-[11px] font-medium text-slate-600">
+          <button
+            onClick={() => setActiveTab('all')}
+            className={`flex-1 py-1 rounded-md text-center transition-all cursor-pointer ${
+              activeTab === 'all' ? 'bg-white text-[#2563EB] shadow-2xs font-semibold' : 'hover:text-slate-900'
+            }`}
+          >
+            All
+          </button>
+          <button
+            onClick={() => setActiveTab('pinned')}
+            className={`flex-1 py-1 rounded-md text-center transition-all cursor-pointer ${
+              activeTab === 'pinned' ? 'bg-white text-[#2563EB] shadow-2xs font-semibold' : 'hover:text-slate-900'
+            }`}
+          >
+            Pinned
+          </button>
+          <button
+            onClick={() => setActiveTab('archived')}
+            className={`flex-1 py-1 rounded-md text-center transition-all cursor-pointer ${
+              activeTab === 'archived' ? 'bg-white text-[#2563EB] shadow-2xs font-semibold' : 'hover:text-slate-900'
+            }`}
+          >
+            Archived
+          </button>
+        </div>
       </div>
 
       {/* List Container */}
       <div className="flex-1 overflow-y-auto p-2.5 space-y-4">
-        {conversations.length === 0 ? (
-          <div className="py-8 text-center text-xs text-slate-400 space-y-1">
-            <p>No conversations found</p>
-            <p className="text-[11px] text-slate-400">Start a new chat to begin</p>
-          </div>
-        ) : (
-          <>
-            {/* Pinned conversations */}
-            {pinnedConversations.length > 0 && (
-              <div className="space-y-1">
-                <div className="flex items-center gap-1.5 px-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                  <Pin className="h-3 w-3" />
-                  <span>Pinned</span>
-                </div>
-                <div className="space-y-0.5">
-                  {pinnedConversations.map(renderConversationItem)}
-                </div>
-              </div>
-            )}
+        {(() => {
+          const displayed = conversations.filter((c) => {
+            if (activeTab === 'pinned') return c.is_pinned && !c.is_archived;
+            if (activeTab === 'archived') return c.is_archived;
+            return !c.is_archived;
+          });
 
-            {/* Recent conversations */}
-            <div className="space-y-1">
-              {pinnedConversations.length > 0 && (
-                <div className="px-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                  <span>Recent</span>
+          if (displayed.length === 0) {
+            return (
+              <div className="py-8 text-center text-xs text-slate-400 space-y-1">
+                <p>No {activeTab !== 'all' ? activeTab : ''} conversations</p>
+                <p className="text-[11px] text-slate-400">
+                  {activeTab === 'archived' ? 'No archived chats' : 'Start a new chat to begin'}
+                </p>
+              </div>
+            );
+          }
+
+          if (activeTab === 'pinned') {
+            return (
+              <div className="space-y-0.5">
+                {displayed.map(renderConversationItem)}
+              </div>
+            );
+          }
+
+          if (activeTab === 'archived') {
+            return (
+              <div className="space-y-0.5">
+                {displayed.map(renderConversationItem)}
+              </div>
+            );
+          }
+
+          const pinned = displayed.filter((c) => c.is_pinned);
+          const recent = displayed.filter((c) => !c.is_pinned);
+
+          return (
+            <>
+              {pinned.length > 0 && (
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5 px-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    <Pin className="h-3 w-3" />
+                    <span>Pinned ({pinned.length})</span>
+                  </div>
+                  <div className="space-y-0.5">
+                    {pinned.map(renderConversationItem)}
+                  </div>
                 </div>
               )}
-              <div className="space-y-0.5">
-                {recentConversations.map(renderConversationItem)}
+
+              <div className="space-y-1">
+                {pinned.length > 0 && (
+                  <div className="px-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    <span>Recent ({recent.length})</span>
+                  </div>
+                )}
+                <div className="space-y-0.5">
+                  {recent.map(renderConversationItem)}
+                </div>
               </div>
-            </div>
-          </>
-        )}
+            </>
+          );
+        })()}
       </div>
     </div>
   );

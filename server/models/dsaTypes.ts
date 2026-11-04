@@ -115,6 +115,13 @@ export interface DSAProblem {
     space: string;
   };
   supported_languages: string[];
+  subtopic?: string;
+  companies?: string[];
+  roadmap_stage?: string;
+  tags?: string[];
+  public_test_cases?: { input: string; output: string }[];
+  hidden_test_cases?: { input: string; output: string }[];
+  reference_solution?: Record<string, string>;
   created_at: string;
   updated_at: string;
 }
@@ -128,6 +135,9 @@ export interface DSAProgress {
   problems_solved: string[];
   hints_used: number;
   weak_topics: string[];
+  bookmarked_problems?: string[];
+  code_drafts?: Record<string, { code: string; language: string; updated_at: string }>;
+  daily_streak?: number;
   last_activity_at: string;
   updated_at: string;
 }

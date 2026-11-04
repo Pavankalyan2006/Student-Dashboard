@@ -34,10 +34,13 @@ export class ActivityService {
       });
     }
 
+    const actType = (studentIdOrPayload as any).activity_type || (studentIdOrPayload as any).type || 'GENERAL';
+    const entType = (studentIdOrPayload as any).entity_type || (studentIdOrPayload as any).entityType || 'ACTIVITY';
+    const entId = (studentIdOrPayload as any).entity_id || (studentIdOrPayload as any).entityId || `act_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     return db.recordActivity(studentIdOrPayload.student_id, {
-      activity_type: studentIdOrPayload.activity_type,
-      entity_type: studentIdOrPayload.entity_type,
-      entity_id: studentIdOrPayload.entity_id,
+      activity_type: actType,
+      entity_type: entType,
+      entity_id: entId,
       title: studentIdOrPayload.title,
       metadata: studentIdOrPayload.metadata,
     });

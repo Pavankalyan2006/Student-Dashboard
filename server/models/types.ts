@@ -12,6 +12,8 @@ export interface Student {
   status?: 'ACTIVE' | 'SUSPENDED' | 'PENDING' | 'DISABLED';
   status_reason?: string;
   avatar_url?: string;
+  display_name?: string;
+  onboarding_completed?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -349,6 +351,14 @@ export interface Course {
   is_published: boolean;
   prerequisites: string[];
   skills: string[];
+  academic_year?: string;
+  instructor?: string;
+  category?: string;
+  syllabus_overview?: string;
+  learning_objectives?: string[];
+  is_custom?: boolean;
+  student_id?: string;
+  linked_subject_id?: string;
   created_at: string;
   updated_at: string;
 }
@@ -386,6 +396,8 @@ export interface CourseEnrollment {
   status: EnrollmentStatus;
   enrolled_at: string;
   completed_at?: string;
+  is_archived?: boolean;
+  archived_at?: string;
 }
 
 export interface LessonProgress {
@@ -410,10 +422,14 @@ export interface CourseBookmark {
 export interface CourseResource {
   id: string;
   course_id: string;
+  chapter_id?: string;
   title: string;
-  type: 'PDF' | 'NOTES' | 'CODE' | 'LINK';
+  type: 'PDF' | 'NOTES' | 'CODE' | 'LINK' | 'DOCUMENT';
   url: string;
   size_bytes?: number;
+  document_id?: string;
+  note_id?: string;
+  processing_status?: 'READY' | 'PROCESSING' | 'NOT_INDEXED';
 }
 
 export interface LessonWithNavigation extends CourseLesson {
@@ -437,10 +453,14 @@ export interface CourseChapterWithLessons extends CourseChapter {
 export interface CourseWithDetails extends Course {
   chapters: CourseChapterWithLessons[];
   enrollment?: CourseEnrollment | null;
+  is_enrolled?: boolean;
   progress_percentage: number;
   completed_lessons: number;
   total_lessons: number;
   is_bookmarked: boolean;
+  is_archived?: boolean;
+  last_studied_at?: string;
+  next_recommended_lesson?: { id: string; title: string };
   resources: CourseResource[];
   related_courses?: CourseCardData[];
 }
@@ -451,6 +471,73 @@ export interface CourseCardData extends Course {
   progress_percentage?: number;
   is_enrolled?: boolean;
   is_bookmarked?: boolean;
+  is_archived?: boolean;
+  last_studied_at?: string;
+  next_recommended_lesson?: { id: string; title: string };
+  status?: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED';
+  total_chapters?: number;
+}
+
+export interface CreateCourseInput {
+  title: string;
+  code?: string;
+  description?: string;
+  branch?: string;
+  semester?: number;
+  academic_year?: string;
+  difficulty?: CourseDifficulty;
+  category?: string;
+  syllabus_overview?: string;
+  learning_objectives?: string[];
+  estimated_hours?: number;
+  instructor?: string;
+  linked_subject_id?: string;
+  linked_document_ids?: string[];
+  linked_note_ids?: string[];
+}
+
+export interface UpdateCourseInput {
+  title?: string;
+  code?: string;
+  description?: string;
+  branch?: string;
+  semester?: number;
+  academic_year?: string;
+  difficulty?: CourseDifficulty;
+  category?: string;
+  syllabus_overview?: string;
+  learning_objectives?: string[];
+  instructor?: string;
+}
+
+export interface CourseAIAssistantRequest {
+  action:
+    | 'explain_simple'
+    | 'practical_example'
+    | 'step_by_step'
+    | 'summarize_chapter'
+    | 'revision_notes'
+    | 'practice_questions'
+    | 'flashcards'
+    | 'explain_terms'
+    | 'compare_concepts'
+    | 'study_next'
+    | 'revision_checklist';
+  topic?: string;
+  chapterId?: string;
+  lessonId?: string;
+  userQuery?: string;
+}
+
+export interface CourseAIAssistantResponse {
+  action: string;
+  result: string;
+  key_points?: string[];
+  practice_questions?: Array<{ question: string; answer: string; explanation?: string }>;
+  flashcards?: Array<{ front: string; back: string }>;
+  suggested_next_topic?: string;
+  grounded_sources?: string[];
+  is_fallback?: boolean;
 }
 
 // ----------------- Notes Models (Phase 5) -----------------
@@ -578,6 +665,68 @@ export type DocumentProcessingStatus =
   | 'READY'
   | 'FAILED';
 
+export type DocumentCategory =
+  | 'Lecture Notes'
+  | 'Study Materials'
+  | 'Textbooks and References'
+  | 'Assignments'
+  | 'Laboratory Manuals'
+  | 'Lab Reports'
+  | 'Project Reports'
+  | 'Research Papers'
+  | 'Presentations'
+  | 'Question Papers'
+  | 'Exam Preparation'
+  | 'Certificates'
+  | 'Resumes'
+  | 'Internship Documents'
+  | 'Placement Materials'
+  | 'Programming Resources'
+  | 'Course Materials'
+  | 'Other Documents';
+
+export interface DocumentFolder {
+  id: string;
+  student_id: string;
+  name: string;
+  description?: string;
+  parent_folder_id?: string;
+  color?: string;
+  icon?: string;
+  document_count?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DocumentVersion {
+  version_number: number;
+  storage_key: string;
+  file_hash: string;
+  file_size: number;
+  original_filename: string;
+  mime_type: string;
+  uploaded_at: string;
+  change_notes?: string;
+  uploader_student_id: string;
+}
+
+export interface DocumentStorageStats {
+  total_documents: number;
+  total_folders: number;
+  storage_used_bytes: number;
+  storage_used_mb: number;
+  storage_limit_mb: number;
+  storage_remaining_mb?: number;
+  storage_usage_percentage: number;
+  percentage_used?: number;
+  documents_awaiting_processing: number;
+  awaiting_processing?: number;
+  recent_uploads_count: number;
+  recent_uploads_7d?: number;
+  category_breakdown: Record<string, number>;
+  categories_breakdown?: Record<string, number>;
+}
+
 export interface Document {
   id: string;
   student_id: string;
@@ -592,6 +741,9 @@ export interface Document {
   description: string;
   author: string;
   language: string;
+  category?: DocumentCategory | string;
+  folder_id?: string;
+  folder_name?: string;
   metadata: {
     course_id?: string;
     course_title?: string;
@@ -600,6 +752,16 @@ export interface Document {
     tags?: string[];
     subject?: string;
     semester?: number;
+    category?: DocumentCategory | string;
+    folder_id?: string;
+    folder_name?: string;
+    academic_year?: string;
+    topic?: string;
+    content_indexed?: boolean;
+    lab_experiment_id?: string;
+    lab_course_id?: string;
+    current_version?: number;
+    versions?: DocumentVersion[];
     [key: string]: any;
   };
   is_favorite: boolean;
@@ -701,10 +863,16 @@ export interface DocumentCardData {
   updated_at: string;
   last_opened_at: string;
   description?: string;
+  category?: DocumentCategory | string;
+  folder_id?: string;
+  folder_name?: string;
   course_id?: string;
   course_title?: string;
   tags?: string[];
   processing_error?: string;
+  content_indexed?: boolean;
+  current_version?: number;
+  version_count?: number;
 }
 
 export interface DocumentChatRequest {

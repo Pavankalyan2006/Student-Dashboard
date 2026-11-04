@@ -33,13 +33,19 @@ import { adminRouter } from './routes/admin';
 import { learningModulesRouter } from './routes/learningModules';
 import { externalIntegrationsRouter } from './routes/externalIntegrations';
 import { semesterCommandCenterRouter } from './routes/semesterCommandCenter';
+import { eventsRouter } from './routes/events';
+import { onboardingRouter } from './routes/onboarding';
+import { systemDesignRouter } from './routes/systemDesign';
+import { gateRouter } from './routes/gate';
 
 export const apiV1Router = Router();
 
 apiV1Router.use('/', healthRouter);
 apiV1Router.use('/', authRouter);
 apiV1Router.use('/admin', adminRouter);
+apiV1Router.use('/', eventsRouter);
 apiV1Router.use('/', studentsRouter);
+apiV1Router.use('/', onboardingRouter);
 apiV1Router.use('/', notificationsRouter);
 apiV1Router.use('/', searchRouter);
 apiV1Router.use('/', aiRouter);
@@ -69,8 +75,43 @@ apiV1Router.use('/', insightsRouter);
 apiV1Router.use('/', learningModulesRouter);
 apiV1Router.use('/', externalIntegrationsRouter);
 apiV1Router.use('/', semesterCommandCenterRouter);
+apiV1Router.use('/', systemDesignRouter);
+apiV1Router.use('/', gateRouter);
 
+// Dedicated AI Mock Interview Endpoints
+import { mockInterviewsRouter } from './routes/mockInterviews';
 
+apiV1Router.use('/mock-interviews', mockInterviewsRouter);
+apiV1Router.use('/interviews', mockInterviewsRouter);
 
+// Dedicated Lab Assistant & Experiment Workspace Endpoints
+import { labAssistantRouter } from './routes/labAssistant';
 
+apiV1Router.use('/labs', labAssistantRouter);
+apiV1Router.use('/lab-assistant', labAssistantRouter);
+
+// Dedicated Language Learning Platform Endpoints (150+ Languages)
+import { languageLearningRouter } from './routes/languages';
+
+apiV1Router.use('/languages', languageLearningRouter);
+apiV1Router.use('/language-learning', languageLearningRouter);
+
+// Dedicated Multi-Source Jobs Discovery Platform (Government + Private)
+import { jobsDiscoveryRouter } from './routes/jobsDiscovery';
+
+apiV1Router.use('/jobs-discovery', jobsDiscoveryRouter);
+apiV1Router.use('/career/jobs-discovery', jobsDiscoveryRouter);
+apiV1Router.use('/jobs', jobsDiscoveryRouter);
+
+// Dedicated External Profiles Platform Endpoints
+import { externalProfilesRouter } from './routes/externalProfiles';
+
+apiV1Router.use('/external-profiles', externalProfilesRouter);
+apiV1Router.use('/profile/external-profiles', externalProfilesRouter);
+
+// Dedicated AI Knowledge Base Endpoints
+import { knowledgeBaseRouter } from './routes/knowledgeBase';
+
+apiV1Router.use('/knowledge-base', knowledgeBaseRouter);
+apiV1Router.use('/knowledge', knowledgeBaseRouter);
 

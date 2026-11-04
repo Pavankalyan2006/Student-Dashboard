@@ -10,6 +10,9 @@ import {
   DoubtResolution,
   FlashcardDeck,
   Flashcard,
+  FlashcardStats,
+  ReviewRating,
+  FlashcardAIGenerateRequest,
   LabEntity,
   LabExperiment,
   VivaQuestionItem,
@@ -27,8 +30,15 @@ import {
   JobDescriptionSkillAnalysis,
 } from '../models/learningModulesTypes';
 import { db } from '../db/database';
-import { NotFoundError, ValidationError } from '../core/exceptions';
+import { NotFoundError, ValidationError, AuthorizationError } from '../core/exceptions';
 import { logger } from '../core/logging';
+import { OnboardingService } from './onboardingService';
+import { SqlLabSandboxService } from './sqlLabSandboxService';
+import { MlLabService } from './mlLabService';
+import { AIService } from '../ai/service';
+import { NotesService } from './notes';
+import { KnowledgeBaseService } from './knowledgeBaseService';
+import { EventBus } from '../events/eventBus';
 
 export class LearningModulesService {
   // In-memory persistent collections keyed by student_id and item_id
@@ -243,20 +253,29 @@ export class LearningModulesService {
   ];
 
   static {
-    this.seedDemoData();
+    this.seedDemoData('std_demo_1');
+    this.seedDemoData('std_01j8k9x2p4');
   }
 
-  private static seedDemoData() {
-    const studentId = 'std_demo_1';
+  private static seedDemoData(studentId: string = 'std_demo_1') {
+    const syllabus = OnboardingService.getSemesterSyllabusSync(studentId);
+    const edu = OnboardingService.getEducationProfileSync(studentId);
+    const career = OnboardingService.getCareerGoalsSync(studentId);
+
+    const primarySubject = syllabus?.subjects?.[0]?.name || 'Database Management Systems';
+    const secondSubject = syllabus?.subjects?.[1]?.name || 'Operating Systems';
+    const thirdSubject = syllabus?.subjects?.[2]?.name || 'Data Structures & Algorithms';
+    const branchName = edu?.branch || 'B.Tech Engineering';
+    const semNumber = syllabus?.semester_number || edu?.current_semester || 6;
 
     // 1. Study Plan
-    const planId = 'plan_sem6_primary';
+    const planId = 'plan_sem6_primary_' + studentId;
     const studyPlan: StudyPlan = {
       id: planId,
       student_id: studentId,
-      title: 'B.Tech Semester 6 Comprehensive Academic & Placement Schedule',
+      title: `${branchName} Semester ${semNumber} Academic & Preparation Schedule`,
       type: 'SEMESTER',
-      description: 'Targeted preparation covering DBMS normalization, OS concurrency, DSA graph algorithms, and placement interview practice.',
+      description: `Targeted daily and weekly preparation covering ${primarySubject}, ${secondSubject}, ${thirdSubject}, and placement practice.`,
       target_date: new Date(Date.now() + 60 * 24 * 3600 * 1000).toISOString().split('T')[0],
       total_hours_target: 120,
       completed_hours: 38,
@@ -266,57 +285,57 @@ export class LearningModulesService {
           id: 'task_1',
           plan_id: planId,
           student_id: studentId,
-          title: 'Review BCNF & 3NF Functional Dependencies',
-          subject: 'Database Management Systems',
-          topic: 'Normalization',
+          title: `Review ${primarySubject} — Core Theory & Problem Formulations`,
+          subject: primarySubject,
+          topic: 'Unit 1 Foundations',
           start_time: '09:00 AM',
           duration_minutes: 60,
           priority: 'CRITICAL',
           status: 'PENDING',
           date: new Date().toISOString().split('T')[0],
-          notes: 'Focus on lossless join decomposition proof and dependency preservation.',
-          ai_recommendation: 'Recommended: Solve 3 normalization schema questions from 2024 university paper.',
+          notes: `Focus on core principles, definitions, and university paper questions for ${primarySubject}.`,
+          ai_recommendation: `Recommended: Complete 3 practice problems from Unit 1 for ${primarySubject}.`,
           created_at: new Date().toISOString(),
         },
         {
           id: 'task_2',
           plan_id: planId,
           student_id: studentId,
-          title: 'Graph Traversal & Cycle Detection in Directed Graphs',
-          subject: 'Data Structures & Algorithms',
-          topic: 'Graphs',
+          title: `Practice ${secondSubject} — Implementation Drills & Lab Exercises`,
+          subject: secondSubject,
+          topic: 'Unit 2 Applications',
           start_time: '11:00 AM',
           duration_minutes: 90,
           priority: 'HIGH',
           status: 'PENDING',
           date: new Date().toISOString().split('T')[0],
-          notes: 'Implement Kahn algorithm and DFS with 3-color vertex marking.',
-          ai_recommendation: 'Practice LeetCode #207 (Course Schedule).',
+          notes: `Hands-on practice and algorithm implementation for ${secondSubject}.`,
+          ai_recommendation: `Practice standard coding and laboratory patterns for ${secondSubject}.`,
           created_at: new Date().toISOString(),
         },
         {
           id: 'task_3',
           plan_id: planId,
           student_id: studentId,
-          title: 'Process Synchronization & Readers-Writers Mutex Lab',
-          subject: 'Operating Systems',
-          topic: 'Concurrency',
+          title: `Master ${thirdSubject} — Unit Assessment & Revisions`,
+          subject: thirdSubject,
+          topic: 'Unit 3 Deep Dive',
           start_time: '03:00 PM',
           duration_minutes: 60,
           priority: 'MEDIUM',
           status: 'COMPLETED',
           completed_at: new Date(Date.now() - 3600000).toISOString(),
           date: new Date().toISOString().split('T')[0],
-          notes: 'Verified starvation prevention for writer threads.',
+          notes: `Completed conceptual revision and formula summary for ${thirdSubject}.`,
           created_at: new Date().toISOString(),
         },
         {
           id: 'task_4',
           plan_id: planId,
           student_id: studentId,
-          title: 'Quantitative Aptitude & Time-Speed-Distance Drills',
+          title: 'Quantitative Aptitude & Problem Solving Drills',
           subject: 'Placement Preparation',
-          topic: 'Aptitude',
+          topic: 'Aptitude & DSA',
           start_time: '05:30 PM',
           duration_minutes: 45,
           priority: 'MEDIUM',
@@ -331,17 +350,17 @@ export class LearningModulesService {
     this.studyPlans.set(planId, studyPlan);
 
     // 2. Exams
-    const examId = 'exam_dbms_midterm';
+    const examId = 'exam_midterm_' + studentId;
     const exam: ExamEntity = {
       id: examId,
       student_id: studentId,
-      title: 'DBMS Mid-Semester Examination',
-      subject: 'Database Management Systems',
+      title: `${primarySubject} Mid-Semester Examination`,
+      subject: primarySubject,
       category: 'SEMESTER',
       exam_date: new Date(Date.now() + 14 * 24 * 3600 * 1000).toISOString().split('T')[0],
       difficulty: 'HARD',
       available_prep_hours: 24,
-      syllabus: 'Relational Model, Relational Algebra, ER Modeling, Normalization (1NF, 2NF, 3NF, BCNF), Transaction Processing & ACID, Concurrency Control (2PL, Timestamping).',
+      syllabus: `Comprehensive midterm assessment covering ${primarySubject} Units 1, 2, and 3.`,
       readiness_score: 74,
       topics: [
         {
@@ -395,7 +414,7 @@ export class LearningModulesService {
     this.exams.set(examId, exam);
 
     // 3. Doubts
-    const doubtId = 'doubt_1';
+    const doubtId = 'doubt_1_' + studentId;
     this.doubts.set(doubtId, {
       id: doubtId,
       student_id: studentId,
@@ -426,7 +445,7 @@ export class LearningModulesService {
     });
 
     // 4. Flashcards
-    const deckId = 'deck_os_memory';
+    const deckId = 'deck_os_memory_' + studentId;
     const flashcardDeck: FlashcardDeck = {
       id: deckId,
       student_id: studentId,
@@ -494,7 +513,7 @@ export class LearningModulesService {
     this.flashcardDecks.set(deckId, flashcardDeck);
 
     // 5. Labs
-    const labId = 'lab_dbms_1';
+    const labId = 'lab_dbms_1_' + studentId;
     const lab: LabEntity = {
       id: labId,
       student_id: studentId,
@@ -541,7 +560,7 @@ export class LearningModulesService {
     this.labs.set(labId, lab);
 
     // 6. ML Experiment
-    const mlExpId = 'exp_rf_iris';
+    const mlExpId = 'exp_rf_iris_' + studentId;
     this.mlExperiments.set(mlExpId, {
       id: mlExpId,
       student_id: studentId,
@@ -584,7 +603,7 @@ export class LearningModulesService {
     });
 
     // 7. System Design
-    const sysId = 'sd_active_url';
+    const sysId = 'sd_active_url_' + studentId;
     this.systemDesigns.set(sysId, {
       id: sysId,
       student_id: studentId,
@@ -625,7 +644,7 @@ export class LearningModulesService {
     });
 
     // 8. Knowledge Items & Collections
-    const colId = 'col_cs_core';
+    const colId = 'col_cs_core_' + studentId;
     this.knowledgeCollections.set(colId, {
       id: colId,
       student_id: studentId,
@@ -636,7 +655,7 @@ export class LearningModulesService {
       created_at: new Date().toISOString(),
     });
 
-    const kId = 'k_item_1';
+    const kId = 'k_item_1_' + studentId;
     this.knowledgeItems.set(kId, {
       id: kId,
       student_id: studentId,
@@ -652,7 +671,7 @@ export class LearningModulesService {
     });
 
     // 9. Internship Applications
-    const appId = 'app_google_swe';
+    const appId = 'app_google_swe_' + studentId;
     this.applications.set(appId, {
       id: appId,
       student_id: studentId,
@@ -687,7 +706,70 @@ export class LearningModulesService {
           'Practice explaining time and space complexity trade-offs out loud.',
         ],
       },
-      created_at: new Date().toISOString(),
+      created_at: new Date(Date.now() - 10 * 86400000).toISOString(),
+      updated_at: new Date().toISOString(),
+    });
+
+    const msftAppId = 'app_microsoft_sde_' + studentId;
+    this.applications.set(msftAppId, {
+      id: msftAppId,
+      student_id: studentId,
+      company_name: 'Microsoft',
+      role: 'Software Engineering Intern - Cloud & AI',
+      location: 'Hyderabad / Bengaluru, India',
+      application_date: new Date(Date.now() - 25 * 86400000).toISOString().split('T')[0],
+      deadline: new Date(Date.now() - 15 * 86400000).toISOString().split('T')[0],
+      application_url: 'https://careers.microsoft.com/us/en/job/1598234',
+      status: 'OFFER',
+      salary_range: '₹1,25,000/month + relocation',
+      interview_date: new Date(Date.now() - 5 * 86400000).toISOString(),
+      contact_person: 'Rahul Verma (University Talent Advisor)',
+      notes: 'Cleared technical and hiring manager rounds. Received official offer letter for summer internship!',
+      resume_version_name: 'Pavan_BTech_Software_SWE_2026.pdf',
+      timeline: [
+        { id: 'msft_ev_1', title: 'Application Submitted', date: new Date(Date.now() - 25 * 86400000).toISOString().split('T')[0], status: 'APPLIED' },
+        { id: 'msft_ev_2', title: 'Coding Assessment Completed', date: new Date(Date.now() - 18 * 86400000).toISOString().split('T')[0], status: 'ASSESSMENT' },
+        { id: 'msft_ev_3', title: 'Technical Rounds (DSA & Architecture)', date: new Date(Date.now() - 10 * 86400000).toISOString().split('T')[0], status: 'TECHNICAL_ROUND' },
+        { id: 'msft_ev_4', title: 'Official Offer Extended', date: new Date(Date.now() - 3 * 86400000).toISOString().split('T')[0], status: 'OFFER', notes: 'Acceptance deadline: 2 weeks.' },
+      ],
+      jd_analysis: {
+        required_skills: [
+          { name: 'C# / Java / C++ or Go', evidence_status: 'EVIDENCE_AVAILABLE', evidence_source: 'Coursework & verified projects' },
+          { name: 'Cloud Computing & Distributed Systems', evidence_status: 'EVIDENCE_AVAILABLE', evidence_source: 'Distributed Key-Value Store' },
+          { name: 'Data Structures & Algorithms', evidence_status: 'EVIDENCE_AVAILABLE', evidence_source: '90%+ Mastery in DSA Lab' },
+        ],
+        readiness_percent: 92,
+        recommended_preparation: ['Prepare onboarding documentation.'],
+      },
+      created_at: new Date(Date.now() - 25 * 86400000).toISOString(),
+      updated_at: new Date().toISOString(),
+    });
+
+    const amzAppId = 'app_amazon_sde_' + studentId;
+    this.applications.set(amzAppId, {
+      id: amzAppId,
+      student_id: studentId,
+      company_name: 'Amazon',
+      role: 'SDE Intern (2026 Batch)',
+      location: 'Hyderabad / Chennai, India',
+      application_date: new Date(Date.now() - 2 * 86400000).toISOString().split('T')[0],
+      deadline: new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0],
+      application_url: 'https://amazon.jobs/en/jobs/2591823',
+      status: 'APPLIED',
+      salary_range: '₹1,10,000/month',
+      notes: 'Applied via student career portal referral. Awaiting OA link.',
+      timeline: [
+        { id: 'amz_ev_1', title: 'Application Submitted Online', date: new Date(Date.now() - 2 * 86400000).toISOString().split('T')[0], status: 'APPLIED' },
+      ],
+      jd_analysis: {
+        required_skills: [
+          { name: 'Object-Oriented Programming (OOP)', evidence_status: 'EVIDENCE_AVAILABLE', evidence_source: 'Java OOP Lab Coursework' },
+          { name: 'Data Structures & Algorithms', evidence_status: 'EVIDENCE_AVAILABLE', evidence_source: 'DSA Lab Verification' },
+        ],
+        readiness_percent: 88,
+        recommended_preparation: ['Review Amazon Leadership Principles with STAR format examples.'],
+      },
+      created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
       updated_at: new Date().toISOString(),
     });
   }
@@ -696,7 +778,12 @@ export class LearningModulesService {
   // 1. Study Planner Methods
   // ==========================================
   public static async getStudyPlans(studentId: string): Promise<StudyPlan[]> {
-    return Array.from(this.studyPlans.values()).filter((p) => p.student_id === studentId);
+    let plans = Array.from(this.studyPlans.values()).filter((p) => p.student_id === studentId);
+    if (plans.length === 0) {
+      this.seedDemoData(studentId);
+      plans = Array.from(this.studyPlans.values()).filter((p) => p.student_id === studentId);
+    }
+    return plans;
   }
 
   public static async getStudyPlanById(studentId: string, planId: string): Promise<StudyPlan> {
@@ -827,9 +914,12 @@ export class LearningModulesService {
   // 3. AI Doubt Solver Methods
   // ==========================================
   public static async getDoubts(studentId: string): Promise<StudentDoubt[]> {
-    return Array.from(this.doubts.values())
-      .filter((d) => d.student_id === studentId)
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    let items = Array.from(this.doubts.values()).filter((d) => d.student_id === studentId);
+    if (items.length === 0) {
+      this.seedDemoData(studentId);
+      items = Array.from(this.doubts.values()).filter((d) => d.student_id === studentId);
+    }
+    return items.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }
 
   public static async getDoubtById(studentId: string, doubtId: string): Promise<StudentDoubt> {
@@ -886,102 +976,795 @@ export class LearningModulesService {
   // ==========================================
   // 4. Flashcards + Spaced Revision Methods
   // ==========================================
-  public static async getFlashcardDecks(studentId: string): Promise<FlashcardDeck[]> {
-    return Array.from(this.flashcardDecks.values()).filter((d) => d.student_id === studentId);
+
+  public static async getFlashcardDecks(
+    studentId: string,
+    options?: { search?: string; subject?: string; course_id?: string; status?: string; sortBy?: string }
+  ): Promise<FlashcardDeck[]> {
+    const decks = await db.getFlashcardDecks(studentId, options);
+    decks.forEach((d) => this.flashcardDecks.set(d.id, d));
+    return decks;
   }
 
   public static async getFlashcardDeckById(studentId: string, deckId: string): Promise<FlashcardDeck> {
-    const deck = this.flashcardDecks.get(deckId);
-    if (!deck || deck.student_id !== studentId) {
+    const deck = await db.getFlashcardDeckById(deckId, studentId);
+    if (!deck) {
+      const memoryDeck = this.flashcardDecks.get(deckId);
+      if (memoryDeck && memoryDeck.student_id === studentId) {
+        return memoryDeck;
+      }
       throw new NotFoundError(`Flashcard deck '${deckId}' not found`);
     }
     return deck;
   }
 
   public static async createFlashcardDeck(studentId: string, data: Partial<FlashcardDeck>): Promise<FlashcardDeck> {
-    if (!data.title || !data.subject) throw new ValidationError('Title and subject are required');
+    const subject = (data.subject || (data as any).subject_name || '').trim();
+    if (!data.title?.trim() || !subject) {
+      throw new ValidationError('Title and subject are required');
+    }
+
+    const today = new Date().toISOString().split('T')[0];
     const deckId = `deck_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+
     const cards: Flashcard[] = (data.cards || []).map((c, idx) => ({
-      id: `fc_${Date.now()}_${idx}`,
+      id: `fc_${deckId}_${idx + 1}`,
       deck_id: deckId,
       student_id: studentId,
-      front: c.front,
-      back: c.back,
+      front: c.front.trim(),
+      back: c.back.trim(),
       type: c.type || 'CONCEPT',
-      topic: c.topic || data.subject || 'General',
+      topic: c.topic || subject || 'General',
       difficulty: c.difficulty || 'MEDIUM',
+      explanation: c.explanation || '',
+      example: c.example || '',
+      tags: c.tags || data.tags || [],
+      source_type: data.source_type || 'MANUAL',
+      source_id: data.source_id,
+      source_title: data.source_title,
       state: 'NEW',
       confidence: 1,
       review_count: 0,
       correct_count: 0,
       incorrect_count: 0,
-      next_review: new Date().toISOString().split('T')[0],
+      interval_days: 1,
+      ease_factor: 2.5,
+      repetition_count: 0,
+      is_bookmarked: Boolean(c.is_bookmarked),
+      next_review: today,
       created_at: new Date().toISOString(),
     }));
 
     const deck: FlashcardDeck = {
       id: deckId,
       student_id: studentId,
-      title: data.title,
-      subject: data.subject,
-      description: data.description || '',
+      title: data.title.trim(),
+      subject: subject,
+      description: data.description?.trim() || '',
       total_cards: cards.length,
       due_count: cards.length,
       mastered_count: 0,
       cards,
+      course_id: data.course_id,
+      course_code: data.course_code,
+      tags: data.tags || [],
+      source_type: data.source_type || 'MANUAL',
+      source_id: data.source_id,
+      source_title: data.source_title,
+      is_archived: false,
+      is_bookmarked: Boolean(data.is_bookmarked),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    const saved = await db.saveFlashcardDeck(deck);
+    this.flashcardDecks.set(deckId, saved);
+    logger.info(`Flashcard deck created: '${deck.title}' (${deck.id}) for student ${studentId}`);
+    return saved;
+  }
+
+  public static async updateFlashcardDeck(
+    studentId: string,
+    deckId: string,
+    updates: Partial<FlashcardDeck>
+  ): Promise<FlashcardDeck> {
+    const deck = await this.getFlashcardDeckById(studentId, deckId);
+
+    if (updates.title !== undefined) {
+      if (!updates.title.trim()) throw new ValidationError('Title cannot be empty');
+      deck.title = updates.title.trim();
+    }
+    if (updates.subject !== undefined) {
+      if (!updates.subject.trim()) throw new ValidationError('Subject cannot be empty');
+      deck.subject = updates.subject.trim();
+    }
+    if (updates.description !== undefined) {
+      deck.description = updates.description.trim();
+    }
+    if (updates.course_id !== undefined) deck.course_id = updates.course_id;
+    if (updates.course_code !== undefined) deck.course_code = updates.course_code;
+    if (updates.tags !== undefined) deck.tags = updates.tags;
+    if (updates.is_archived !== undefined) deck.is_archived = updates.is_archived;
+    if (updates.is_bookmarked !== undefined) deck.is_bookmarked = updates.is_bookmarked;
+
+    const saved = await db.saveFlashcardDeck(deck);
+    this.flashcardDecks.set(deckId, saved);
+    return saved;
+  }
+
+  public static async duplicateFlashcardDeck(studentId: string, deckId: string): Promise<FlashcardDeck> {
+    const dup = await db.duplicateFlashcardDeck(deckId, studentId);
+    if (!dup) throw new NotFoundError(`Flashcard deck '${deckId}' not found`);
+    this.flashcardDecks.set(dup.id, dup);
+    return dup;
+  }
+
+  public static async archiveFlashcardDeck(
+    studentId: string,
+    deckId: string,
+    isArchived: boolean = true
+  ): Promise<FlashcardDeck> {
+    return this.updateFlashcardDeck(studentId, deckId, { is_archived: isArchived });
+  }
+
+  public static async bookmarkFlashcardDeck(
+    studentId: string,
+    deckId: string,
+    isBookmarked: boolean = true
+  ): Promise<FlashcardDeck> {
+    return this.updateFlashcardDeck(studentId, deckId, { is_bookmarked: isBookmarked });
+  }
+
+  public static async toggleDeckArchive(studentId: string, deckId: string): Promise<FlashcardDeck> {
+    const deck = await this.getFlashcardDeckById(studentId, deckId);
+    return this.archiveFlashcardDeck(studentId, deckId, !deck.is_archived);
+  }
+
+  public static async toggleDeckBookmark(studentId: string, deckId: string): Promise<FlashcardDeck> {
+    const deck = await this.getFlashcardDeckById(studentId, deckId);
+    return this.bookmarkFlashcardDeck(studentId, deckId, !deck.is_bookmarked);
+  }
+
+  public static async deleteFlashcardDeck(studentId: string, deckId: string): Promise<boolean> {
+    await this.getFlashcardDeckById(studentId, deckId);
+    const deleted = await db.deleteFlashcardDeck(deckId, studentId);
+    this.flashcardDecks.delete(deckId);
+    return deleted;
+  }
+
+  public static async addCardToDeck(
+    studentId: string,
+    deckId: string,
+    cardData: Partial<Flashcard>
+  ): Promise<Flashcard> {
+    const deck = await this.getFlashcardDeckById(studentId, deckId);
+    if (!cardData.front?.trim() || !cardData.back?.trim()) {
+      throw new ValidationError('Card front and back are required');
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+    const newCard: Flashcard = {
+      id: `fc_${deckId}_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      deck_id: deckId,
+      student_id: studentId,
+      front: cardData.front.trim(),
+      back: cardData.back.trim(),
+      type: cardData.type || 'CONCEPT',
+      topic: cardData.topic?.trim() || deck.subject,
+      difficulty: cardData.difficulty || 'MEDIUM',
+      explanation: cardData.explanation || '',
+      example: cardData.example || '',
+      tags: cardData.tags || deck.tags || [],
+      source_type: deck.source_type,
+      source_id: deck.source_id,
+      source_title: deck.source_title,
+      state: 'NEW',
+      confidence: 1,
+      review_count: 0,
+      correct_count: 0,
+      incorrect_count: 0,
+      interval_days: 1,
+      ease_factor: 2.5,
+      repetition_count: 0,
+      is_bookmarked: Boolean(cardData.is_bookmarked),
+      next_review: today,
       created_at: new Date().toISOString(),
     };
 
+    deck.cards.push(newCard);
+    await db.saveFlashcardDeck(deck);
     this.flashcardDecks.set(deckId, deck);
-    return deck;
+    return newCard;
+  }
+
+  public static async updateCard(
+    studentId: string,
+    deckId: string,
+    cardId: string,
+    updates: Partial<Flashcard>,
+    resetSchedule: boolean = false
+  ): Promise<Flashcard> {
+    const deck = await this.getFlashcardDeckById(studentId, deckId);
+    const card = deck.cards.find((c) => c.id === cardId);
+    if (!card) throw new NotFoundError(`Card '${cardId}' not found in deck`);
+
+    if (updates.front !== undefined) {
+      if (!updates.front.trim()) throw new ValidationError('Card front cannot be empty');
+      card.front = updates.front.trim();
+    }
+    if (updates.back !== undefined) {
+      if (!updates.back.trim()) throw new ValidationError('Card back cannot be empty');
+      card.back = updates.back.trim();
+    }
+    if (updates.type !== undefined) card.type = updates.type;
+    if (updates.topic !== undefined) card.topic = updates.topic.trim();
+    if (updates.difficulty !== undefined) card.difficulty = updates.difficulty;
+    if (updates.explanation !== undefined) card.explanation = updates.explanation;
+    if (updates.example !== undefined) card.example = updates.example;
+    if (updates.tags !== undefined) card.tags = updates.tags;
+    if (updates.is_bookmarked !== undefined) card.is_bookmarked = updates.is_bookmarked;
+
+    if (resetSchedule) {
+      const today = new Date().toISOString().split('T')[0];
+      card.state = 'NEW';
+      card.confidence = 1;
+      card.review_count = 0;
+      card.correct_count = 0;
+      card.incorrect_count = 0;
+      card.interval_days = 1;
+      card.ease_factor = 2.5;
+      card.repetition_count = 0;
+      card.next_review = today;
+    }
+
+    await db.saveFlashcardDeck(deck);
+    this.flashcardDecks.set(deckId, deck);
+    return card;
+  }
+
+  public static async deleteCard(studentId: string, deckId: string, cardId: string): Promise<boolean> {
+    const deck = await this.getFlashcardDeckById(studentId, deckId);
+    const initialLen = deck.cards.length;
+    deck.cards = deck.cards.filter((c) => c.id !== cardId);
+    if (deck.cards.length === initialLen) {
+      throw new NotFoundError(`Card '${cardId}' not found in deck`);
+    }
+
+    await db.saveFlashcardDeck(deck);
+    this.flashcardDecks.set(deckId, deck);
+    return true;
+  }
+
+  public static async updateCardInDeck(
+    studentId: string,
+    deckId: string,
+    cardId: string,
+    updates: Partial<Flashcard>,
+    resetSchedule: boolean = false
+  ): Promise<Flashcard> {
+    return this.updateCard(studentId, deckId, cardId, updates, resetSchedule);
+  }
+
+  public static async deleteCardFromDeck(studentId: string, deckId: string, cardId: string): Promise<boolean> {
+    return this.deleteCard(studentId, deckId, cardId);
+  }
+
+  public static async bookmarkCard(
+    studentId: string,
+    deckId: string,
+    cardId: string,
+    isBookmarked: boolean = true
+  ): Promise<Flashcard> {
+    return this.updateCard(studentId, deckId, cardId, { is_bookmarked: isBookmarked });
   }
 
   public static async reviewFlashcard(
     studentId: string,
     deckId: string,
     cardId: string,
-    confidence: number // 1 to 5
+    ratingOrConfidence: ReviewRating | number
   ): Promise<Flashcard> {
     const deck = await this.getFlashcardDeckById(studentId, deckId);
     const card = deck.cards.find((c) => c.id === cardId);
     if (!card) throw new NotFoundError(`Card '${cardId}' not found in deck`);
 
-    card.confidence = confidence;
-    card.review_count++;
-    card.last_reviewed = new Date().toISOString();
+    // Standardize rating to numeric grade (0 to 5)
+    let grade = 4;
+    let confidence = 4;
+    let ratingString = 'GOOD';
 
-    // Spaced repetition interval calculation
-    let daysToAdd = 1;
-    if (confidence >= 4) {
-      card.correct_count++;
-      card.state = card.correct_count >= 3 ? 'MASTERED' : 'REVIEW';
-      daysToAdd = confidence === 5 ? 7 : 3;
+    if (typeof ratingOrConfidence === 'string') {
+      const upper = ratingOrConfidence.toUpperCase();
+      ratingString = upper;
+      if (upper === 'AGAIN') {
+        grade = 1;
+        confidence = 1;
+      } else if (upper === 'HARD') {
+        grade = 3;
+        confidence = 2;
+      } else if (upper === 'GOOD') {
+        grade = 4;
+        confidence = 3;
+      } else if (upper === 'EASY') {
+        grade = 5;
+        confidence = 4;
+      }
     } else {
-      card.incorrect_count++;
-      card.state = 'LEARNING';
-      daysToAdd = 1;
+      const num = Number(ratingOrConfidence);
+      if (num <= 1) {
+        grade = 1;
+        confidence = 1;
+        ratingString = 'AGAIN';
+      } else if (num === 2) {
+        grade = 3;
+        confidence = 2;
+        ratingString = 'HARD';
+      } else if (num === 3) {
+        grade = 4;
+        confidence = 3;
+        ratingString = 'GOOD';
+      } else if (num === 4) {
+        grade = 5;
+        confidence = 4;
+        ratingString = 'EASY';
+      } else {
+        grade = 5;
+        confidence = 5;
+        ratingString = 'EASY';
+      }
     }
 
-    const nextDate = new Date();
-    nextDate.setDate(nextDate.getDate() + daysToAdd);
-    card.next_review = nextDate.toISOString().split('T')[0];
+    card.confidence = confidence;
+    card.review_count = (card.review_count || 0) + 1;
+    card.last_reviewed = new Date().toISOString();
+    card.ease_factor = card.ease_factor || 2.5;
+    card.repetition_count = card.repetition_count || 0;
 
-    // Recompute deck stats
-    const today = new Date().toISOString().split('T')[0];
-    deck.due_count = deck.cards.filter((c) => c.next_review <= today).length;
-    deck.mastered_count = deck.cards.filter((c) => c.state === 'MASTERED').length;
+    // SuperMemo-2 (SM-2) Spaced Repetition Scheduling Algorithm
+    if (grade < 3) {
+      // Forgotten: restart learning sequence
+      card.incorrect_count = (card.incorrect_count || 0) + 1;
+      card.repetition_count = 0;
+      card.interval_days = 1;
+      card.state = 'LEARNING';
+      card.ease_factor = Math.max(1.3, Number((card.ease_factor - 0.20).toFixed(2)));
+    } else {
+      // Recalled correctly: scale interval according to current repetition
+      card.correct_count = (card.correct_count || 0) + 1;
+      if (card.repetition_count === 0) {
+        card.interval_days = 1;
+      } else if (card.repetition_count === 1) {
+        card.interval_days = grade === 5 ? 7 : (grade === 3 ? 3 : 6);
+      } else {
+        const bonus = grade === 5 ? 1.3 : (grade === 3 ? 0.85 : 1.0);
+        card.interval_days = Math.max(1, Math.round(card.interval_days * card.ease_factor * bonus));
+      }
+
+      card.repetition_count += 1;
+
+      // Mastery condition: 3+ correct recalls with at least 6 days interval
+      if (card.repetition_count >= 3 && card.interval_days >= 6) {
+        card.state = 'MASTERED';
+      } else {
+        card.state = 'REVIEW';
+      }
+
+      // Update ease factor: EF' = EF + (0.1 - (5 - grade) * (0.08 + (5 - grade) * 0.02))
+      card.ease_factor = Math.max(1.3, Number((card.ease_factor + (0.1 - (5 - grade) * (0.08 + (5 - grade) * 0.02))).toFixed(2)));
+    }
+
+    // Calculate next due date
+    const nextDate = new Date();
+    nextDate.setDate(nextDate.getDate() + card.interval_days);
+    card.next_review = nextDate.toISOString().split('T')[0];
+    card.next_review_at = card.next_review;
+    card.last_reviewed_at = new Date().toISOString();
+
+    deck.last_reviewed_at = new Date().toISOString();
+
+    // Persist deck and review record
+    await db.saveFlashcardDeck(deck);
+    await db.recordFlashcardReview({
+      student_id: studentId,
+      deck_id: deckId,
+      card_id: cardId,
+      rating: ratingString,
+      confidence,
+    });
+    this.flashcardDecks.set(deckId, deck);
+
+    // Publish event for Unified Progress & Learning Activity tracking
+    try {
+      await EventBus.getInstance().publish(
+        'FLASHCARD_REVIEWED',
+        {
+          deck_id: deckId,
+          card_id: cardId,
+          deck_title: deck.title,
+          rating: ratingString,
+          confidence,
+          interval_days: card.interval_days,
+          is_mastered: card.state === 'MASTERED',
+        },
+        {
+          student_id: studentId,
+          resource_type: 'flashcard',
+          resource_id: cardId,
+        }
+      );
+    } catch {
+      // Non-fatal event publishing
+    }
 
     return card;
+  }
+
+  public static async getDueFlashcards(
+    studentId: string,
+    options?: { deck_id?: string; course_id?: string; limit?: number }
+  ): Promise<Flashcard[]> {
+    return await db.getDueFlashcards(studentId, options);
+  }
+
+  public static async getFlashcardStats(studentId: string): Promise<FlashcardStats> {
+    return await db.getFlashcardStats(studentId);
+  }
+
+  // ==========================================
+  // AI Flashcard Generation Methods
+  // ==========================================
+
+  public static async generateAIFlashcards(
+    studentId: string,
+    req: FlashcardAIGenerateRequest
+  ): Promise<{
+    title: string;
+    subject: string;
+    cards: Array<{
+      front: string;
+      back: string;
+      type: Flashcard['type'];
+      topic: string;
+      difficulty: Flashcard['difficulty'];
+      explanation?: string;
+      example?: string;
+    }>;
+    is_fallback: boolean;
+  }> {
+    if (!req.topic?.trim()) {
+      throw new ValidationError('Topic is required for flashcard generation');
+    }
+
+    const count = Math.min(Math.max(req.count || 6, 2), 15);
+    const difficulty = req.difficulty || 'INTERMEDIATE';
+    const style = req.style || 'MIXED';
+    const subject = req.subject || 'Engineering Concepts';
+
+    const systemPrompt = `You are the specialized FlashcardAgent for B.Tech engineering students.
+Your job is to generate focused, high-yield active recall question-and-answer flashcards.
+CRITICAL FORMAT RULES:
+1. Front must be a clear, testable question, formula prompt, or concept check.
+2. Back must be a concise, direct, accurate answer (2-4 sentences max).
+3. Include clear conceptual or mathematical explanations.
+4. Output valid JSON only with NO markdown fences or preamble.`;
+
+    const userPrompt = `Generate exactly ${count} active recall flashcards for B.Tech curriculum:
+TOPIC: ${req.topic}
+SUBJECT: ${subject}
+DIFFICULTY: ${difficulty}
+CARD STYLE: ${style}
+${req.context_text ? `CONTEXT/SOURCE TEXT:\n"""\n${req.context_text.slice(0, 3000)}\n"""` : ''}
+
+Output JSON format:
+{
+  "title": "${req.topic} Flashcards",
+  "subject": "${subject}",
+  "cards": [
+    {
+      "front": "Concise testable prompt or question",
+      "back": "Accurate, direct explanation or definition",
+      "type": "CONCEPT", // DEFINITION, CONCEPT, FORMULA, COMPARISON, QA
+      "topic": "${req.topic}",
+      "difficulty": "MEDIUM", // EASY, MEDIUM, HARD
+      "explanation": "Brief elaboration or invariant",
+      "example": "Practical real-world or code example if relevant"
+    }
+  ]
+}`;
+
+    try {
+      const aiResult = await AIService.generate(
+        [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+        'revision_notes_prompt',
+        0.3
+      );
+
+      const raw = aiResult.text.trim();
+      let cleanJson = raw;
+      const jsonStart = raw.indexOf('{');
+      const jsonEnd = raw.lastIndexOf('}');
+      if (jsonStart !== -1 && jsonEnd !== -1) {
+        cleanJson = raw.slice(jsonStart, jsonEnd + 1);
+      }
+
+      const parsed = JSON.parse(cleanJson);
+      if (Array.isArray(parsed.cards) && parsed.cards.length > 0) {
+        return {
+          title: parsed.title || `${req.topic} Flashcards`,
+          subject: parsed.subject || subject,
+          cards: parsed.cards.map((c: any) => ({
+            front: c.front || 'Test Concept',
+            back: c.back || 'Concept Explanation',
+            type: c.type || 'CONCEPT',
+            topic: c.topic || req.topic,
+            difficulty: c.difficulty || 'MEDIUM',
+            explanation: c.explanation || '',
+            example: c.example || '',
+          })),
+          is_fallback: false,
+        };
+      }
+      throw new Error('AI returned empty cards array');
+    } catch (err: any) {
+      logger.warn(`AI Flashcard generation fallback used for topic '${req.topic}': ${err?.message || err}`);
+
+      // High-quality deterministic academic fallback
+      const fallbackCards = [
+        {
+          front: `What is the core definition and theoretical foundation of ${req.topic}?`,
+          back: `${req.topic} is an essential module in ${subject}. It establishes theoretical guarantees, runtime constraints, and system correctness in engineering architectures.`,
+          type: 'DEFINITION' as const,
+          topic: req.topic,
+          difficulty: 'EASY' as const,
+          explanation: `Fundamental conceptual principle in ${subject}.`,
+          example: `Standard university end-semester exam question.`,
+        },
+        {
+          front: `What are the primary operational trade-offs and constraints associated with ${req.topic}?`,
+          back: `The primary trade-offs balance computational complexity, memory footprint, and implementation overhead. Operating under constrained resources requires strict state management.`,
+          type: 'CONCEPT' as const,
+          topic: req.topic,
+          difficulty: 'MEDIUM' as const,
+          explanation: `System trade-offs dictate optimal deployment strategies.`,
+          example: `High-throughput processing pipelines and distributed services.`,
+        },
+        {
+          front: `State the mathematical invariant or algorithmic property governing ${req.topic}.`,
+          back: `The state transition preserves invariants across iterative steps, ensuring convergence to an optimal or stable fixed point without unexpected deadlock or overflow.`,
+          type: 'FORMULA' as const,
+          topic: req.topic,
+          difficulty: 'HARD' as const,
+          explanation: `Invariants guarantee safety and correctness under edge cases.`,
+          example: `Proof by induction or contradiction in formal specification.`,
+        },
+        {
+          front: `How does ${req.topic} compare to its closest alternative in practical systems?`,
+          back: `While alternative approaches may optimize for simpler code paths, ${req.topic} provides robust asymptotic bounds and predictable error handling under peak load.`,
+          type: 'COMPARISON' as const,
+          topic: req.topic,
+          difficulty: 'MEDIUM' as const,
+          explanation: `Design pattern comparison for engineering technical interviews.`,
+          example: `Production system benchmarking.`,
+        },
+      ];
+
+      return {
+        title: `${req.topic} Flashcards`,
+        subject,
+        cards: fallbackCards.slice(0, count),
+        is_fallback: true,
+      };
+    }
+  }
+
+  public static async generateFromNote(
+    studentId: string,
+    noteId: string
+  ): Promise<{
+    title: string;
+    subject: string;
+    source_id: string;
+    source_title: string;
+    cards: Array<{
+      front: string;
+      back: string;
+      type: Flashcard['type'];
+      topic: string;
+      difficulty: Flashcard['difficulty'];
+    }>;
+  }> {
+    const note = await db.getNoteById(noteId, studentId);
+    if (!note) {
+      throw new NotFoundError(`Note '${noteId}' not found or unauthorized`);
+    }
+
+    const generated = await NotesService.generateFlashcards(studentId, noteId);
+    return {
+      title: `Flashcards: ${note.title}`,
+      subject: note.tags?.[0] || 'Academic Notes',
+      source_id: note.id,
+      source_title: note.title,
+      cards: generated.map((g) => ({
+        front: g.question,
+        back: g.answer,
+        type: 'CONCEPT',
+        topic: g.concept || note.title,
+        difficulty: (g.difficulty?.toUpperCase() as any) || 'MEDIUM',
+      })),
+    };
+  }
+
+  public static async generateFromDocument(
+    studentId: string,
+    documentId: string,
+    targetCount: number = 6
+  ): Promise<{
+    title: string;
+    subject: string;
+    source_id: string;
+    source_title: string;
+    cards: Array<{
+      front: string;
+      back: string;
+      type: Flashcard['type'];
+      topic: string;
+      difficulty: Flashcard['difficulty'];
+    }>;
+  }> {
+    const doc = await db.getDocumentById(documentId, studentId);
+    if (!doc) {
+      throw new NotFoundError(`Document '${documentId}' not found or unauthorized`);
+    }
+
+    const material = await KnowledgeBaseService.generateStudyMaterials(studentId, {
+      document_id: documentId,
+      type: 'FLASHCARDS',
+      target_count: targetCount,
+    });
+
+    const rawCards = material.content?.flashcards || [];
+    return {
+      title: material.title || `Flashcards: ${doc.title}`,
+      subject: doc.category || 'Study Material',
+      source_id: doc.id,
+      source_title: doc.title,
+      cards: rawCards.map((c) => ({
+        front: c.question,
+        back: c.answer,
+        type: 'CONCEPT',
+        topic: c.topic || doc.title,
+        difficulty: (c.difficulty?.toUpperCase() as any) || 'MEDIUM',
+      })),
+    };
+  }
+
+  public static async generateFromCourse(
+    studentId: string,
+    courseId: string,
+    chapterId?: string,
+    targetCount: number = 6
+  ): Promise<{
+    title: string;
+    subject: string;
+    source_id: string;
+    source_title: string;
+    cards: Array<{
+      front: string;
+      back: string;
+      type: Flashcard['type'];
+      topic: string;
+      difficulty: Flashcard['difficulty'];
+    }>;
+  }> {
+    const course = await db.getCourseById(courseId, studentId);
+    if (!course) {
+      throw new NotFoundError(`Course '${courseId}' not found or unauthorized`);
+    }
+
+    let targetTopic = course.title;
+    if (chapterId) {
+      const chapter = course.chapters.find((c) => c.id === chapterId);
+      if (chapter) {
+        targetTopic = `${course.title}: ${chapter.title}`;
+      }
+    }
+
+    const aiRes = await this.generateAIFlashcards(studentId, {
+      topic: targetTopic,
+      subject: course.branch || course.category || course.title,
+      count: targetCount,
+      difficulty: 'INTERMEDIATE',
+    });
+
+    return {
+      title: `Flashcards: ${targetTopic}`,
+      subject: course.branch || course.title,
+      source_id: course.id,
+      source_title: `${course.title} (${course.code})`,
+      cards: aiRes.cards,
+    };
+  }
+
+  public static async scheduleReviewTask(
+    studentId: string,
+    deckId: string,
+    scheduledDate?: string,
+    durationMinutes: number = 20
+  ): Promise<StudyPlanTask> {
+    const deck = await this.getFlashcardDeckById(studentId, deckId);
+    const plans = await this.getStudyPlans(studentId);
+    let plan = plans[0];
+    if (!plan) {
+      plan = await this.createPlan(studentId, {
+        title: `Spaced Revision Plan: ${deck.subject}`,
+        target_role: 'Active Recall Mastery',
+        semester: 6,
+        target_hours_per_week: 10,
+        subjects: [deck.subject],
+      });
+    }
+
+    const earliestDue = scheduledDate || deck.cards[0]?.next_review || new Date().toISOString().split('T')[0];
+    const taskId = `task_rev_${Date.now()}`;
+    const newTask: StudyPlanTask = {
+      id: taskId,
+      title: `Flashcard Spaced Review: ${deck.title}`,
+      description: `Active recall review of ${deck.due_count || deck.total_cards} cards scheduled for ${deck.subject}.`,
+      subject: deck.subject,
+      scheduled_date: earliestDue,
+      duration_minutes: durationMinutes,
+      priority: 'HIGH',
+      status: 'PENDING',
+      type: 'REVISION',
+    };
+
+    plan.tasks.push(newTask);
+    this.studyPlans.set(plan.id, plan);
+    logger.info(`Scheduled flashcard study plan task '${newTask.title}' for student ${studentId}`);
+    return newTask;
   }
 
   // ==========================================
   // 5. Lab Assistant + Viva Methods
   // ==========================================
-  public static async getLabs(studentId: string): Promise<LabEntity[]> {
+  public static async getLabs(studentId: string): Promise<any[]> {
+    const dbLabs = await db.getLabCourses(studentId);
+    if (dbLabs.length > 0) {
+      const result = [];
+      for (const d of dbLabs) {
+        const exps = await db.getLabExperiments(d.id, studentId);
+        result.push({
+          ...d,
+          title: d.name,
+          experiments: exps.map((e) => ({
+            ...e,
+            objective: e.aim || e.objective || '',
+            procedure: e.procedure || e.procedure_steps?.map((s) => s.text) || [],
+          })),
+        });
+      }
+      return result;
+    }
     return Array.from(this.labs.values());
   }
 
-  public static async getLabById(studentId: string, labId: string): Promise<LabEntity> {
+  public static async getLabById(studentId: string, labId: string): Promise<any> {
+    const dbLab = await db.getLabCourseById(labId, studentId);
+    if (dbLab) {
+      const exps = await db.getLabExperiments(labId, studentId);
+      return {
+        ...dbLab,
+        title: dbLab.name,
+        experiments: exps.map((e) => ({
+          ...e,
+          objective: e.aim || e.objective || '',
+          procedure: e.procedure || e.procedure_steps?.map((s) => s.text) || [],
+        })),
+      };
+    }
     const lab = this.labs.get(labId);
     if (!lab) throw new NotFoundError(`Lab '${labId}' not found`);
     return lab;
@@ -993,11 +1776,16 @@ export class LearningModulesService {
     experimentId: string,
     questionId: string,
     studentAnswer: string
-  ): Promise<VivaQuestionItem> {
+  ): Promise<any> {
+    const dbExp = await db.getLabExperimentById(experimentId, studentId);
+    if (dbExp) {
+      const { LabAssistantService } = await import('./labAssistantService');
+      return LabAssistantService.evaluateVivaAnswer(studentId, experimentId, questionId, studentAnswer);
+    }
     const lab = await this.getLabById(studentId, labId);
-    const exp = lab.experiments.find((e) => e.id === experimentId);
+    const exp = lab.experiments.find((e: any) => e.id === experimentId);
     if (!exp) throw new NotFoundError(`Experiment '${experimentId}' not found`);
-    const q = exp.viva_questions.find((item) => item.id === questionId);
+    const q = exp.viva_questions.find((item: any) => item.id === questionId);
     if (!q) throw new NotFoundError(`Question '${questionId}' not found`);
 
     q.student_answer = studentAnswer;
@@ -1016,177 +1804,52 @@ export class LearningModulesService {
   // ==========================================
   // 6. SQL / Database Lab Methods
   // ==========================================
-  public static async getSqlSchemas(): Promise<Record<string, SQLTableDefinition[]>> {
-    const result: Record<string, SQLTableDefinition[]> = {};
-    for (const [key, val] of this.sqlSchemas.entries()) {
-      result[key] = val;
-    }
-    return result;
+  public static async getSqlSchemas(studentId: string = 'std_01j8k9x2p4'): Promise<Record<string, SQLTableDefinition[]>> {
+    return SqlLabSandboxService.getSchemas(studentId);
   }
 
   public static async getSqlChallenges(): Promise<SQLChallenge[]> {
     return this.sqlChallenges;
   }
 
-  public static async executeSandboxedSql(studentId: string, query: string): Promise<SQLExecutionResult> {
-    const trimmed = query.trim();
-    if (!trimmed) {
-      throw new ValidationError('SQL query cannot be empty');
-    }
-
-    const startTime = Date.now();
-    const upper = trimmed.toUpperCase();
-
-    // Security Guard: Prevent malicious or injection attempts
-    if (upper.includes('DROP DATABASE') || upper.includes('SHUTDOWN') || upper.includes('XP_CMDSHELL')) {
-      return {
-        success: false,
-        columns: [],
-        rows: [],
-        row_count: 0,
-        execution_time_ms: 2,
-        error: 'Execution blocked: Destructive database administration commands are prohibited in student sandbox.',
-      };
-    }
-
-    // Interactive query simulation against university_db tables
-    if (upper.includes('FROM STUDENTS') && upper.includes('GROUP BY BRANCH')) {
-      return {
-        success: true,
-        columns: ['branch', 'top_cgpa'],
-        rows: [
-          { branch: 'Computer Science', top_cgpa: 9.45 },
-          { branch: 'Electronics', top_cgpa: 8.40 },
-          { branch: 'Information Tech', top_cgpa: 8.85 },
-        ],
-        row_count: 3,
-        execution_time_ms: Date.now() - startTime + 4,
-        explanation: 'Query executed with HashAggregate on branch; utilized in-memory sort pass.',
-        optimization_tips: ['Ensure an index on (branch, cgpa) exists for Index-Only Scans.'],
-      };
-    }
-
-    if (upper.includes('FROM STUDENTS') && upper.includes('JOIN ENROLLMENTS')) {
-      return {
-        success: true,
-        columns: ['name', 'grade'],
-        rows: [
-          { name: 'Aarav Sharma', grade: 'A+' },
-          { name: 'Diya Patel', grade: 'A' },
-        ],
-        row_count: 2,
-        execution_time_ms: Date.now() - startTime + 6,
-        explanation: 'Executed Hash Join on students.student_id = enrollments.student_id with predicate filter on CS301.',
-      };
-    }
-
-    if (upper.includes('SELECT') && upper.includes('FROM STUDENTS')) {
-      const defaultTable = this.sqlSchemas.get('university_db')?.[0];
-      return {
-        success: true,
-        columns: defaultTable?.columns.map((c) => c.name) || ['student_id', 'name', 'branch', 'semester', 'cgpa'],
-        rows: defaultTable?.sample_rows || [],
-        row_count: defaultTable?.sample_rows.length || 0,
-        execution_time_ms: Date.now() - startTime + 3,
-        explanation: 'Sequential Table Scan executed on students table.',
-      };
-    }
-
-    if (upper.includes('SELECT') && upper.includes('FROM COURSES')) {
-      const courseTable = this.sqlSchemas.get('university_db')?.[1];
-      return {
-        success: true,
-        columns: courseTable?.columns.map((c) => c.name) || ['course_id', 'course_name', 'credits', 'dept'],
-        rows: courseTable?.sample_rows || [],
-        row_count: courseTable?.sample_rows.length || 0,
-        execution_time_ms: Date.now() - startTime + 2,
-      };
-    }
-
-    // Generic valid response for custom SELECT
-    return {
-      success: true,
-      columns: ['result', 'status'],
-      rows: [{ result: 'Query parsed and executed cleanly', status: 'SUCCESS' }],
-      row_count: 1,
-      execution_time_ms: Date.now() - startTime + 5,
-      explanation: 'Query parsed into relational algebra tree and executed in sandbox.',
-    };
+  public static async executeSandboxedSql(
+    studentId: string,
+    query: string,
+    dbName: string = 'university_db'
+  ): Promise<SQLExecutionResult> {
+    return SqlLabSandboxService.executeSandboxedSql(studentId, dbName, query);
   }
 
   // ==========================================
   // 7. AI/ML Lab Methods
   // ==========================================
-  public static async getMlDatasets(): Promise<MLDataset[]> {
-    return this.mlDatasets;
+  public static async getMlDatasets(studentId: string = 'std_01j8k9x2p4'): Promise<MLDataset[]> {
+    return MlLabService.getDatasets(studentId);
   }
 
   public static async getMlExperiments(studentId: string): Promise<MLExperimentEntity[]> {
-    return Array.from(this.mlExperiments.values()).filter((e) => e.student_id === studentId);
+    return MlLabService.getExperiments(studentId);
   }
 
   public static async createAndRunMlExperiment(
     studentId: string,
-    data: Partial<MLExperimentEntity>
+    data: any
   ): Promise<MLExperimentEntity> {
-    if (!data.name || !data.dataset_name) {
+    if (!data.name || (!data.dataset_name && !data.dataset_id)) {
       throw new ValidationError('Experiment name and dataset are required');
     }
-
-    const expId = `exp_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
-    const model = data.model_type || 'Random Forest';
-
-    // Calculate genuine mathematical ML metrics based on model family
-    let metrics: any = {};
-    if (data.dataset_name.includes('Iris') || model.includes('Forest') || model.includes('Classifier')) {
-      const baseAcc = model === 'Random Forest' ? 0.9667 : model === 'SVM' ? 0.9556 : 0.9333;
-      metrics = {
-        accuracy: baseAcc,
-        precision: baseAcc + 0.002,
-        recall: baseAcc,
-        f1_score: baseAcc - 0.001,
-        confusion_matrix: [
-          [10, 0, 0],
-          [0, 9, 1],
-          [0, 0, 10],
-        ],
-      };
-    } else {
-      metrics = {
-        mse: 0.428,
-        rmse: 0.654,
-        mae: 0.492,
-        r2_score: 0.785,
-      };
-    }
-
-    const experiment: MLExperimentEntity = {
-      id: expId,
-      student_id: studentId,
+    return MlLabService.runExperiment(studentId, {
       name: data.name,
-      dataset_name: data.dataset_name,
-      model_type: model,
-      hyperparameters: data.hyperparameters || { n_estimators: 100, max_depth: 5 },
+      dataset_id: data.dataset_id || data.dataset_name,
+      dataset_name: data.dataset_name || data.name,
+      target_column: data.target_column,
+      feature_columns: data.feature_columns || [],
+      task_type: data.task_type || (data.model_type?.includes('Linear') ? 'REGRESSION' : 'CLASSIFICATION'),
+      model_type: data.model_type || 'Random Forest',
       train_split: data.train_split || 0.8,
-      status: 'COMPLETED',
-      metrics,
-      insights: {
-        underfitting_or_overfitting: 'Training curve shows balanced convergence without excessive variance.',
-        feature_importance: [
-          { feature: 'Feature_1 (Petal/Income)', importance: 0.52 },
-          { feature: 'Feature_2 (Width/Age)', importance: 0.32 },
-          { feature: 'Feature_3 (Length/Rooms)', importance: 0.16 },
-        ],
-        recommendations: [
-          `Model ${model} achieved ${Math.round((metrics.accuracy || metrics.r2_score) * 100)}% benchmark performance.`,
-          'Perform cross-validation (k=5) to ensure stability across dataset splits.',
-        ],
-      },
-      created_at: new Date().toISOString(),
-    };
-
-    this.mlExperiments.set(expId, experiment);
-    return experiment;
+      hyperparameters: data.hyperparameters || {},
+      workspace_id: data.workspace_id,
+    });
   }
 
   // ==========================================
@@ -1197,7 +1860,12 @@ export class LearningModulesService {
   }
 
   public static async getSystemDesigns(studentId: string): Promise<SystemDesignEntity[]> {
-    return Array.from(this.systemDesigns.values()).filter((s) => s.student_id === studentId);
+    let designs = Array.from(this.systemDesigns.values()).filter((s) => s.student_id === studentId);
+    if (designs.length === 0) {
+      this.seedDemoData(studentId);
+      designs = Array.from(this.systemDesigns.values()).filter((s) => s.student_id === studentId);
+    }
+    return designs;
   }
 
   public static async createSystemDesign(
@@ -1307,9 +1975,16 @@ export class LearningModulesService {
   // 10. Internship Tracker Methods
   // ==========================================
   public static async getApplications(studentId: string): Promise<InternshipApplication[]> {
-    return Array.from(this.applications.values())
+    let studentApps = Array.from(this.applications.values())
       .filter((a) => a.student_id === studentId)
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    if (studentApps.length === 0) {
+      this.seedDemoData(studentId);
+      studentApps = Array.from(this.applications.values())
+        .filter((a) => a.student_id === studentId)
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    }
+    return studentApps;
   }
 
   public static async getApplicationById(studentId: string, appId: string): Promise<InternshipApplication> {
@@ -1383,6 +2058,65 @@ export class LearningModulesService {
       status: newStatus,
     });
     app.updated_at = new Date().toISOString();
+    return app;
+  }
+
+  public static async updateApplication(
+    studentId: string,
+    appId: string,
+    patch: Partial<InternshipApplication>
+  ): Promise<InternshipApplication> {
+    const app = await this.getApplicationById(studentId, appId);
+    if (patch.company_name !== undefined) app.company_name = patch.company_name;
+    if (patch.role !== undefined) app.role = patch.role;
+    if (patch.location !== undefined) app.location = patch.location;
+    if (patch.deadline !== undefined) app.deadline = patch.deadline;
+    if (patch.application_url !== undefined) app.application_url = patch.application_url;
+    if (patch.salary_range !== undefined) app.salary_range = patch.salary_range;
+    if (patch.notes !== undefined) app.notes = patch.notes;
+    if (patch.interview_date !== undefined) app.interview_date = patch.interview_date;
+    if (patch.assessment_date !== undefined) app.assessment_date = patch.assessment_date;
+    if (patch.contact_person !== undefined) app.contact_person = patch.contact_person;
+    if (patch.resume_version_name !== undefined) app.resume_version_name = patch.resume_version_name;
+    if (patch.status && patch.status !== app.status) {
+      app.status = patch.status;
+      app.timeline.push({
+        id: `ev_${Date.now()}`,
+        title: `Status updated to ${patch.status}`,
+        date: new Date().toISOString().split('T')[0],
+        status: patch.status,
+      });
+    }
+    app.updated_at = new Date().toISOString();
+    this.applications.set(app.id, app);
+    return app;
+  }
+
+  public static async deleteApplication(studentId: string, appId: string): Promise<boolean> {
+    const app = await this.getApplicationById(studentId, appId);
+    this.applications.delete(app.id);
+    return true;
+  }
+
+  public static async addTimelineEvent(
+    studentId: string,
+    appId: string,
+    event: { title: string; date?: string; notes?: string; status?: ApplicationStatus }
+  ): Promise<InternshipApplication> {
+    const app = await this.getApplicationById(studentId, appId);
+    const newEvent: ApplicationTimelineEvent = {
+      id: `ev_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      title: event.title,
+      date: event.date || new Date().toISOString().split('T')[0],
+      status: event.status || app.status,
+      notes: event.notes,
+    };
+    app.timeline.push(newEvent);
+    if (event.status && event.status !== app.status) {
+      app.status = event.status;
+    }
+    app.updated_at = new Date().toISOString();
+    this.applications.set(app.id, app);
     return app;
   }
 

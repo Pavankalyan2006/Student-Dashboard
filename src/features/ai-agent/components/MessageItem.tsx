@@ -8,23 +8,37 @@ import {
   ThumbsDown,
   ArrowRight,
   Code2,
+  Layers,
+  HelpCircle,
+  FilePlus,
+  Loader2,
+  ExternalLink,
 } from 'lucide-react';
 import { AIMessageRecord } from '../types/ai';
 import { MarkdownContent } from '../../../components/content/MarkdownContent';
 import { AICitation, ToolExecutionCard, AgentPlanCard } from './RichCards';
+import { conversationApi } from '../api/conversationApi';
 import { toast } from 'sonner';
 
 export function MessageItem({
   message,
   onActionClick,
   onSubmitFeedback,
+  onNavigate,
 }: {
   message: AIMessageRecord;
   onActionClick: (action: string) => void;
-  onSubmitFeedback: (messageId: string, isHelpful: boolean) => void;
+  onSubmitFeedback: (messageId: string, isHelpful: boolean, reason?: string) => void;
+  onNavigate?: (path: string) => void;
 }) {
   const [copied, setCopied] = React.useState(false);
+  const [isSavingNote, setIsSavingNote] = React.useState(false);
+  const [isGeneratingFlashcards, setIsGeneratingFlashcards] = React.useState(false);
+  const [isGeneratingQuiz, setIsGeneratingQuiz] = React.useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = React.useState(false);
+
   const isAssistant = message.role === 'assistant';
+  const hasCode = message.content.includes('```');
 
   const handleCopy = () => {
     navigator.clipboard.writeText(message.content);
@@ -32,6 +46,60 @@ export function MessageItem({
     toast.success('Response copied to clipboard');
     setTimeout(() => setCopied(false), 2000);
   };
+
+  const handleSaveToNotes = async () => {
+    try {
+      setIsSavingNote(true);
+      const firstLine = message.content.split('\n')[0].replace(/[#*`]/g, '').trim();
+      const title = firstLine.slice(0, 50) || 'AI Tutor Study Note';
+      await conversationApi.generateNote({
+        title,
+        content: message.content,
+        topic: 'AI Academic Tutoring',
+      });
+      toast.success('Saved to Notes module successfully!');
+    } catch {
+      toast.error('Failed to save to Notes');
+    } finally {
+      setIsSavingNote(false);
+    }
+  };
+
+  const handleGenerateFlashcards = async () => {
+    try {
+      setIsGeneratingFlashcards(true);
+      const firstLine = message.content.split('\n')[0].replace(/[#*`]/g, '').trim();
+      const topic = firstLine.slice(0, 40) || 'Engineering Concept';
+      await conversationApi.generateFlashcards({ topic });
+      toast.success(`Active recall flashcards created for "${topic}"!`);
+    } catch {
+      toast.error('Failed to generate flashcards');
+    } finally {
+      setIsGeneratingFlashcards(false);
+    }
+  };
+
+  const handleGenerateQuiz = async () => {
+    try {
+      setIsGeneratingQuiz(true);
+      const firstLine = message.content.split('\n')[0].replace(/[#*`]/g, '').trim();
+      const topic = firstLine.slice(0, 40) || 'Engineering Concept';
+      await conversationApi.generateQuiz({ topic, question_count: 3 });
+      toast.success(`Practice quiz generated for "${topic}"!`);
+    } catch {
+      toast.error('Failed to generate quiz');
+    } finally {
+      setIsGeneratingQuiz(false);
+    }
+  };
+
+  const feedbackReasons = [
+    'Needs more detail',
+    'Explanation too difficult',
+    'Incorrect answer',
+    'Source mismatch',
+    'Formatting issues',
+  ];
 
   return (
     <div
@@ -55,9 +123,16 @@ export function MessageItem({
       {/* Message Content Body */}
       <div className="flex-1 space-y-3 min-w-0">
         <div className="flex items-center justify-between text-xs text-slate-400">
-          <span className="font-bold text-slate-900">
-            {isAssistant ? 'B.Tech AI Learning Assistant' : 'You'}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-slate-900">
+              {isAssistant ? 'AI Academic Tutor' : 'You'}
+            </span>
+            {isAssistant && (
+              <span className="text-[10px] px-1.5 py-0.2 rounded bg-blue-100/80 text-[#2563EB] font-semibold">
+                Verified
+              </span>
+            )}
+          </div>
           <span className="text-[11px] tabular-nums">
             {new Date(message.created_at).toLocaleTimeString([], {
               hour: '2-digit',
@@ -80,14 +155,16 @@ export function MessageItem({
           </div>
         )}
 
-        {/* Formatted Markdown with KaTeX */}
-        <MarkdownContent content={message.content} />
+        {/* Formatted Markdown with KaTeX & Syntax-highlighted code */}
+        <div className="text-slate-800 leading-relaxed text-xs sm:text-sm">
+          <MarkdownContent content={message.content} />
+        </div>
 
-        {/* Citations */}
+        {/* Source Citations */}
         {message.metadata?.citations && message.metadata.citations.length > 0 && (
-          <div className="pt-2 flex flex-wrap items-center gap-2">
+          <div className="pt-2 flex flex-wrap items-center gap-2 border-t border-slate-100">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-              Source:
+              Grounding Citations:
             </span>
             {message.metadata.citations.map((c) => (
               <AICitation key={c.id} citation={c} />
@@ -116,39 +193,107 @@ export function MessageItem({
           </div>
         )}
 
-        {/* Footer actions for assistant response */}
+        {/* Assistant Action Ribbon */}
         {isAssistant && (
-          <div className="pt-2 flex items-center justify-between text-xs text-slate-400 border-t border-slate-100">
-            <div className="flex items-center gap-3">
+          <div className="pt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500 border-t border-slate-100">
+            {/* Learning module action buttons */}
+            <div className="flex flex-wrap items-center gap-1.5">
               <button
                 onClick={handleCopy}
-                className="flex items-center gap-1 hover:text-slate-700 transition-colors cursor-pointer text-[11px]"
+                className="inline-flex items-center gap-1 px-2 py-1 rounded bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 text-[11px] font-medium transition-colors cursor-pointer"
+                title="Copy entire response"
               >
-                {copied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+                {copied ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
                 <span>{copied ? 'Copied' : 'Copy'}</span>
               </button>
+
+              <button
+                onClick={handleGenerateFlashcards}
+                disabled={isGeneratingFlashcards}
+                className="inline-flex items-center gap-1 px-2 py-1 rounded bg-white border border-indigo-200 hover:bg-indigo-50 text-indigo-700 text-[11px] font-medium transition-colors cursor-pointer"
+                title="Create active recall flashcard deck"
+              >
+                {isGeneratingFlashcards ? <Loader2 className="h-3 w-3 animate-spin" /> : <Layers className="h-3 w-3" />}
+                <span>Flashcards</span>
+              </button>
+
+              <button
+                onClick={handleGenerateQuiz}
+                disabled={isGeneratingQuiz}
+                className="inline-flex items-center gap-1 px-2 py-1 rounded bg-white border border-amber-200 hover:bg-amber-50 text-amber-700 text-[11px] font-medium transition-colors cursor-pointer"
+                title="Create practice quiz from this topic"
+              >
+                {isGeneratingQuiz ? <Loader2 className="h-3 w-3 animate-spin" /> : <HelpCircle className="h-3 w-3" />}
+                <span>Create Quiz</span>
+              </button>
+
+              <button
+                onClick={handleSaveToNotes}
+                disabled={isSavingNote}
+                className="inline-flex items-center gap-1 px-2 py-1 rounded bg-white border border-emerald-200 hover:bg-emerald-50 text-emerald-700 text-[11px] font-medium transition-colors cursor-pointer"
+                title="Save explanation into personal study notes"
+              >
+                {isSavingNote ? <Loader2 className="h-3 w-3 animate-spin" /> : <FilePlus className="h-3 w-3" />}
+                <span>Save to Notes</span>
+              </button>
+
+              {hasCode && (
+                <button
+                  onClick={() => onNavigate?.('/placements/coding')}
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded bg-blue-50 border border-blue-200 hover:bg-blue-100 text-[#2563EB] text-[11px] font-semibold transition-colors cursor-pointer"
+                  title="Open in isolated Coding Lab"
+                >
+                  <Code2 className="h-3 w-3" />
+                  <span>Open in Coding Lab</span>
+                </button>
+              )}
             </div>
 
             {/* Feedback controls */}
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 shrink-0 relative">
               <button
                 onClick={() => onSubmitFeedback(message.id, true)}
                 className={`p-1 rounded hover:bg-slate-200/60 transition-colors cursor-pointer ${
-                  message.metadata?.feedback?.is_helpful === true ? 'text-emerald-600 font-bold' : 'hover:text-slate-700'
+                  message.metadata?.feedback?.is_helpful === true ? 'text-emerald-600 font-bold bg-emerald-50' : 'text-slate-400 hover:text-slate-700'
                 }`}
-                title="Helpful"
+                title="Helpful explanation"
               >
                 <ThumbsUp className="h-3.5 w-3.5" />
               </button>
               <button
-                onClick={() => onSubmitFeedback(message.id, false)}
+                onClick={() => {
+                  if (message.metadata?.feedback?.is_helpful === false) {
+                    onSubmitFeedback(message.id, false);
+                  } else {
+                    setShowFeedbackModal(!showFeedbackModal);
+                  }
+                }}
                 className={`p-1 rounded hover:bg-slate-200/60 transition-colors cursor-pointer ${
-                  message.metadata?.feedback?.is_helpful === false ? 'text-rose-600 font-bold' : 'hover:text-slate-700'
+                  message.metadata?.feedback?.is_helpful === false ? 'text-rose-600 font-bold bg-rose-50' : 'text-slate-400 hover:text-slate-700'
                 }`}
                 title="Not helpful"
               >
                 <ThumbsDown className="h-3.5 w-3.5" />
               </button>
+
+              {/* Feedback reason dropdown */}
+              {showFeedbackModal && (
+                <div className="absolute right-0 bottom-full mb-1 z-20 w-48 bg-white rounded-xl border border-slate-200 shadow-xl p-2 space-y-1 text-left">
+                  <p className="text-[10px] font-bold text-slate-600 px-1">How can we improve?</p>
+                  {feedbackReasons.map((reason) => (
+                    <button
+                      key={reason}
+                      onClick={() => {
+                        onSubmitFeedback(message.id, false, reason);
+                        setShowFeedbackModal(false);
+                      }}
+                      className="w-full text-left px-2 py-1 text-[11px] text-slate-700 hover:bg-rose-50 hover:text-rose-900 rounded transition-colors cursor-pointer"
+                    >
+                      {reason}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}

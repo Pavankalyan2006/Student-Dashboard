@@ -1,5 +1,11 @@
 import { apiClient } from '../../../api/client';
-import { AIConversation, AIMessageRecord, StudentLearningContext } from '../types/ai';
+import {
+  AIConversation,
+  AIMessageRecord,
+  StudentLearningContext,
+  AITutorContextOptions,
+  SelectedTutorContext,
+} from '../types/ai';
 
 export const conversationApi = {
   getConversations: async (): Promise<AIConversation[]> => {
@@ -53,5 +59,44 @@ export const conversationApi = {
 
   getLearningContext: async (): Promise<StudentLearningContext> => {
     return apiClient.get<StudentLearningContext>('/ai/context');
+  },
+
+  getTutorContextOptions: async (): Promise<AITutorContextOptions> => {
+    return apiClient.get<AITutorContextOptions>('/ai/tutor/context-options');
+  },
+
+  generateFlashcards: async (data: {
+    topic: string;
+    subject?: string;
+    cards?: { front: string; back: string; topic?: string }[];
+    course_id?: string;
+  }) => {
+    return apiClient.post('/ai/tutor/generate-flashcards', data);
+  },
+
+  generateQuiz: async (data: {
+    topic: string;
+    difficulty?: string;
+    question_count?: number;
+    course_id?: string;
+  }) => {
+    return apiClient.post('/ai/tutor/generate-quiz', data);
+  },
+
+  generateNote: async (data: {
+    title: string;
+    content: string;
+    topic?: string;
+    course_id?: string;
+  }) => {
+    return apiClient.post('/ai/tutor/generate-note', data);
+  },
+
+  createStudyTask: async (data: {
+    title: string;
+    description?: string;
+    target_date?: string;
+  }) => {
+    return apiClient.post('/ai/tutor/create-study-task', data);
   },
 };

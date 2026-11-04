@@ -75,12 +75,18 @@ export class ResumeTailoringService {
 
     // Identify relevant projects from student's actual projects
     const relevantProjects = resumeData.projects.map((p) => {
-      const matchCount = p.technologies.filter((t) => textLower.includes(t.toLowerCase())).length;
+      const techList: string[] = Array.isArray(p.technologies)
+        ? p.technologies
+        : typeof p.technologies === 'string'
+        ? (p.technologies as string).split(',').map((t) => t.trim()).filter(Boolean)
+        : [];
+      const matchedTech = techList.filter((t) => textLower.includes(t.toLowerCase()));
+      const matchCount = matchedTech.length;
       return {
         project_id: p.id,
         title: p.title,
         alignment_reason: matchCount > 0
-          ? `Directly applies ${matchCount} technologies mentioned in the job description (${p.technologies.filter((t) => textLower.includes(t.toLowerCase())).join(', ')}).`
+          ? `Directly applies ${matchCount} technologies mentioned in the job description (${matchedTech.join(', ')}).`
           : `Demonstrates software design and practical development principles.`,
       };
     });

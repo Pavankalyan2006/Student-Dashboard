@@ -58,6 +58,20 @@ export class PlacementTopicService {
       String(submittedAnswer).trim().toLowerCase() ===
       String(question.correct_answer).trim().toLowerCase();
 
+    // Persist practice attempt for accurate progress tracking
+    await db.recordPlacementPractice({
+      id: `att_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      student_id: studentId,
+      question_id: question.id,
+      topic_id: question.topic_id,
+      category: question.category,
+      submitted_answer: submittedAnswer,
+      is_correct: isCorrect,
+      explanation: question.explanation,
+      correct_answer: question.correct_answer,
+      created_at: new Date().toISOString(),
+    });
+
     logger.info(`Student ${studentId} practiced placement question ${questionId}: correct=${isCorrect}`);
 
     return {

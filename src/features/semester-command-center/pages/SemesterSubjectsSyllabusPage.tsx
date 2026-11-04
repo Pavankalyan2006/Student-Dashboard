@@ -333,7 +333,7 @@ export function SemesterSubjectsSyllabusPage({ initialSubjectId, onNavigate }: S
                                   : 'bg-slate-800 text-slate-400'
                               }`}
                             >
-                              {unit.status.replace('_', ' ')}
+                              {(unit.status || 'IN_PROGRESS').replace(/_/g, ' ')}
                             </span>
                             {isExpanded ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
                           </div>

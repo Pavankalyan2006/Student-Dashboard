@@ -120,6 +120,7 @@ export function CourseLearningPage({
           isCompleting={isCompleting}
           onNavigateLesson={(id) => onNavigate(`/courses/${courseId}/learn/${id}`)}
           onOpenAI={() => setMobileAiOpen(true)}
+          onBackToCourse={() => onNavigate(`/courses/${courseId}`)}
         />
       </div>
 

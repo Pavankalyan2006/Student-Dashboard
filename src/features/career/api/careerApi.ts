@@ -66,7 +66,77 @@ export interface CareerRecommendationResult {
   disclaimer: string;
 }
 
+export interface CareerProfileData {
+  student_id: string;
+  target_roles: string[];
+  preferred_industries: string[];
+  preferred_locations: string[];
+  preferred_work_arrangement: 'REMOTE' | 'HYBRID' | 'ONSITE' | 'FLEXIBLE';
+  graduation_year?: number;
+  technical_skills: string[];
+  career_goals: string[];
+  updated_at: string;
+}
+
+export interface CareerDashboardSummary {
+  career_profile: CareerProfileData;
+  readiness: {
+    resume_completeness: number;
+    resume_sections_status: { section: string; complete: boolean; details?: string }[];
+    skills_aligned_percentage: number;
+    matching_skills: string[];
+    skills_to_develop: string[];
+    projects_count: number;
+    projects_available: { id: string; title: string; domain?: string }[];
+    placement_prep_progress: {
+      topics_practiced: number;
+      total_topics: number;
+      mock_interviews_count: number;
+      latest_mock_score?: number;
+      active_sprint_title?: string;
+    };
+    applications_in_progress: number;
+    upcoming_deadlines: {
+      id: string;
+      title: string;
+      company: string;
+      date: string;
+      type: 'DEADLINE' | 'INTERVIEW' | 'ASSESSMENT';
+    }[];
+    readiness_explanation: string;
+  };
+  recommended_actions: {
+    id: string;
+    title: string;
+    description: string;
+    action_label: string;
+    target_path: string;
+    priority: 'HIGH' | 'MEDIUM' | 'LOW';
+    category: 'RESUME' | 'PLACEMENT' | 'JOBS' | 'APPLICATIONS' | 'PLATFORMS' | 'SKILLS';
+  }[];
+  recent_activity: {
+    id: string;
+    title: string;
+    subtitle: string;
+    timestamp: string;
+    category: 'APPLICATION' | 'RESUME' | 'INTERVIEW' | 'INTEGRATION' | 'PROFILE';
+    url?: string;
+  }[];
+}
+
 export const careerApi = {
+  async getDashboardSummary(): Promise<CareerDashboardSummary> {
+    return apiClient.get<CareerDashboardSummary>('/career/dashboard-summary');
+  },
+
+  async getProfile(): Promise<CareerProfileData> {
+    return apiClient.get<CareerProfileData>('/career/profile');
+  },
+
+  async updateProfile(data: Partial<CareerProfileData>): Promise<CareerProfileData> {
+    return apiClient.patch<CareerProfileData>('/career/profile', data);
+  },
+
   async listRoles(): Promise<CareerRole[]> {
     return apiClient.get<CareerRole[]>('/career/roles');
   },

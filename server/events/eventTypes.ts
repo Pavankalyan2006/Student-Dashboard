@@ -1,0 +1,57 @@
+export type PlatformEventType =
+  | 'STUDENT_CREATED'
+  | 'PROFILE_UPDATED'
+  | 'STUDENT_PROFILE_UPDATED'
+  | 'ONBOARDING_COMPLETED'
+  | 'EDUCATION_PROFILE_UPDATED'
+  | 'STUDENT_SKILL_UPDATED'
+  | 'STUDENT_GOAL_UPDATED'
+  | 'SEMESTER_UPDATED'
+  | 'CAREER_PROFILE_UPDATED'
+  | 'EXTERNAL_ACCOUNT_CONNECTED'
+  | 'SKILL_EVIDENCE_UPDATED'
+  | 'RECOMMENDATION_UPDATED'
+  | 'COURSE_COMPLETED'
+  | 'LESSON_COMPLETED'
+  | 'NOTE_CREATED'
+  | 'DOCUMENT_UPLOADED'
+  | 'DOCUMENT_PROCESSED'
+  | 'QUIZ_STARTED'
+  | 'QUIZ_COMPLETED'
+  | 'QUIZ_RESULT_UPDATED'
+  | 'FLASHCARD_REVIEWED'
+  | 'REVISION_COMPLETED'
+  | 'STUDY_TASK_COMPLETED'
+  | 'SEMESTER_PLAN_UPDATED'
+  | 'SYLLABUS_UPDATED'
+  | 'ACADEMIC_EVENT_CREATED'
+  | 'ACADEMIC_EVENT_UPDATED'
+  | 'SLIP_TEST_COMPLETED'
+  | 'MINOR_RESULT_UPDATED'
+  | 'EXAM_DATE_CHANGED'
+  | 'CODING_SUBMISSION_COMPLETED'
+  | 'DSA_PROBLEM_COMPLETED'
+  | 'PROJECT_UPDATED'
+  | 'GITHUB_SYNC_COMPLETED'
+  | 'RESEARCH_UPDATED'
+  | 'RESUME_UPDATED'
+  | 'APPLICATION_UPDATED'
+  | 'JOB_IMPORTED'
+  | 'EXTERNAL_PROFILE_UPDATED'
+  | 'PROGRESS_UPDATED'
+  | 'GOAL_UPDATED'
+  | 'NOTIFICATION_CREATED';
+
+export interface PlatformEvent<T = any> {
+  id: string;
+  type: PlatformEventType;
+  student_id?: string;
+  resource_type?: string;
+  resource_id?: string;
+  payload: T;
+  source: string;
+  timestamp: string;
+  metadata?: Record<string, any>;
+}
+
+export type EventHandler<T = any> = (event: PlatformEvent<T>) => Promise<void> | void;

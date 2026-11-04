@@ -16,6 +16,97 @@ export class AgentRouter {
     // 1. Check for manual mode constraint if provided (from advanced selector)
     const mode = (explicitMode || 'AUTO').toUpperCase();
 
+    if (mode === 'EXPLAIN' || mode === 'MODE_A' || mode === 'EXPLAIN_CONCEPT') {
+      return {
+        intent: 'CONCEPT_EXPLANATION',
+        domains: ['LEARNING'],
+        complexity: 'SIMPLE',
+        targetAgents: this.filterAvailableAgents(['LearningAgent']),
+        requiresStudentContext: true,
+        requiresTools: false,
+        requiresConfirmation: false,
+        confidence: 1.0,
+      };
+    }
+
+    if (mode === 'STEP_BY_STEP' || mode === 'MODE_B') {
+      return {
+        intent: 'STEP_BY_STEP_TUTORING',
+        domains: ['LEARNING', 'PEDAGOGY'],
+        complexity: 'MODERATE',
+        targetAgents: this.filterAvailableAgents(['LearningAgent']),
+        requiresStudentContext: true,
+        requiresTools: false,
+        requiresConfirmation: false,
+        confidence: 1.0,
+      };
+    }
+
+    if (mode === 'SOLVE' || mode === 'MODE_C' || mode === 'SOLVE_PROBLEM') {
+      return {
+        intent: 'PROBLEM_SOLVING',
+        domains: ['MATHEMATICS', 'ENGINEERING', 'PROBLEM_SOLVING'],
+        complexity: 'MODERATE',
+        targetAgents: this.filterAvailableAgents(['LearningAgent']),
+        requiresStudentContext: true,
+        requiresTools: true,
+        requiresConfirmation: false,
+        confidence: 1.0,
+      };
+    }
+
+    if (mode === 'EXAM_PREP' || mode === 'MODE_D' || mode === 'EXAM') {
+      return {
+        intent: 'EXAM_PREPARATION_WORKFLOW',
+        domains: ['EXAMS', 'COURSES', 'ASSESSMENT'],
+        complexity: 'COMPLEX',
+        targetAgents: this.filterAvailableAgents(['CourseAgent', 'ExamPreparationAgent', 'StudyPlannerAgent', 'QuizAgent', 'NotesAgent']),
+        requiresStudentContext: true,
+        requiresTools: true,
+        requiresConfirmation: false,
+        confidence: 1.0,
+      };
+    }
+
+    if (mode === 'CODING' || mode === 'MODE_E' || mode === 'CODE') {
+      return {
+        intent: 'CODE_DEBUG_AND_REVIEW',
+        domains: ['CODING', 'DSA'],
+        complexity: 'SIMPLE',
+        targetAgents: this.filterAvailableAgents(['CodingAgent', 'DSAAgent']),
+        requiresStudentContext: true,
+        requiresTools: true,
+        requiresConfirmation: false,
+        confidence: 1.0,
+      };
+    }
+
+    if (mode === 'INTERVIEW' || mode === 'MODE_F') {
+      return {
+        intent: 'TECHNICAL_INTERVIEW_PREP',
+        domains: ['INTERVIEW', 'DSA', 'CAREER'],
+        complexity: 'MODERATE',
+        targetAgents: this.filterAvailableAgents(['InterviewAgent', 'DSAAgent']),
+        requiresStudentContext: true,
+        requiresTools: true,
+        requiresConfirmation: false,
+        confidence: 1.0,
+      };
+    }
+
+    if (mode === 'REVISION' || mode === 'MODE_G') {
+      return {
+        intent: 'ACTIVE_REVISION_TUTORING',
+        domains: ['REVISION', 'FLASHCARDS', 'NOTES'],
+        complexity: 'MODERATE',
+        targetAgents: this.filterAvailableAgents(['RevisionAgent', 'FlashcardAgent', 'NotesAgent']),
+        requiresStudentContext: true,
+        requiresTools: true,
+        requiresConfirmation: false,
+        confidence: 1.0,
+      };
+    }
+
     // 2. Comprehensive intent matching using semantic keywords and contextual cues
     const isExamPrep =
       text.includes('exam') ||
@@ -47,12 +138,52 @@ export class AgentRouter {
       text.includes('citations') ||
       !!context.selected_papers?.length;
 
+    const isSystemDesign =
+      text.includes('system design') ||
+      text.includes('distributed cache') ||
+      text.includes('load balancer') ||
+      text.includes('consistent hashing') ||
+      text.includes('microservices') ||
+      text.includes('sharding') ||
+      text.includes('rate limiter');
+
+    const isSQL =
+      text.includes('sql') ||
+      text.includes('database query') ||
+      text.includes('relational') ||
+      text.includes('normalization') ||
+      text.includes('bcnf') ||
+      text.includes('database index') ||
+      text.includes('dbms');
+
+    const isML =
+      text.includes('machine learning') ||
+      text.includes('ml experiment') ||
+      text.includes('model training') ||
+      text.includes('hyperparameter') ||
+      text.includes('neural network') ||
+      text.includes('random forest') ||
+      text.includes('classification');
+
+    const isViva =
+      text.includes('viva') ||
+      text.includes('oral exam') ||
+      text.includes('lab exam') ||
+      text.includes('viva voce');
+
+    const isLabExperiment =
+      text.includes('lab experiment') ||
+      text.includes('lab assistant') ||
+      text.includes('lab record') ||
+      text.includes('practical manual');
+
     const isProject =
+      !isSystemDesign && (
       text.includes('project') ||
       text.includes('capstone') ||
       text.includes('architecture') ||
       text.includes('module') ||
-      !!context.current_project;
+      !!context.current_project);
 
     const isResume =
       text.includes('resume') ||
@@ -350,6 +481,76 @@ export class AgentRouter {
         requiresTools: true,
         requiresConfirmation: false,
         confidence: 0.96,
+      };
+    }
+
+    // MODERATE CASE: System Design Lab Architecture
+    if (isSystemDesign) {
+      return {
+        intent: 'SYSTEM_DESIGN_ARCHITECTURE',
+        domains: ['SYSTEM_DESIGN', 'ARCHITECTURE'],
+        complexity: 'MODERATE',
+        targetAgents: this.filterAvailableAgents(['SystemDesignAgent']),
+        requiresStudentContext: false,
+        requiresTools: true,
+        requiresConfirmation: false,
+        confidence: 0.95,
+      };
+    }
+
+    // SIMPLE CASE: Lab Viva Voce Oral Assessment
+    if (isViva) {
+      return {
+        intent: 'LAB_VIVA_EXAMINATION',
+        domains: ['LAB_EXPERIMENTS', 'VIVA'],
+        complexity: 'SIMPLE',
+        targetAgents: this.filterAvailableAgents(['VivaAgent', 'LabAssistantAgent']),
+        requiresStudentContext: false,
+        requiresTools: true,
+        requiresConfirmation: false,
+        confidence: 0.96,
+      };
+    }
+
+    // SIMPLE CASE: Lab Experiment Guidance
+    if (isLabExperiment) {
+      return {
+        intent: 'LAB_EXPERIMENT_GUIDANCE',
+        domains: ['LAB_EXPERIMENTS'],
+        complexity: 'SIMPLE',
+        targetAgents: this.filterAvailableAgents(['LabAssistantAgent']),
+        requiresStudentContext: false,
+        requiresTools: true,
+        requiresConfirmation: false,
+        confidence: 0.95,
+      };
+    }
+
+    // SIMPLE CASE: SQL Database Query & Normalization
+    if (isSQL) {
+      return {
+        intent: 'SQL_DATABASE_QUERY',
+        domains: ['DATABASE', 'SQL'],
+        complexity: 'SIMPLE',
+        targetAgents: this.filterAvailableAgents(['SQLDatabaseAgent', 'DatabaseAgent']),
+        requiresStudentContext: false,
+        requiresTools: true,
+        requiresConfirmation: false,
+        confidence: 0.95,
+      };
+    }
+
+    // MODERATE CASE: ML Experiment Pipeline
+    if (isML) {
+      return {
+        intent: 'ML_EXPERIMENT_PIPELINE',
+        domains: ['ML', 'RESEARCH'],
+        complexity: 'MODERATE',
+        targetAgents: this.filterAvailableAgents(['MLExperimentAgent']),
+        requiresStudentContext: false,
+        requiresTools: true,
+        requiresConfirmation: false,
+        confidence: 0.95,
       };
     }
 

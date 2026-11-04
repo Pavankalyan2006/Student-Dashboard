@@ -40,6 +40,8 @@ import {
   Brain,
   Link2,
   ExternalLink,
+  BookOpenCheck,
+  Languages,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useUiStore } from '../../store/uiStore';
@@ -71,6 +73,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { name: 'Doubt Solver', href: '/doubts', icon: HelpCircle, badge: 'AI' },
       { name: 'Flashcards', href: '/flashcards', icon: Layers, badge: 'Spaced' },
       { name: 'Study Planner', href: '/study-planner', icon: Calendar, badge: 'AI' },
+      { name: 'Language Learning', href: '/languages', icon: Languages, badge: '150+' },
     ],
   },
   {
@@ -90,7 +93,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { name: 'Quiz', href: '/quiz', icon: HelpCircle },
       { name: 'Exam Preparation', href: '/exams', icon: GraduationCap, badge: 'Prep' },
       { name: 'Mock Interviews', href: '/interviews', icon: Mic },
-      { name: 'Placement Preparation', href: '/placement', icon: Briefcase },
+      { name: 'GATE Exam Preparation', href: '/assessment/gate-preparation', icon: BookOpenCheck, badge: 'GATE' },
     ],
   },
   {
@@ -107,10 +110,11 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { name: 'Career', href: '/career', icon: Compass },
       { name: 'Resume', href: '/resume', icon: FileUser },
+      { name: 'Mock Interviews', href: '/mock-interviews', icon: Mic, badge: 'AI' },
       { name: 'Internships / Applications', href: '/applications', icon: Briefcase, badge: 'Tracker' },
       { name: 'Placement Preparation', href: '/placement', icon: Award },
       { name: 'Connected Platforms', href: '/integrations', icon: Link2, badge: 'Sync' },
-      { name: 'External Profiles', href: '/profile/external', icon: ExternalLink },
+      { name: 'External Profiles', href: '/profile/external', icon: ExternalLink, badge: 'Verified' },
       { name: 'Jobs Discovery', href: '/career/jobs', icon: Briefcase, badge: 'AI' },
     ],
   },
@@ -137,7 +141,6 @@ export const NAV_SECTIONS: NavSection[] = [
 
 export function Sidebar({ currentPath, onNavigate }: { currentPath: string; onNavigate: (path: string) => void }) {
   const { sidebarCollapsed, toggleSidebar, mobileDrawerOpen, setMobileDrawerOpen } = useUiStore();
-  const { isSuperAdmin } = useAuth();
 
   const handleItemClick = (href: string) => {
     onNavigate(href);
@@ -247,32 +250,6 @@ export function Sidebar({ currentPath, onNavigate }: { currentPath: string; onNa
               </div>
             </div>
           ))}
-
-          {/* Super Admin Section (if authenticated user is SUPER_ADMIN) */}
-          {isSuperAdmin && (
-            <div className="pt-2 border-t border-[#1E2E55] space-y-1">
-              {(!sidebarCollapsed || mobileDrawerOpen) && (
-                <h4 className="px-3 text-[10px] font-bold uppercase tracking-wider text-amber-500/90 select-none">
-                  ADMINISTRATION
-                </h4>
-              )}
-              <button
-                onClick={() => handleItemClick('/admin')}
-                className={cn(
-                  'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer text-left',
-                  currentPath.startsWith('/admin')
-                    ? 'bg-amber-950/40 text-amber-200 border border-amber-800/40'
-                    : 'text-amber-400/80 hover:bg-[#132247] hover:text-amber-300',
-                  sidebarCollapsed && !mobileDrawerOpen ? 'justify-center px-0' : ''
-                )}
-              >
-                <ShieldAlert className="h-4 w-4 shrink-0 text-amber-400" />
-                {(!sidebarCollapsed || mobileDrawerOpen) && (
-                  <span className="truncate flex-1 font-semibold">Super Admin Shell</span>
-                )}
-              </button>
-            </div>
-          )}
         </div>
 
         {/* Sidebar Footer / Collapse toggle for desktop */}

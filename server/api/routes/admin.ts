@@ -5,6 +5,8 @@ import { ToolRegistry } from '../../ai/tools';
 import { ValidationError, NotFoundError } from '../../core/exceptions';
 import { StudentAccountStatus } from '../../models/adminSecurityTypes';
 import { ProgressService } from '../../services/progressService';
+import { OnboardingService } from '../../services/onboardingService';
+import { eventBus } from '../../events/eventBus';
 
 export const adminRouter = Router();
 
@@ -122,12 +124,16 @@ adminRouter.get('/students/:studentId', async (req: Request, res: Response, next
     const projects = await db.getProjects(student.id);
     const certificates = await db.getCertificates(student.id);
     const goals = await db.getStudentGoals(student.id);
+    const profileCompletion = await OnboardingService.getProfileCompletion(student.id);
+    const onboardingStatus = await OnboardingService.getOnboardingStatus(student.id);
 
     res.json({
       success: true,
       data: {
         student: safeStudent,
         academic_profile: profile,
+        profile_completion: profileCompletion,
+        onboarding_status: onboardingStatus,
         progress_summary: {
           courses_completed: progress.courses_completed || 0,
           dsa_solved: progress.overall_indicators.dsa_problems_solved,
@@ -177,6 +183,119 @@ adminRouter.patch('/students/:studentId/status', async (req: Request, res: Respo
     next(err);
   }
 });
+
+// Create new student account (SUPER_ADMIN only)
+adminRouter.post('/students', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { name, email, password, branch, semester, role } = req.body;
+
+    // Validate required fields
+    if (!name || typeof name !== 'string' || name.trim().length < 2) {
+      throw new ValidationError("'name' must be at least 2 characters.");
+    }
+    if (!email || typeof email !== 'string' || !email.includes('@')) {
+      throw new ValidationError("Valid 'email' is required.");
+    }
+    if (!password || typeof password !== 'string' || password.length < 8) {
+      throw new ValidationError("'password' must be at least 8 characters.");
+    }
+    if (!branch || typeof branch !== 'string') {
+      throw new ValidationError("'branch' is required.");
+    }
+    const semesterNum = parseInt(semester, 10);
+    if (isNaN(semesterNum) || semesterNum < 1 || semesterNum > 8) {
+      throw new ValidationError("'semester' must be a number between 1 and 8.");
+    }
+
+    const allowedRoles = ['STUDENT', 'SUPER_ADMIN'];
+    const assignedRole = role && allowedRoles.includes(role) ? role : 'STUDENT';
+
+    // Prevent duplicate email
+    const existing = await db.getStudentByEmail(email.trim().toLowerCase());
+    if (existing) {
+      throw new ValidationError(`A student account with email '${email}' already exists.`);
+    }
+
+    // Hash password
+    const bcrypt = await import('bcryptjs');
+    const password_hash = await bcrypt.hash(password, 12);
+
+    const newStudent = await db.createStudent({
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
+      password_hash,
+      branch: branch.trim(),
+      semester: semesterNum,
+      role: assignedRole as 'STUDENT' | 'SUPER_ADMIN',
+      is_active: true,
+      status: 'ACTIVE',
+      avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name.trim())}`,
+    });
+
+    await eventBus.publish(
+      'STUDENT_CREATED',
+      {
+        student_id: newStudent.id,
+        student_email: newStudent.email,
+        student_name: newStudent.name,
+        created_by: req.user!.email,
+      },
+      {
+        student_id: newStudent.id,
+        resource_type: 'Student',
+        resource_id: newStudent.id,
+        source: 'AdminPortal',
+      }
+    );
+
+    res.status(201).json({
+      success: true,
+      data: newStudent,
+      message: `Student account created successfully for ${newStudent.name}.`,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Delete student account (SUPER_ADMIN only — use with caution)
+adminRouter.delete('/students/:studentId', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const student = await db.getStudentById(req.params.studentId);
+    if (!student) {
+      throw new NotFoundError(`Student with ID ${req.params.studentId} not found`);
+    }
+
+    // Prevent self-deletion
+    if (req.user!.userId === req.params.studentId) {
+      throw new ValidationError('Super admins cannot delete their own account via the admin panel.');
+    }
+
+    // Mark as disabled rather than hard delete (preserve audit trail)
+    const admin = await db.getStudentById(req.user!.userId);
+    const adminName = admin ? admin.name : 'Super Admin';
+    const { default: bcrypt } = await import('bcryptjs');
+    void bcrypt; // imported for createStudent, not needed here
+
+    await db.updateStudentAccountStatus(
+      req.params.studentId,
+      'DISABLED',
+      'Account permanently disabled by Super Admin.',
+      req.user!.userId,
+      adminName,
+      req.ip || '127.0.0.1'
+    );
+
+    res.json({
+      success: true,
+      message: `Student account ${req.params.studentId} has been permanently disabled.`,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+
 
 // ----------------------------------------------------------------------------
 // 3. AUDIT LOGS

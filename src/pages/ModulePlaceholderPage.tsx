@@ -44,6 +44,23 @@ export const MODULE_REGISTRY: Record<string, ModuleConfig> = {
       { label: 'Export Format', value: 'PDF / Markdown' },
     ],
   },
+  '/assessment/gate-preparation': {
+    title: 'GATE Exam Preparation',
+    description: 'Comprehensive Graduate Aptitude Test in Engineering preparation platform with paper selection, syllabus explorer, authentic PYQs, and full-length official mock tests.',
+    phaseNumber: 15,
+    badgeText: 'GATE',
+    features: [
+      'Multi-paper selection (CS, DA, EC, EE, ME, CE, MA, PH)',
+      'Topic-wise syllabus tracking with confidence ratings & revision flags',
+      'Authentic PYQ bank with timer and server-side scoring (MCQ, MSQ, NAT)',
+      '180-minute official CBT exam simulation with virtual calculator',
+      'Personalized study planner, weak topics diagnostics & GateGuru AI tutor',
+    ],
+    stats: [
+      { label: 'Papers Supported', value: '8 Branches' },
+      { label: 'Exam Mode', value: 'CBT Simulation' },
+    ],
+  },
   '/quiz': {
     title: 'Adaptive AI Quiz System',
     description: 'Dynamic question generation calibrated to student knowledge level and university exam patterns.',
@@ -147,6 +164,21 @@ export const MODULE_REGISTRY: Record<string, ModuleConfig> = {
     stats: [
       { label: 'Voice / Text', value: 'Supported' },
       { label: 'Feedback', value: 'Real-time' },
+    ],
+  },
+  '/mock-interviews': {
+    title: 'AI Mock Interviews Platform',
+    description: 'Comprehensive 12-track interview simulation with coding/SQL sandboxes, STAR method, and multi-rubric scoring.',
+    phaseNumber: 11,
+    features: [
+      '12 Dedicated interview tracks including Coding, SQL, and System Design',
+      'Browser voice speech-to-text with real-time transcript',
+      'Multi-dimensional rubric scoring with actionable learning roadmap',
+      'Direct integration with Coding Sandbox, SQL Sandbox, and Resume Builder',
+    ],
+    stats: [
+      { label: 'Tracks', value: '12 Categories' },
+      { label: 'Execution', value: 'Sandboxed' },
     ],
   },
   '/resume': {
@@ -282,6 +314,54 @@ export const MODULE_REGISTRY: Record<string, ModuleConfig> = {
     stats: [
       { label: 'API Version', value: 'v1.0.0' },
       { label: 'Environment', value: 'Production Ready' },
+    ],
+  },
+  '/languages': {
+    title: 'Language Learning Platform',
+    description: 'Master 150+ world & Indian regional languages with interactive lessons, SM-2 spaced repetition, and AI conversations.',
+    phaseNumber: 17,
+    features: [
+      '150 distinct world & regional languages directory',
+      'CEFR-aligned learning pathways (A1 to C2)',
+      'SM-2 SuperMemo spaced repetition vocabulary flashcards',
+      'AI conversation partner with speech recognition and correction mode',
+      'Contextual multi-lingual translator with register nuances',
+    ],
+    stats: [
+      { label: 'Languages', value: '150 Distinct' },
+      { label: 'Learning Engine', value: 'SM-2 & AI' },
+    ],
+  },
+  '/knowledge': {
+    title: 'AI Knowledge Base & Document Repository',
+    description: 'Hierarchical collections, vector search, grounded QA with page citations, and auto-generated study materials.',
+    phaseNumber: 18,
+    features: [
+      'Subject & semester collection hierarchy',
+      'Semantic vector search across indexed lecture PDFs and notes',
+      'Grounded AI Q&A with exact document page citations',
+      'Interactive flashcard decks and practice quizzes',
+      'Bookmarks, margin annotations, and external reference links',
+    ],
+    stats: [
+      { label: 'Indexing Engine', value: 'Vector RAG' },
+      { label: 'Grounded QA', value: 'Page-level Citations' },
+    ],
+  },
+  '/knowledge-base': {
+    title: 'AI Knowledge Base & Document Repository',
+    description: 'Hierarchical collections, vector search, grounded QA with page citations, and auto-generated study materials.',
+    phaseNumber: 18,
+    features: [
+      'Subject & semester collection hierarchy',
+      'Semantic vector search across indexed lecture PDFs and notes',
+      'Grounded AI Q&A with exact document page citations',
+      'Interactive flashcard decks and practice quizzes',
+      'Bookmarks, margin annotations, and external reference links',
+    ],
+    stats: [
+      { label: 'Indexing Engine', value: 'Vector RAG' },
+      { label: 'Grounded QA', value: 'Page-level Citations' },
     ],
   },
 };

@@ -36,6 +36,8 @@ import {
   CareerConsistencyReport,
 } from '../../../types/externalIntegrations';
 import { toast } from 'sonner';
+import { ExternalProfilesPage } from './ExternalProfilesPage';
+import { externalProfilesApi } from '../api/externalProfilesApi';
 
 interface ExternalProfileHubPageProps {
   onNavigate?: (path: string) => void;
@@ -44,6 +46,7 @@ interface ExternalProfileHubPageProps {
 export function ExternalProfileHubPage({ onNavigate }: ExternalProfileHubPageProps) {
   const [providers, setProviders] = React.useState<ExternalProviderInfo[]>([]);
   const [connections, setConnections] = React.useState<ExternalAccountConnection[]>([]);
+  const [externalProfilesCount, setExternalProfilesCount] = React.useState<number>(0);
   const [skills, setSkills] = React.useState<ExternalSkillEvidence[]>([]);
   const [consistency, setConsistency] = React.useState<CareerConsistencyReport | null>(null);
   const [loading, setLoading] = React.useState(true);
@@ -66,14 +69,16 @@ export function ExternalProfileHubPage({ onNavigate }: ExternalProfileHubPagePro
   const loadData = React.useCallback(async () => {
     try {
       setLoading(true);
-      const [allProviders, conns, skillList, consistencyRep] = await Promise.all([
+      const [allProviders, conns, skillList, consistencyRep, extProfiles] = await Promise.all([
         externalIntegrationsApi.getProviders(),
         externalIntegrationsApi.getConnections(),
         externalIntegrationsApi.getSkillEvidence(),
         externalIntegrationsApi.getConsistencyReport(),
+        externalProfilesApi.getProfiles().catch(() => []),
       ]);
       setProviders(allProviders);
       setConnections(conns);
+      setExternalProfilesCount(extProfiles.length);
       setSkills(skillList);
       setConsistency(consistencyRep);
     } catch (err: any) {
@@ -168,7 +173,7 @@ export function ExternalProfileHubPage({ onNavigate }: ExternalProfileHubPagePro
           }`}
         >
           <ExternalLink className="w-4 h-4" />
-          Connected Profiles ({connections.length})
+          Connected Profiles ({externalProfilesCount || connections.length})
         </button>
         <button
           onClick={() => setActiveTab('consistency')}
@@ -207,142 +212,7 @@ export function ExternalProfileHubPage({ onNavigate }: ExternalProfileHubPagePro
 
       {/* TAB 1: PROFILES */}
       {activeTab === 'profiles' && (
-        <div className="space-y-8">
-          {/* Quick Summary Banner */}
-          <div className="p-4 bg-gradient-to-r from-indigo-950/40 via-slate-900 to-slate-900 border border-indigo-800/40 rounded-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
-                <Sparkles className="w-5 h-5" />
-              </div>
-              <div>
-                <h4 className="text-sm font-semibold text-white">Multi-Agent Evidence Aggregation Active</h4>
-                <p className="text-xs text-slate-400">
-                  External coding milestones and verified projects seamlessly reinforce your Resume, Placement, and AI Learning Path.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-slate-400">
-                {connections.length} of {providers.length} platforms linked
-              </span>
-              <div className="w-32 bg-slate-800 rounded-full h-2 overflow-hidden border border-slate-700">
-                <div
-                  className="bg-indigo-500 h-full rounded-full transition-all duration-500"
-                  style={{ width: `${(connections.length / Math.max(providers.length, 1)) * 100}%` }}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Section: Professional Profiles */}
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-semibold text-white flex items-center gap-2">
-                <Briefcase className="w-4 h-4 text-sky-400" />
-                Professional & Career Profiles
-              </h3>
-              <span className="text-xs text-slate-400">LinkedIn, Indeed & Job Networks</span>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {professionalProviders.map((prov) => {
-                const conn = getConnectionForProvider(prov.id);
-                return (
-                  <ProfileCard
-                    key={prov.id}
-                    provider={prov}
-                    connection={conn}
-                    onSync={() => conn && handleSyncConnection(conn.id)}
-                    onConnect={() => onNavigate && onNavigate('/integrations')}
-                    isSyncing={syncingId === conn?.id}
-                  />
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Section: Coding Profiles */}
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-semibold text-white flex items-center gap-2">
-                <Code2 className="w-4 h-4 text-emerald-400" />
-                Coding & Problem Solving Profiles
-              </h3>
-              <span className="text-xs text-slate-400">LeetCode, GitHub, HackerRank, CodeChef, GeeksforGeeks</span>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {codingProviders.map((prov) => {
-                const conn = getConnectionForProvider(prov.id);
-                return (
-                  <ProfileCard
-                    key={prov.id}
-                    provider={prov}
-                    connection={conn}
-                    onSync={() => conn && handleSyncConnection(conn.id)}
-                    onConnect={() => onNavigate && onNavigate('/integrations')}
-                    isSyncing={syncingId === conn?.id}
-                  />
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Section: AI / ML Profiles */}
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-semibold text-white flex items-center gap-2">
-                <Cpu className="w-4 h-4 text-purple-400" />
-                Data Science & AI Profiles
-              </h3>
-              <span className="text-xs text-slate-400">Kaggle, HuggingFace & Research Portfolios</span>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {aiProviders.map((prov) => {
-                const conn = getConnectionForProvider(prov.id);
-                return (
-                  <ProfileCard
-                    key={prov.id}
-                    provider={prov}
-                    connection={conn}
-                    onSync={() => conn && handleSyncConnection(conn.id)}
-                    onConnect={() => onNavigate && onNavigate('/integrations')}
-                    isSyncing={syncingId === conn?.id}
-                  />
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Custom Portfolio Link */}
-          <div className="p-4 bg-slate-900/60 border border-slate-800 rounded-xl flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-                <ExternalLink className="w-5 h-5" />
-              </div>
-              <div>
-                <h4 className="text-sm font-semibold text-white">Personal Portfolio & Website</h4>
-                <p className="text-xs text-slate-400">
-                  Provide your verified personal portfolio URL for resume tailoring and placement packages.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 w-full md:w-auto">
-              <input
-                type="url"
-                value={customPortfolioUrl}
-                onChange={(e) => setCustomPortfolioUrl(e.target.value)}
-                className="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 w-full md:w-64"
-                placeholder="https://yourportfolio.com"
-              />
-              <Button
-                size="sm"
-                onClick={() => toast.success('Portfolio URL updated!')}
-                className="bg-slate-800 hover:bg-slate-700 text-slate-200 shrink-0"
-              >
-                Save URL
-              </Button>
-            </div>
-          </div>
-        </div>
+        <ExternalProfilesPage embedded={true} onNavigate={onNavigate} />
       )}
 
       {/* TAB 2: CONSISTENCY CHECKER (Section 21) */}

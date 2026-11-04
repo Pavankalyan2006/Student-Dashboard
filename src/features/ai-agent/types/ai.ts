@@ -88,3 +88,47 @@ export interface StudentLearningContext {
   weak_areas: string[];
   suggested_actions: string[];
 }
+
+export interface TutorTeachingMode {
+  id: string;
+  name: string;
+  desc: string;
+}
+
+export interface SelectedTutorContext {
+  mode: string;
+  difficulty?: string;
+  subject?: string;
+  courseId?: string;
+  courseName?: string;
+  chapterId?: string;
+  lessonId?: string;
+  lessonTitle?: string;
+  documentIds?: string[];
+  noteIds?: string[];
+}
+
+export interface AITutorContextOptions {
+  courses: {
+    id: string;
+    name: string;
+    code: string;
+    category?: string;
+    difficulty?: string;
+    units_count?: number;
+  }[];
+  documents: {
+    id: string;
+    title: string;
+    file_type?: string;
+    page_count?: number;
+  }[];
+  notes: {
+    id: string;
+    title: string;
+    note_type?: string;
+  }[];
+  subjects: string[];
+  teachingModes: TutorTeachingMode[];
+  difficultyLevels: string[];
+}

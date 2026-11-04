@@ -451,16 +451,21 @@ export class ExternalIntegrationService {
   /**
    * Import job description text manually or from URL
    */
-  public static async importJob(studentId: string, data: Partial<ExternalJob>): Promise<ExternalJob> {
-    if (!data.title || !data.company_name || !data.description) {
+  public static async importJob(
+    studentId: string,
+    data: Partial<ExternalJob> & { company?: string }
+  ): Promise<ExternalJob & { company?: string }> {
+    const company = data.company_name || data.company;
+    if (!data.title || !company || !data.description) {
       throw new ValidationError('Job Title, Company Name, and Description are required');
     }
 
     const jobId = `job_imp_${Date.now()}`;
-    const newJob: ExternalJob = {
+    const newJob: ExternalJob & { company?: string } = {
       id: jobId,
       title: data.title,
-      company_name: data.company_name,
+      company_name: company,
+      company: company,
       location: data.location || 'Bengaluru / Remote',
       is_remote: data.is_remote ?? true,
       employment_type: data.employment_type || 'INTERNSHIP',
@@ -475,8 +480,8 @@ export class ExternalIntegrationService {
       posted_at: new Date().toISOString(),
     };
 
-    this.jobs.set(jobId, newJob);
-    logger.info(`Job description imported by student ${studentId}: ${newJob.title} at ${newJob.company_name}`);
+    this.jobs.set(jobId, newJob as ExternalJob);
+    logger.info(`Job description imported by student ${studentId}: ${newJob.title} at ${company}`);
     return newJob;
   }
 }

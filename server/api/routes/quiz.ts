@@ -6,6 +6,7 @@ import { QuizAttemptService } from '../../services/quizAttempt';
 import { QuizProgressService } from '../../services/quizProgress';
 import { toDeliveryQuestion, GenerateQuizRequest } from '../../models/quizTypes';
 import { ValidationError, NotFoundError, AuthorizationError } from '../../core/exceptions';
+import { eventBus } from '../../events/eventBus';
 
 export const quizRouter = Router();
 
@@ -397,6 +398,25 @@ quizRouter.post('/quiz/attempts/:attempt_id/submit', requireAuth, async (req, re
     const studentId = req.user!.userId;
     const { answers } = req.body;
     const result = await QuizAttemptService.submitAttempt(studentId, req.params.attempt_id, answers);
+
+    await eventBus.publish(
+      'QUIZ_RESULT_UPDATED',
+      {
+        attempt_id: req.params.attempt_id,
+        quiz_id: result.quiz_id,
+        quiz_title: result.quiz_title,
+        score: result.score,
+        total_questions: result.correct_count + result.incorrect_count + result.unanswered_count,
+        percentage: result.percentage,
+      },
+      {
+        student_id: studentId,
+        resource_type: 'QuizAttempt',
+        resource_id: req.params.attempt_id,
+        source: 'QuizRouter',
+      }
+    );
+
     res.json({
       success: true,
       data: result,

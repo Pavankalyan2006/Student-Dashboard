@@ -1,3 +1,6 @@
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const AdmZip = require('adm-zip');
 import { DocumentParser, ParsedDocumentResult, ParsedPage } from './base';
 
 export class PPTXParser implements DocumentParser {
@@ -13,76 +16,67 @@ export class PPTXParser implements DocumentParser {
 
   public async parse(bufferOrText: Buffer | string, options?: { filename?: string }): Promise<ParsedDocumentResult> {
     const filename = options?.filename || 'Lecture_Slides.pptx';
-    const title = filename.replace(/\.[^/.]+$/, '').replace(/[_\\-]/g, ' ');
+    const title = filename.replace(/\.[^/.]+$/, '').replace(/[_\-]/g, ' ');
 
-    let rawString = '';
+    let buffer: Buffer;
     if (typeof bufferOrText === 'string') {
-      rawString = bufferOrText;
+      if (bufferOrText.startsWith('data:')) {
+        const base64Data = bufferOrText.split(',')[1] || '';
+        buffer = Buffer.from(base64Data, 'base64');
+      } else {
+        buffer = Buffer.from(bufferOrText, 'base64');
+      }
     } else {
-      rawString = bufferOrText.toString('utf-8');
+      buffer = bufferOrText;
     }
 
     const pages: ParsedPage[] = [];
 
-    // Check if slides are delimited by <p:sld or custom delimiter
-    if (rawString.includes('<a:t>')) {
-      const slideTextBlocks: string[] = [];
-      const regex = /<a:t>([\s\S]*?)<\/a:t>/g;
-      let match: RegExpExecArray | null;
-      let currentSlide = '';
-      while ((match = regex.exec(rawString)) !== null) {
-        currentSlide += match[1] + '\n';
-        if (currentSlide.length > 500) {
-          slideTextBlocks.push(currentSlide.trim());
-          currentSlide = '';
-        }
-      }
-      if (currentSlide.trim().length > 0) {
-        slideTextBlocks.push(currentSlide.trim());
-      }
+    try {
+      const zip = new AdmZip(buffer);
+      const zipEntries = zip.getEntries();
+      const slideEntries = zipEntries
+        .filter((e: any) => e.entryName.startsWith('ppt/slides/slide') && e.entryName.endsWith('.xml'))
+        .sort((a: any, b: any) => {
+          const numA = parseInt(a.entryName.replace(/[^0-9]/g, '') || '0', 10);
+          const numB = parseInt(b.entryName.replace(/[^0-9]/g, '') || '0', 10);
+          return numA - numB;
+        });
 
-      slideTextBlocks.forEach((slideContent, idx) => {
-        const lines = slideContent.split('\n');
-        const heading = lines[0] || `Slide ${idx + 1}`;
+      slideEntries.forEach((entry: any, idx: number) => {
+        const xml = entry.getData().toString('utf-8');
+        const textPieces: string[] = [];
+        const regex = /<a:t>([\s\S]*?)<\/a:t>/g;
+        let match: RegExpExecArray | null;
+        while ((match = regex.exec(xml)) !== null) {
+          if (match[1].trim()) textPieces.push(match[1].trim());
+        }
+        const slideText = textPieces.join('\n');
+        const heading = textPieces[0] || `Slide ${idx + 1}`;
+
         pages.push({
           pageNumber: idx + 1,
-          text: `## Slide ${idx + 1}: ${heading}\n\n${slideContent}`,
+          text: `## Slide ${idx + 1}: ${heading}\n\n${slideText}`,
           headings: [heading],
-          metadata: {
-            slide_number: idx + 1,
-            word_count: slideContent.split(/\s+/).length,
-          },
+          metadata: { word_count: slideText.split(/\s+/).length },
         });
       });
+    } catch (e) {
+      // Fallback
     }
 
     if (pages.length === 0) {
-      // Default generated lecture slides for curriculum presentation
-      pages.push(
-        {
-          pageNumber: 1,
-          text: `## Slide 1: ${title}\n\n- Department of Computer Science & Engineering\n- B.Tech Curriculum Lecture Series\n- Overview of Core Modules and Learning Outcomes`,
-          headings: [`Slide 1: ${title}`],
-          metadata: { slide_number: 1, word_count: 24 },
-        },
-        {
-          pageNumber: 2,
-          text: `## Slide 2: Architectural Foundations & Invariants\n\n- Key System Requirements:\n  * Low latency dispatch\n  * Deterministic scheduling\n  * ACID transactional state\n- High-level system topology and block diagrams`,
-          headings: ['Slide 2: Architectural Foundations'],
-          metadata: { slide_number: 2, word_count: 28 },
-        },
-        {
-          pageNumber: 3,
-          text: `## Slide 3: Summary & Exam Takeaways\n\n- Key points for semester viva and laboratory examinations\n- Review unit questions and reference textbooks`,
-          headings: ['Slide 3: Summary & Exam Takeaways'],
-          metadata: { slide_number: 3, word_count: 20 },
-        }
-      );
+      pages.push({
+        pageNumber: 1,
+        text: `Slide content for ${title}`,
+        headings: ['Overview'],
+        metadata: { word_count: 4 },
+      });
     }
 
     return {
       title,
-      author: 'Academic Lecturer',
+      author: 'Academic Faculty',
       pageCount: pages.length,
       pages,
       language: 'en',

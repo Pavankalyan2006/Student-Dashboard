@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { conversationApi } from '../api/conversationApi';
-import { AIMessageRecord, ToolExecutionSummary, AgentPlanItem } from '../types/ai';
+import { AIMessageRecord, ToolExecutionSummary, AgentPlanItem, SelectedTutorContext } from '../types/ai';
 import { toast } from 'sonner';
 
 export function useAIChat(
@@ -36,7 +36,11 @@ export function useAIChat(
     setActivePlan(null);
   }, [convData, conversationId]);
 
-  const sendMessage = async (text: string, mode?: string) => {
+  const sendMessage = async (
+    text: string,
+    mode?: string,
+    tutorContext?: SelectedTutorContext
+  ) => {
     const trimmed = text.trim();
     if (!trimmed || isGenerating) return;
 
@@ -70,7 +74,14 @@ export function useAIChat(
         body: JSON.stringify({
           conversation_id: conversationId,
           message: trimmed,
-          context: { mode: mode || 'AUTO' },
+          context: {
+            mode: mode || tutorContext?.mode || 'AUTO',
+            courseId: tutorContext?.courseId,
+            lessonId: tutorContext?.lessonId,
+            documentIds: tutorContext?.documentIds,
+            difficulty: tutorContext?.difficulty,
+            subject: tutorContext?.subject,
+          },
         }),
         signal: abortController.signal,
       });

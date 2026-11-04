@@ -104,6 +104,71 @@ export const githubApi = {
     return apiClient.post<{ title: string; sections: { heading: string; body: string }[] }>(`/github/repos/${repoId}/onboarding-guide`, {});
   },
 
+  // Connection with PAT
+  async connectWithPat(token: string, username?: string): Promise<any> {
+    return apiClient.post<any>('/github/connect-pat', { token, username });
+  },
+
+  async syncAll(): Promise<{ synced_at: string; repositories_count: number; message: string }> {
+    return apiClient.post<{ synced_at: string; repositories_count: number; message: string }>('/github/sync', {});
+  },
+
+  // Readme
+  async getReadme(repoId: string): Promise<{ repo_id: string; name: string; content: string; path: string }> {
+    return apiClient.get<{ repo_id: string; name: string; content: string; path: string }>(`/github/repos/${repoId}/readme`);
+  },
+
+  // Featured Projects & Portfolio
+  async toggleFeatured(repoId: string, is_featured: boolean, metadata?: any): Promise<GitHubRepository> {
+    return apiClient.post<GitHubRepository>(`/github/repos/${repoId}/featured`, { is_featured, metadata });
+  },
+
+  async listFeatured(): Promise<GitHubRepository[]> {
+    return apiClient.get<GitHubRepository[]>('/github/featured');
+  },
+
+  async updatePersonalNotes(repoId: string, notes: string): Promise<GitHubRepository> {
+    return apiClient.post<GitHubRepository>(`/github/repos/${repoId}/personal-notes`, { notes });
+  },
+
+  // Languages Summary
+  async getLanguagesSummary(): Promise<{
+    total_repositories: number;
+    languages: { name: string; repo_count: number; percentage: number }[];
+  }> {
+    return apiClient.get<any>('/github/languages');
+  },
+
+  // Career & Resume Integration
+  async generateResumeBullets(repoId: string, role_context?: string): Promise<{ bullets: any[]; generated_at: string }> {
+    return apiClient.post<{ bullets: any[]; generated_at: string }>(`/github/repos/${repoId}/resume-bullets`, { role_context });
+  },
+
+  async exportToResume(
+    repoId: string,
+    data: { bullets: string[]; title?: string; tech_stack?: string[] }
+  ): Promise<{ success: boolean; project_id: string; title: string; bullets_count: number; message: string }> {
+    return apiClient.post<any>(`/github/repos/${repoId}/resume-export`, data);
+  },
+
+  async generateInterviewPrep(repoId: string): Promise<{ questions: any[]; repo_name: string; generated_at: string }> {
+    return apiClient.post<{ questions: any[]; repo_name: string; generated_at: string }>(`/github/repos/${repoId}/interview-prep`, {});
+  },
+
+  // Learning Discovery
+  async searchLearningRepositories(params?: {
+    query?: string;
+    topic?: string;
+    language?: string;
+  }): Promise<{ total_count: number; items: any[] }> {
+    const query = new URLSearchParams();
+    if (params?.query) query.set('query', params.query);
+    if (params?.topic) query.set('topic', params.topic);
+    if (params?.language) query.set('language', params.language);
+    const qs = query.toString() ? `?${query.toString()}` : '';
+    return apiClient.get<any>(`/github/learning-discovery${qs}`);
+  },
+
   // Linking to Project Builder
   async linkProject(repoId: string, projectId: string): Promise<GitHubRepository> {
     return apiClient.post<GitHubRepository>(`/github/repos/${repoId}/link-project`, { project_id: projectId });

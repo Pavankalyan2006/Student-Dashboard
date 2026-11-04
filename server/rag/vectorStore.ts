@@ -66,6 +66,7 @@ export class VectorStore {
     options: {
       studentId: string;
       documentId?: string;
+      documentIds?: string[];
       pageNumbers?: number[];
       topK?: number;
       minScore?: number;
@@ -83,6 +84,9 @@ export class VectorStore {
 
       // 2. Document filter
       if (options.documentId && record.documentId !== options.documentId) {
+        continue;
+      }
+      if (options.documentIds && options.documentIds.length > 0 && !options.documentIds.includes(record.documentId)) {
         continue;
       }
 
@@ -113,6 +117,42 @@ export class VectorStore {
   }
 
   /**
+   * Adds an individual vector record directly into the store.
+   */
+  public static addVector(data: {
+    id: string;
+    vector: number[];
+    documentId: string;
+    pageNumber: number;
+    content: string;
+    studentId: string;
+    metadata?: Record<string, any>;
+  }): void {
+    this.store.set(data.id, {
+      chunkId: data.id,
+      documentId: data.documentId,
+      studentId: data.studentId,
+      pageNumber: data.pageNumber,
+      content: data.content,
+      vector: data.vector,
+      metadata: data.metadata || {},
+    });
+  }
+
+  /**
+   * Retrieves all chunk records associated with a document.
+   */
+  public static getChunksByDocument(documentId: string): VectorRecord[] {
+    const results: VectorRecord[] = [];
+    for (const record of this.store.values()) {
+      if (record.documentId === documentId) {
+        results.push(record);
+      }
+    }
+    return results;
+  }
+
+  /**
    * Deletes all vector records for a specific document.
    */
   public static deleteDocumentVectors(documentId: string, studentId: string): void {
@@ -137,3 +177,4 @@ export class VectorStore {
     return this.store.size;
   }
 }
+

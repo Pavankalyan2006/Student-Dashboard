@@ -8,7 +8,9 @@ export class ResponseSynthesizer {
   public static synthesize(
     userMessage: string,
     plan: TaskPlan,
-    results: AgentResult[]
+    results: AgentResult[],
+    llmGeneratedAnswer?: string,
+    extraSources?: SourceProvenance[]
   ): SynthesizedResponse {
     const understanding = `Interpreted request for **${plan.intent.intent.replace(/_/g, ' ')}** spanning ${plan.intent.domains.join(', ')}.`;
 
@@ -17,6 +19,14 @@ export class ResponseSynthesizer {
     const disclosures: string[] = [];
     const allSources: SourceProvenance[] = [];
     const nextActionsSet = new Set<string>();
+
+    if (extraSources) {
+      for (const s of extraSources) {
+        if (!allSources.some((existing) => existing.sourceId === s.sourceId)) {
+          allSources.push(s);
+        }
+      }
+    }
 
     for (const res of results) {
       if (res.status === 'failure') {
@@ -136,8 +146,15 @@ export class ResponseSynthesizer {
       }
     }
 
-    // Default result text if specialized fields were empty
-    if (!resultSection.trim()) {
+    // Integrate LLM generated answer if provided
+    if (llmGeneratedAnswer && llmGeneratedAnswer.trim()) {
+      if (resultSection.trim()) {
+        resultSection = `${llmGeneratedAnswer.trim()}\n\n---\n\n${resultSection.trim()}`;
+      } else {
+        resultSection = llmGeneratedAnswer.trim();
+      }
+    } else if (!resultSection.trim()) {
+      // Default result text if specialized fields were empty
       resultSection = results
         .map((r) => `#### ${r.agent}\n${r.summary}`)
         .join('\n\n');
@@ -145,9 +162,10 @@ export class ResponseSynthesizer {
 
     // 4. Default Suggested Actions
     if (nextActionsSet.size === 0) {
-      nextActionsSet.add('Save study plan to your calendar');
-      nextActionsSet.add('Practice related problems in DSA Lab');
-      nextActionsSet.add('Export flashcards to Smart Notes');
+      nextActionsSet.add('Save key insights to Notes');
+      nextActionsSet.add('Generate Active Recall Flashcards');
+      nextActionsSet.add('Take Diagnostic Practice Quiz');
+      nextActionsSet.add('Practice related code in Coding Lab');
       nextActionsSet.add('Take full-length adaptive quiz');
     }
 

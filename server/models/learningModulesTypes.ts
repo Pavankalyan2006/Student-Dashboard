@@ -19,14 +19,15 @@ export interface StudyPlanTask {
   duration_minutes: number;
   priority: StudyTaskPriority;
   status: StudyTaskStatus;
-  date: string; // YYYY-MM-DD
+  date?: string; // YYYY-MM-DD
   course_id?: string;
   lesson_id?: string;
   resource_url?: string;
   notes?: string;
   ai_recommendation?: string;
+  is_ai_recommended?: boolean;
   completed_at?: string;
-  created_at: string;
+  created_at?: string;
 }
 
 export interface StudyPlan {
@@ -133,6 +134,7 @@ export interface StudentDoubt {
 // ==========================================
 export type FlashcardType = 'DEFINITION' | 'CONCEPT' | 'FORMULA' | 'CODE' | 'SYNTAX' | 'COMPARISON' | 'QA' | 'SCENARIO';
 export type FlashcardState = 'NEW' | 'LEARNING' | 'REVIEW' | 'MASTERED';
+export type ReviewRating = 'AGAIN' | 'HARD' | 'GOOD' | 'EASY' | number;
 
 export interface Flashcard {
   id: string;
@@ -152,6 +154,16 @@ export interface Flashcard {
   last_reviewed?: string;
   next_review: string;
   created_at: string;
+  interval_days?: number;
+  ease_factor?: number;
+  repetition_count?: number;
+  is_bookmarked?: boolean;
+  explanation?: string;
+  example?: string;
+  tags?: string[];
+  source_type?: 'MANUAL' | 'AI_GENERATED' | 'NOTES' | 'DOCUMENT' | 'COURSE';
+  source_id?: string;
+  source_title?: string;
 }
 
 export interface FlashcardDeck {
@@ -165,6 +177,46 @@ export interface FlashcardDeck {
   mastered_count: number;
   cards: Flashcard[];
   created_at: string;
+  updated_at?: string;
+  last_reviewed_at?: string;
+  course_id?: string;
+  course_code?: string;
+  tags?: string[];
+  is_archived?: boolean;
+  is_bookmarked?: boolean;
+  source_type?: 'MANUAL' | 'AI_GENERATED' | 'NOTES' | 'DOCUMENT' | 'COURSE';
+  source_id?: string;
+  source_title?: string;
+}
+
+export interface FlashcardStats {
+  total_decks: number;
+  total_cards: number;
+  due_today: number;
+  reviewed_today: number;
+  mastered_cards: number;
+  learning_cards: number;
+  new_cards: number;
+  streak_days: number;
+  overall_coverage_pct: number;
+  mastery_pct: number;
+  rating_distribution: {
+    again: number;
+    hard: number;
+    good: number;
+    easy: number;
+  };
+  recent_activity: Array<{ date: string; count: number }>;
+}
+
+export interface FlashcardAIGenerateRequest {
+  topic: string;
+  subject?: string;
+  course_id?: string;
+  difficulty?: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+  count?: number;
+  style?: 'DEFINITION' | 'CONCEPT' | 'COMPARISON' | 'EXAMPLE' | 'FORMULA' | 'MIXED';
+  context_text?: string;
 }
 
 // ==========================================
@@ -215,18 +267,81 @@ export interface LabEntity {
 // ==========================================
 // 6. SQL / Database Lab Models
 // ==========================================
+export type SQLDataType =
+  | 'INTEGER'
+  | 'BIGINT'
+  | 'DECIMAL'
+  | 'FLOAT'
+  | 'VARCHAR'
+  | 'CHAR'
+  | 'TEXT'
+  | 'BOOLEAN'
+  | 'DATE'
+  | 'TIME'
+  | 'TIMESTAMP'
+  | 'JSON';
+
+export interface SQLForeignKeyConstraint {
+  id?: string;
+  constraint_name?: string;
+  source_column: string;
+  referenced_table: string;
+  referenced_column: string;
+  on_update?: 'CASCADE' | 'RESTRICT' | 'SET NULL' | 'NO ACTION';
+  on_delete?: 'CASCADE' | 'RESTRICT' | 'SET NULL' | 'NO ACTION';
+}
+
+export interface SQLIndexDefinition {
+  name: string;
+  columns: string[];
+  is_unique?: boolean;
+}
+
 export interface SQLTableColumn {
   name: string;
   type: string;
+  length_precision?: string;
+  is_nullable?: boolean;
   is_primary_key?: boolean;
+  is_unique?: boolean;
+  is_auto_increment?: boolean;
+  default_value?: string;
+  check_constraint?: string;
   is_foreign_key?: boolean;
   references?: string;
+  foreign_key?: SQLForeignKeyConstraint;
 }
 
 export interface SQLTableDefinition {
   name: string;
+  schema_name?: string;
+  description?: string;
   columns: SQLTableColumn[];
+  foreign_keys?: SQLForeignKeyConstraint[];
+  indexes?: SQLIndexDefinition[];
   sample_rows: Record<string, any>[];
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface SQLWorkspaceSummary {
+  id: string;
+  name: string;
+  description?: string;
+  tables_count: number;
+  created_at: string;
+}
+
+export interface SQLQueryHistoryItem {
+  id: string;
+  student_id: string;
+  schema_name: string;
+  query: string;
+  success: boolean;
+  duration_ms: number;
+  row_count?: number;
+  error?: string;
+  executed_at: string;
 }
 
 export interface SQLChallenge {
@@ -246,23 +361,107 @@ export interface SQLExecutionResult {
   columns: string[];
   rows: Record<string, any>[];
   row_count: number;
+  affected_rows?: number;
   execution_time_ms: number;
   error?: string;
   explanation?: string;
   optimization_tips?: string[];
+  query_plan?: {
+    operation: string;
+    cost_estimate: string;
+    details: string;
+  }[];
+}
+
+export interface TableDataFilter {
+  page?: number;
+  limit?: number;
+  sort_by?: string;
+  sort_dir?: 'ASC' | 'DESC';
+  search?: string;
+}
+
+export interface TableDataResponse {
+  table_name: string;
+  columns: SQLTableColumn[];
+  rows: Record<string, any>[];
+  total_rows: number;
+  page: number;
+  limit: number;
+  total_pages: number;
 }
 
 // ==========================================
 // 7. AI/ML Experiment Lab Models
 // ==========================================
+export interface MLWorkspaceFile {
+  id: string;
+  workspace_id: string;
+  name: string;
+  extension: string;
+  size_bytes: number;
+  content: string;
+  updated_at: string;
+}
+
+export interface MLWorkspace {
+  id: string;
+  student_id: string;
+  name: string;
+  description: string;
+  task_type: 'CLASSIFICATION' | 'REGRESSION' | 'CLUSTERING';
+  files: MLWorkspaceFile[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MLDatasetColumnInfo {
+  name: string;
+  data_type: 'NUMERICAL' | 'CATEGORICAL';
+  missing_count: number;
+  unique_count: number;
+  min?: number;
+  max?: number;
+  mean?: number;
+  std?: number;
+  sample_values: any[];
+}
+
 export interface MLDataset {
   id: string;
   name: string;
+  description?: string;
+  workspace_id?: string;
+  source: 'BUILT_IN' | 'UPLOADED';
+  file_size_bytes?: number;
   features: string[];
   target_column: string;
   total_samples: number;
+  columns_metadata?: MLDatasetColumnInfo[];
   preview: Record<string, any>[];
+  raw_data?: Record<string, any>[];
   task_type: 'CLASSIFICATION' | 'REGRESSION' | 'CLUSTERING';
+  created_at?: string;
+}
+
+export interface MLTrainingConfig {
+  workspace_id?: string;
+  name: string;
+  dataset_id: string;
+  dataset_name: string;
+  target_column?: string;
+  feature_columns: string[];
+  task_type: 'CLASSIFICATION' | 'REGRESSION' | 'CLUSTERING';
+  model_type: string;
+  custom_code_file_id?: string;
+  train_split: number;
+  random_seed?: number;
+  preprocessing?: {
+    missing_value_strategy: 'DROP' | 'MEAN' | 'MEDIAN' | 'MODE';
+    categorical_encoding: 'ONE_HOT' | 'ORDINAL' | 'NONE';
+    scaling: 'STANDARD' | 'MINMAX' | 'NONE';
+  };
+  hyperparameters: Record<string, any>;
 }
 
 export interface MLExperimentMetric {
@@ -271,29 +470,61 @@ export interface MLExperimentMetric {
   recall?: number;
   f1_score?: number;
   confusion_matrix?: number[][];
+  class_labels?: string[];
+  classification_report?: Record<string, { precision: number; recall: number; f1: number; support: number }>;
   mse?: number;
   rmse?: number;
   mae?: number;
   r2_score?: number;
+  residuals?: Array<{ actual: number; predicted: number; residual: number }>;
+  inertia?: number;
   silhouette_score?: number;
+  cluster_centers?: number[][];
+  cluster_distribution?: Record<string, number>;
+}
+
+export interface MLExperimentLog {
+  timestamp: string;
+  stage: string;
+  message: string;
+  level: 'INFO' | 'WARN' | 'ERROR';
 }
 
 export interface MLExperimentEntity {
   id: string;
   student_id: string;
+  workspace_id?: string;
   name: string;
   dataset_name: string;
-  model_type: string; // 'Linear Regression' | 'Random Forest' | 'SVM' | etc.
+  target_column?: string;
+  feature_columns?: string[];
+  model_type: string;
   hyperparameters: Record<string, any>;
-  train_split: number; // e.g. 0.8
-  status: 'IDLE' | 'TRAINING' | 'COMPLETED' | 'FAILED';
+  train_split: number;
+  status: 'DRAFT' | 'QUEUED' | 'PREPARING_DATA' | 'TRAINING' | 'EVALUATING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+  logs?: MLExperimentLog[];
   metrics: MLExperimentMetric;
   insights: {
     underfitting_or_overfitting: string;
     feature_importance?: { feature: string; importance: number }[];
+    loss_curve?: { iteration: number; loss: number; val_loss?: number }[];
     recommendations: string[];
   };
+  feature_schema?: Array<{ name: string; type: 'NUMERICAL' | 'CATEGORICAL'; default_val: any; options?: string[] }>;
+  duration_ms?: number;
   created_at: string;
+}
+
+export interface MLPredictionRequest {
+  inputs: Record<string, any>;
+}
+
+export interface MLPredictionResult {
+  predicted_value: any;
+  predicted_label?: string;
+  class_probabilities?: Record<string, number>;
+  confidence?: number;
+  explanation: string;
 }
 
 // ==========================================

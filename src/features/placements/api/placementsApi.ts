@@ -18,9 +18,18 @@ import {
   CreatePlacementPlanRequest,
   StarFormatResponse,
   WeakPlacementTopic,
+  PlacementDashboardStats,
+  PlacementAssessmentSubmission,
+  PlacementAssessmentResult,
+  GroupDiscussionTopic,
 } from '../types/placement';
 
 export const placementsApi = {
+  // Authoritative Dashboard Stats grounded in persisted records
+  async getDashboardStats(): Promise<PlacementDashboardStats> {
+    return apiClient.get<PlacementDashboardStats>('/placements/dashboard-stats');
+  },
+
   // Readiness & Progress
   async getReadiness(): Promise<PlacementReadiness> {
     return apiClient.get<PlacementReadiness>('/placements/readiness');
@@ -35,6 +44,39 @@ export const placementsApi = {
   }> {
     return apiClient.get('/placements/recommendations');
   },
+
+  // Group Discussion Topics
+  async getGDTopics(category?: string): Promise<GroupDiscussionTopic[]> {
+    const query = category ? `?category=${category}` : '';
+    return apiClient.get<GroupDiscussionTopic[]>(`/placements/gd-topics${query}`);
+  },
+
+  async getGDTopicById(id: string): Promise<GroupDiscussionTopic> {
+    return apiClient.get<GroupDiscussionTopic>(`/placements/gd-topics/${id}`);
+  },
+
+  // Timed Assessments
+  async submitAssessment(data: PlacementAssessmentSubmission): Promise<PlacementAssessmentResult> {
+    return apiClient.post<PlacementAssessmentResult>('/placements/assessments/submit', data);
+  },
+
+  async getAssessmentHistory(): Promise<PlacementAssessmentResult[]> {
+    return apiClient.get<PlacementAssessmentResult[]>('/placements/assessments/history');
+  },
+
+  // Resume & Project Defense Audit
+  async getResumeAudit(): Promise<{
+    has_resume: boolean;
+    completeness_percentage: number;
+    checks: Array<{ name: string; completed: boolean; weight: number }>;
+    project_defense_questions: Array<{ project_title: string; question: string; expected_rubric: string; star_focus: string }>;
+    connected_github: string | null;
+    project_count: number;
+    skill_count: number;
+  }> {
+    return apiClient.get('/placements/resume-audit');
+  },
+
 
   // Topics
   async getTopics(category?: string): Promise<PlacementTopic[]> {

@@ -110,8 +110,16 @@ export const communityProfileApi = {
   },
 
   // ----------------- Progress -----------------
-  async getProgress(): Promise<UnifiedLearningProgress> {
-    return apiClient.request<UnifiedLearningProgress>('/progress');
+  async getProgress(filters?: { timeRange?: string; subject?: string }): Promise<UnifiedLearningProgress> {
+    const params = new URLSearchParams();
+    if (filters?.timeRange) params.set('timeRange', filters.timeRange);
+    if (filters?.subject) params.set('subject', filters.subject);
+    const qs = params.toString();
+    return apiClient.request<UnifiedLearningProgress>(`/progress${qs ? `?${qs}` : ''}`);
+  },
+
+  async exportProgress(): Promise<any> {
+    return apiClient.request<any>('/progress/export');
   },
 
   async getSubsystemProgress(subsystem: string): Promise<SubsystemProgressOverview> {
@@ -119,9 +127,20 @@ export const communityProfileApi = {
   },
 
   // ----------------- Goals -----------------
-  async getGoals(status?: string): Promise<LearningGoal[]> {
-    const qs = status ? `?status=${status}` : '';
-    return apiClient.request<LearningGoal[]>(`/goals${qs}`);
+  async getGoals(
+    filters?: string | { status?: string; category?: string; priority?: string; search?: string }
+  ): Promise<LearningGoal[]> {
+    const params = new URLSearchParams();
+    if (typeof filters === 'string') {
+      if (filters && filters !== 'ALL') params.set('status', filters);
+    } else if (filters) {
+      if (filters.status && filters.status !== 'ALL') params.set('status', filters.status);
+      if (filters.category && filters.category !== 'ALL') params.set('category', filters.category);
+      if (filters.priority && filters.priority !== 'ALL') params.set('priority', filters.priority);
+      if (filters.search) params.set('search', filters.search);
+    }
+    const qs = params.toString();
+    return apiClient.request<LearningGoal[]>(`/goals${qs ? `?${qs}` : ''}`);
   },
 
   async getGoal(goalId: string): Promise<LearningGoal> {
@@ -343,8 +362,12 @@ export const communityProfileApi = {
   },
 
   // ----------------- Notifications -----------------
-  async getNotifications(): Promise<{ items: any[]; unreadCount: number; total: number }> {
-    return apiClient.request('/notifications');
+  async getNotifications(filters?: { unreadOnly?: boolean; category?: string }): Promise<{ items: any[]; unreadCount: number; total: number }> {
+    const params = new URLSearchParams();
+    if (filters?.unreadOnly) params.set('unreadOnly', 'true');
+    if (filters?.category && filters.category !== 'ALL') params.set('category', filters.category);
+    const qs = params.toString();
+    return apiClient.request(`/notifications${qs ? `?${qs}` : ''}`);
   },
 
   async markNotificationRead(id: string): Promise<any> {
@@ -359,6 +382,18 @@ export const communityProfileApi = {
     });
   },
 
+  async deleteNotification(id: string): Promise<{ success: boolean }> {
+    return apiClient.request<{ success: boolean }>(`/notifications/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  async generateReminders(): Promise<{ generated_count: number; items: any[] }> {
+    return apiClient.request<{ generated_count: number; items: any[] }>('/notifications/generate-reminders', {
+      method: 'POST',
+    });
+  },
+
   async getNotificationPreferences(): Promise<NotificationPreference> {
     return apiClient.request<NotificationPreference>('/notifications/preferences');
   },
@@ -368,6 +403,18 @@ export const communityProfileApi = {
       method: 'PATCH',
       body: JSON.stringify(updates),
     });
+  },
+
+  // ----------------- Security & Export -----------------
+  async changePassword(oldPassword: string, newPassword: string): Promise<{ success: boolean; message: string }> {
+    return apiClient.request<{ success: boolean; message: string }>('/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ oldPassword, newPassword }),
+    });
+  },
+
+  async exportStudentData(): Promise<any> {
+    return apiClient.request<any>('/profile/export');
   },
 
   // ----------------- Portfolio -----------------

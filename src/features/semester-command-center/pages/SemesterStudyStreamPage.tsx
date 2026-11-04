@@ -212,7 +212,7 @@ export function SemesterStudyStreamPage({ onNavigate }: SemesterStudyStreamPageP
                           </span>
                           <span className="text-xs text-slate-500">•</span>
                           <span className="text-[10px] font-medium text-slate-400 uppercase">
-                            {node.type.replace('_', ' ')}
+                            {(node.type || 'STUDY').replace(/_/g, ' ')}
                           </span>
                           {node.unit_number && (
                             <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-800/80 text-slate-300">

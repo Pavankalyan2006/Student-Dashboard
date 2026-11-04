@@ -8,12 +8,28 @@ export const progressRouter = Router();
 progressRouter.get('/progress', requireAuth, async (req: Request, res: Response) => {
   try {
     const studentId = req.user!.userId;
-    const progress = await ProgressService.getUnifiedProgress(studentId);
+    const { timeRange, subject } = req.query;
+    const progress = await ProgressService.getUnifiedProgress(studentId, {
+      timeRange: timeRange as string,
+      subject: subject as string,
+    });
     res.json({ success: true, data: progress });
   } catch (err: any) {
     res.status(err.status || 500).json({ success: false, message: err.message });
   }
 });
+
+// GET /api/v1/progress/export
+progressRouter.get('/progress/export', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const studentId = req.user!.userId;
+    const exported = await ProgressService.exportProgress(studentId);
+    res.json({ success: true, data: exported });
+  } catch (err: any) {
+    res.status(err.status || 500).json({ success: false, message: err.message });
+  }
+});
+
 
 // GET /api/v1/progress/courses
 progressRouter.get('/progress/courses', requireAuth, async (req: Request, res: Response) => {

@@ -12,6 +12,10 @@ import {
   ChevronLeft,
   ChevronRight,
   ShieldCheck,
+  UserPlus,
+  Plus,
+  Key,
+  X,
 } from 'lucide-react';
 import { adminApi, AdminStudentItem } from '../../../api/adminApi';
 import { cn } from '../../../lib/utils';
@@ -30,6 +34,70 @@ export function AdminStudentsPage({ onNavigate }: { onNavigate: (path: string) =
   const [statusAction, setStatusAction] = React.useState<'SUSPEND' | 'REACTIVATE' | null>(null);
   const [statusReason, setStatusReason] = React.useState('');
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+  // Create student modal state
+  const [isCreateModalOpen, setIsCreateModalOpen] = React.useState(false);
+  const [isCreating, setIsCreating] = React.useState(false);
+  const [createForm, setCreateForm] = React.useState({
+    name: '',
+    email: '',
+    password: '',
+    branch: 'Computer Science & AI/ML',
+    semester: 4,
+    role: 'STUDENT' as 'STUDENT' | 'SUPER_ADMIN',
+  });
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (window.location.pathname === '/admin/students/create' || window.location.search.includes('create=true')) {
+        setIsCreateModalOpen(true);
+      }
+    }
+  }, []);
+
+  const handleGeneratePassword = () => {
+    setCreateForm((prev) => ({ ...prev, password: 'StudentPass@2025!' }));
+    toast.info('Generated initial temporary password');
+  };
+
+  const handleCreateStudent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!createForm.name.trim() || !createForm.email.trim() || !createForm.password.trim()) {
+      toast.error('Name, university email, and initial password are required.');
+      return;
+    }
+    if (createForm.password.length < 8) {
+      toast.error('Password must be at least 8 characters.');
+      return;
+    }
+
+    setIsCreating(true);
+    try {
+      await adminApi.createStudent({
+        name: createForm.name.trim(),
+        email: createForm.email.trim().toLowerCase(),
+        password: createForm.password,
+        branch: createForm.branch,
+        semester: Number(createForm.semester),
+        role: createForm.role,
+      });
+      toast.success(`Student account created successfully for ${createForm.name}!`);
+      setIsCreateModalOpen(false);
+      setCreateForm({
+        name: '',
+        email: '',
+        password: '',
+        branch: 'Computer Science & AI/ML',
+        semester: 4,
+        role: 'STUDENT',
+      });
+      fetchStudents(1);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to create student account');
+    } finally {
+      setIsCreating(false);
+    }
+  };
 
   const fetchStudents = async (page = 1) => {
     setIsLoading(true);
@@ -102,13 +170,23 @@ export function AdminStudentsPage({ onNavigate }: { onNavigate: (path: string) =
           </p>
         </div>
 
-        <button
-          onClick={() => fetchStudents(pagination.page)}
-          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#14234B] hover:bg-[#1C3168] border border-[#233870] text-xs font-medium text-slate-200 transition-colors self-start sm:self-auto cursor-pointer"
-        >
-          <RefreshCw className={cn('h-3.5 w-3.5', isLoading && 'animate-spin')} />
-          Refresh Table
-        </button>
+        <div className="flex items-center gap-2.5 self-start sm:self-auto">
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-xs font-semibold text-slate-950 shadow-md hover:shadow-lg transition-all cursor-pointer"
+          >
+            <UserPlus className="h-4 w-4" />
+            Create Student Account
+          </button>
+
+          <button
+            onClick={() => fetchStudents(pagination.page)}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#14234B] hover:bg-[#1C3168] border border-[#233870] text-xs font-medium text-slate-200 transition-colors cursor-pointer"
+          >
+            <RefreshCw className={cn('h-3.5 w-3.5', isLoading && 'animate-spin')} />
+            Refresh Table
+          </button>
+        </div>
       </div>
 
       {/* Filters Bar */}
@@ -364,6 +442,153 @@ export function AdminStudentsPage({ onNavigate }: { onNavigate: (path: string) =
                 Confirm Status Change
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Student Modal */}
+      {isCreateModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-[#0D1836] border border-amber-500/40 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-[#1E2E55] pb-3">
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
+                  <UserPlus className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">Create Student Account</h3>
+                  <p className="text-[11px] text-slate-400">Super Admin Authority: Provision a new student identity</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsCreateModalOpen(false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#152349] transition-colors cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateStudent} className="space-y-3.5">
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-300">
+                  Full Name <span className="text-amber-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Rahul Sharma"
+                  value={createForm.name}
+                  onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
+                  className="w-full px-3.5 py-2 rounded-xl bg-[#081024] border border-[#1E2E55] text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-300">
+                  University Email <span className="text-amber-400">*</span>
+                </label>
+                <input
+                  type="email"
+                  required
+                  placeholder="e.g. rahul.sharma@btech.edu"
+                  value={createForm.email}
+                  onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
+                  className="w-full px-3.5 py-2 rounded-xl bg-[#081024] border border-[#1E2E55] text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-slate-300">
+                    Initial Password <span className="text-amber-400">*</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleGeneratePassword}
+                    className="text-[11px] text-amber-400 hover:text-amber-300 flex items-center gap-1 cursor-pointer"
+                  >
+                    <Key className="h-3 w-3" />
+                    Quick Fill Default
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  required
+                  placeholder="Minimum 8 characters"
+                  value={createForm.password}
+                  onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
+                  className="w-full px-3.5 py-2 rounded-xl bg-[#081024] border border-[#1E2E55] text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 font-mono"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-slate-300">
+                    Engineering Branch <span className="text-amber-400">*</span>
+                  </label>
+                  <select
+                    value={createForm.branch}
+                    onChange={(e) => setCreateForm({ ...createForm, branch: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl bg-[#081024] border border-[#1E2E55] text-xs text-slate-200 focus:outline-none focus:border-amber-500 cursor-pointer"
+                  >
+                    <option value="Computer Science & AI/ML">Computer Science & AI/ML</option>
+                    <option value="Information Technology">Information Technology</option>
+                    <option value="Electronics & Communication">Electronics & Communication</option>
+                    <option value="Electrical Engineering">Electrical Engineering</option>
+                    <option value="Mechanical Engineering">Mechanical Engineering</option>
+                    <option value="Civil Engineering">Civil Engineering</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-slate-300">
+                    Current Semester <span className="text-amber-400">*</span>
+                  </label>
+                  <select
+                    value={createForm.semester}
+                    onChange={(e) => setCreateForm({ ...createForm, semester: Number(e.target.value) })}
+                    className="w-full px-3 py-2 rounded-xl bg-[#081024] border border-[#1E2E55] text-xs text-slate-200 focus:outline-none focus:border-amber-500 cursor-pointer"
+                  >
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
+                      <option key={sem} value={sem}>
+                        Semester {sem}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-300">Account Role</label>
+                <select
+                  value={createForm.role}
+                  onChange={(e) => setCreateForm({ ...createForm, role: e.target.value as any })}
+                  className="w-full px-3 py-2 rounded-xl bg-[#081024] border border-[#1E2E55] text-xs text-slate-200 focus:outline-none focus:border-amber-500 cursor-pointer"
+                >
+                  <option value="STUDENT">STUDENT (Standard Learner)</option>
+                  <option value="SUPER_ADMIN">SUPER_ADMIN (Platform Administrator)</option>
+                </select>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#1E2E55]">
+                <button
+                  type="button"
+                  onClick={() => setIsCreateModalOpen(false)}
+                  disabled={isCreating}
+                  className="px-4 py-2 rounded-xl bg-[#14234B] hover:bg-[#1E3368] text-xs font-medium text-slate-300 cursor-pointer transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isCreating}
+                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-xs font-semibold text-slate-950 transition-all cursor-pointer flex items-center gap-2 shadow-md disabled:opacity-50"
+                >
+                  {isCreating ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <UserPlus className="h-3.5 w-3.5" />}
+                  Provision Account
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

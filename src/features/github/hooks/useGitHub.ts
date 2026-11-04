@@ -140,6 +140,8 @@ export function useDisconnectGitHub() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['github-status'] });
       qc.invalidateQueries({ queryKey: ['github-repos'] });
+      qc.invalidateQueries({ queryKey: ['github-featured'] });
+      qc.invalidateQueries({ queryKey: ['github-languages'] });
       toast.success('GitHub account disconnected');
     },
     onError: (err: any) => {
@@ -147,3 +149,142 @@ export function useDisconnectGitHub() {
     },
   });
 }
+
+export function useConnectGitHubPat() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ token, username }: { token: string; username?: string }) =>
+      githubApi.connectWithPat(token, username),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['github-status'] });
+      qc.invalidateQueries({ queryKey: ['github-repos'] });
+      qc.invalidateQueries({ queryKey: ['github-featured'] });
+      qc.invalidateQueries({ queryKey: ['github-languages'] });
+      toast.success('Connected via GitHub Personal Access Token (AES-256 encrypted)');
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'PAT Connection failed');
+    },
+  });
+}
+
+export function useSyncAllGitHub() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => githubApi.syncAll(),
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ['github-status'] });
+      qc.invalidateQueries({ queryKey: ['github-repos'] });
+      qc.invalidateQueries({ queryKey: ['github-featured'] });
+      qc.invalidateQueries({ queryKey: ['github-languages'] });
+      toast.success(data.message || 'GitHub repositories and profile refreshed');
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'Sync failed');
+    },
+  });
+}
+
+export function useGitHubReadme(repoId?: string) {
+  return useQuery({
+    queryKey: ['github-readme', repoId],
+    queryFn: () => (repoId ? githubApi.getReadme(repoId) : Promise.reject('No repo ID')),
+    enabled: !!repoId,
+  });
+}
+
+export function useGitHubFeaturedRepos() {
+  return useQuery({
+    queryKey: ['github-featured'],
+    queryFn: () => githubApi.listFeatured(),
+  });
+}
+
+export function useToggleFeaturedRepo(repoId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ is_featured, metadata }: { is_featured: boolean; metadata?: any }) =>
+      githubApi.toggleFeatured(repoId, is_featured, metadata),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['github-repo', repoId] });
+      qc.invalidateQueries({ queryKey: ['github-repos'] });
+      qc.invalidateQueries({ queryKey: ['github-featured'] });
+      toast.success('Portfolio featured status updated');
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'Failed to update featured status');
+    },
+  });
+}
+
+export function useUpdateRepoNotes(repoId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (notes: string) => githubApi.updatePersonalNotes(repoId, notes),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['github-repo', repoId] });
+      toast.success('Personal study notes saved');
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'Failed to save notes');
+    },
+  });
+}
+
+export function useGitHubLanguages() {
+  return useQuery({
+    queryKey: ['github-languages'],
+    queryFn: () => githubApi.getLanguagesSummary(),
+  });
+}
+
+export function useGitHubResumeBullets(repoId: string) {
+  return useMutation({
+    mutationFn: (roleContext?: string) => githubApi.generateResumeBullets(repoId, roleContext),
+    onSuccess: () => {
+      toast.success('Grounded resume bullets generated');
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'Failed to generate resume bullets');
+    },
+  });
+}
+
+export function useExportToResume(repoId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { bullets: string[]; title?: string; tech_stack?: string[] }) =>
+      githubApi.exportToResume(repoId, data),
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ['active-resume'] });
+      toast.success(data.message || 'Project exported to Resume successfully!');
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'Failed to export to resume');
+    },
+  });
+}
+
+export function useGitHubInterviewPrep(repoId: string) {
+  return useMutation({
+    mutationFn: () => githubApi.generateInterviewPrep(repoId),
+    onSuccess: () => {
+      toast.success('Project technical interview questions generated');
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'Failed to generate interview preparation');
+    },
+  });
+}
+
+export function useGitHubLearningDiscovery(params?: {
+  query?: string;
+  topic?: string;
+  language?: string;
+}) {
+  return useQuery({
+    queryKey: ['github-learning', params],
+    queryFn: () => githubApi.searchLearningRepositories(params),
+  });
+}
+

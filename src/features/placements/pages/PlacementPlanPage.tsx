@@ -32,6 +32,7 @@ import type {
 } from '../types/placement';
 import { WeakAreaCard } from '../components/WeakAreaCard';
 import { PlacementReadinessCard } from '../components/PlacementReadinessCard';
+import { toast } from 'sonner';
 
 interface Props {
   onNavigate?: (path: string) => void;
@@ -145,7 +146,7 @@ export const PlacementPlanPage: React.FC<Props> = ({ onNavigate }) => {
       setShowCreateModal(false);
     } catch (err) {
       console.error('Failed to create placement plan', err);
-      alert('Could not generate placement plan. Please check inputs and try again.');
+      toast.error('Could not generate placement plan. Please check inputs and try again.');
     } finally {
       setCreating(false);
     }

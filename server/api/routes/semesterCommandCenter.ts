@@ -8,9 +8,10 @@ import { semesterCommandCenterService } from '../../services/semesterCommandCent
 export const semesterCommandCenterRouter = Router();
 
 // 1. Semester Overview & Dashboard Data
-semesterCommandCenterRouter.get('/semester/overview', async (_req: Request, res: Response) => {
+semesterCommandCenterRouter.get('/semester/overview', async (req: Request, res: Response) => {
   try {
-    const data = semesterCommandCenterService.getOverview();
+    const studentId = (req as any).user?.userId;
+    const data = semesterCommandCenterService.getOverview(studentId);
     res.json({ success: true, data });
   } catch (err: any) {
     res.status(err.status || 500).json({ success: false, message: err.message });
@@ -18,9 +19,10 @@ semesterCommandCenterRouter.get('/semester/overview', async (_req: Request, res:
 });
 
 // 2. Semester Config
-semesterCommandCenterRouter.get('/semester/config', async (_req: Request, res: Response) => {
+semesterCommandCenterRouter.get('/semester/config', async (req: Request, res: Response) => {
   try {
-    const overview = semesterCommandCenterService.getOverview();
+    const studentId = (req as any).user?.userId;
+    const overview = semesterCommandCenterService.getOverview(studentId);
     res.json({ success: true, data: overview.config });
   } catch (err: any) {
     res.status(err.status || 500).json({ success: false, message: err.message });
@@ -37,9 +39,10 @@ semesterCommandCenterRouter.patch('/semester/config', requireAuth, async (req: R
 });
 
 // 3. Subjects & Syllabus
-semesterCommandCenterRouter.get('/semester/subjects', async (_req: Request, res: Response) => {
+semesterCommandCenterRouter.get('/semester/subjects', async (req: Request, res: Response) => {
   try {
-    const subjects = semesterCommandCenterService.getSubjects();
+    const studentId = (req as any).user?.userId;
+    const subjects = semesterCommandCenterService.getSubjects(studentId);
     res.json({ success: true, data: subjects });
   } catch (err: any) {
     res.status(err.status || 500).json({ success: false, message: err.message });

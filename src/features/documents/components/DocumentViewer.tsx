@@ -250,25 +250,25 @@ export function DocumentViewer({
         {/* Scrollable Page Sheet Canvas */}
         <div className="flex-1 overflow-auto p-4 sm:p-8 flex justify-center bg-[#F1F5F9]">
           <div
-            className="w-full max-w-3xl min-h-[680px] bg-white rounded-xl border border-[#E4E7EC] shadow-md p-8 sm:p-12 flex flex-col justify-between transition-transform duration-150 origin-top"
+            className="w-full max-w-3xl min-h-[680px] bg-white rounded-xl border border-[#E4E7EC] shadow-md p-8 sm:p-12 flex flex-col justify-between transition-transform duration-150 origin-top overflow-hidden break-words"
             style={{ transform: `scale(${zoom / 100})` }}
           >
             {/* Header info */}
             <div>
               <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-6">
-                <div>
+                <div className="min-w-0 pr-4">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                     B.Tech Academic Curriculum Document
                   </span>
-                  <h1 className="text-base font-bold text-slate-900 mt-0.5">{document.title}</h1>
+                  <h1 className="text-base font-bold text-slate-900 mt-0.5 truncate">{document.title}</h1>
                 </div>
-                <span className="text-[11px] font-mono text-slate-400 bg-slate-50 px-2 py-0.5 rounded border border-slate-200">
+                <span className="text-[11px] font-mono text-slate-400 bg-slate-50 px-2 py-0.5 rounded border border-slate-200 shrink-0">
                   Page {activePage?.page_number || currentPage}
                 </span>
               </div>
 
-              {/* Rendered Page Text with KaTeX & Markdown */}
-              <div className="prose prose-slate max-w-none text-xs leading-relaxed text-[#1F2937]">
+              {/* Rendered Page Text with KaTeX & Markdown - Responsive Table & Text containment */}
+              <div className="prose prose-slate max-w-none text-xs leading-relaxed text-[#1F2937] overflow-x-auto break-words [overflow-wrap:anywhere] space-y-3 [&_table]:w-full [&_table]:border-collapse [&_table]:my-3 [&_th]:border [&_th]:border-slate-200 [&_th]:bg-slate-50 [&_th]:p-2 [&_th]:text-left [&_td]:border [&_td]:border-slate-200 [&_td]:p-2 [&_pre]:overflow-x-auto [&_pre]:p-3 [&_pre]:rounded-lg [&_pre]:bg-slate-900 [&_code]:break-words">
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm, remarkMath]}
                   rehypePlugins={[rehypeKatex]}

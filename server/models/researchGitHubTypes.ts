@@ -242,6 +242,15 @@ export interface GitHubConnection {
   avatar_url: string;
   encrypted_token: string;
   scopes: string[];
+  bio?: string;
+  company?: string;
+  location?: string;
+  public_repos?: number;
+  followers?: number;
+  following?: number;
+  profile_url?: string;
+  last_synced_at?: string;
+  sync_error?: string;
   expires_at?: string;
   is_connected: boolean;
   created_at: string;
@@ -265,11 +274,60 @@ export interface GitHubRepository {
   open_issues_count: number;
   url: string;
   clone_url: string;
+  topics?: string[];
+  license?: string;
+  is_fork?: boolean;
+  is_starred?: boolean;
+  is_featured?: boolean;
+  featured_metadata?: {
+    title?: string;
+    role?: string;
+    custom_description?: string;
+    tech_stack?: string[];
+    key_features?: string[];
+    challenges_solved?: string;
+    demo_url?: string;
+    resume_bullets?: string[];
+  };
+  personal_notes?: string;
+  languages?: Record<string, number>;
+  readme_content?: string;
   linked_project_id?: string;
   analysis_status: 'NOT_ANALYZED' | 'ANALYZING' | 'ANALYZED' | 'FAILED';
   last_synced_at: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface GitHubResumeBullet {
+  id: string;
+  bullet: string;
+  context: string;
+  technologies: string[];
+  verified: boolean;
+}
+
+export interface GitHubInterviewQuestion {
+  id: string;
+  question: string;
+  answer: string;
+  category: 'ARCHITECTURE' | 'TRADEOFFS' | 'TESTING' | 'PERFORMANCE' | 'CHALLENGES';
+  relevant_files: string[];
+}
+
+export interface GitHubLearningRepo {
+  id: string;
+  name: string;
+  full_name: string;
+  description: string;
+  language: string;
+  stars: number;
+  url: string;
+  html_url?: string;
+  stargazers_count?: number;
+  topic: string;
+  learning_focus: string;
+  difficulty: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
 }
 
 export interface GitHubSync {

@@ -3,6 +3,7 @@ import { PDFParser } from './pdf';
 import { DOCXParser } from './docx';
 import { PPTXParser } from './pptx';
 import { TXTParser } from './txt';
+import { CodeAndDataParser } from './codeAndData';
 import { ValidationError } from '../core/exceptions';
 
 export class DocumentParserRegistry {
@@ -10,6 +11,7 @@ export class DocumentParserRegistry {
     new PDFParser(),
     new DOCXParser(),
     new PPTXParser(),
+    new CodeAndDataParser(),
     new TXTParser(),
   ];
 
@@ -46,3 +48,4 @@ export * from './pdf';
 export * from './docx';
 export * from './pptx';
 export * from './txt';
+export * from './codeAndData';

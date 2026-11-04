@@ -27,6 +27,7 @@ import {
 import { PageContainer, PageHeader, LoadingState, EmptyState } from '../../../components/layout/PageComponents';
 import { Button } from '../../../components/ui/button';
 import { externalIntegrationsApi } from '../../../api/externalIntegrationsApi';
+import { learningModulesApi } from '../../../api/learningModulesApi';
 import { ExternalJob, JobAnalysisResult } from '../../../types/externalIntegrations';
 import { toast } from 'sonner';
 
@@ -40,6 +41,8 @@ export function JobDiscoveryPage({ onNavigate }: JobDiscoveryPageProps) {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [selectedLocation, setSelectedLocation] = React.useState<string>('ALL');
   const [isRemoteOnly, setIsRemoteOnly] = React.useState(false);
+  const [savedJobIds, setSavedJobIds] = React.useState<Set<string>>(new Set());
+  const [trackingJobId, setTrackingJobId] = React.useState<string | null>(null);
 
   // Job Analysis Modal & State
   const [analyzingJob, setAnalyzingJob] = React.useState<ExternalJob | null>(null);
@@ -57,6 +60,20 @@ export function JobDiscoveryPage({ onNavigate }: JobDiscoveryPageProps) {
     description: '',
   });
   const [isImporting, setIsImporting] = React.useState(false);
+
+  const toggleSaveJob = (jobId: string, title: string) => {
+    setSavedJobIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(jobId)) {
+        next.delete(jobId);
+        toast.info(`Removed "${title}" from saved jobs`);
+      } else {
+        next.add(jobId);
+        toast.success(`Saved "${title}" to your career bookmarks`);
+      }
+      return next;
+    });
+  };
 
   const loadJobs = React.useCallback(async () => {
     try {
@@ -123,10 +140,27 @@ export function JobDiscoveryPage({ onNavigate }: JobDiscoveryPageProps) {
     }
   };
 
-  const handleTrackJob = (job: ExternalJob) => {
-    toast.success(`Job "${job.title}" at ${job.company || job.company_name} added to Application Tracker!`);
-    if (onNavigate) {
-      onNavigate('/applications');
+  const handleTrackJob = async (job: ExternalJob) => {
+    try {
+      setTrackingJobId(job.id);
+      await learningModulesApi.applications.createApplication({
+        company_name: job.company || job.company_name,
+        role: job.title,
+        location: job.location || (job.is_remote ? 'Remote' : 'Bengaluru / Hybrid'),
+        application_url: job.url || job.job_url,
+        deadline: job.deadline || new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0],
+        salary_range: job.salary_range || undefined,
+        notes: `Imported from Job Discovery: ${job.title} at ${job.company || job.company_name}`,
+        status: 'SAVED',
+      });
+      toast.success(`Job "${job.title}" at ${job.company || job.company_name} saved to Application Tracker!`);
+      if (onNavigate) {
+        onNavigate('/applications');
+      }
+    } catch (err: any) {
+      toast.error('Failed to save to Application Tracker: ' + err.message);
+    } finally {
+      setTrackingJobId(null);
     }
   };
 
@@ -309,14 +343,27 @@ export function JobDiscoveryPage({ onNavigate }: JobDiscoveryPageProps) {
                 </div>
 
                 <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => toggleSaveJob(job.id, job.title)}
+                    className={`p-1.5 rounded-lg border transition-colors ${
+                      savedJobIds.has(job.id)
+                        ? 'border-amber-500/50 bg-amber-500/10 text-amber-400'
+                        : 'border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800'
+                    }`}
+                    title={savedJobIds.has(job.id) ? 'Saved' : 'Save job bookmark'}
+                  >
+                    <Bookmark className={`w-3.5 h-3.5 ${savedJobIds.has(job.id) ? 'fill-amber-400' : ''}`} />
+                  </button>
                   <Button
                     variant="outline"
                     size="sm"
+                    disabled={trackingJobId === job.id}
                     onClick={() => handleTrackJob(job)}
                     className="text-xs border-slate-700 hover:bg-slate-800 text-slate-300"
                   >
                     <Target className="w-3.5 h-3.5 mr-1 text-sky-400" />
-                    Track
+                    {trackingJobId === job.id ? 'Tracking...' : 'Track'}
                   </Button>
                   {(job.url || job.job_url) && (
                     <a

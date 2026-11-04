@@ -1,10 +1,27 @@
 import * as React from 'react';
-import { Sparkles, ArrowRight, CornerDownLeft, Bot, HelpCircle, Calendar, Briefcase, Code } from 'lucide-react';
+import { Sparkles, ArrowRight, CornerDownLeft, Bot, HelpCircle, Calendar, Briefcase, Code, Brain } from 'lucide-react';
 import { useUiStore } from '../../../store/uiStore';
+import { onboardingApi } from '../../../api/onboardingApi';
+import { StudentAIPersona } from '../../../../server/models/onboardingTypes';
 
 export function DashboardAIHero({ onNavigate }: { onNavigate: (path: string) => void }) {
   const [prompt, setPrompt] = React.useState('');
+  const [persona, setPersona] = React.useState<StudentAIPersona | null>(null);
   const setAiInitialPrompt = useUiStore((s) => s.setAiInitialPrompt);
+
+  React.useEffect(() => {
+    let mounted = true;
+    onboardingApi.getAIPersona()
+      .then((data) => {
+        if (mounted && data) setPersona(data);
+      })
+      .catch((err) => {
+        console.debug('No custom AI persona found or failed to load:', err);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const handleSubmit = (e?: React.FormEvent, customText?: string) => {
     if (e) e.preventDefault();
@@ -32,14 +49,19 @@ export function DashboardAIHero({ onNavigate }: { onNavigate: (path: string) => 
 
       <div className="relative z-10 space-y-4">
         {/* Header line */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-[#2563EB] to-[#4F46E5] text-white shadow-xs">
               <Sparkles className="h-4 w-4" />
             </div>
             <span className="text-xs font-bold tracking-tight uppercase text-indigo-300">
-              B.Tech AI Learning Assistant
+              {persona?.companion_name ? `${persona.companion_name} · AI Companion` : 'B.Tech AI Learning Assistant'}
             </span>
+            {persona?.tone && (
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-200 border border-indigo-500/30 font-medium capitalize">
+                {persona.tone.replace(/-/g, ' ')}
+              </span>
+            )}
           </div>
           <span className="text-[11px] font-mono text-slate-400 hidden sm:inline-block">
             Gemini &amp; Tool Registry Connected
@@ -55,6 +77,16 @@ export function DashboardAIHero({ onNavigate }: { onNavigate: (path: string) => 
             Ask any engineering coursework question, generate targeted practice quizzes, or debug algorithms with real-time explanation.
           </p>
         </div>
+
+        {/* Active AI Companion Focus Pill */}
+        {persona?.primary_focus_directives && persona.primary_focus_directives.length > 0 && (
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-indigo-950/60 border border-indigo-500/30 text-xs text-indigo-200 max-w-2xl">
+            <Brain className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+            <span className="truncate">
+              <strong className="text-white font-medium">Personalized Focus:</strong> {persona.primary_focus_directives[0]}
+            </span>
+          </div>
+        )}
 
         {/* Input Bar */}
         <form onSubmit={(e) => handleSubmit(e)} className="relative flex items-center">

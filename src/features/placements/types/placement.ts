@@ -334,3 +334,97 @@ export interface StarFormatResponse {
   improved_answer: string;
   critique: string;
 }
+
+export interface PlacementPracticeAttempt {
+  id: string;
+  student_id: string;
+  question_id: string;
+  topic_id?: string;
+  category: string;
+  submitted_answer: string | number;
+  is_correct: boolean;
+  explanation: string;
+  correct_answer: string | number;
+  created_at: string;
+}
+
+export interface PlacementAssessmentSubmission {
+  assessment_id?: string;
+  title: string;
+  category: string;
+  difficulty: string;
+  time_spent_seconds: number;
+  answers: Record<string, string | number>;
+}
+
+export interface PlacementAssessmentResult {
+  id: string;
+  student_id: string;
+  title: string;
+  category: string;
+  difficulty: string;
+  total_questions: number;
+  correct_answers: number;
+  score_percentage: number;
+  time_spent_seconds: number;
+  detailed_results: Array<{
+    question_id: string;
+    question_text: string;
+    submitted_answer?: string | number;
+    correct_answer: string | number;
+    is_correct: boolean;
+    explanation: string;
+    topic_id?: string;
+  }>;
+  weak_topics: string[];
+  submitted_at: string;
+}
+
+export interface GroupDiscussionTopic {
+  id: string;
+  title: string;
+  category: 'TECH' | 'SOCIO_ECONOMIC' | 'BUSINESS' | 'ETHICS' | 'POLICY';
+  description: string;
+  background_context: string;
+  pros_arguments: string[];
+  cons_arguments: string[];
+  suggested_structure: Array<{
+    phase: string;
+    description: string;
+    duration_seconds: number;
+  }>;
+  evaluation_criteria: string[];
+  created_at: string;
+}
+
+export interface CategoryProgressItem {
+  category_id: string;
+  name: string;
+  icon: string;
+  total_available: number;
+  completed_count: number;
+  accuracy_percentage: number | null;
+  status: 'NOT_STARTED' | 'IN_PROGRESS' | 'MASTERED';
+  route: string;
+  description: string;
+}
+
+export interface PlacementDashboardStats {
+  tasks_completed: number;
+  practice_questions_attempted: number;
+  accuracy_percentage: number | null;
+  coding_problems_solved: number;
+  mock_interviews_completed: number;
+  topics_needing_revision: number;
+  upcoming_tasks_count: number;
+  recent_activity: Array<{
+    id: string;
+    type: string;
+    title: string;
+    timestamp: string;
+    details?: string;
+  }>;
+  categories_progress: CategoryProgressItem[];
+  is_onboarding: boolean;
+}
+

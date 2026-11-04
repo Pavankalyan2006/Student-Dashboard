@@ -155,7 +155,7 @@ export function SemesterRecoveryGuidancePage({
                           </span>
                         </div>
                         <p className="text-xs text-slate-400 mt-0.5">
-                          Logged on {plan.missed_date} • Type: {plan.missed_item_type.replace('_', ' ')}
+                          Logged on {plan.missed_date} • Type: {(plan.missed_item_type || 'ACADEMIC').replace(/_/g, ' ')}
                         </p>
                       </div>
 

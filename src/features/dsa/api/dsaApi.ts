@@ -42,11 +42,19 @@ export const dsaApi = {
     topic_id?: string;
     difficulty?: string;
     search?: string;
+    subtopic?: string;
+    company?: string;
+    roadmap_stage?: string;
+    status?: string;
   }): Promise<DSAProblem[]> => {
     const q = new URLSearchParams();
     if (params?.topic_id) q.set('topic_id', params.topic_id);
     if (params?.difficulty) q.set('difficulty', params.difficulty);
     if (params?.search) q.set('search', params.search);
+    if (params?.subtopic) q.set('subtopic', params.subtopic);
+    if (params?.company) q.set('company', params.company);
+    if (params?.roadmap_stage) q.set('roadmap_stage', params.roadmap_stage);
+    if (params?.status) q.set('status', params.status);
     const queryStr = q.toString() ? `?${q.toString()}` : '';
     return apiClient.get<DSAProblem[]>(`/dsa/problems${queryStr}`);
   },
@@ -55,11 +63,83 @@ export const dsaApi = {
     return apiClient.get<DSAProblem>(`/dsa/problems/${idOrSlug}`);
   },
 
+  runCode: async (
+    problemId: string,
+    payload: { language: string; source_code: string }
+  ) => {
+    return apiClient.post(`/dsa/problems/${problemId}/run`, payload);
+  },
+
   submitProblemSolution: async (
     problemId: string,
     payload: { language: string; source_code: string }
   ) => {
     return apiClient.post(`/dsa/problems/${problemId}/submit`, payload);
+  },
+
+  getDailyChallenge: async () => {
+    return apiClient.get<{
+      date: string;
+      problem: DSAProblem;
+      is_completed: boolean;
+    }>('/dsa/daily-challenge');
+  },
+
+  getRoadmap: async () => {
+    return apiClient.get<Array<{
+      stage: string;
+      description: string;
+      total_problems: number;
+      solved_problems: number;
+      topics: Array<{
+        topic_id: string;
+        topic_name: string;
+        total: number;
+        solved: number;
+      }>;
+    }>>('/dsa/roadmap');
+  },
+
+  getAnalytics: async () => {
+    return apiClient.get<{
+      total_problems: number;
+      total_solved: number;
+      total_attempted: number;
+      total_unsolved: number;
+      completion_percentage: number;
+      acceptance_rate: number;
+      daily_streak: number;
+      by_difficulty: {
+        easy: { solved: number; total: number; percentage: number };
+        medium: { solved: number; total: number; percentage: number };
+        hard: { solved: number; total: number; percentage: number };
+      };
+      by_topic: Array<{
+        topic_id: string;
+        topic_name: string;
+        solved: number;
+        total: number;
+        percentage: number;
+      }>;
+      weak_topics: string[];
+      bookmarked_count: number;
+    }>('/dsa/analytics');
+  },
+
+  getBookmarks: async (): Promise<string[]> => {
+    return apiClient.get<string[]>('/dsa/bookmarks');
+  },
+
+  toggleBookmark: async (problemId: string): Promise<{ bookmarked: boolean; bookmarks: string[] }> => {
+    return apiClient.post<{ bookmarked: boolean; bookmarks: string[] }>(`/dsa/bookmarks/${problemId}`, {});
+  },
+
+  getDraft: async (problemId: string): Promise<{ code: string; language: string; updated_at: string } | null> => {
+    return apiClient.get(`/dsa/drafts/${problemId}`);
+  },
+
+  saveDraft: async (problemId: string, payload: { code: string; language: string }): Promise<void> => {
+    return apiClient.post(`/dsa/drafts/${problemId}`, payload);
   },
 
   getHints: async (problemId: string, level = 1): Promise<{

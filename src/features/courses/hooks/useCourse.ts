@@ -35,6 +35,58 @@ export function useCourse(courseId: string) {
     onError: () => toast.error('Failed to update bookmark'),
   });
 
+  const updateMutation = useMutation({
+    mutationFn: (updates: Parameters<typeof coursesApi.updateCourse>[1]) => coursesApi.updateCourse(courseId, updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['course', courseId] });
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+      toast.success('Course details updated');
+    },
+    onError: (err: any) => toast.error(err?.message || 'Failed to update course'),
+  });
+
+  const addChapterMutation = useMutation({
+    mutationFn: (payload: { title: string; description?: string }) => coursesApi.addChapter(courseId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['course', courseId] });
+      toast.success('Chapter added to course');
+    },
+    onError: (err: any) => toast.error(err?.message || 'Failed to add chapter'),
+  });
+
+  const addLessonMutation = useMutation({
+    mutationFn: ({
+      chapterId,
+      payload,
+    }: {
+      chapterId: string;
+      payload: { title: string; description?: string; content?: string; estimated_minutes?: number };
+    }) => coursesApi.addLesson(courseId, chapterId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['course', courseId] });
+      toast.success('Lesson added to chapter');
+    },
+    onError: (err: any) => toast.error(err?.message || 'Failed to add lesson'),
+  });
+
+  const addResourceMutation = useMutation({
+    mutationFn: (payload: Parameters<typeof coursesApi.addResource>[1]) => coursesApi.addResource(courseId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['course', courseId] });
+      toast.success('Resource linked to course');
+    },
+    onError: (err: any) => toast.error(err?.message || 'Failed to link resource'),
+  });
+
+  const removeResourceMutation = useMutation({
+    mutationFn: (resourceId: string) => coursesApi.removeResource(courseId, resourceId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['course', courseId] });
+      toast.success('Resource unlinked');
+    },
+    onError: () => toast.error('Failed to unlink resource'),
+  });
+
   return {
     course: query.data,
     isLoading: query.isLoading,
@@ -44,5 +96,15 @@ export function useCourse(courseId: string) {
     enroll: enrollMutation.mutate,
     isEnrolling: enrollMutation.isPending,
     toggleBookmark: bookmarkMutation.mutate,
+    updateCourse: updateMutation.mutateAsync,
+    isUpdating: updateMutation.isPending,
+    addChapter: addChapterMutation.mutateAsync,
+    isAddingChapter: addChapterMutation.isPending,
+    addLesson: addLessonMutation.mutateAsync,
+    isAddingLesson: addLessonMutation.isPending,
+    addResource: addResourceMutation.mutateAsync,
+    isAddingResource: addResourceMutation.isPending,
+    removeResource: removeResourceMutation.mutateAsync,
+    isRemovingResource: removeResourceMutation.isPending,
   };
 }

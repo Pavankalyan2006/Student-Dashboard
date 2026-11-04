@@ -406,7 +406,7 @@ export function SemesterOverviewPage({ onNavigate }: SemesterOverviewPageProps) 
                       <div className="flex items-center justify-between">
                         <span className="font-semibold text-white truncate mr-2">{ev.title}</span>
                         <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-800 text-indigo-400 shrink-0">
-                          {ev.event_type.replace('_', ' ')}
+                          {(ev.event_type || 'ACADEMIC_EVENT').replace(/_/g, ' ')}
                         </span>
                       </div>
                       <div className="flex items-center justify-between text-slate-400 text-[11px]">

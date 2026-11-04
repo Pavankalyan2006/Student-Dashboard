@@ -15,15 +15,35 @@ export class AIService {
 
   public static async generate(
     messages: AIMessage[],
-    promptKey = 'student_learning_agent',
+    promptKey?: string,
     temperature = 0.7
   ): Promise<AIGenerateResult> {
-    const systemInstruction = PromptService.getPrompt(promptKey);
+    // 1. Extract system instruction from messages or explicit promptKey
+    let systemInstruction: string | undefined = undefined;
+    const filteredMessages: AIMessage[] = [];
+
+    for (const m of messages) {
+      if (m.role === 'system') {
+        if (!systemInstruction) {
+          systemInstruction = m.content;
+        } else {
+          systemInstruction += '\n\n' + m.content;
+        }
+      } else {
+        filteredMessages.push(m);
+      }
+    }
+
+    if (!systemInstruction && promptKey) {
+      systemInstruction = PromptService.getPrompt(promptKey);
+    }
+
     logger.info('AIService generate call initiated', {
-      context: { provider: this.provider.name, promptKey, messageCount: messages.length },
+      context: { provider: this.provider.name, promptKey, messageCount: filteredMessages.length },
     });
+
     return this.provider.generate({
-      messages,
+      messages: filteredMessages.length > 0 ? filteredMessages : messages,
       systemInstruction,
       temperature,
     });
@@ -32,16 +52,35 @@ export class AIService {
   public static async stream(
     messages: AIMessage[],
     onChunk: (text: string) => void,
-    promptKey = 'student_learning_agent',
+    promptKey?: string,
     temperature = 0.7
   ): Promise<void> {
-    const systemInstruction = PromptService.getPrompt(promptKey);
+    let systemInstruction: string | undefined = undefined;
+    const filteredMessages: AIMessage[] = [];
+
+    for (const m of messages) {
+      if (m.role === 'system') {
+        if (!systemInstruction) {
+          systemInstruction = m.content;
+        } else {
+          systemInstruction += '\n\n' + m.content;
+        }
+      } else {
+        filteredMessages.push(m);
+      }
+    }
+
+    if (!systemInstruction && promptKey) {
+      systemInstruction = PromptService.getPrompt(promptKey);
+    }
+
     logger.info('AIService stream call initiated', {
-      context: { provider: this.provider.name, promptKey, messageCount: messages.length },
+      context: { provider: this.provider.name, promptKey, messageCount: filteredMessages.length },
     });
+
     return this.provider.stream(
       {
-        messages,
+        messages: filteredMessages.length > 0 ? filteredMessages : messages,
         systemInstruction,
         temperature,
       },

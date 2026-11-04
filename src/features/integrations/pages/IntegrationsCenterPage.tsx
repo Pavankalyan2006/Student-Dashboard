@@ -347,48 +347,169 @@ export function IntegrationsCenterPage({ onNavigate, initialTab = 'platforms' }:
         </div>
       )}
 
-      {/* Tab 2: Activity Stream */}
+      {/* Tab 2: Activity Stream & Sync Operations */}
       {activeTab === 'activity' && (
-        <div className="p-6 rounded-2xl border border-[#E4E7EC] bg-white shadow-sm space-y-4">
-          <h3 className="text-base font-bold text-[#101828] flex items-center gap-2">
-            <Activity className="w-4 h-4 text-blue-600" />
-            Verified Multi-Platform Activity Stream
-          </h3>
-
-          <div className="space-y-3">
-            {activities.map((act) => (
-              <div
-                key={act.id}
-                className="p-4 rounded-xl border border-gray-200 bg-gray-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-              >
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded uppercase">
-                      {act.provider}
-                    </span>
-                    <span className="text-xs font-bold text-[#101828]">{act.title}</span>
-                  </div>
-                  {act.description && <p className="text-xs text-[#475467]">{act.description}</p>}
-                </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  <span className="text-[11px] text-gray-400">
-                    {(act.timestamp || act.occurred_at || act.created_at)
-                      ? new Date(act.timestamp || act.occurred_at || act.created_at!).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                      : 'Recently'}
-                  </span>
-                  {act.url && (
-                    <a
-                      href={act.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="p-1 rounded hover:bg-gray-200 text-gray-500"
-                    >
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
-                  )}
-                </div>
+        <div className="space-y-6">
+          {/* Sync Operations Matrix */}
+          <div className="p-6 rounded-2xl border border-[#E4E7EC] bg-white shadow-sm space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-3">
+              <div>
+                <h3 className="text-base font-bold text-[#101828] flex items-center gap-2">
+                  <RefreshCw className="w-4 h-4 text-blue-600" />
+                  Sync Center & Platform Job Status
+                </h3>
+                <p className="text-xs text-gray-500">
+                  Real-time status of data synchronization tasks across all supported external providers.
+                </p>
               </div>
-            ))}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={loadData}
+                className="text-xs gap-1.5 self-start sm:self-auto"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                Refresh Status
+              </Button>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs text-[#344054]">
+                <thead className="bg-gray-50 border-b border-gray-200 text-[11px] uppercase font-bold text-gray-500 tracking-wider">
+                  <tr>
+                    <th className="px-4 py-3">Platform</th>
+                    <th className="px-4 py-3">Connection Status</th>
+                    <th className="px-4 py-3">Last Sync</th>
+                    <th className="px-4 py-3">Sync Operation</th>
+                    <th className="px-4 py-3 text-right">Sync Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {providers.map((p) => {
+                    const conn = getConnectionForProvider(p.id);
+                    const isConnected = !!conn;
+                    const isSyncing = isSyncingId === conn?.id;
+
+                    return (
+                      <tr key={p.id} className="hover:bg-gray-50/50">
+                        <td className="px-4 py-3">
+                          <div className="font-bold text-[#101828]">{p.name}</div>
+                          <div className="text-[10px] text-gray-400 capitalize">{p.category.toLowerCase().replace(/_/g, ' ')}</div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                              isConnected
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                : 'bg-gray-100 text-gray-500'
+                            }`}
+                          >
+                            {isConnected ? 'READY / CONNECTED' : 'NOT CONNECTED'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-gray-500">
+                          {conn?.last_synced_at
+                            ? new Date(conn.last_synced_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })
+                            : isConnected
+                            ? 'Never synced'
+                            : '—'}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="text-[11px] text-gray-600">
+                            {isConnected ? 'Bidirectional profile & evidence pull' : 'Connect account to enable sync'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          {isConnected && conn ? (
+                            <div className="flex items-center justify-end gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                disabled={isSyncing}
+                                onClick={() => handleSync(conn.id, p.name)}
+                                className="text-xs gap-1"
+                              >
+                                <RefreshCw className={`w-3 h-3 ${isSyncing ? 'animate-spin text-blue-600' : ''}`} />
+                                {isSyncing ? 'Syncing...' : 'Sync Now'}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                disabled={isSyncing}
+                                onClick={() => handleSync(conn.id, p.name)}
+                                className="text-xs text-amber-600 hover:text-amber-800"
+                                title="Retry synchronization"
+                              >
+                                Retry
+                              </Button>
+                            </div>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleOpenConnectModal(p)}
+                              className="text-xs text-blue-600 hover:underline"
+                            >
+                              Connect
+                            </Button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Activity Stream */}
+          <div className="p-6 rounded-2xl border border-[#E4E7EC] bg-white shadow-sm space-y-4">
+            <h3 className="text-base font-bold text-[#101828] flex items-center gap-2">
+              <Activity className="w-4 h-4 text-blue-600" />
+              Verified Multi-Platform Activity Stream
+            </h3>
+
+            <div className="space-y-3">
+              {activities.length > 0 ? (
+                activities.map((act) => (
+                  <div
+                    key={act.id}
+                    className="p-4 rounded-xl border border-gray-200 bg-gray-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                  >
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded uppercase">
+                          {act.provider}
+                        </span>
+                        <span className="text-xs font-bold text-[#101828]">{act.title}</span>
+                      </div>
+                      {act.description && <p className="text-xs text-[#475467]">{act.description}</p>}
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <span className="text-[11px] text-gray-400">
+                        {(act.timestamp || act.occurred_at || act.created_at)
+                          ? new Date(act.timestamp || act.occurred_at || act.created_at!).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                          : 'Recently'}
+                      </span>
+                      {act.url && (
+                        <a
+                          href={act.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="p-1 rounded hover:bg-gray-200 text-gray-500"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-6 text-gray-400 text-xs">
+                  No sync activities recorded yet. Connect an external account and trigger sync above.
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

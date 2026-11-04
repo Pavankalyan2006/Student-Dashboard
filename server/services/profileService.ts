@@ -8,6 +8,7 @@ import {
   UnifiedPortfolioSummary,
 } from '../models/communityProfileProgressTypes';
 import { AuthorizationError, NotFoundError, ValidationError } from '../core/exceptions';
+import { OnboardingService } from './onboardingService';
 
 export class ProfileService {
   /**
@@ -26,6 +27,25 @@ export class ProfileService {
         throw new AuthorizationError('This student profile is private');
       }
     }
+
+    try {
+      const edu = OnboardingService.getEducationProfileSync(targetStudentId);
+      const career = OnboardingService.getCareerGoalsSync(targetStudentId);
+      const skills = OnboardingService.getSkillsAssessmentSync(targetStudentId);
+
+      if (edu) {
+        if (edu.branch) profile.branch = edu.branch;
+        if (edu.current_semester) profile.semester = edu.current_semester;
+        if (edu.institution) profile.college_name = edu.institution;
+        if (edu.expected_graduation_year) profile.graduation_year = edu.expected_graduation_year;
+      }
+      if (career && career.target_job_role) {
+        profile.target_role = career.target_job_role;
+      }
+      if (skills && skills.skills && skills.skills.length > 0) {
+        profile.skills = skills.skills.map((s) => s.skill_name);
+      }
+    } catch {}
 
     if (!profile.completion_breakdown) {
       profile.completion_breakdown = {
@@ -136,6 +156,10 @@ export class ProfileService {
     return db.getStudentPrivacy(studentId);
   }
 
+  public static async getPrivacySettings(studentId: string): Promise<StudentPrivacySetting> {
+    return this.getPrivacy(studentId);
+  }
+
   /**
    * Updates privacy settings
    */
@@ -205,6 +229,26 @@ export class ProfileService {
       certificates_count: certificates.length,
       achievements_count: achievements.length,
       items,
+    };
+  }
+
+  /**
+   * Complete GDPR/privacy student data export
+   */
+  public static async exportStudentData(studentId: string) {
+    const profile = await this.getProfile(studentId);
+    const preferences = await this.getPreferences(studentId);
+    const privacy = await this.getPrivacy(studentId);
+    const notifications = await db.getNotifications(studentId);
+    const goals = await db.getStudentGoals(studentId);
+    return {
+      student_id: studentId,
+      profile,
+      preferences,
+      privacy,
+      notifications,
+      goals,
+      exported_at: new Date().toISOString(),
     };
   }
 }

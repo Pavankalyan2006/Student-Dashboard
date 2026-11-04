@@ -11,7 +11,18 @@ import { logger } from '../../core/logging';
 
 export const placementsRouter = Router();
 
-// 1. Placement Readiness & Progress
+// 1. Placement Readiness, Stats & Progress
+placementsRouter.get('/dashboard-stats', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const studentId = req.user!.userId;
+    const stats = await PlacementService.getDashboardStats(studentId);
+    res.json({ success: true, data: stats });
+  } catch (err: any) {
+    logger.error('Failed to get placement dashboard stats', { error: err.message });
+    res.status(err.status || 500).json({ success: false, message: err.message });
+  }
+});
+
 placementsRouter.get('/readiness', requireAuth, async (req: Request, res: Response) => {
   try {
     const studentId = req.user!.userId;
@@ -42,6 +53,63 @@ placementsRouter.get('/recommendations', requireAuth, async (req: Request, res: 
     res.status(err.status || 500).json({ success: false, message: err.message });
   }
 });
+
+// Group Discussion Topics
+placementsRouter.get('/gd-topics', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const category = req.query.category as string | undefined;
+    const topics = await db.getGroupDiscussionTopics(category);
+    res.json({ success: true, data: topics });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+placementsRouter.get('/gd-topics/:id', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const topic = await db.getGroupDiscussionTopicById(req.params.id);
+    if (!topic) {
+      return res.status(404).json({ success: false, message: 'Group discussion topic not found' });
+    }
+    res.json({ success: true, data: topic });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Real Resume & Project Defense Audit
+placementsRouter.get('/resume-audit', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const studentId = req.user!.userId;
+    const audit = await PlacementService.getResumeAudit(studentId);
+    res.json({ success: true, data: audit });
+  } catch (err: any) {
+    res.status(err.status || 500).json({ success: false, message: err.message });
+  }
+});
+
+// Timed Assessments
+placementsRouter.post('/assessments/submit', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const studentId = req.user!.userId;
+    const result = await PlacementService.submitAssessment(studentId, req.body);
+    res.json({ success: true, data: result });
+  } catch (err: any) {
+    logger.error('Failed to submit placement assessment', { error: err.message });
+    res.status(err.status || 500).json({ success: false, message: err.message });
+  }
+});
+
+placementsRouter.get('/assessments/history', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const studentId = req.user!.userId;
+    const history = await PlacementService.getAssessmentHistory(studentId);
+    res.json({ success: true, data: history });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 
 // 2. Placement Topics
 placementsRouter.get('/topics', requireAuth, async (req: Request, res: Response) => {

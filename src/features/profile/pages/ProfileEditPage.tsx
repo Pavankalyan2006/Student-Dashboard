@@ -3,8 +3,10 @@ import { ArrowLeft, Save, Sparkles, CheckCircle2 } from 'lucide-react';
 import { communityProfileApi } from '../../../api/communityProfileApi';
 import { StudentProfileData } from '../../../../server/models/communityProfileProgressTypes';
 import { toast } from 'sonner';
+import { useStudentContext } from '../../../hooks/useStudentContext';
 
 export function ProfileEditPage({ onNavigate }: { onNavigate: (path: string) => void }) {
+  const { refreshStudentContext } = useStudentContext();
   const [profile, setProfile] = React.useState<StudentProfileData | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [saving, setSaving] = React.useState(false);
@@ -106,6 +108,7 @@ export function ProfileEditPage({ onNavigate }: { onNavigate: (path: string) => 
         },
       });
 
+      await refreshStudentContext().catch(() => {});
       toast.success('Profile updated successfully!');
       onNavigate('/profile');
     } catch (err: any) {

@@ -20,6 +20,10 @@ export class Security {
     return bcrypt.compare(plain, hash);
   }
 
+  public static async comparePasswords(plain: string, hash: string): Promise<boolean> {
+    return this.comparePassword(plain, hash);
+  }
+
   public static generateAccessToken(payload: TokenPayload): string {
     return jwt.sign(payload, config.jwtSecret, {
       expiresIn: config.jwtExpiresIn as any,

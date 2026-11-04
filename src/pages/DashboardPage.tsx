@@ -29,9 +29,16 @@ import { CareerResumeWidget } from '../features/dashboard/components/CareerResum
 import { ResearchGitHubWidget } from '../features/dashboard/components/ResearchGitHubWidget';
 import { LearningModulesSummaryWidget } from '../features/dashboard/components/LearningModulesSummaryWidget';
 import { ExternalActivityWidget } from '../features/dashboard/components/ExternalActivityWidget';
+import { onboardingApi } from '../api/onboardingApi';
+import { Sparkles, ArrowRight } from 'lucide-react';
 
 export function DashboardPage({ onNavigate }: { onNavigate: (path: string) => void }) {
   const { data, isLoading, isError, error, refetch, toggleTodayTask } = useDashboard();
+  const [onboardingStatus, setOnboardingStatus] = React.useState<any>(null);
+
+  React.useEffect(() => {
+    onboardingApi.getStatus().then(setOnboardingStatus).catch(() => {});
+  }, []);
 
   if (isLoading) {
     return (
@@ -67,6 +74,29 @@ export function DashboardPage({ onNavigate }: { onNavigate: (path: string) => vo
 
   return (
     <PageContainer className="space-y-6">
+      {/* 0. Onboarding Personalization Action Banner */}
+      {onboardingStatus && !onboardingStatus.is_complete && (
+        <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl p-5 text-white shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-amber-300" />
+              <span className="text-xs font-bold uppercase tracking-wider text-blue-100">Profile Setup & Personalization</span>
+            </div>
+            <h3 className="text-lg font-bold">Personalize your B.Tech AI Learning Platform</h3>
+            <p className="text-xs text-blue-100 max-w-xl">
+              Configure your curriculum syllabus, internal exam dates, learning modality, self-assessed skills, and career targets to personalize every AI Tutor and lab.
+            </p>
+          </div>
+          <button
+            onClick={() => onNavigate('/onboarding')}
+            className="px-5 py-2.5 rounded-xl bg-white text-blue-700 font-bold text-xs hover:bg-blue-50 transition-all shrink-0 flex items-center gap-1.5 shadow-sm"
+          >
+            <span>Complete Onboarding Setup</span>
+            <ArrowRight className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
       {/* 1. Personalized Welcome Header */}
       <DashboardWelcome
         student={data.student}

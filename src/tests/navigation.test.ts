@@ -26,11 +26,32 @@ describe('Navigation & Shell Route Foundation', () => {
     expect(allHrefs).toContain('/coding');
     expect(allHrefs).toContain('/projects');
     expect(allHrefs).toContain('/placement');
+    expect(allHrefs).toContain('/assessment/gate-preparation');
+  });
+
+  it('replaces Placement Preparation with GATE Exam Preparation in ASSESSMENT while preserving it in CAREER', () => {
+    const assessmentSection = NAV_SECTIONS.find((s) => s.title === 'ASSESSMENT');
+    expect(assessmentSection).toBeDefined();
+    const assessmentItemNames = assessmentSection!.items.map((i) => i.name);
+    const assessmentItemHrefs = assessmentSection!.items.map((i) => i.href);
+
+    expect(assessmentItemNames).toContain('GATE Exam Preparation');
+    expect(assessmentItemHrefs).toContain('/assessment/gate-preparation');
+    expect(assessmentItemNames).not.toContain('Placement Preparation');
+
+    const careerSection = NAV_SECTIONS.find((s) => s.title === 'CAREER & EXTERNAL PLATFORMS');
+    expect(careerSection).toBeDefined();
+    const careerItemNames = careerSection!.items.map((i) => i.name);
+    const careerItemHrefs = careerSection!.items.map((i) => i.href);
+
+    expect(careerItemNames).toContain('Placement Preparation');
+    expect(careerItemHrefs).toContain('/placement');
   });
 
   it('provides rich placeholder configurations for all future roadmap modules', () => {
     expect(MODULE_REGISTRY['/courses'].phaseNumber).toBe(4);
     expect(MODULE_REGISTRY['/dsa'].phaseNumber).toBe(8);
     expect(MODULE_REGISTRY['/placement'].phaseNumber).toBe(11);
+    expect(MODULE_REGISTRY['/assessment/gate-preparation'].phaseNumber).toBe(15);
   });
 });

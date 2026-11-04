@@ -74,7 +74,8 @@ class ApiClient {
       if (response.status === 401 && !path.includes('/auth/login')) {
         this.setToken(null);
         if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
-          window.location.href = '/login';
+          const target = encodeURIComponent(window.location.pathname + window.location.search);
+          window.location.href = `/login?redirect=${target}`;
         }
       }
 

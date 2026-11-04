@@ -12,6 +12,7 @@ import {
   Clock,
   HardDrive,
   BookOpen,
+  Folder,
 } from 'lucide-react';
 import { cn } from '../../../lib/utils';
 
@@ -25,6 +26,13 @@ export interface DocumentCardProps {
   onToggleFavorite: (documentId: string) => void;
   onDelete: (documentId: string) => Promise<any>;
   onRetryProcessing?: (documentId: string) => void;
+  onPreview?: (document: DocumentCardData) => void;
+  onDownload?: (documentId: string, filename: string) => void;
+  onOpenVersions?: (document: DocumentCardData) => void;
+  onOpenMove?: (document: DocumentCardData) => void;
+  onOpenEdit?: (document: DocumentCardData) => void;
+  onIndexKnowledge?: (documentId: string) => void;
+  onLinkLab?: (document: DocumentCardData) => void;
 }
 
 export function DocumentCard({
@@ -37,6 +45,13 @@ export function DocumentCard({
   onToggleFavorite,
   onDelete,
   onRetryProcessing,
+  onPreview,
+  onDownload,
+  onOpenVersions,
+  onOpenMove,
+  onOpenEdit,
+  onIndexKnowledge,
+  onLinkLab,
 }: DocumentCardProps) {
   const [deleteOpen, setDeleteOpen] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
@@ -85,15 +100,22 @@ export function DocumentCard({
         )}
       >
         <div>
-          {/* Top header row: Format Icon, Badge, Favorite, Action Menu */}
+          {/* Top header row: Format Icon, Extension, Version, Favorite, Action Menu */}
           <div className="flex items-center justify-between gap-2 mb-3">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <div className="h-9 w-9 rounded-lg bg-slate-50 border border-slate-200/80 flex items-center justify-center shrink-0">
                 {getFileIcon(document.file_extension)}
               </div>
-              <span className="text-[10px] font-mono uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-slate-100 text-slate-700">
-                {document.file_extension}
-              </span>
+              <div className="flex flex-col">
+                <span className="text-[10px] font-mono uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 w-fit">
+                  {document.file_extension}
+                </span>
+              </div>
+              {document.current_version && document.current_version > 1 && (
+                <span className="text-[9px] font-mono font-semibold px-1 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200">
+                  v{document.current_version}
+                </span>
+              )}
             </div>
 
             <div className="flex items-center gap-1">
@@ -122,13 +144,41 @@ export function DocumentCard({
                 onToggleFavorite={() => onToggleFavorite(document.id)}
                 onRetryProcessing={() => onRetryProcessing?.(document.id)}
                 onDelete={() => setDeleteOpen(true)}
+                onPreview={onPreview ? () => onPreview(document) : undefined}
+                onDownload={
+                  onDownload
+                    ? () => onDownload(document.id, document.original_filename)
+                    : undefined
+                }
+                onOpenVersions={onOpenVersions ? () => onOpenVersions(document) : undefined}
+                onOpenMove={onOpenMove ? () => onOpenMove(document) : undefined}
+                onOpenEdit={onOpenEdit ? () => onOpenEdit(document) : undefined}
+                onIndexKnowledge={
+                  onIndexKnowledge ? () => onIndexKnowledge(document.id) : undefined
+                }
+                onLinkLab={onLinkLab ? () => onLinkLab(document) : undefined}
               />
             </div>
           </div>
 
+          {/* Category & Folder Pills */}
+          <div className="flex flex-wrap items-center gap-1.5 mb-2">
+            {document.category && (
+              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100 truncate max-w-[180px]">
+                {document.category}
+              </span>
+            )}
+            {document.folder_name && (
+              <span className="text-[10px] text-slate-600 flex items-center gap-1 bg-slate-50 border border-slate-200 px-1.5 py-0.5 rounded">
+                <Folder className="h-2.5 w-2.5 text-slate-400" />
+                <span className="truncate max-w-[120px]">{document.folder_name}</span>
+              </span>
+            )}
+          </div>
+
           {/* Title and description */}
           <div
-            onClick={() => onOpen(document.id)}
+            onClick={() => (onPreview ? onPreview(document) : onOpen(document.id))}
             className="cursor-pointer group-hover:text-[#2563EB] transition-colors"
           >
             <h3 className="text-sm font-semibold text-[#101828] line-clamp-2 leading-snug group-hover:text-[#2563EB]">
@@ -175,3 +225,4 @@ export function DocumentCard({
     </>
   );
 }
+
