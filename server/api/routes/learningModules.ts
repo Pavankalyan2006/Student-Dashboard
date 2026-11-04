@@ -3,6 +3,7 @@
 
 import { Router, Request, Response } from 'express';
 import { requireAuth } from '../../middleware/auth';
+import { ValidationError } from '../../core/exceptions';
 import { LearningModulesService } from '../../services/learningModulesService';
 import { SqlLabSandboxService } from '../../services/sqlLabSandboxService';
 import { MlLabService } from '../../services/mlLabService';
@@ -18,7 +19,7 @@ learningModulesRouter.get('/study-planner/plans', requireAuth, async (req: Reque
     const plans = await LearningModulesService.getStudyPlans(studentId);
     res.json({ success: true, data: plans });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -28,7 +29,7 @@ learningModulesRouter.get('/study-planner/plans/:planId', requireAuth, async (re
     const plan = await LearningModulesService.getStudyPlanById(studentId, req.params.planId);
     res.json({ success: true, data: plan });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -38,7 +39,7 @@ learningModulesRouter.post('/study-planner/plans', requireAuth, async (req: Requ
     const plan = await LearningModulesService.createStudyPlan(studentId, req.body);
     res.status(201).json({ success: true, data: plan });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -49,7 +50,7 @@ learningModulesRouter.patch('/study-planner/plans/:planId/tasks/:taskId', requir
     const updated = await LearningModulesService.updateTaskStatus(studentId, req.params.planId, req.params.taskId, status);
     res.json({ success: true, data: updated });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -59,7 +60,7 @@ learningModulesRouter.get('/study-planner/today', requireAuth, async (req: Reque
     const tasks = await LearningModulesService.getTodayTasks(studentId);
     res.json({ success: true, data: tasks });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -72,7 +73,7 @@ learningModulesRouter.get('/exams', requireAuth, async (req: Request, res: Respo
     const exams = await LearningModulesService.getExams(studentId);
     res.json({ success: true, data: exams });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -82,7 +83,7 @@ learningModulesRouter.get('/exams/:examId', requireAuth, async (req: Request, re
     const exam = await LearningModulesService.getExamById(studentId, req.params.examId);
     res.json({ success: true, data: exam });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -92,7 +93,7 @@ learningModulesRouter.post('/exams', requireAuth, async (req: Request, res: Resp
     const exam = await LearningModulesService.createExam(studentId, req.body);
     res.status(201).json({ success: true, data: exam });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -105,7 +106,7 @@ learningModulesRouter.get('/doubts', requireAuth, async (req: Request, res: Resp
     const doubts = await LearningModulesService.getDoubts(studentId);
     res.json({ success: true, data: doubts });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -115,7 +116,7 @@ learningModulesRouter.get('/doubts/:doubtId', requireAuth, async (req: Request, 
     const doubt = await LearningModulesService.getDoubtById(studentId, req.params.doubtId);
     res.json({ success: true, data: doubt });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -125,7 +126,7 @@ learningModulesRouter.post('/doubts', requireAuth, async (req: Request, res: Res
     const doubt = await LearningModulesService.createDoubt(studentId, req.body);
     res.status(201).json({ success: true, data: doubt });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -145,7 +146,7 @@ learningModulesRouter.get('/flashcards/decks', requireAuth, async (req: Request,
     });
     res.json({ success: true, data: decks });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -155,7 +156,7 @@ learningModulesRouter.get('/flashcards/decks/:deckId', requireAuth, async (req: 
     const deck = await LearningModulesService.getFlashcardDeckById(studentId, req.params.deckId);
     res.json({ success: true, data: deck });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -165,7 +166,7 @@ learningModulesRouter.post('/flashcards/decks', requireAuth, async (req: Request
     const deck = await LearningModulesService.createFlashcardDeck(studentId, req.body);
     res.status(201).json({ success: true, data: deck });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -175,7 +176,7 @@ learningModulesRouter.put('/flashcards/decks/:deckId', requireAuth, async (req: 
     const deck = await LearningModulesService.updateFlashcardDeck(studentId, req.params.deckId, req.body);
     res.json({ success: true, data: deck });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -185,7 +186,7 @@ learningModulesRouter.post('/flashcards/decks/:deckId/duplicate', requireAuth, a
     const deck = await LearningModulesService.duplicateFlashcardDeck(studentId, req.params.deckId);
     res.status(201).json({ success: true, data: deck });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -196,7 +197,7 @@ learningModulesRouter.post('/flashcards/decks/:deckId/archive', requireAuth, asy
     const deck = await LearningModulesService.archiveFlashcardDeck(studentId, req.params.deckId, isArchived);
     res.json({ success: true, data: deck });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -207,7 +208,7 @@ learningModulesRouter.post('/flashcards/decks/:deckId/bookmark', requireAuth, as
     const deck = await LearningModulesService.bookmarkFlashcardDeck(studentId, req.params.deckId, isBookmarked);
     res.json({ success: true, data: deck });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -217,7 +218,7 @@ learningModulesRouter.delete('/flashcards/decks/:deckId', requireAuth, async (re
     await LearningModulesService.deleteFlashcardDeck(studentId, req.params.deckId);
     res.json({ success: true, message: 'Deck deleted successfully' });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -227,7 +228,7 @@ learningModulesRouter.post('/flashcards/decks/:deckId/cards', requireAuth, async
     const card = await LearningModulesService.addCardToDeck(studentId, req.params.deckId, req.body);
     res.status(201).json({ success: true, data: card });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -238,7 +239,7 @@ learningModulesRouter.put('/flashcards/decks/:deckId/cards/:cardId', requireAuth
     const card = await LearningModulesService.updateCard(studentId, req.params.deckId, req.params.cardId, req.body, resetSchedule);
     res.json({ success: true, data: card });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -248,7 +249,7 @@ learningModulesRouter.delete('/flashcards/decks/:deckId/cards/:cardId', requireA
     await LearningModulesService.deleteCard(studentId, req.params.deckId, req.params.cardId);
     res.json({ success: true, message: 'Card deleted successfully' });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -259,7 +260,7 @@ learningModulesRouter.post('/flashcards/decks/:deckId/cards/:cardId/bookmark', r
     const card = await LearningModulesService.bookmarkCard(studentId, req.params.deckId, req.params.cardId, isBookmarked);
     res.json({ success: true, data: card });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -271,7 +272,7 @@ learningModulesRouter.post('/flashcards/decks/:deckId/cards/:cardId/review', req
     const card = await LearningModulesService.reviewFlashcard(studentId, req.params.deckId, req.params.cardId, ratingParam);
     res.json({ success: true, data: card });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -286,7 +287,7 @@ learningModulesRouter.get('/flashcards/due', requireAuth, async (req: Request, r
     });
     res.json({ success: true, data: cards });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -296,7 +297,7 @@ learningModulesRouter.get('/flashcards/stats', requireAuth, async (req: Request,
     const stats = await LearningModulesService.getFlashcardStats(studentId);
     res.json({ success: true, data: stats });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -306,7 +307,7 @@ learningModulesRouter.post('/flashcards/generate/ai', requireAuth, async (req: R
     const generated = await LearningModulesService.generateAIFlashcards(studentId, req.body);
     res.json({ success: true, data: generated });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -318,7 +319,7 @@ learningModulesRouter.post('/flashcards/generate/from-note', requireAuth, async 
     const result = await LearningModulesService.generateFromNote(studentId, note_id);
     res.json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -330,7 +331,7 @@ learningModulesRouter.post('/flashcards/generate/from-document', requireAuth, as
     const result = await LearningModulesService.generateFromDocument(studentId, document_id, count ? Number(count) : 8);
     res.json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -342,7 +343,7 @@ learningModulesRouter.post('/flashcards/generate/from-course', requireAuth, asyn
     const result = await LearningModulesService.generateFromCourse(studentId, course_id, chapter_id, count ? Number(count) : 8);
     res.json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -352,7 +353,7 @@ learningModulesRouter.post('/flashcards/decks/:deckId/schedule-task', requireAut
     const task = await LearningModulesService.scheduleReviewTask(studentId, req.params.deckId);
     res.status(201).json({ success: true, data: task });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -365,7 +366,7 @@ learningModulesRouter.get('/labs', requireAuth, async (req: Request, res: Respon
     const labs = await LearningModulesService.getLabs(studentId);
     res.json({ success: true, data: labs });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -375,7 +376,7 @@ learningModulesRouter.get('/labs/:labId', requireAuth, async (req: Request, res:
     const lab = await LearningModulesService.getLabById(studentId, req.params.labId);
     res.json({ success: true, data: lab });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -386,7 +387,7 @@ learningModulesRouter.post('/labs/:labId/experiments/:expId/viva/:qId', requireA
     const evaluated = await LearningModulesService.evaluateVivaAnswer(studentId, req.params.labId, req.params.expId, req.params.qId, student_answer || '');
     res.json({ success: true, data: evaluated });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -399,7 +400,7 @@ learningModulesRouter.get('/sql-lab/workspaces', requireAuth, async (req: Reques
     const workspaces = SqlLabSandboxService.getWorkspaces(studentId);
     res.json({ success: true, data: workspaces });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -420,7 +421,7 @@ learningModulesRouter.get('/sql-lab/schemas', async (req: Request, res: Response
     const schemas = SqlLabSandboxService.getSchemas(studentId);
     res.json({ success: true, data: schemas });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -430,7 +431,7 @@ learningModulesRouter.get('/sql-lab/schemas/:dbName/tables', requireAuth, async 
     const tables = SqlLabSandboxService.getSchemaTables(studentId, req.params.dbName);
     res.json({ success: true, data: tables });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -467,7 +468,7 @@ learningModulesRouter.get('/sql-lab/schemas/:dbName/tables/:tableName/data', req
     });
     res.json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -527,7 +528,7 @@ learningModulesRouter.get('/sql-lab/history', requireAuth, async (req: Request, 
     const history = SqlLabSandboxService.getQueryHistory(studentId, req.query.schema_name as string);
     res.json({ success: true, data: history });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -536,7 +537,7 @@ learningModulesRouter.get('/sql-lab/challenges', async (_req: Request, res: Resp
     const challenges = await LearningModulesService.getSqlChallenges();
     res.json({ success: true, data: challenges });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -547,7 +548,7 @@ learningModulesRouter.post('/sql-lab/execute', requireAuth, async (req: Request,
     const result = await SqlLabSandboxService.executeSandboxedSql(studentId, db_name || 'university_db', query || '');
     res.json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -560,7 +561,7 @@ learningModulesRouter.get('/ml-lab/workspaces', requireAuth, async (req: Request
     const workspaces = MlLabService.getWorkspaces(studentId);
     res.json({ success: true, data: workspaces });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -630,7 +631,7 @@ learningModulesRouter.get('/ml-lab/datasets', async (req: Request, res: Response
     const datasets = MlLabService.getDatasets(studentId);
     res.json({ success: true, data: datasets });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -660,7 +661,7 @@ learningModulesRouter.get('/ml-lab/experiments', requireAuth, async (req: Reques
     const experiments = MlLabService.getExperiments(studentId, req.query.workspace_id as string);
     res.json({ success: true, data: experiments });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -702,7 +703,7 @@ learningModulesRouter.get('/system-design/problems', async (_req: Request, res: 
     const problems = await LearningModulesService.getSystemDesignProblems();
     res.json({ success: true, data: problems });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -712,7 +713,7 @@ learningModulesRouter.get('/system-design/designs', requireAuth, async (req: Req
     const designs = await LearningModulesService.getSystemDesigns(studentId);
     res.json({ success: true, data: designs });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -722,7 +723,7 @@ learningModulesRouter.post('/system-design/designs', requireAuth, async (req: Re
     const design = await LearningModulesService.createSystemDesign(studentId, req.body);
     res.status(201).json({ success: true, data: design });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -735,7 +736,7 @@ learningModulesRouter.get('/knowledge/collections', requireAuth, async (req: Req
     const collections = await LearningModulesService.getKnowledgeCollections(studentId);
     res.json({ success: true, data: collections });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -746,7 +747,7 @@ learningModulesRouter.get('/knowledge/items', requireAuth, async (req: Request, 
     const items = await LearningModulesService.getKnowledgeItems(studentId, search);
     res.json({ success: true, data: items });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -756,7 +757,7 @@ learningModulesRouter.post('/knowledge/items', requireAuth, async (req: Request,
     const item = await LearningModulesService.createKnowledgeItem(studentId, req.body);
     res.status(201).json({ success: true, data: item });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -766,7 +767,7 @@ learningModulesRouter.get('/knowledge/graph', requireAuth, async (req: Request, 
     const graphData = await LearningModulesService.getKnowledgeGraphData(studentId);
     res.json({ success: true, data: graphData });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -779,7 +780,7 @@ learningModulesRouter.get('/applications', requireAuth, async (req: Request, res
     const apps = await LearningModulesService.getApplications(studentId);
     res.json({ success: true, data: apps });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -789,7 +790,7 @@ learningModulesRouter.get('/applications/:appId', requireAuth, async (req: Reque
     const app = await LearningModulesService.getApplicationById(studentId, req.params.appId);
     res.json({ success: true, data: app });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -799,7 +800,7 @@ learningModulesRouter.post('/applications', requireAuth, async (req: Request, re
     const app = await LearningModulesService.createApplication(studentId, req.body);
     res.status(201).json({ success: true, data: app });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -810,7 +811,7 @@ learningModulesRouter.patch('/applications/:appId/status', requireAuth, async (r
     const updated = await LearningModulesService.updateApplicationStatus(studentId, req.params.appId, status, note);
     res.json({ success: true, data: updated });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -820,7 +821,7 @@ learningModulesRouter.patch('/applications/:appId', requireAuth, async (req: Req
     const updated = await LearningModulesService.updateApplication(studentId, req.params.appId, req.body);
     res.json({ success: true, data: updated });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -830,7 +831,7 @@ learningModulesRouter.delete('/applications/:appId', requireAuth, async (req: Re
     await LearningModulesService.deleteApplication(studentId, req.params.appId);
     res.json({ success: true, message: 'Application deleted successfully' });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -840,7 +841,7 @@ learningModulesRouter.post('/applications/:appId/timeline', requireAuth, async (
     const updated = await LearningModulesService.addTimelineEvent(studentId, req.params.appId, req.body);
     res.json({ success: true, data: updated });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -851,7 +852,7 @@ learningModulesRouter.get('/internships', requireAuth, async (req: Request, res:
     const apps = await LearningModulesService.getApplications(studentId);
     res.json({ success: true, data: apps });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -861,7 +862,7 @@ learningModulesRouter.post('/internships', requireAuth, async (req: Request, res
     const app = await LearningModulesService.createApplication(studentId, req.body);
     res.status(201).json({ success: true, data: app });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 

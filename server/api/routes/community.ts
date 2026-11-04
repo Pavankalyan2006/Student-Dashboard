@@ -11,7 +11,7 @@ communityRouter.get('/community/topics', async (_req: Request, res: Response) =>
     const topics = await CommunityService.getTopics();
     res.json({ success: true, data: topics });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -20,7 +20,7 @@ communityRouter.get('/community/topics/:id', async (req: Request, res: Response)
     const topic = await CommunityService.getTopic(req.params.id);
     res.json({ success: true, data: topic });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -30,7 +30,7 @@ communityRouter.post('/community/topics/:id/follow', requireAuth, async (req: Re
     await CommunityService.followTopic(studentId, req.params.id);
     res.json({ success: true, message: 'Followed topic successfully' });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -40,7 +40,7 @@ communityRouter.delete('/community/topics/:id/follow', requireAuth, async (req: 
     await CommunityService.unfollowTopic(studentId, req.params.id);
     res.json({ success: true, message: 'Unfollowed topic successfully' });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -50,7 +50,7 @@ communityRouter.get('/community/followed-topics', requireAuth, async (req: Reque
     const followed = await CommunityService.getFollowedTopics(studentId);
     res.json({ success: true, data: followed });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -65,7 +65,7 @@ communityRouter.get('/community/questions', async (req: Request, res: Response) 
     });
     res.json({ success: true, data: questions });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -75,7 +75,7 @@ communityRouter.post('/community/questions/assist', requireAuth, async (req: Req
     const assistance = await CommunityService.assistQuestion(title || '', description || '');
     res.json({ success: true, data: assistance });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -85,7 +85,7 @@ communityRouter.post('/community/questions', requireAuth, async (req: Request, r
     const question = await CommunityService.createQuestion(studentId, req.body);
     res.status(201).json({ success: true, data: question });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -95,7 +95,7 @@ communityRouter.get('/community/questions/:id', async (req: Request, res: Respon
     const answers = await CommunityService.getAnswers(req.params.id);
     res.json({ success: true, data: { ...question, answers } });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -105,7 +105,7 @@ communityRouter.patch('/community/questions/:id', requireAuth, async (req: Reque
     const updated = await CommunityService.updateQuestion(req.params.id, studentId, req.body);
     res.json({ success: true, data: updated });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -115,7 +115,7 @@ communityRouter.delete('/community/questions/:id', requireAuth, async (req: Requ
     await CommunityService.deleteQuestion(req.params.id, studentId);
     res.json({ success: true, message: 'Question deleted successfully' });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -124,7 +124,7 @@ communityRouter.post('/community/questions/:id/upvote', requireAuth, async (req:
     const question = await CommunityService.upvoteQuestion(req.params.id);
     res.json({ success: true, data: question });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -134,7 +134,7 @@ communityRouter.get('/community/questions/:id/answers', async (req: Request, res
     const answers = await CommunityService.getAnswers(req.params.id);
     res.json({ success: true, data: answers });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -144,7 +144,7 @@ communityRouter.post('/community/questions/:id/answers', requireAuth, async (req
     const answer = await CommunityService.createAnswer(studentId, req.params.id, req.body);
     res.status(201).json({ success: true, data: answer });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -154,7 +154,7 @@ communityRouter.patch('/community/answers/:id', requireAuth, async (req: Request
     const updated = await CommunityService.updateAnswer(req.params.id, studentId, req.body);
     res.json({ success: true, data: updated });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -164,7 +164,7 @@ communityRouter.delete('/community/answers/:id', requireAuth, async (req: Reques
     await CommunityService.deleteAnswer(req.params.id, studentId);
     res.json({ success: true, message: 'Answer deleted successfully' });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -173,7 +173,7 @@ communityRouter.post('/community/questions/:id/answers/:answerId/upvote', requir
     const answer = await CommunityService.upvoteAnswer(req.params.id, req.params.answerId);
     res.json({ success: true, data: answer });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -184,7 +184,7 @@ communityRouter.post('/community/questions/:id/accept', requireAuth, async (req:
     await CommunityService.acceptAnswer(req.params.id, answer_id, studentId);
     res.json({ success: true, message: 'Answer accepted successfully' });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -195,7 +195,7 @@ communityRouter.get('/community/discussions', async (req: Request, res: Response
     const discussions = await CommunityService.getDiscussions(category);
     res.json({ success: true, data: discussions });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -205,7 +205,7 @@ communityRouter.post('/community/discussions', requireAuth, async (req: Request,
     const discussion = await CommunityService.createDiscussion(studentId, req.body);
     res.status(201).json({ success: true, data: discussion });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -214,7 +214,7 @@ communityRouter.get('/community/discussions/:id', async (req: Request, res: Resp
     const discussion = await CommunityService.getDiscussion(req.params.id);
     res.json({ success: true, data: discussion });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -228,7 +228,7 @@ communityRouter.post('/community/discussions/:id/replies', requireAuth, async (r
     const reply = await CommunityService.addDiscussionReply(studentId, req.params.id, content);
     res.status(201).json({ success: true, data: reply });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -237,7 +237,7 @@ communityRouter.post('/community/discussions/:id/upvote', requireAuth, async (re
     const discussion = await CommunityService.upvoteDiscussion(req.params.id);
     res.json({ success: true, data: discussion });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -248,7 +248,7 @@ communityRouter.get('/community/resources', async (req: Request, res: Response) 
     const resources = await CommunityService.getResources(topicId);
     res.json({ success: true, data: resources });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -258,7 +258,7 @@ communityRouter.post('/community/resources', requireAuth, async (req: Request, r
     const resource = await CommunityService.createResource(studentId, req.body);
     res.status(201).json({ success: true, data: resource });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -267,7 +267,7 @@ communityRouter.post('/community/resources/:id/upvote', requireAuth, async (req:
     const resource = await CommunityService.upvoteResource(req.params.id);
     res.json({ success: true, data: resource });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -277,7 +277,7 @@ communityRouter.get('/community/projects', async (_req: Request, res: Response) 
     const projects = await CommunityService.getProjects();
     res.json({ success: true, data: projects });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -287,7 +287,7 @@ communityRouter.post('/community/projects', requireAuth, async (req: Request, re
     const project = await CommunityService.createProject(studentId, req.body);
     res.status(201).json({ success: true, data: project });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -296,7 +296,7 @@ communityRouter.post('/community/projects/:id/upvote', requireAuth, async (req: 
     const project = await CommunityService.upvoteProject(req.params.id);
     res.json({ success: true, data: project });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -307,7 +307,7 @@ communityRouter.post('/community/reports', requireAuth, async (req: Request, res
     const report = await ModerationService.reportContent(studentId, req.body);
     res.status(201).json({ success: true, data: report });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -316,6 +316,6 @@ communityRouter.get('/community/reports', requireAuth, requireRole('SUPER_ADMIN'
     const reports = await ModerationService.getReports();
     res.json({ success: true, data: reports });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });

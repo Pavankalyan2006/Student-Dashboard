@@ -19,7 +19,7 @@ labAssistantRouter.get('/analytics/summary', requireAuth, async (req: Request, r
     res.json({ success: true, data: analytics });
   } catch (err: any) {
     logger.error('Error fetching lab analytics', err);
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -33,7 +33,7 @@ labAssistantRouter.get('/', requireAuth, async (req: Request, res: Response) => 
     res.json({ success: true, data: labs });
   } catch (err: any) {
     logger.error('Error fetching student labs', err);
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -55,7 +55,7 @@ labAssistantRouter.get('/:labId', requireAuth, async (req: Request, res: Respons
     res.json({ success: true, data: lab });
   } catch (err: any) {
     logger.error(`Error fetching lab ${req.params.labId}`, err);
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -77,7 +77,7 @@ labAssistantRouter.delete('/:labId', requireAuth, async (req: Request, res: Resp
     res.json({ success: true, deleted });
   } catch (err: any) {
     logger.error(`Error deleting lab ${req.params.labId}`, err);
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -141,7 +141,7 @@ labAssistantRouter.post('/:labId/extract-ai', requireAuth, async (req: Request, 
     res.json({ success: true, data: experiments });
   } catch (err: any) {
     logger.error(`Error running AI manual extraction for lab ${req.params.labId}`, err);
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -154,7 +154,7 @@ labAssistantRouter.get('/:labId/experiments', requireAuth, async (req: Request, 
     const exps = await db.getLabExperiments(req.params.labId, studentId);
     res.json({ success: true, data: exps });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -236,7 +236,7 @@ labAssistantRouter.post('/:labId/experiments/reorder', requireAuth, async (req: 
     const updated = await db.getLabExperiments(req.params.labId, studentId);
     res.json({ success: true, data: updated });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -246,7 +246,7 @@ labAssistantRouter.get('/:labId/experiments/:expId', requireAuth, async (req: Re
     const exp = await LabAssistantService.getExperimentDetails(studentId, req.params.expId);
     res.json({ success: true, data: exp });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -276,7 +276,7 @@ labAssistantRouter.delete('/:labId/experiments/:expId', requireAuth, async (req:
     const deleted = await db.deleteLabExperiment(req.params.expId, studentId);
     res.json({ success: true, deleted });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -297,7 +297,7 @@ labAssistantRouter.post('/:labId/experiments/:expId/checklist', requireAuth, asy
     );
     res.json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -307,7 +307,7 @@ labAssistantRouter.post('/:labId/experiments/:expId/checklist/reset', requireAut
     const result = await LabAssistantService.resetChecklist(studentId, req.params.expId);
     res.json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -323,7 +323,7 @@ labAssistantRouter.post('/:labId/experiments/:expId/notes', requireAuth, async (
     const saved = await db.saveLabExperiment(exp);
     res.json({ success: true, data: saved });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -346,7 +346,7 @@ labAssistantRouter.post('/:labId/experiments/:expId/code/run', requireAuth, asyn
     res.json({ success: true, data: result });
   } catch (err: any) {
     logger.error('Error executing code in lab experiment', err);
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -364,7 +364,7 @@ labAssistantRouter.post('/:labId/experiments/:expId/code/save', requireAuth, asy
     });
     res.json({ success: true, data: draft });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -383,7 +383,7 @@ labAssistantRouter.post('/:labId/experiments/:expId/sql/run', requireAuth, async
     res.json({ success: true, data: result });
   } catch (err: any) {
     logger.error('Error executing SQL in lab experiment', err);
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -423,7 +423,7 @@ labAssistantRouter.post('/:labId/experiments/:expId/viva/:qId', requireAuth, asy
     );
     res.json({ success: true, data: evaluated });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -439,7 +439,7 @@ labAssistantRouter.post('/:labId/experiments/:expId/viva/:qId/evaluate', require
     );
     res.json({ success: true, data: evaluated });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -455,7 +455,7 @@ labAssistantRouter.post('/:labId/experiments/:expId/viva/generate', requireAuth,
     );
     res.json({ success: true, data: generated });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -476,7 +476,7 @@ labAssistantRouter.post('/:labId/experiments/:expId/doubt', requireAuth, async (
     );
     res.json({ success: true, data: { answer } });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -486,7 +486,7 @@ labAssistantRouter.get('/:labId/experiments/:expId/doubt', requireAuth, async (r
     const history = await db.getLabDoubtHistory(studentId, req.params.expId);
     res.json({ success: true, data: history });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -496,7 +496,7 @@ labAssistantRouter.delete('/:labId/experiments/:expId/doubt', requireAuth, async
     await db.clearLabDoubtHistory(studentId, req.params.expId);
     res.json({ success: true, cleared: true });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -514,7 +514,7 @@ labAssistantRouter.post('/:labId/experiments/:expId/report', requireAuth, async 
     );
     res.json({ success: true, data: report });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -530,7 +530,7 @@ labAssistantRouter.get('/:labId/experiments/:expId/report', requireAuth, async (
     }
     res.json({ success: true, data: report });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -549,6 +549,6 @@ labAssistantRouter.post('/:labId/experiments/:expId/complete', requireAuth, asyn
     const saved = await db.saveLabExperiment(exp);
     res.json({ success: true, data: saved });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });

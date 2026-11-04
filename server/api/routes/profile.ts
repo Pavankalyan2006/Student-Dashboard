@@ -6,6 +6,7 @@ import { AchievementService } from '../../services/achievementService';
 import { CertificateService } from '../../services/certificateService';
 import { BookmarkService } from '../../services/bookmarkService';
 import { PortfolioService } from '../../services/portfolioService';
+import { db } from '../../db/database';
 
 export const profileRouter = Router();
 
@@ -23,7 +24,7 @@ profileRouter.get('/profile', requireAuth, async (req: Request, res: Response) =
       },
     });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -34,7 +35,7 @@ profileRouter.patch('/profile', requireAuth, async (req: Request, res: Response)
     const updated = await ProfileService.updateProfile(studentId, req.body);
     res.json({ success: true, data: updated });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -51,7 +52,7 @@ profileRouter.get('/profile/activity', requireAuth, async (req: Request, res: Re
     const streak = await ActivityService.getStreak(studentId);
     res.json({ success: true, data: { activities, streak } });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -70,7 +71,7 @@ profileRouter.get('/profile/achievements', requireAuth, async (req: Request, res
       },
     });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -81,7 +82,7 @@ profileRouter.get('/profile/certificates', requireAuth, async (req: Request, res
     const certs = await CertificateService.getCertificates(studentId);
     res.json({ success: true, data: certs });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -93,7 +94,7 @@ profileRouter.get('/profile/bookmarks', requireAuth, async (req: Request, res: R
     const bookmarks = await BookmarkService.getBookmarks(studentId, category);
     res.json({ success: true, data: bookmarks });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -115,7 +116,7 @@ profileRouter.get('/profile/settings', requireAuth, async (req: Request, res: Re
       },
     });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -126,7 +127,7 @@ profileRouter.get('/profile/privacy', requireAuth, async (req: Request, res: Res
     const privacy = await ProfileService.getPrivacy(studentId);
     res.json({ success: true, data: privacy });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -137,7 +138,7 @@ profileRouter.patch('/profile/privacy', requireAuth, async (req: Request, res: R
     const updated = await ProfileService.updatePrivacy(studentId, req.body);
     res.json({ success: true, data: updated });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -148,7 +149,7 @@ profileRouter.get('/profile/preferences', requireAuth, async (req: Request, res:
     const prefs = await ProfileService.getPreferences(studentId);
     res.json({ success: true, data: prefs });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -159,7 +160,7 @@ profileRouter.patch('/profile/preferences', requireAuth, async (req: Request, re
     const updated = await ProfileService.updatePreferences(studentId, req.body);
     res.json({ success: true, data: updated });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -170,7 +171,7 @@ profileRouter.patch('/profile/settings/privacy', requireAuth, async (req: Reques
     const updated = await ProfileService.updatePrivacy(studentId, req.body);
     res.json({ success: true, data: updated });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -181,7 +182,7 @@ profileRouter.patch('/profile/settings/notifications', requireAuth, async (req: 
     const updated = await ProfileService.updateNotificationPreferences(studentId, req.body);
     res.json({ success: true, data: updated });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -217,7 +218,7 @@ profileRouter.get('/profile/export', requireAuth, async (req: Request, res: Resp
       data: exportPayload,
     });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -229,7 +230,7 @@ profileRouter.get('/portfolio', requireAuth, async (req: Request, res: Response)
     const portfolio = await ProfileService.getPortfolio(studentId);
     res.json({ success: true, data: portfolio });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -240,6 +241,6 @@ profileRouter.patch('/portfolio/items/:id', requireAuth, async (req: Request, re
     const updated = await PortfolioService.updatePortfolioItem(req.params.id, studentId, req.body);
     res.json({ success: true, data: updated });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });

@@ -48,7 +48,7 @@ mockInterviewsRouter.get('/questions/:id', (req: Request, res: Response) => {
     const question = MockInterviewEngineService.getQuestionById(req.params.id);
     res.json({ success: true, data: question });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -61,7 +61,7 @@ mockInterviewsRouter.post('/sessions', requireAuth, async (req: Request, res: Re
     const result = await MockInterviewEngineService.createSession(studentId, req.body);
     res.status(201).json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -81,7 +81,7 @@ mockInterviewsRouter.get('/sessions/:id', requireAuth, async (req: Request, res:
     const result = await MockInterviewEngineService.getSession(req.params.id, studentId);
     res.json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -91,7 +91,7 @@ mockInterviewsRouter.post('/sessions/:id/start', requireAuth, async (req: Reques
     const session = await MockInterviewEngineService.startSession(req.params.id, studentId);
     res.json({ success: true, data: session });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -101,7 +101,7 @@ mockInterviewsRouter.post('/sessions/:id/pause', requireAuth, async (req: Reques
     const session = await MockInterviewEngineService.pauseSession(req.params.id, studentId);
     res.json({ success: true, data: session });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -111,7 +111,7 @@ mockInterviewsRouter.post('/sessions/:id/resume', requireAuth, async (req: Reque
     const session = await MockInterviewEngineService.resumeSession(req.params.id, studentId);
     res.json({ success: true, data: session });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -125,7 +125,7 @@ mockInterviewsRouter.post('/sessions/:id/skip', requireAuth, async (req: Request
     );
     res.json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -139,7 +139,7 @@ mockInterviewsRouter.post('/sessions/:id/hint', requireAuth, async (req: Request
     );
     res.json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -154,7 +154,7 @@ mockInterviewsRouter.post('/sessions/:id/code/run', requireAuth, async (req: Req
     });
     res.json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -168,7 +168,7 @@ mockInterviewsRouter.post('/sessions/:id/sql/run', requireAuth, async (req: Requ
     });
     res.json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -181,7 +181,7 @@ mockInterviewsRouter.post('/sessions/:id/artifacts', requireAuth, async (req: Re
     });
     res.json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -195,7 +195,7 @@ mockInterviewsRouter.post('/sessions/:id/scratchpad', requireAuth, async (req: R
     );
     res.json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -217,7 +217,7 @@ mockInterviewsRouter.post('/sessions/:id/answers', requireAuth, async (req: Requ
     );
     res.json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -227,7 +227,7 @@ mockInterviewsRouter.post('/sessions/:id/finish', requireAuth, async (req: Reque
     const result = await MockInterviewEngineService.completeSession(req.params.id, studentId);
     res.json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -237,7 +237,7 @@ mockInterviewsRouter.post('/sessions/:id/abandon', requireAuth, async (req: Requ
     const session = await MockInterviewEngineService.abandonSession(req.params.id, studentId);
     res.json({ success: true, data: session });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -247,7 +247,7 @@ mockInterviewsRouter.get('/sessions/:id/report', requireAuth, async (req: Reques
     const report = await MockInterviewEngineService.getReport(req.params.id, studentId);
     res.json({ success: true, data: report });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -270,7 +270,7 @@ mockInterviewsRouter.post('/saved-questions', requireAuth, async (req: Request, 
     const item = await MockInterviewEngineService.saveQuestion(studentId, req.body);
     res.status(201).json({ success: true, data: item });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -280,7 +280,7 @@ mockInterviewsRouter.delete('/saved-questions/:id', requireAuth, async (req: Req
     const deleted = await MockInterviewEngineService.deleteSavedQuestion(studentId, req.params.id);
     res.json({ success: true, data: { deleted } });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -303,7 +303,7 @@ mockInterviewsRouter.post('/schedule', requireAuth, async (req: Request, res: Re
     const item = await MockInterviewEngineService.scheduleInterview(studentId, req.body);
     res.status(201).json({ success: true, data: item });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -313,7 +313,7 @@ mockInterviewsRouter.delete('/scheduled/:id', requireAuth, async (req: Request, 
     const deleted = await MockInterviewEngineService.deleteScheduled(studentId, req.params.id);
     res.json({ success: true, data: { deleted } });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 

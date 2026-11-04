@@ -21,7 +21,7 @@ researchRouter.get('/', requireAuth, async (req: Request, res: Response) => {
     res.json({ success: true, data: projects });
   } catch (err: any) {
     logger.error('Failed to list research projects', { error: err.message });
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -32,7 +32,7 @@ researchRouter.get('/projects', requireAuth, async (req: Request, res: Response)
     res.json({ success: true, data: projects });
   } catch (err: any) {
     logger.error('Failed to list research projects', { error: err.message });
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -64,7 +64,7 @@ researchRouter.post('/papers/:paper_id/analyze', requireAuth, async (req: Reques
     const analysis = await PaperAnalysisService.analyzePaper(req.params.paper_id, studentId);
     res.json({ success: true, data: analysis });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -75,7 +75,7 @@ researchRouter.post('/papers/:paper_id/summarize', requireAuth, async (req: Requ
     const summary = await PaperAnalysisService.summarizePaper(req.params.paper_id, studentId, mode || 'simple');
     res.json({ success: true, data: summary });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -89,7 +89,7 @@ researchRouter.post('/papers/compare', requireAuth, async (req: Request, res: Re
     const comparison = await PaperAnalysisService.comparePapers(paper_ids, studentId);
     res.json({ success: true, data: comparison });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -104,7 +104,7 @@ researchRouter.delete('/questions/:question_id', requireAuth, async (req: Reques
     const deleted = await ResearchService.deleteQuestion(projectId, req.params.question_id, studentId);
     res.json({ success: true, data: { deleted } });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -135,7 +135,7 @@ researchRouter.delete('/:id', requireAuth, async (req: Request, res: Response) =
     const deleted = await ResearchService.deleteProject(req.params.id, studentId);
     res.json({ success: true, data: { deleted } });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -149,7 +149,7 @@ researchRouter.get('/:id/papers', requireAuth, async (req: Request, res: Respons
     const papers = await ResearchService.listPapers(req.params.id, studentId);
     res.json({ success: true, data: papers });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -167,7 +167,7 @@ researchRouter.post('/:id/papers/search', requireAuth, async (req: Request, res:
     });
     res.json({ success: true, data: results });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -204,7 +204,7 @@ researchRouter.get('/:id/questions', requireAuth, async (req: Request, res: Resp
     const questions = await ResearchService.listQuestions(req.params.id, studentId);
     res.json({ success: true, data: questions });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -224,7 +224,7 @@ researchRouter.get('/:id/gaps', requireAuth, async (req: Request, res: Response)
     const gaps = await ResearchService.listGaps(req.params.id, studentId);
     res.json({ success: true, data: gaps });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -234,7 +234,7 @@ researchRouter.post('/:id/gaps/analyze', requireAuth, async (req: Request, res: 
     const gaps = await PaperAnalysisService.identifyResearchGaps(req.params.id, studentId);
     res.json({ success: true, data: gaps });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -254,7 +254,7 @@ researchRouter.get('/:id/ideas', requireAuth, async (req: Request, res: Response
     const ideas = await ResearchService.listIdeas(req.params.id, studentId);
     res.json({ success: true, data: ideas });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -264,7 +264,7 @@ researchRouter.post('/:id/ideas/generate', requireAuth, async (req: Request, res
     const ideas = await PaperAnalysisService.generateResearchIdeas(req.params.id, studentId);
     res.json({ success: true, data: ideas });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -288,7 +288,7 @@ researchRouter.get('/:id/methodology', requireAuth, async (req: Request, res: Re
     const methodology = await ResearchService.getMethodology(req.params.id, studentId);
     res.json({ success: true, data: methodology });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -312,7 +312,7 @@ researchRouter.get('/:id/literature-review', requireAuth, async (req: Request, r
     const review = await ResearchService.getLiteratureReview(req.params.id, studentId);
     res.json({ success: true, data: review });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -327,7 +327,7 @@ researchRouter.post('/:id/literature-review/generate', requireAuth, async (req: 
     );
     res.json({ success: true, data: review });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -351,7 +351,7 @@ researchRouter.get('/:id/citations', requireAuth, async (req: Request, res: Resp
     const citations = await ResearchService.listCitations(req.params.id, studentId);
     res.json({ success: true, data: citations });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -378,7 +378,7 @@ researchRouter.get('/:id/citations/bibliography', requireAuth, async (req: Reque
     const bibliography = await ResearchCitationService.generateBibliography(req.params.id, studentId, style);
     res.json({ success: true, data: { style, bibliography } });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -392,7 +392,7 @@ researchRouter.get('/:id/evidence-matrix', requireAuth, async (req: Request, res
     const matrix = await ResearchService.getEvidenceMatrix(req.params.id, studentId);
     res.json({ success: true, data: matrix });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -416,6 +416,6 @@ researchRouter.get('/:id/export', requireAuth, async (req: Request, res: Respons
     const markdown = await ResearchExportService.exportResearchProposal(req.params.id, studentId);
     res.json({ success: true, data: { content: markdown, format } });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });

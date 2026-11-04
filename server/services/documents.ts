@@ -343,26 +343,6 @@ export class DocumentService {
   }
 
   /**
-   * Updates document metadata (rename, tags, favorite).
-   */
-  public static async updateDocument(
-    documentId: string,
-    studentId: string,
-    updates: Partial<Document>
-  ): Promise<Document> {
-    const doc = await this.getDocument(documentId, studentId);
-
-    const updated = await db.updateDocument(documentId, studentId, {
-      title: updates.title !== undefined ? updates.title.trim() : undefined,
-      description: updates.description,
-      is_favorite: updates.is_favorite,
-      metadata: updates.metadata ? { ...doc.metadata, ...updates.metadata } : undefined,
-    });
-
-    return updated;
-  }
-
-  /**
    * Toggles bookmark / favorite status for a document.
    */
   public static async toggleFavorite(
@@ -876,7 +856,19 @@ export class DocumentService {
     studentId: string,
     updates: Partial<Document>
   ): Promise<Document> {
-    return db.updateDocument(documentId, studentId, updates);
+    const doc = await this.getDocument(documentId, studentId);
+    const cleaned: Partial<Document> = { ...updates };
+    if (updates.title !== undefined) {
+      const title = String(updates.title).trim();
+      if (!title) {
+        throw new ValidationError('Document title cannot be empty');
+      }
+      cleaned.title = title;
+    }
+    if (updates.metadata) {
+      cleaned.metadata = { ...(doc.metadata || {}), ...updates.metadata };
+    }
+    return db.updateDocument(documentId, studentId, cleaned);
   }
 
   /**

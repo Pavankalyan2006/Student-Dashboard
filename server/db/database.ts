@@ -3963,7 +3963,6 @@ print(power_mod(2, 10, 1000))  # Output: 24
       status?: string;
       is_archived?: boolean;
       academic_year?: string;
-      search?: string;
       sort?: string;
       page?: number;
       limit?: number;
@@ -4284,7 +4283,10 @@ print(power_mod(2, 10, 1000))  # Output: 24
         : { id: courseLessons[0].id, title: courseLessons[0].title };
     }
 
-    const resources = this.courseResources.get(courseId) || [];
+    // Student-attached resources are private to that student; seeded catalog resources are shared.
+    const resources = (this.courseResources.get(courseId) || []).filter(
+      (r) => !r.student_id || r.student_id === studentId
+    );
 
     // Related courses (same branch or difficulty, excluding self)
     const related = Array.from(this.courses.values())
@@ -4444,6 +4446,7 @@ print(power_mod(2, 10, 1000))  # Output: 24
             document_id: doc.id,
             size_bytes: doc.file_size,
             processing_status: 'READY',
+            student_id: studentId,
           });
         }
       }
@@ -4463,6 +4466,7 @@ print(power_mod(2, 10, 1000))  # Output: 24
             url: `/notes/${note.id}`,
             note_id: note.id,
             processing_status: 'READY',
+            student_id: studentId,
           });
         }
       }
@@ -4491,7 +4495,8 @@ print(power_mod(2, 10, 1000))  # Output: 24
     }
 
     // Only creator can edit custom courses
-    if (course.is_custom && course.student_id !== studentId) {
+    // Shared catalog courses are read-only for students; only the owner of a custom course may change it.
+    if (!course.is_custom || course.student_id !== studentId) {
       throw new AuthorizationError('You do not have permission to edit this course');
     }
 
@@ -4587,7 +4592,8 @@ print(power_mod(2, 10, 1000))  # Output: 24
       throw new NotFoundError(`Course '${courseId}' not found`);
     }
 
-    if (course.is_custom && course.student_id !== studentId) {
+    // Shared catalog courses are read-only for students; only the owner of a custom course may change it.
+    if (!course.is_custom || course.student_id !== studentId) {
       throw new AuthorizationError('You do not have permission to add chapters to this course');
     }
 
@@ -4624,7 +4630,8 @@ print(power_mod(2, 10, 1000))  # Output: 24
       throw new NotFoundError(`Chapter '${chapterId}' not found in course`);
     }
 
-    if (course.is_custom && course.student_id !== studentId) {
+    // Shared catalog courses are read-only for students; only the owner of a custom course may change it.
+    if (!course.is_custom || course.student_id !== studentId) {
       throw new AuthorizationError('You do not have permission to add lessons to this course');
     }
 
@@ -4695,6 +4702,7 @@ print(power_mod(2, 10, 1000))  # Output: 24
       document_id: data.document_id,
       note_id: data.note_id,
       processing_status: 'READY',
+      student_id: studentId,
     };
 
     resList.push(resource);
@@ -4710,6 +4718,13 @@ print(power_mod(2, 10, 1000))  # Output: 24
   ): Promise<{ success: boolean }> {
     await this.initialize();
     const resList = this.courseResources.get(courseId) || [];
+    const target = resList.find((r) => r.id === resourceId);
+    if (!target) {
+      throw new NotFoundError(`Resource '${resourceId}' not found in course`);
+    }
+    if (target.student_id !== studentId) {
+      throw new AuthorizationError('You do not have permission to remove this resource');
+    }
     const updated = resList.filter((r) => r.id !== resourceId);
     this.courseResources.set(courseId, updated);
     return { success: true };
@@ -5105,6 +5120,16 @@ print(power_mod(2, 10, 1000))  # Output: 24
     }
     if (note.student_id !== studentId) {
       throw new AuthorizationError('You do not have permission to modify this note');
+    }
+
+    // Drop keys that were not supplied. Routes forward every known field from the
+    // request body, so a partial PATCH (e.g. title only) previously spread
+    // `content: undefined` / `tags: undefined` over the stored note and erased it.
+    updates = Object.fromEntries(
+      Object.entries(updates).filter(([, value]) => value !== undefined)
+    ) as typeof updates;
+    if (updates.title !== undefined && !String(updates.title).trim()) {
+      throw new ValidationError('Note title cannot be empty');
     }
 
     const now = new Date().toISOString();

@@ -10,6 +10,6 @@ certificatesRouter.get('/certificates/verify/:id', async (req: Request, res: Res
     const result = await CertificateService.verifyCertificate(req.params.id);
     res.json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });

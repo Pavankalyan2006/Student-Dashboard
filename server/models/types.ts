@@ -430,6 +430,8 @@ export interface CourseResource {
   document_id?: string;
   note_id?: string;
   processing_status?: 'READY' | 'PROCESSING' | 'NOT_INDEXED';
+  /** Student who attached this resource. Seeded catalog resources have no owner and are shared. */
+  student_id?: string;
 }
 
 export interface LessonWithNavigation extends CourseLesson {

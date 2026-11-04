@@ -13,7 +13,7 @@ insightsRouter.get('/learning/insights', requireAuth, async (req: Request, res: 
     const insights = await LearningInsightService.getInsights(studentId, period);
     res.json({ success: true, data: insights });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -24,6 +24,6 @@ insightsRouter.get('/learning/recommendations', requireAuth, async (req: Request
     const recs = await RecommendationService.getRecommendations(studentId);
     res.json({ success: true, data: recs });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });

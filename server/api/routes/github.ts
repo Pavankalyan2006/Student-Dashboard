@@ -16,7 +16,7 @@ githubRouter.get('/status', requireAuth, async (req: Request, res: Response) => 
     const status = await GitHubService.getConnectionStatus(studentId);
     res.json({ success: true, data: status });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -52,7 +52,7 @@ githubRouter.post('/connect-pat', requireAuth, async (req: Request, res: Respons
     const connection = await GitHubService.connectWithToken(studentId, token, username);
     res.json({ success: true, data: connection });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -62,7 +62,7 @@ githubRouter.post('/sync', requireAuth, async (req: Request, res: Response) => {
     const result = await GitHubService.syncAll(studentId);
     res.json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -88,7 +88,7 @@ githubRouter.get('/repos', requireAuth, async (req: Request, res: Response) => {
     const repos = await GitHubService.listRepositories(studentId, { language, visibility });
     res.json({ success: true, data: repos });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -108,7 +108,7 @@ githubRouter.get('/repos/:id/readme', requireAuth, async (req: Request, res: Res
     const readme = await GitHubService.getReadme(req.params.id, studentId);
     res.json({ success: true, data: readme });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -124,7 +124,7 @@ githubRouter.post('/repos/:id/featured', requireAuth, async (req: Request, res: 
     );
     res.json({ success: true, data: repo });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -135,7 +135,7 @@ githubRouter.post('/repos/:id/personal-notes', requireAuth, async (req: Request,
     const repo = await GitHubService.updatePersonalNotes(req.params.id, studentId, notes || '');
     res.json({ success: true, data: repo });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -145,7 +145,7 @@ githubRouter.get('/featured', requireAuth, async (req: Request, res: Response) =
     const repos = await GitHubService.listFeatured(studentId);
     res.json({ success: true, data: repos });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -155,7 +155,7 @@ githubRouter.get('/languages', requireAuth, async (req: Request, res: Response) 
     const summary = await GitHubService.getLanguagesSummary(studentId);
     res.json({ success: true, data: summary });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -167,7 +167,7 @@ githubRouter.get('/learning-discovery', requireAuth, async (req: Request, res: R
     const results = await GitHubService.searchLearningRepositories({ query, topic, language });
     res.json({ success: true, data: results });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -177,7 +177,7 @@ githubRouter.post('/repos/:id/sync', requireAuth, async (req: Request, res: Resp
     const repo = await GitHubService.syncRepository(req.params.id, studentId);
     res.json({ success: true, data: repo });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -199,7 +199,7 @@ githubRouter.get('/repos/:id/tree', requireAuth, async (req: Request, res: Respo
     }));
     res.json({ success: true, data: tree });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -218,7 +218,7 @@ githubRouter.get('/repos/:id/files', requireAuth, async (req: Request, res: Resp
     const files = await GitHubService.getRepositoryFiles(req.params.id, studentId);
     res.json({ success: true, data: files });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -232,7 +232,7 @@ githubRouter.get('/repos/:id/commits', requireAuth, async (req: Request, res: Re
     const commits = await GitHubService.getCommits(req.params.id, studentId);
     res.json({ success: true, data: commits });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -242,7 +242,7 @@ githubRouter.get('/repos/:id/issues', requireAuth, async (req: Request, res: Res
     const issues = await GitHubService.getIssues(req.params.id, studentId);
     res.json({ success: true, data: issues });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -252,7 +252,7 @@ githubRouter.get('/repos/:id/pulls', requireAuth, async (req: Request, res: Resp
     const pulls = await GitHubService.getPullRequests(req.params.id, studentId);
     res.json({ success: true, data: pulls });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -266,7 +266,7 @@ githubRouter.post('/repos/:id/analyze', requireAuth, async (req: Request, res: R
     const analysis = await GitHubAnalysisService.analyzeRepository(req.params.id, studentId);
     res.json({ success: true, data: analysis });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -288,7 +288,7 @@ githubRouter.post('/repos/:id/search', requireAuth, async (req: Request, res: Re
       }));
     res.json({ success: true, data: matches });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -302,7 +302,7 @@ githubRouter.post('/files/explain', requireAuth, async (req: Request, res: Respo
     const explanation = await GitHubAnalysisService.explainFile(repo_id, file_path, studentId);
     res.json({ success: true, data: explanation });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -316,7 +316,7 @@ githubRouter.post('/files/review', requireAuth, async (req: Request, res: Respon
     const review = await GitHubAnalysisService.reviewCode(repo_id, file_path, studentId);
     res.json({ success: true, data: review });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -330,7 +330,7 @@ githubRouter.post('/files/generate-tests', requireAuth, async (req: Request, res
     const tests = await GitHubAnalysisService.generateTests(repo_id, file_path, studentId);
     res.json({ success: true, data: tests });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -340,7 +340,7 @@ githubRouter.post('/repos/:id/onboarding-guide', requireAuth, async (req: Reques
     const guide = await GitHubAnalysisService.generateOnboardingGuide(req.params.id, studentId);
     res.json({ success: true, data: guide });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -373,7 +373,7 @@ githubRouter.post('/repos/:id/resume-bullets', requireAuth, async (req: Request,
     const bullets = await GitHubService.generateResumeBullets(req.params.id, studentId, role_context);
     res.json({ success: true, data: bullets });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -391,7 +391,7 @@ githubRouter.post('/repos/:id/resume-export', requireAuth, async (req: Request, 
     });
     res.json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -401,7 +401,7 @@ githubRouter.post('/repos/:id/interview-prep', requireAuth, async (req: Request,
     const questions = await GitHubService.generateInterviewPrep(req.params.id, studentId);
     res.json({ success: true, data: questions });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 

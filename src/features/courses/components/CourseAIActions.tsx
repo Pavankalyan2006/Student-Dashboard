@@ -18,6 +18,7 @@ import {
   Compass,
 } from 'lucide-react';
 import { useUiStore } from '../../../store/uiStore';
+import { Button } from '../../../components/ui/button';
 import { coursesApi } from '../api/coursesApi';
 import { CourseAIAssistantResponse } from '../types/courses';
 import { MarkdownContent } from '../../../components/content/MarkdownContent';

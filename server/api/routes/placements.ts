@@ -19,7 +19,7 @@ placementsRouter.get('/dashboard-stats', requireAuth, async (req: Request, res: 
     res.json({ success: true, data: stats });
   } catch (err: any) {
     logger.error('Failed to get placement dashboard stats', { error: err.message });
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -30,7 +30,7 @@ placementsRouter.get('/readiness', requireAuth, async (req: Request, res: Respon
     res.json({ success: true, data: readiness });
   } catch (err: any) {
     logger.error('Failed to get placement readiness', { error: err.message });
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -40,7 +40,7 @@ placementsRouter.get('/progress', requireAuth, async (req: Request, res: Respons
     const readiness = await PlacementService.getReadiness(studentId);
     res.json({ success: true, data: readiness });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -50,7 +50,7 @@ placementsRouter.get('/recommendations', requireAuth, async (req: Request, res: 
     const recommendations = await PlacementService.getRecommendations(studentId);
     res.json({ success: true, data: recommendations });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -84,7 +84,7 @@ placementsRouter.get('/resume-audit', requireAuth, async (req: Request, res: Res
     const audit = await PlacementService.getResumeAudit(studentId);
     res.json({ success: true, data: audit });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -96,7 +96,7 @@ placementsRouter.post('/assessments/submit', requireAuth, async (req: Request, r
     res.json({ success: true, data: result });
   } catch (err: any) {
     logger.error('Failed to submit placement assessment', { error: err.message });
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -127,7 +127,7 @@ placementsRouter.get('/topics/:id', requireAuth, async (req: Request, res: Respo
     const topic = await PlacementTopicService.getTopicById(req.params.id);
     res.json({ success: true, data: topic });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -153,7 +153,7 @@ placementsRouter.post('/questions/:id/practice', requireAuth, async (req: Reques
     );
     res.json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -183,7 +183,7 @@ placementsRouter.get('/companies/:id', requireAuth, async (req: Request, res: Re
     const company = await PlacementCompanyRoleService.getCompanyById(req.params.id);
     res.json({ success: true, data: company });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -193,7 +193,7 @@ placementsRouter.get('/companies/:id/profile', requireAuth, async (req: Request,
     const profile = await PlacementCompanyRoleService.getCompanyProfile(req.params.id, roleId);
     res.json({ success: true, data: profile });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -211,7 +211,7 @@ placementsRouter.get('/roles/:id', requireAuth, async (req: Request, res: Respon
     const role = await PlacementCompanyRoleService.getRoleById(req.params.id);
     res.json({ success: true, data: role });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -232,7 +232,7 @@ placementsRouter.post('/plans', requireAuth, async (req: Request, res: Response)
     const result = await PlacementPlanService.createPlan(studentId, req.body);
     res.status(201).json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -242,7 +242,7 @@ placementsRouter.get('/plans/:id', requireAuth, async (req: Request, res: Respon
     const plan = await PlacementPlanService.getPlanById(req.params.id, studentId);
     res.json({ success: true, data: plan });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -252,7 +252,7 @@ placementsRouter.get('/plans/:id/tasks', requireAuth, async (req: Request, res: 
     const tasks = await PlacementPlanService.getPlanTasks(req.params.id, studentId);
     res.json({ success: true, data: tasks });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -267,7 +267,7 @@ placementsRouter.patch('/plans/:id/tasks/:taskId', requireAuth, async (req: Requ
     );
     res.json({ success: true, data: updated });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -281,7 +281,7 @@ placementsRouter.patch('/plans/:id', requireAuth, async (req: Request, res: Resp
     );
     res.json({ success: true, data: updated });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -291,7 +291,7 @@ placementsRouter.delete('/plans/:id', requireAuth, async (req: Request, res: Res
     await PlacementPlanService.deletePlan(req.params.id, studentId);
     res.json({ success: true, message: 'Placement plan deleted successfully' });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -312,7 +312,7 @@ placementsRouter.post('/interviews', requireAuth, async (req: Request, res: Resp
     const result = await MockInterviewService.createSession(studentId, req.body);
     res.status(201).json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -322,7 +322,7 @@ placementsRouter.get('/interviews/:id', requireAuth, async (req: Request, res: R
     const result = await MockInterviewService.getSession(req.params.id, studentId);
     res.json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -332,7 +332,7 @@ placementsRouter.post('/interviews/:id/start', requireAuth, async (req: Request,
     const session = await MockInterviewService.startSession(req.params.id, studentId);
     res.json({ success: true, data: session });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -347,7 +347,7 @@ placementsRouter.post('/interviews/:id/answers', requireAuth, async (req: Reques
     );
     res.json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -357,7 +357,7 @@ placementsRouter.post('/interviews/:id/complete', requireAuth, async (req: Reque
     const result = await MockInterviewService.completeSession(req.params.id, studentId);
     res.json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -367,7 +367,7 @@ placementsRouter.post('/interviews/:id/abandon', requireAuth, async (req: Reques
     const session = await MockInterviewService.abandonSession(req.params.id, studentId);
     res.json({ success: true, data: session });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -377,7 +377,7 @@ placementsRouter.get('/interviews/:id/feedback', requireAuth, async (req: Reques
     const feedback = await MockInterviewService.getFeedback(req.params.id, studentId);
     res.json({ success: true, data: feedback });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 

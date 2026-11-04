@@ -772,14 +772,10 @@ Rules:
 
     let generatedBullets: any[] = [];
     try {
-      const response = await AIService.generate({
-        provider: 'gemini',
-        model: 'gemini-flash-lite-latest',
-        messages: [{ role: 'user', content: prompt }],
-      });
+      const response = await AIService.generate([{ role: 'user', content: prompt }]);
 
       const parsed = JSON.parse(
-        response.content.replace(/```json/g, '').replace(/```/g, '').trim()
+        response.text.replace(/```json/g, '').replace(/```/g, '').trim()
       );
       if (Array.isArray(parsed)) {
         generatedBullets = parsed;

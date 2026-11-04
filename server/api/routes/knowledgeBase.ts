@@ -19,7 +19,7 @@ knowledgeBaseRouter.get('/dashboard', requireAuth, async (req: Request, res: Res
     res.json({ success: true, data: stats });
   } catch (err: any) {
     logger.error('Failed to get knowledge base dashboard stats', err);
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -32,7 +32,7 @@ knowledgeBaseRouter.get('/collections', requireAuth, async (req: Request, res: R
     const collections = await KnowledgeBaseService.getCollections(studentId);
     res.json({ success: true, data: collections });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -42,7 +42,7 @@ knowledgeBaseRouter.post('/collections', requireAuth, async (req: Request, res: 
     const collection = await KnowledgeBaseService.createCollection(studentId, req.body);
     res.status(201).json({ success: true, data: collection });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -52,7 +52,7 @@ knowledgeBaseRouter.get('/collections/:id', requireAuth, async (req: Request, re
     const details = await KnowledgeBaseService.getCollectionById(studentId, req.params.id);
     res.json({ success: true, data: details });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -62,7 +62,7 @@ knowledgeBaseRouter.patch('/collections/:id', requireAuth, async (req: Request, 
     const updated = await KnowledgeBaseService.updateCollection(studentId, req.params.id, req.body);
     res.json({ success: true, data: updated });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -73,7 +73,7 @@ knowledgeBaseRouter.delete('/collections/:id', requireAuth, async (req: Request,
     await KnowledgeBaseService.deleteCollection(studentId, req.params.id, deleteDocs);
     res.json({ success: true, message: 'Collection deleted successfully' });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -87,7 +87,7 @@ knowledgeBaseRouter.post('/collections/:id/documents', requireAuth, async (req: 
     const collection = await KnowledgeBaseService.assignDocumentToCollection(studentId, req.params.id, documentId);
     res.json({ success: true, data: collection });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -104,7 +104,7 @@ knowledgeBaseRouter.delete(
       );
       res.json({ success: true, data: collection });
     } catch (err: any) {
-      res.status(err.status || 500).json({ success: false, message: err.message });
+      res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
     }
   }
 );
@@ -118,7 +118,7 @@ knowledgeBaseRouter.post('/search', requireAuth, async (req: Request, res: Respo
     const results = await KnowledgeBaseService.searchKnowledge(studentId, req.body);
     res.json({ success: true, data: results });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -128,7 +128,7 @@ knowledgeBaseRouter.post('/ask', requireAuth, async (req: Request, res: Response
     const answer = await KnowledgeBaseService.askQuestion(studentId, req.body);
     res.json({ success: true, data: answer });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -139,7 +139,7 @@ knowledgeBaseRouter.get('/questions', requireAuth, async (req: Request, res: Res
     const questions = await db.getKnowledgeQuestions(studentId, limit);
     res.json({ success: true, data: questions });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -152,7 +152,7 @@ knowledgeBaseRouter.post('/materials/generate', requireAuth, async (req: Request
     const material = await KnowledgeBaseService.generateStudyMaterial(studentId, req.body);
     res.status(201).json({ success: true, data: material });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -163,7 +163,7 @@ knowledgeBaseRouter.get('/materials', requireAuth, async (req: Request, res: Res
     const materials = await KnowledgeBaseService.getStudyMaterials(studentId, documentId);
     res.json({ success: true, data: materials });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -173,7 +173,7 @@ knowledgeBaseRouter.post('/materials/:id/save-to-notes', requireAuth, async (req
     const note = await KnowledgeBaseService.saveMaterialToNotes(studentId, req.params.id);
     res.status(201).json({ success: true, data: note, message: 'Saved to Notes successfully' });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -183,7 +183,7 @@ knowledgeBaseRouter.post('/materials/:id/save-to-flashcards', requireAuth, async
     const deck = await KnowledgeBaseService.saveMaterialToFlashcards(studentId, req.params.id);
     res.status(201).json({ success: true, data: deck, message: 'Saved to Flashcards successfully' });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -193,7 +193,7 @@ knowledgeBaseRouter.post('/materials/:id/save-to-quiz', requireAuth, async (req:
     const result = await KnowledgeBaseService.saveMaterialToQuiz(studentId, req.params.id);
     res.status(201).json({ success: true, data: result, message: 'Practice Quiz created successfully' });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -206,7 +206,7 @@ knowledgeBaseRouter.post('/documents/:id/reindex', requireAuth, async (req: Requ
     const doc = await KnowledgeBaseService.reindexDocument(studentId, req.params.id);
     res.json({ success: true, data: doc });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -220,7 +220,7 @@ knowledgeBaseRouter.get('/bookmarks', requireAuth, async (req: Request, res: Res
     const bookmarks = await KnowledgeBaseService.getBookmarks(studentId, documentId);
     res.json({ success: true, data: bookmarks });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -230,7 +230,7 @@ knowledgeBaseRouter.post('/bookmarks', requireAuth, async (req: Request, res: Re
     const bookmark = await KnowledgeBaseService.createBookmark(studentId, req.body);
     res.status(201).json({ success: true, data: bookmark });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -240,7 +240,7 @@ knowledgeBaseRouter.delete('/bookmarks/:id', requireAuth, async (req: Request, r
     await KnowledgeBaseService.deleteBookmark(studentId, req.params.id);
     res.json({ success: true, message: 'Bookmark removed successfully' });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -254,7 +254,7 @@ knowledgeBaseRouter.get('/notes', requireAuth, async (req: Request, res: Respons
     const notes = await KnowledgeBaseService.getNotes(studentId, documentId);
     res.json({ success: true, data: notes });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -264,7 +264,7 @@ knowledgeBaseRouter.post('/notes', requireAuth, async (req: Request, res: Respon
     const note = await KnowledgeBaseService.createNote(studentId, req.body);
     res.status(201).json({ success: true, data: note });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -274,7 +274,7 @@ knowledgeBaseRouter.delete('/notes/:id', requireAuth, async (req: Request, res: 
     await KnowledgeBaseService.deleteNote(studentId, req.params.id);
     res.json({ success: true, message: 'Note deleted successfully' });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -288,7 +288,7 @@ knowledgeBaseRouter.get('/resources', requireAuth, async (req: Request, res: Res
     const resources = await KnowledgeBaseService.getResources(studentId, collectionId);
     res.json({ success: true, data: resources });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -298,7 +298,7 @@ knowledgeBaseRouter.post('/resources', requireAuth, async (req: Request, res: Re
     const resource = await KnowledgeBaseService.createResource(studentId, req.body);
     res.status(201).json({ success: true, data: resource });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
 
@@ -308,6 +308,6 @@ knowledgeBaseRouter.delete('/resources/:id', requireAuth, async (req: Request, r
     await KnowledgeBaseService.deleteResource(studentId, req.params.id);
     res.json({ success: true, message: 'Resource deleted successfully' });
   } catch (err: any) {
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });

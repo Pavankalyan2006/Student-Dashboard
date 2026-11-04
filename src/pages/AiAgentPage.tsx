@@ -9,7 +9,7 @@ import { SelectedTutorContext } from '../features/ai-agent/types/ai';
 
 export function AiAgentPage({ onNavigate }: { onNavigate?: (path: string) => void }) {
   const { aiInitialPrompt, setAiInitialPrompt } = useUiStore();
-  const [selectedId, setSelectedId] = React.useState<string>('conv_01');
+  const [selectedId, setSelectedId] = React.useState<string>('');
   const [mobileHistoryOpen, setMobileHistoryOpen] = React.useState(false);
   const [mobileContextOpen, setMobileContextOpen] = React.useState(false);
   const [input, setInput] = React.useState('');

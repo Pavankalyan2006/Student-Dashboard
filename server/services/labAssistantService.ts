@@ -572,13 +572,9 @@ Output ONLY valid JSON with this shape:
   ]
 }`;
 
-      const aiResponse = await AIService.generate({
-        promptKey: 'student_learning_agent',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.2,
-      });
+      const aiResponse = await AIService.generate([{ role: 'user', content: prompt }], 'student_learning_agent', 0.2);
 
-      const jsonMatch = aiResponse.content.match(/\{[\s\S]*\}/);
+      const jsonMatch = aiResponse.text.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
         if (Array.isArray(parsed.experiments) && parsed.experiments.length > 0) {
@@ -858,13 +854,9 @@ Format output as valid JSON:
   ]
 }`;
 
-      const res = await AIService.generate({
-        promptKey: 'student_learning_agent',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.3,
-      });
+      const res = await AIService.generate([{ role: 'user', content: prompt }], 'student_learning_agent', 0.3);
 
-      const match = res.content.match(/\{[\s\S]*\}/);
+      const match = res.text.match(/\{[\s\S]*\}/);
       if (match) {
         const parsed = JSON.parse(match[0]);
         if (Array.isArray(parsed.questions) && parsed.questions.length > 0) {
@@ -943,13 +935,9 @@ ${codeSnippet ? `\nStudent's Code Snippet:\n${codeSnippet}` : ''}
 
 Answer beginner-friendly, stay strictly grounded in the experiment, and provide direct actionable steps.`;
 
-      const aiRes = await AIService.generate({
-        promptKey: 'student_learning_agent',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.3,
-      });
+      const aiRes = await AIService.generate([{ role: 'user', content: prompt }], 'student_learning_agent', 0.3);
 
-      answer = aiRes.content;
+      answer = aiRes.text;
     } catch (err) {
       answer = `Based on Experiment ${exp.experiment_number} (${exp.title}): ${exp.aim}. Ensure your inputs match the requirements (${exp.requirements.join(', ')}). Review the procedure steps in the checklist to isolate where the issue occurs.`;
     }
