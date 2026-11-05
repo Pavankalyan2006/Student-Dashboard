@@ -192,3 +192,35 @@ describe('Phase 1 › Courses: private courses stay private', () => {
     expect(course?.is_enrolled).toBe(false);
   });
 });
+
+describe('Phase 1 › Documents upload validation', () => {
+  const dataUrl = (text: string) => `data:text/plain;base64,${Buffer.from(text).toString('base64')}`;
+
+  it('rejects an empty file, strips directories from the name, and never records fewer bytes than received', async () => {
+    const { DocumentService } = await import('../../server/services/documents');
+    await db.initialize();
+    const s = uid('std_p1_doc');
+    await expect(
+      DocumentService.uploadDocument(s, { originalName: 'empty.txt', mimeType: 'text/plain', sizeBytes: 0, contentBase64: 'data:text/plain;base64,' } as any)
+    ).rejects.toThrow(/empty/i);
+
+    const doc = await DocumentService.uploadDocument(s, {
+      originalName: '../../../etc/passwd.txt',
+      mimeType: 'text/plain',
+      sizeBytes: 3,
+      contentBase64: dataUrl('eleven bytes'),
+    } as any);
+    expect(doc.original_filename).toBe('passwd.txt');
+    expect(doc.file_size).toBe(Buffer.byteLength('eleven bytes'));
+  });
+
+  it('applies the same checks to a new version', async () => {
+    const { DocumentService } = await import('../../server/services/documents');
+    await db.initialize();
+    const s = uid('std_p1_docv');
+    const doc = await DocumentService.uploadDocument(s, { originalName: 'a.txt', mimeType: 'text/plain', sizeBytes: 5, contentBase64: dataUrl('hello') } as any);
+    await expect(
+      DocumentService.uploadNewVersion(doc.id, s, { originalName: 'a.exe', mimeType: 'application/octet-stream', sizeBytes: 2, contentBase64: dataUrl('MZ') })
+    ).rejects.toThrow(/Unsupported/);
+  });
+});

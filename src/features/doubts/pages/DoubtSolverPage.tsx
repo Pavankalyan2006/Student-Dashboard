@@ -77,7 +77,11 @@ export function DoubtSolverPage({ onNavigate }: DoubtSolverPageProps) {
         code_snippet: codeSnippet || undefined,
         topic: subject,
       });
-      toast.success('Doubt resolved by DoubtSolverAgent!');
+      if (created.status === 'RESOLVED') {
+        toast.success('Doubt answered');
+      } else {
+        toast.info('Doubt saved. The AI provider is not available, so it has no answer yet.');
+      }
       setTitle('');
       setQuestionText('');
       setCodeSnippet('');
@@ -402,6 +406,17 @@ export function DoubtSolverPage({ onNavigate }: DoubtSolverPageProps) {
                   </div>
                 </div>
               )}
+            </div>
+          ) : selectedDoubt ? (
+            <div className="p-6 rounded-xl border border-[#E4E7EC] bg-white shadow-sm space-y-3">
+              <span className="text-xs font-bold text-amber-800 bg-amber-50 px-2.5 py-1 rounded-md">{selectedDoubt.status}</span>
+              <h2 className="text-lg font-bold text-[#101828]">{selectedDoubt.title}</h2>
+              <p className="text-xs text-[#475467] bg-gray-50 p-2.5 rounded-lg border border-gray-100 italic">
+                "{selectedDoubt.question_text}"
+              </p>
+              <p className="text-sm text-[#475467]">
+                This doubt has no answer yet. It was saved while the AI provider was not available.
+              </p>
             </div>
           ) : (
             <EmptyState

@@ -1,4 +1,5 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+import { AIService } from '../../server/ai/service';
 import { db } from '../../server/db/database';
 import { DocumentService } from '../../server/services/documents';
 import { DocumentAIService } from '../../server/services/documentAi';
@@ -290,10 +291,35 @@ describe('Phase 6 PDF & Document AI Learning Module', () => {
   // 6. Hierarchical Summarization & Caching
   // -------------------------------------------------------------
   describe('Document Summarization', () => {
+    it('without a model, gives an extractive summary and invents no exam points or formulas', async () => {
+      const summary = await DocumentSummaryService.generateSummary(seededDocId, studentA, {
+        level: 'detailed',
+      });
+      expect(summary.title).toMatch(/AI unavailable/);
+      expect(summary.exam_points).toEqual([]);
+      expect(summary.formulas).toEqual([]);
+      expect(summary.definitions).toEqual([]);
+    });
+
     it('generates structured summary with key concepts, exam points, and formulas', async () => {
+      // Model output is stubbed: no provider key in tests.
+      const spy = vi.spyOn(AIService, 'generate').mockResolvedValue({
+        text: JSON.stringify({
+          title: 'Stub summary',
+          overview: 'Stub overview of the document.',
+          main_topics: ['Topic one'],
+          key_concepts: ['Concept one'],
+          important_points: ['Point one'],
+          summary: 'Stub overview of the document.',
+          exam_points: ['Exam point one'],
+          definitions: [],
+          formulas: [],
+          conclusion: 'Stub conclusion.',
+        }),
+      } as any);
       const summary = await DocumentSummaryService.generateSummary(seededDocId, studentA, {
         level: 'standard',
-      });
+      }).finally(() => spy.mockRestore());
 
       expect(summary).toBeDefined();
       expect(summary.document_id).toBe(seededDocId);

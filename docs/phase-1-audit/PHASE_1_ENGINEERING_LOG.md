@@ -38,3 +38,10 @@
 - Tests: `phase1_learning_workspace.test.ts` 11, `notes.test.ts` updated with a stubbed model and an AI-off case; full suite green.
 - Files: `server/db/database.ts`, `server/services/notes.ts`, `src/features/courses/components/{CourseCard,CourseHero,CourseFilters}.tsx`, `src/tests/notes.test.ts`, `src/tests/phase1_learning_workspace.test.ts`.
 - Next: batch 5 (Documents, Doubt Solver).
+
+## Batch 5 — Documents, Doubt Solver
+- Documents over HTTP with A/B: valid text upload 201; .exe and .html → 400; declared 60 MB → 400; B get/download/file/delete → 403; B list empty; A download returns the bytes; pages and in-document search work; document chat with AI off returns an extractive passage labelled as such with a citation. Found P1-024..P1-029 and fixed them.
+- Doubt Solver: new student starts with no doubts (demo seed limited to demo accounts); empty question → 400; every new doubt was "resolved" with fixed text (P1-030), now OPEN without a model. Browser: toast and panel say the doubt has no answer yet.
+- PR #3 CI was green on e729552 before this batch.
+- Files: `server/services/{documents,documentSummary,knowledgeBaseService,learningModulesService}.ts`, `server/ai/provider.ts`, `src/features/doubts/pages/DoubtSolverPage.tsx`, tests `documents`, `knowledge_base_master`, `learning_modules_e2e`, `phase1_learning_workspace` (13).
+- Next: batch 6 (Flashcards, Spaced Revision).

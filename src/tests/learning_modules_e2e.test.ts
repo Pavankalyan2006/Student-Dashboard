@@ -1,4 +1,5 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+import { AIService } from '../../server/ai/service';
 import { db } from '../../server/db/database';
 import { DashboardService } from '../../server/services/dashboard';
 import { semesterCommandCenterService } from '../../server/services/semesterCommandCenterService';
@@ -257,7 +258,31 @@ describe('Complete 9 Learning Modules & Multi-Intelligence Agent System E2E Suit
       expect(resolved?.resolution?.related_concepts.length).toBeGreaterThanOrEqual(1);
     });
 
+    it('saves a doubt as OPEN with no invented answer when the AI provider is unavailable', async () => {
+      const created = await LearningModulesService.createDoubt(studentId, {
+        title: 'What is a TLB?',
+        question_text: 'Why does a TLB speed up address translation?',
+      });
+      expect(created.status).toBe('OPEN');
+      expect(created.resolution).toBeUndefined();
+      const saved = await LearningModulesService.getDoubtById(studentId, created.id);
+      expect(saved.question_text).toContain('TLB');
+    });
+
     it('creates and resolves a new student doubt with DoubtSolverAgent logic', async () => {
+      // Stubbed model reply: no provider key in tests.
+      const spy = vi.spyOn(AIService, 'generate').mockResolvedValue({
+        text: JSON.stringify({
+          direct_answer: 'Leaf-only records keep internal nodes small, so more keys fit per node.',
+          simple_explanation: 'Smaller internal nodes mean a shorter tree.',
+          detailed_explanation: 'Because internal nodes hold only keys, fan-out increases and height drops, reducing disk reads per lookup.',
+          example: 'A 4 KB page holds hundreds of keys.',
+          common_mistake: 'Confusing B-trees with B+ trees.',
+          related_concepts: ['Fan-out'],
+          suggested_practice: 'Compute tree height for 1M keys.',
+          quiz_question: { question: 'Where are records stored in a B+ tree?', options: ['Leaves', 'Root'], correct: 0, explanation: 'Only leaves hold records.' },
+        }),
+      } as any);
       const created = await LearningModulesService.createDoubt(studentId, {
         title: 'Why do B+ Trees store all actual record pointers in leaf nodes?',
         question_text: 'What is the exact performance advantage of storing values exclusively in the leaves rather than internal nodes?',
@@ -270,6 +295,7 @@ describe('Complete 9 Learning Modules & Multi-Intelligence Agent System E2E Suit
       expect(created.resolution).toBeDefined();
       expect(created.resolution?.detailed_explanation.length).toBeGreaterThan(20);
       expect(created.resolution?.quiz_question).toBeDefined();
+      spy.mockRestore();
     });
   });
 

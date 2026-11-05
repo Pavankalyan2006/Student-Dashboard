@@ -28,7 +28,7 @@ import {
   KnowledgeSearchFilters,
 } from '../models/knowledgeBaseTypes';
 import { DocumentCardData, Document } from '../models/types';
-import { NotFoundError, ValidationError, AuthorizationError } from '../core/exceptions';
+import { NotFoundError, ValidationError, AuthorizationError, AppError } from '../core/exceptions';
 import { logger } from '../core/logging';
 
 export class KnowledgeBaseService {
@@ -737,98 +737,23 @@ Return valid JSON only with this structure:
     let contentPayload: any = {};
     let generatedTitle = `${type} - ${doc.title}`;
 
+    // Study material comes from the model only. Without real output nothing is saved, rather
+    // than storing fixed sample flashcards, quiz questions or formulas unrelated to the document.
+    const aiResult = await AIService.generate(messages, undefined, 0.3);
+    if (AIService.isUnavailableResult(aiResult)) {
+      throw new AppError('Generating study material needs the AI provider, which is not available right now. Nothing was saved.', 503, 'AI_UNAVAILABLE');
+    }
     try {
-      const aiResult = await AIService.generate(messages, undefined, 0.3);
-      const rawText = aiResult.text || '{}';
-      const cleanJson = rawText.replace(/```json\s*|\s*```/g, '').trim();
+      const cleanJson = (aiResult.text || '').replace(/```json\s*|\s*```/g, '').trim();
       contentPayload = JSON.parse(cleanJson);
-      if (contentPayload.title) {
-        generatedTitle = contentPayload.title;
-      }
-    } catch (err) {
-      logger.warn('Failed parsing AI study material, providing high-quality fallback', { error: err });
-      if (type === 'FLASHCARDS') {
-        contentPayload = {
-          flashcards: [
-            {
-              id: 'fc-1',
-              question: `What is the primary objective of ${doc.title}?`,
-              answer: `To master core architectural and engineering foundations covered in ${doc.original_filename}.`,
-              difficulty: 'MEDIUM',
-              topic: 'Foundations',
-            },
-            {
-              id: 'fc-2',
-              question: 'How do time and space complexity trade-offs affect system scalability?',
-              answer: 'Memory constraints and CPU cycles dictate pipeline throughput and caching strategies.',
-              difficulty: 'HARD',
-              topic: 'System Performance',
-            },
-            {
-              id: 'fc-3',
-              question: 'What is the role of indexing in database query performance?',
-              answer: 'B-tree or hash indexes allow sublinear search O(log N) rather than full table scans O(N).',
-              difficulty: 'EASY',
-              topic: 'Data Structures',
-            },
-          ],
-        };
-      } else if (type === 'QUIZ') {
-        contentPayload = {
-          quiz_questions: [
-            {
-              id: 'q-1',
-              question: `Which fundamental principle is demonstrated in ${doc.title}?`,
-              options: [
-                'Separation of Concerns and Modular Architecture',
-                'Single monolithic unstructured procedure',
-                'O(N^3) brute-force recursion',
-                'Unsynchronized shared mutable state',
-              ],
-              correct_answer_index: 0,
-              explanation: 'Modular system design ensures maintainability, testability, and isolated failure domains.',
-              topic: 'Architecture',
-            },
-            {
-              id: 'q-2',
-              question: 'What is the standard time complexity for balanced binary search tree lookups?',
-              options: ['O(1)', 'O(log N)', 'O(N)', 'O(N log N)'],
-              correct_answer_index: 1,
-              explanation: 'A balanced BST guarantees height log N, ensuring O(log N) search and insert operations.',
-              topic: 'Data Structures',
-            },
-          ],
-        };
-      } else if (type === 'FORMULA_SHEET') {
-        contentPayload = {
-          formula_sheet: [
-            {
-              name: 'Effective Memory Access Time (EMAT)',
-              formula: 'EMAT = h * (t_tlb + t_mem) + (1 - h) * (t_tlb + 2 * t_mem)',
-              description: 'Computes average memory latency considering Translation Lookaside Buffer hit ratio.',
-              variables: 'h = TLB Hit Ratio, t_tlb = TLB lookup time, t_mem = Main memory access time',
-              complexity: 'O(1)',
-            },
-            {
-              name: 'Page Table Space Overhead',
-              formula: 'Space = (Total Virtual Pages) * (Entry Size)',
-              description: 'Calculates the memory required for storing linear or multi-level page tables.',
-              variables: 'Virtual Pages = Virtual Address Space / Page Size',
-              complexity: 'O(V / P)',
-            },
-          ],
-        };
-      } else {
-        contentPayload = {
-          summary: `This document contains foundational engineering material regarding ${doc.title}. It serves as a vital resource for exam prep and project architecture.`,
-          key_takeaways: [
-            'Systematic understanding of core engineering principles.',
-            'Implementation guidelines and best practices.',
-            'Optimal algorithmic analysis and complexity boundaries.',
-          ],
-          prerequisites: ['Basic Discrete Mathematics', 'Object-Oriented Programming'],
-        };
-      }
+    } catch {
+      throw new AppError('The AI provider returned an unreadable response, so no study material was saved. Please try again.', 502, 'AI_BAD_RESPONSE');
+    }
+    if (!contentPayload || typeof contentPayload !== 'object') {
+      throw new AppError('The AI provider returned no study material. Please try again.', 502, 'AI_BAD_RESPONSE');
+    }
+    if (contentPayload.title) {
+      generatedTitle = contentPayload.title;
     }
 
     const material: GeneratedStudyMaterial = {

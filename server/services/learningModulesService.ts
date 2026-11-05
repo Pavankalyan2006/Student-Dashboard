@@ -946,29 +946,52 @@ export class LearningModulesService {
     return doubt;
   }
 
+  /** Asks the model for a structured resolution; returns null when there is no usable model output. */
+  private static async resolveDoubtWithAI(data: Partial<StudentDoubt>): Promise<DoubtResolution | null> {
+    const prompt = `A B.Tech student asks a doubt${data.topic ? ` about ${data.topic}` : ''}.
+TITLE: ${data.title}
+QUESTION: ${String(data.question_text).slice(0, 3000)}
+${data.code_snippet ? `CODE:\n${String(data.code_snippet).slice(0, 3000)}` : ''}
+
+Answer the doubt accurately. Return valid JSON only:
+{"direct_answer": "...", "simple_explanation": "...", "detailed_explanation": "...", "example": "...", "common_mistake": "...", "related_concepts": ["..."], "suggested_practice": "...", "quiz_question": {"question": "...", "options": ["...", "...", "...", "..."], "correct": 0, "explanation": "..."}}`;
+    let res;
+    try {
+      res = await AIService.generate([{ role: 'user', content: prompt }], 'student_learning_agent', 0.3);
+    } catch {
+      return null;
+    }
+    if (!res || AIService.isUnavailableResult(res)) return null;
+    try {
+      const m = res.text.match(/\{[\s\S]*\}/);
+      const parsed = m ? JSON.parse(m[0]) : null;
+      if (!parsed || typeof parsed.direct_answer !== 'string' || !parsed.direct_answer.trim()) return null;
+      const q = parsed.quiz_question;
+      const quizOk = q && Array.isArray(q.options) && q.options.length >= 2 && Number.isInteger(q.correct) && q.correct >= 0 && q.correct < q.options.length;
+      return {
+        direct_answer: parsed.direct_answer,
+        simple_explanation: String(parsed.simple_explanation || ''),
+        detailed_explanation: String(parsed.detailed_explanation || ''),
+        example: String(parsed.example || ''),
+        common_mistake: String(parsed.common_mistake || ''),
+        related_concepts: Array.isArray(parsed.related_concepts) ? parsed.related_concepts.map(String) : [],
+        suggested_practice: String(parsed.suggested_practice || ''),
+        quiz_question: quizOk ? { question: String(q.question), options: q.options.map(String), correct: q.correct, explanation: String(q.explanation || '') } : undefined,
+      };
+    } catch {
+      return null;
+    }
+  }
+
   public static async createDoubt(studentId: string, data: Partial<StudentDoubt>): Promise<StudentDoubt> {
     if (!data.title || !data.question_text) {
       throw new ValidationError('Doubt title and question text are required');
     }
     const doubtId = `doubt_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
-    
-    // Auto-generate high-quality educational resolution
-    const resolution: DoubtResolution = {
-      direct_answer: `Here is the core technical explanation for "${data.title}": The fundamental invariant revolves around maintaining mathematical consistency and algorithmic correctness.`,
-      simple_explanation: `In simple terms: ${data.question_text.slice(0, 150)}... This problem is addressed by breaking the operation into atomic invariant steps that preserve system balance.`,
-      detailed_explanation: `Detailed Mathematical & Architectural Reasoning:\n1. State Definition: The input parameters define the domain constraints.\n2. Invariant Property: The invariant holds true before and after the operation.\n3. Complexity Analysis: The computational cost is bounded by O(log N) or O(N) depending on recursive partitioning.\n4. Edge Cases: Handle empty input, single element, boundary conditions, and overflow.`,
-      example: `Example Demonstration:\nSuppose we input: [10, 20, 30]. The system evaluates the recurrence relation at each node step and preserves the invariant properties.`,
-      common_mistake: 'Failing to check base cases or boundary conditions before invoking recursive operations.',
-      related_concepts: ['Asymptotic Invariants', 'Recursion & Induction', 'System Optimization'],
-      suggested_practice: 'Try implementing the solution from scratch with unit tests checking null and boundary cases.',
-      quiz_question: {
-        question: `What is the primary technical advantage of preserving invariants in ${data.topic || 'computer systems'}?`,
-        options: ['Guarantees mathematical correctness at every state', 'Eliminates all hardware memory constraints', 'Doubles processor clock frequency', 'Removes need for unit testing'],
-        correct: 0,
-        explanation: 'Invariants guarantee that regardless of state transitions, system correctness holds true at all times.',
-      },
-    };
 
+    // The resolution comes from the model. Without one, the doubt is saved as OPEN with no
+    // resolution, so the student keeps the question in history and nothing invented is shown.
+    const resolution = await this.resolveDoubtWithAI(data);
     const doubt: StudentDoubt = {
       id: doubtId,
       student_id: studentId,
@@ -978,11 +1001,11 @@ export class LearningModulesService {
       topic: data.topic || 'General Computer Science',
       course_id: data.course_id,
       course_name: data.course_name,
-      status: 'RESOLVED',
-      resolution,
-      tags: data.tags || ['engineering', 'academic'],
+      status: resolution ? 'RESOLVED' : 'OPEN',
+      resolution: resolution || undefined,
+      tags: data.tags || [],
       created_at: new Date().toISOString(),
-      resolved_at: new Date().toISOString(),
+      resolved_at: resolution ? new Date().toISOString() : undefined,
     };
 
     this.doubts.set(doubtId, doubt);

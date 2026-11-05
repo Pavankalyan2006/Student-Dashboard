@@ -91,16 +91,39 @@ export class DocumentService {
   }
 
   /**
-   * Handles authenticated document upload, secure storage, record creation, and kicks off async processing.
+   * Checks an uploaded file (new document or new version): a plain file name, a real non-empty
+   * size taken from the bytes received, the size limit, and a supported extension.
    */
-  public static async uploadDocument(
-    studentId: string,
-    input: UploadDocumentInput
-  ): Promise<Document> {
-    const { originalName, mimeType, sizeBytes, contentBase64 } = input;
+  private static validateUpload(input: { originalName: string; mimeType: string; sizeBytes: number; contentBase64?: string }): {
+    originalName: string;
+    sizeBytes: number;
+    ext: string;
+  } {
+    const { mimeType, contentBase64 } = input;
+    let { originalName, sizeBytes } = input;
 
     if (!originalName || !mimeType || sizeBytes === undefined) {
       throw new ValidationError('Missing required file metadata (originalName, mimeType, sizeBytes)');
+    }
+
+    // Keep only the file's own name: no directories, no control characters.
+    originalName = originalName.replace(/\\/g, '/').split('/').pop()!.replace(/[\u0000-\u001f\u007f"]/g, '').trim();
+    if (!originalName || originalName === '.' || originalName === '..') {
+      throw new ValidationError('Invalid file name');
+    }
+
+    // Never record less than the bytes that actually arrived, so a client cannot understate a
+    // file's size to slip past the size limit or the storage quota. An upload with no bytes is empty.
+    if (typeof contentBase64 === 'string') {
+      const payload = contentBase64.startsWith('data:') ? contentBase64.split(',')[1] || '' : contentBase64;
+      const actualBytes = Buffer.from(payload, 'base64').length;
+      if (actualBytes === 0) {
+        throw new ValidationError('The file is empty');
+      }
+      sizeBytes = Math.max(Number(sizeBytes) || 0, actualBytes);
+    }
+    if (!(Number(sizeBytes) > 0)) {
+      throw new ValidationError('The file is empty');
     }
 
     // 1. File size check (max 50MB)
@@ -145,6 +168,19 @@ export class DocumentService {
         `Unsupported document format (.${ext}). Supported formats: PDF, DOCX, PPTX, XLSX, TXT, MD, CSV, PNG, JPG, WEBP, and Source Code (.py, .java, .cpp, .ts, .sql, etc.)`
       );
     }
+
+    return { originalName, sizeBytes, ext };
+  }
+
+  /**
+   * Handles authenticated document upload, secure storage, record creation, and kicks off async processing.
+   */
+  public static async uploadDocument(
+    studentId: string,
+    input: UploadDocumentInput
+  ): Promise<Document> {
+    const { mimeType, contentBase64 } = input;
+    const { originalName, sizeBytes, ext } = this.validateUpload(input);
 
     // 3. Prevent duplicate uploads using content hash & metadata
     const contentHash = crypto
@@ -269,6 +305,8 @@ export class DocumentService {
     role: string = 'STUDENT'
   ): Promise<Document> {
     const existing = await this.getDocument(documentId, studentId, role);
+    const checked = this.validateUpload(input);
+    input = { ...input, originalName: checked.originalName, sizeBytes: checked.sizeBytes };
 
     // 1. Upload new blob to StorageService
     const newStorageRecord = await StorageService.upload({
