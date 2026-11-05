@@ -218,14 +218,14 @@ export interface GateDashboardData {
     total_mock_tests_taken: number;
     avg_mock_test_score: number;
     highest_mock_test_score: number;
-    estimated_gate_score: number;
+    estimated_gate_score?: number;
     saved_questions_count: number;
   };
   weak_topics: {
     topic_id: string;
     topic_name: string;
     subject: string;
-    accuracy: number;
+    accuracy: number | null;
     attempts_count: number;
     recommendation: string;
   }[];

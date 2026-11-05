@@ -136,7 +136,7 @@ export const GateMockTestsView: React.FC<GateMockTestsViewProps> = ({
                   <div className="text-xs">
                     <span className="text-slate-500 block text-[10px]">Best Score:</span>
                     <span className="font-bold text-emerald-400">
-                      {bestResult.total_marks_obtained}/{t.total_marks} (Est. {bestResult.estimated_gate_score || 500})
+                      {bestResult.total_marks_obtained}/{t.total_marks} marks
                     </span>
                   </div>
                 ) : (
@@ -201,7 +201,7 @@ export const GateMockTestsView: React.FC<GateMockTestsViewProps> = ({
                       {res.total_marks_obtained}/{res.max_marks}
                     </span>
                     <span className="text-[10px] text-slate-400 block">
-                      Score: {res.estimated_gate_score || 500}
+                      Accuracy: {res.accuracy_percentage}%
                     </span>
                   </div>
 

@@ -106,6 +106,23 @@ learningModulesRouter.post('/exams', requireAuth, async (req: Request, res: Resp
   }
 });
 
+learningModulesRouter.patch('/exams/:examId/topics/:topicId', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const exam = await LearningModulesService.updateExamTopic(req.user!.userId, req.params.examId, req.params.topicId, req.body || {});
+    res.json({ success: true, data: exam });
+  } catch (err: any) {
+    res.status(err.statusCode || err.status || 500).json({ success: false, message: err.message });
+  }
+});
+
+learningModulesRouter.delete('/exams/:examId', requireAuth, async (req: Request, res: Response) => {
+  try {
+    res.json({ success: true, data: await LearningModulesService.deleteExam(req.user!.userId, req.params.examId) });
+  } catch (err: any) {
+    res.status(err.statusCode || err.status || 500).json({ success: false, message: err.message });
+  }
+});
+
 // ==========================================
 // 3. AI Doubt Solver Routes
 // ==========================================

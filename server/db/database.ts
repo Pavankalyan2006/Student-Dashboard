@@ -10253,10 +10253,11 @@ print(power_mod(2, 10, 1000))  # Output: 24
       profile = {
         student_id: studentId,
         target_paper: 'CS',
-        exam_cycle: 'GATE 2026',
-        target_date: '2026-02-07',
-        target_score: 75,
-        air_goal: '< 500',
+        // Exam cycle, date and goals are left empty until the student sets them: the official GATE
+        // schedule is announced by the organising IIT each year, so no date is assumed here.
+        exam_cycle: '',
+        target_date: '',
+        air_goal: '',
         weekly_study_hours: 18,
         study_days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
         onboarding_completed: false,
@@ -10492,9 +10493,21 @@ print(power_mod(2, 10, 1000))  # Output: 24
     if (session.student_id !== studentId) {
       throw new AuthorizationError('Unauthorized to update this test session');
     }
-
-    session.answers = { ...session.answers, ...answers };
-    session.remaining_seconds = Math.max(0, remainingSeconds);
+    if (session.status !== 'IN_PROGRESS') {
+      throw new ValidationError('This test has already been submitted.');
+    }
+    // The timer is enforced on the server: answers sent after the time limit (plus a short grace
+    // period for network delay) are refused, whatever remaining time the browser reports.
+    const elapsed = (Date.now() - new Date(session.start_time).getTime()) / 1000;
+    const limit = session.duration_minutes * 60;
+    if (elapsed > limit + 120) {
+      throw new ValidationError('Time is up for this test. Answers saved before the time limit will be scored.');
+    }
+    const known = new Set(Object.keys(session.answers));
+    const accepted: Record<string, any> = {};
+    for (const [qid, a] of Object.entries(answers || {})) if (known.has(qid)) accepted[qid] = a;
+    session.answers = { ...session.answers, ...accepted };
+    session.remaining_seconds = Math.max(0, Math.round(Math.min(limit - elapsed, Number(remainingSeconds) || 0)));
     this.gateTestSessions.set(sessionId, session);
     return session;
   }
@@ -10647,25 +10660,15 @@ print(power_mod(2, 10, 1000))  # Output: 24
     }
 
     const maxMarks = test.total_marks || 100;
-    const finalMarks = Math.max(0, Math.round(totalMarks * 100) / 100);
+    // Raw marks, which can be negative in GATE because of negative marking; not clamped to 0.
+    const finalMarks = Math.round(totalMarks * 100) / 100;
     const attemptedTotal = correctCount + incorrectCount;
     const accuracy = attemptedTotal > 0 ? Math.round((correctCount / attemptedTotal) * 100) : 0;
-    const timeTaken = Math.max(0, test.duration_minutes * 60 - session.remaining_seconds);
+    // Time taken from the server clock, capped at the test duration.
+    const timeTaken = Math.min(test.duration_minutes * 60, Math.max(0, Math.round((Date.now() - new Date(session.start_time).getTime()) / 1000)));
 
-    // Standard normalized GATE score formula approximation (scale 100 - 1000)
-    // S = Sq + (St - Sq) * (M - Mq) / (Mt - Mq)
-    // where Mq ~ 25 (qualifying mark), Mt ~ 75 (top 0.1% mark), Sq = 350, St = 900
-    const Mq = 25;
-    const Mt = 75;
-    const Sq = 350;
-    const St = 900;
-    let estScore = 200;
-    if (finalMarks >= Mq) {
-      estScore = Math.min(1000, Math.round(Sq + ((St - Sq) * (finalMarks - Mq)) / (Mt - Mq)));
-    } else {
-      estScore = Math.max(100, Math.round((finalMarks / Mq) * Sq));
-    }
-
+    // No GATE score (out of 1000) is estimated: the official score is normalised using that year's
+    // qualifying mark and the mean of the top 0.1% of all candidates, which a practice test cannot know.
     const result: GateTestResult = {
       id: `gtr_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       session_id: sessionId,
@@ -10683,8 +10686,6 @@ print(power_mod(2, 10, 1000))  # Output: 24
       negative_marks_lost: Math.round(negativeLost * 100) / 100,
       accuracy_percentage: accuracy,
       time_taken_seconds: timeTaken,
-      estimated_gate_score: estScore,
-      gate_score_estimate: estScore,
       subject_breakdown: subjectBreakdown,
       topic_breakdown: topicBreakdown,
       question_reviews: questionReviews,
@@ -10825,9 +10826,10 @@ print(power_mod(2, 10, 1000))  # Output: 24
               topic_id: top.id,
               topic_name: top.name,
               subject: sec.name,
-              accuracy: 40,
-              attempts_count: 2,
-              recommendation: `Recommended revision: ${top.name} (${top.pyq_frequency}).`,
+              // Flagged by the student (low confidence or revision flag); there are no attempts to measure yet.
+              accuracy: null,
+              attempts_count: 0,
+              recommendation: `You flagged ${top.name} for revision (${top.pyq_frequency}).`,
             });
             if (weakTopics.length >= 3) break;
           }
@@ -10839,8 +10841,6 @@ print(power_mod(2, 10, 1000))  # Output: 24
     const bookmarks = this.gateBookmarks.get(studentId) || [];
     const tasks = await this.getGateStudyPlan(studentId, profile.target_paper);
 
-    // Estimated GATE Score
-    const estGateScore = highestScore > 0 ? Math.round(350 + (highestScore / 100) * 550) : 480;
 
     const recentAttemptsWithMeta = paperAttempts.slice(0, 5).map((att) => {
       const q = this.gateQuestions.get(att.question_id);
@@ -10865,7 +10865,6 @@ print(power_mod(2, 10, 1000))  # Output: 24
         total_mock_tests_taken: testsTaken,
         avg_mock_test_score: avgScore,
         highest_mock_test_score: highestScore,
-        estimated_gate_score: estGateScore,
         saved_questions_count: bookmarks.length,
       },
       weak_topics: weakTopics,

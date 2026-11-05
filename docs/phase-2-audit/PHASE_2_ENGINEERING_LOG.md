@@ -49,3 +49,23 @@ See the last entry. Probe scripts live in `scripts/audit/phase2-*.cjs` and need 
   Evidence: `src/tests/phase2_batch3.test.ts` (6 HTTP tests), updated system design / lab assistant tests; full suite 846/846;
   browser: new student sees no demo labs, lab card shows 0/1 progress, viva shows the keyword-check label.
   Out of scope but observed: Mock Interview pages show fallback scores (`?? 82`, `|| 80`, `|| 70`) and Writing Practice `|| 88`.
+- 2026-11-05 15:40 Batch 4 done (Quiz, Exam Preparation, GATE).
+  Quiz: `GET /quiz/attempts/:id/review` returned correct answers while the attempt was IN_PROGRESS (answers readable
+  mid-quiz); now only after submission. `GET /quiz/:id` and `/quiz/:id/questions` had no owner check; now 404 for other
+  students. `/quiz/generate` sent answers and explanations with the new quiz; now delivery format. Empty validated
+  output is 502. Scoring was already server-side and resubmission blocked (verified).
+  GATE: `estimated_gate_score` was computed from invented constants (Mq 25, Mt 75) and the dashboard showed 480 for a
+  student with no tests, with frontend fallbacks 500/520; removed, raw marks shown (negative allowed, as in GATE).
+  Default profile invented exam date 2026-02-07, target 75 and AIR goal "< 500"; now empty until the student sets them.
+  Flagged weak topics showed a made-up 40% accuracy; now "Flagged by you". Question bank delivered answer keys; now only
+  after answering. Unanswered MCQ got negative marks in practice; now 400. Mock test timer enforced server-side
+  (answers refused after limit + 2 min; time taken from server clock). AI tutor used Gemini directly with hardcoded
+  formulas and a canned fallback; now AIService with 503.
+  Exam Prep: create defaulted the date to +14 days and the syllabus to placeholder units, alternated confidence
+  DEVELOPING/WEAK, added generic subtopics and readiness 50; now date and syllabus required, all topics start WEAK,
+  readiness computed from the student's confidence (new PATCH topic endpoint + UI selectors). The overview insight
+  ("Normalization carries ~25%") and the "AI-Synthesized" DBMS revision plan were hardcoded for every exam; replaced with
+  a plan built from the exam date, prep hours and confidence. "Take Mock Exam" pointed to a non-existent route; now
+  opens Quiz create with the subject.
+  Evidence: `src/tests/phase2_batch4.test.ts` (7 HTTP tests); full suite 853/853; browser `/tmp/p2/ui-b4.cjs`.
+  Limitation: the GATE seed bank is tiny (7 CS questions; "CS 2024 full" mock has 7 questions).

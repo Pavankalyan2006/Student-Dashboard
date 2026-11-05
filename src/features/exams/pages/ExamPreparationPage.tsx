@@ -65,8 +65,8 @@ export function ExamPreparationPage({ onNavigate }: ExamPreparationPageProps) {
 
   const handleCreateExam = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !subject) {
-      toast.error('Please enter Exam Title and Subject');
+    if (!title || !subject || !examDate || !syllabus.trim()) {
+      toast.error('Please enter the exam title, subject, date and syllabus topics');
       return;
     }
     try {
@@ -76,9 +76,9 @@ export function ExamPreparationPage({ onNavigate }: ExamPreparationPageProps) {
         subject,
         category,
         difficulty,
-        exam_date: examDate || new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0],
+        exam_date: examDate,
         available_prep_hours: Number(prepHours) || 30,
-        syllabus: syllabus || 'Unit 1 Fundamentals, Unit 2 Architecture, Unit 3 Concurrency, Unit 4 Optimization',
+        syllabus,
       });
       toast.success('Exam target and adaptive topic breakdown created!');
       setTitle('');
@@ -95,6 +95,47 @@ export function ExamPreparationPage({ onNavigate }: ExamPreparationPageProps) {
   };
 
   const selectedExam = exams.find((e) => e.id === selectedExamId) || exams[0];
+
+  const confidenceRank: Record<string, number> = { WEAK: 0, DEVELOPING: 1, STRONG: 2 };
+  // Weakest topics first, then by weightage: this drives the suggestion and the revision plan.
+  const orderedTopics = React.useMemo(
+    () =>
+      [...(selectedExam?.topics || [])].sort(
+        (a, b) => (confidenceRank[a.confidence] ?? 0) - (confidenceRank[b.confidence] ?? 0) || (b.weightage_percent || 0) - (a.weightage_percent || 0)
+      ),
+    [selectedExam]
+  );
+  const priorityTopic = orderedTopics.find((t) => t.confidence !== 'STRONG');
+
+  // Revision plan from the student's own data: days until the exam, prep hours and topic confidence.
+  const revisionPlan = React.useMemo(() => {
+    if (!selectedExam) return [];
+    const daysLeft = Math.max(1, Math.ceil((new Date(selectedExam.exam_date).getTime() - Date.now()) / 86400000));
+    const days = Math.min(daysLeft, 14);
+    const todo = orderedTopics.filter((t) => t.confidence !== 'STRONG');
+    const list = todo.length ? todo : orderedTopics;
+    if (!list.length) return [];
+    const hoursPerDay = Math.max(0.5, Math.round(((selectedExam.available_prep_hours || 0) / days) * 2) / 2);
+    return Array.from({ length: days }, (_, i) => {
+      const topic = list[i % list.length];
+      const date = new Date(Date.now() + i * 86400000);
+      return {
+        time: date.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' }),
+        task: `${i >= list.length ? 'Second pass: ' : ''}${topic.name} (${topic.confidence.toLowerCase()} confidence)`,
+        dur: `${hoursPerDay} h`,
+      };
+    });
+  }, [selectedExam, orderedTopics]);
+
+  const handleTopicUpdate = async (topicId: string, updates: { confidence?: string; status?: string }) => {
+    if (!selectedExam) return;
+    try {
+      const updated = await learningModulesApi.exams.updateTopic(selectedExam.id, topicId, updates);
+      setExams((prev) => prev.map((e) => (e.id === updated.id ? updated : e)));
+    } catch (err: any) {
+      toast.error('Could not update topic: ' + err.message);
+    }
+  };
 
   // Calculate days remaining
   const getDaysRemaining = (dateStr: string) => {
@@ -155,7 +196,7 @@ export function ExamPreparationPage({ onNavigate }: ExamPreparationPageProps) {
             <div>
               <p className="text-xs font-medium text-[#475467]">Readiness Score</p>
               <h3 className="text-2xl font-bold text-[#101828] mt-1">{selectedExam.readiness_score}%</h3>
-              <p className="text-xs text-emerald-600 mt-0.5">Evidence-based calculation</p>
+              <p className="text-xs text-emerald-600 mt-0.5">From your topic confidence, weighted by topic</p>
             </div>
             <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
               <BarChart3 className="w-6 h-6" />
@@ -214,7 +255,7 @@ export function ExamPreparationPage({ onNavigate }: ExamPreparationPageProps) {
             activeTab === 'revision' ? 'bg-[#101828] text-white' : 'text-[#475467] hover:bg-gray-100'
           }`}
         >
-          48-Hour Recovery Plan
+          Revision Plan
         </button>
         <button
           onClick={() => setActiveTab('create')}
@@ -240,11 +281,11 @@ export function ExamPreparationPage({ onNavigate }: ExamPreparationPageProps) {
               <div className="flex items-center gap-2">
                 <Button
                   size="sm"
-                  onClick={() => onNavigate?.(`/exams/${selectedExam.id}/mock-test`)}
+                  onClick={() => onNavigate?.(`/quiz/create?topic=${encodeURIComponent(selectedExam.subject)}`)}
                   className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1 text-xs"
                 >
                   <Target className="w-3.5 h-3.5" />
-                  Take Mock Exam
+                  Practice Quiz
                 </Button>
                 <Button
                   size="sm"
@@ -275,33 +316,36 @@ export function ExamPreparationPage({ onNavigate }: ExamPreparationPageProps) {
             </div>
           </div>
 
-          {/* Weak Topics Diagnostic Banner */}
-          <div className="p-4 rounded-xl border border-amber-200 bg-amber-50/60 flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-            <div className="space-y-1">
-              <h4 className="text-sm font-bold text-amber-900">High-Yield Priority Concept Identified</h4>
-              <p className="text-xs text-amber-800 leading-relaxed">
-                Analysis of university past papers shows that <strong>Normalization (3NF / BCNF)</strong> carries ~25% weightage. Your current confidence in this topic is <em>DEVELOPING</em>.
-              </p>
-              <div className="pt-1 flex items-center gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="text-xs bg-white text-amber-900 border-amber-300 hover:bg-amber-100"
-                  onClick={() => onNavigate?.('/doubts')}
-                >
-                  Ask Doubt on Normalization
-                </Button>
-                <Button
-                  size="sm"
-                  className="text-xs bg-amber-600 hover:bg-amber-700 text-white"
-                  onClick={() => setActiveTab('revision')}
-                >
-                  View Targeted Revision
-                </Button>
+          {/* Priority topic, from the student's own topic confidence and weightage */}
+          {priorityTopic && (
+            <div className="p-4 rounded-xl border border-amber-200 bg-amber-50/60 flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <h4 className="text-sm font-bold text-amber-900">Suggested next topic: {priorityTopic.name}</h4>
+                <p className="text-xs text-amber-800 leading-relaxed">
+                  Chosen because you rated your confidence <em>{priorityTopic.confidence}</em> and it carries ~{priorityTopic.weightage_percent}%
+                  of this exam in your topic list. Update your confidence in the Topics tab as you revise.
+                </p>
+                <div className="pt-1 flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-xs bg-white text-amber-900 border-amber-300 hover:bg-amber-100"
+                    onClick={() => onNavigate?.('/doubts')}
+                  >
+                    Ask a doubt
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="text-xs bg-amber-600 hover:bg-amber-700 text-white"
+                    onClick={() => setActiveTab('revision')}
+                  >
+                    View revision plan
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 
@@ -319,7 +363,7 @@ export function ExamPreparationPage({ onNavigate }: ExamPreparationPageProps) {
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-bold text-gray-500">{topic.unit}</span>
                     <h4 className="text-sm font-semibold text-[#101828]">{topic.name}</h4>
-                    <span className="text-xs px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full font-medium">
+                    <span className="text-xs px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full font-medium" title="Topics are weighted equally unless set otherwise">
                       ~{topic.weightage_percent}% Weightage
                     </span>
                   </div>
@@ -339,8 +383,34 @@ export function ExamPreparationPage({ onNavigate }: ExamPreparationPageProps) {
                     </span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button size="sm" variant="outline" onClick={() => onNavigate?.('/quiz')} className="text-xs">
+                <div className="flex flex-wrap items-center gap-2">
+                  <select
+                    aria-label={`Confidence for ${topic.name}`}
+                    value={topic.confidence}
+                    onChange={(e) => handleTopicUpdate(topic.id, { confidence: e.target.value })}
+                    className="text-xs border border-[#D0D5DD] rounded-lg px-2 py-1 bg-white"
+                  >
+                    <option value="WEAK">Weak</option>
+                    <option value="DEVELOPING">Developing</option>
+                    <option value="STRONG">Strong</option>
+                  </select>
+                  <select
+                    aria-label={`Status for ${topic.name}`}
+                    value={topic.status}
+                    onChange={(e) => handleTopicUpdate(topic.id, { status: e.target.value })}
+                    className="text-xs border border-[#D0D5DD] rounded-lg px-2 py-1 bg-white"
+                  >
+                    <option value="NOT_STARTED">Not started</option>
+                    <option value="IN_PROGRESS">In progress</option>
+                    <option value="REVISED">Revised</option>
+                    <option value="MASTERED">Mastered</option>
+                  </select>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => onNavigate?.(`/quiz/create?topic=${encodeURIComponent(topic.name)}`)}
+                    className="text-xs"
+                  >
                     Practice Questions
                   </Button>
                 </div>
@@ -355,19 +425,16 @@ export function ExamPreparationPage({ onNavigate }: ExamPreparationPageProps) {
         <div className="p-5 rounded-xl border border-[#E4E7EC] bg-white shadow-sm space-y-4">
           <h3 className="text-base font-bold text-[#101828] flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-purple-600" />
-            AI-Synthesized 48-Hour Final Revision Blueprint
+            Revision Plan
           </h3>
           <p className="text-xs text-[#475467]">
-            Structured chronological checkpoints focusing on high-weightage proofs, derivations, and active recall.
+            Built from your exam date, available prep hours and topic confidence (weakest and heaviest topics first).
+            It is a plain schedule, not AI-generated. Up to the next 14 days are shown.
           </p>
 
           <div className="space-y-3">
-            {[
-              { time: 'Day -2 (Morning)', task: 'Lossless Join Decomposition proofs & BCNF check algorithms', dur: '3 Hours' },
-              { time: 'Day -2 (Afternoon)', task: 'ACID transactions, 2-Phase Locking (2PL), and Cascadeless schedules', dur: '2.5 Hours' },
-              { time: 'Day -1 (Morning)', task: 'B+ Tree insertion/deletion trace exercises (10-mark university question pattern)', dur: '3 Hours' },
-              { time: 'Day -1 (Evening)', task: 'Formula sheet formula drill & quick memory flashcard review', dur: '1.5 Hours' },
-            ].map((step, idx) => (
+            {revisionPlan.length === 0 && <p className="text-xs text-gray-500">Add syllabus topics to build a plan.</p>}
+            {revisionPlan.map((step, idx) => (
               <div key={idx} className="p-3 border rounded-lg bg-gray-50/60 flex items-center justify-between">
                 <div>
                   <span className="text-xs font-bold text-blue-600">{step.time}</span>

@@ -947,23 +947,41 @@ export class LearningModulesService {
     return exam;
   }
 
+  /** Readiness from the student's own topic confidence, weighted by topic weightage (0-100). */
+  public static computeReadiness(topics: ExamTopic[]): number {
+    if (!topics.length) return 0;
+    const value = { STRONG: 1, DEVELOPING: 0.5, WEAK: 0 } as Record<string, number>;
+    const totalW = topics.reduce((a, t) => a + (t.weightage_percent || 0), 0) || topics.length;
+    const got = topics.reduce((a, t) => a + (value[t.confidence] ?? 0) * (totalW === topics.length ? 1 : t.weightage_percent || 0), 0);
+    return Math.round((got / totalW) * 100);
+  }
+
   public static async createExam(studentId: string, data: Partial<ExamEntity>): Promise<ExamEntity> {
     if (!data.title || !data.subject) throw new ValidationError('Exam title and subject are required');
-    const examId = `exam_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    // The exam date and syllabus come from the student; nothing is assumed for them.
+    const examDate = String(data.exam_date || '').trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(examDate) || isNaN(new Date(examDate).getTime())) {
+      throw new ValidationError('Enter the exam date (YYYY-MM-DD).');
+    }
     const syllabusTopics = (data.syllabus || '')
       .split(',')
-      .map((s, idx) => s.trim())
-      .filter(Boolean);
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .slice(0, 40);
+    if (!syllabusTopics.length) throw new ValidationError('List the syllabus topics, separated by commas.');
+    const examId = `exam_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
 
     const generatedTopics: ExamTopic[] = syllabusTopics.map((topicName, idx) => ({
       id: `top_${Date.now()}_${idx}`,
       exam_id: examId,
       name: topicName,
-      unit: `Unit ${idx + 1}`,
-      weightage_percent: Math.round(100 / Math.max(1, syllabusTopics.length)),
-      confidence: idx % 2 === 0 ? 'DEVELOPING' : 'WEAK',
+      unit: `Topic ${idx + 1}`,
+      // No official weightage was entered, so topics are weighted equally.
+      weightage_percent: Math.round(100 / syllabusTopics.length),
+      // Every topic starts as not yet confident; the student updates confidence as they revise.
+      confidence: 'WEAK',
       status: 'NOT_STARTED',
-      subtopics: [`Core ${topicName} fundamentals`, `Previous exam questions`, `Numerical analysis`],
+      subtopics: [],
     }));
 
     const exam: ExamEntity = {
@@ -972,12 +990,12 @@ export class LearningModulesService {
       title: data.title,
       subject: data.subject,
       category: data.category || 'SEMESTER',
-      exam_date: data.exam_date || new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0],
+      exam_date: examDate,
       difficulty: data.difficulty || 'MEDIUM',
-      available_prep_hours: data.available_prep_hours || 20,
+      available_prep_hours: Math.max(1, Math.min(500, Number(data.available_prep_hours) || 20)),
       syllabus: data.syllabus || '',
-      readiness_score: 50,
-      topics: generatedTopics.length > 0 ? generatedTopics : data.topics || [],
+      readiness_score: 0,
+      topics: generatedTopics,
       mock_tests_count: 0,
       status: 'UPCOMING',
       created_at: new Date().toISOString(),
@@ -985,6 +1003,35 @@ export class LearningModulesService {
     };
     this.exams.set(examId, exam);
     return exam;
+  }
+
+  public static async updateExamTopic(
+    studentId: string,
+    examId: string,
+    topicId: string,
+    updates: { confidence?: string; status?: string }
+  ): Promise<ExamEntity> {
+    const exam = await this.getExamById(studentId, examId);
+    const topic = exam.topics.find((t) => t.id === topicId);
+    if (!topic) throw new NotFoundError(`Topic '${topicId}' not found`);
+    if (updates.confidence !== undefined) {
+      if (!['WEAK', 'DEVELOPING', 'STRONG'].includes(updates.confidence)) throw new ValidationError('confidence must be WEAK, DEVELOPING or STRONG');
+      topic.confidence = updates.confidence as any;
+    }
+    if (updates.status !== undefined) {
+      if (!['NOT_STARTED', 'IN_PROGRESS', 'REVISED', 'MASTERED'].includes(updates.status)) throw new ValidationError('Unknown topic status');
+      topic.status = updates.status as any;
+    }
+    exam.readiness_score = this.computeReadiness(exam.topics);
+    exam.updated_at = new Date().toISOString();
+    this.exams.set(exam.id, exam);
+    return exam;
+  }
+
+  public static async deleteExam(studentId: string, examId: string): Promise<{ success: boolean }> {
+    await this.getExamById(studentId, examId);
+    this.exams.delete(examId);
+    return { success: true };
   }
 
   // ==========================================

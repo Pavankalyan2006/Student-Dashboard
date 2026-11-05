@@ -375,6 +375,12 @@ export class QuizAttemptService {
       throw new AuthorizationError('You are not authorized to review this attempt');
     }
 
+    // Correct answers and explanations are only revealed once the attempt is submitted;
+    // otherwise a student could read them in the middle of the quiz.
+    if (attempt.status !== 'COMPLETED') {
+      throw new ValidationError('Submit the quiz to see the answers and explanations.');
+    }
+
     const quiz = await db.getQuizById(attempt.quiz_id);
     if (!quiz) {
       throw new NotFoundError(`Associated quiz ${attempt.quiz_id} not found`);

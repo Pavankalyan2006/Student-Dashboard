@@ -223,14 +223,15 @@ export interface GateDashboardData {
     total_mock_tests_taken: number;
     avg_mock_test_score: number;
     highest_mock_test_score: number;
-    estimated_gate_score: number; // e.g. 642 / 1000
+    /** Not computed: an official GATE score cannot be estimated from a practice test. */
+    estimated_gate_score?: number;
     saved_questions_count: number;
   };
   weak_topics: {
     topic_id: string;
     topic_name: string;
     subject: string;
-    accuracy: number;
+    accuracy: number | null; // null for topics the student flagged but has not practised
     attempts_count: number;
     recommendation: string;
   }[];

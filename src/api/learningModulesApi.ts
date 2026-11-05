@@ -99,6 +99,17 @@ export const learningModulesApi = {
       });
       return unwrap<ExamEntity>(res);
     },
+    updateTopic: async (examId: string, topicId: string, updates: { confidence?: string; status?: string }): Promise<ExamEntity> => {
+      const res = await apiClient.request<any>(`/exams/${examId}/topics/${topicId}`, {
+        method: 'PATCH',
+        body: JSON.stringify(updates),
+      });
+      return unwrap<ExamEntity>(res);
+    },
+    deleteExam: async (examId: string): Promise<{ success: boolean }> => {
+      const res = await apiClient.request<any>(`/exams/${examId}`, { method: 'DELETE' });
+      return unwrap<any>(res);
+    },
   },
 
   // 3. Doubt Solver

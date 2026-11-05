@@ -263,8 +263,8 @@ describe('GATE Exam Preparation Master Test Suite', () => {
       expect(result.total_marks_obtained).toBeCloseTo(4.34, 2);
 
       // Verify estimated normalized GATE score (0-1000)
-      expect(result.estimated_gate_score).toBeGreaterThanOrEqual(100);
-      expect(result.estimated_gate_score).toBeLessThanOrEqual(1000);
+      // No GATE score out of 1000 is invented: it depends on all candidates' marks in the real exam.
+      expect(result.estimated_gate_score).toBeUndefined();
 
       // Verify question reviews contain detailed breakdown
       expect(result.question_reviews.length).toBe(test!.question_ids.length);
@@ -328,7 +328,7 @@ describe('GATE Exam Preparation Master Test Suite', () => {
       // Metrics
       expect(dashboard.metrics).toBeDefined();
       expect(dashboard.metrics.total_questions_practiced).toBeGreaterThanOrEqual(0);
-      expect(dashboard.metrics.estimated_gate_score).toBeGreaterThanOrEqual(100);
+      expect(dashboard.metrics.estimated_gate_score).toBeUndefined();
 
       // Upcoming study tasks
       expect(dashboard.upcoming_tasks).toBeDefined();

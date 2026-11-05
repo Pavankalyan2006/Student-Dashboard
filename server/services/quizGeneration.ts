@@ -84,6 +84,9 @@ export class QuizGenerationService {
       sourceId,
       citation
     ).slice(0, questionCount);
+    if (validatedQuestions.length === 0) {
+      throw new AppError('The AI returned questions that did not pass validation (missing options or answers). No quiz was created.', 502, 'AI_BAD_OUTPUT');
+    }
 
     // 5. Persist Quiz Model
     const quizId = `quiz_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
