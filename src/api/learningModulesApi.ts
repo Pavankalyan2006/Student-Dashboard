@@ -561,6 +561,15 @@ export const learningModulesApi = {
       });
       return unwrap<MLPredictionResult>(res);
     },
+    getPredictions: async (experimentId?: string): Promise<any[]> => {
+      const q = experimentId ? `?experiment_id=${encodeURIComponent(experimentId)}` : '';
+      const res = await apiClient.request<any>(`/ml-lab/predictions${q}`);
+      return unwrap<any[]>(res, []) || [];
+    },
+    deleteDataset: async (datasetId: string): Promise<{ success: boolean }> => {
+      const res = await apiClient.request<any>(`/ml-lab/datasets/${encodeURIComponent(datasetId)}`, { method: 'DELETE' });
+      return unwrap<any>(res);
+    },
   },
 
   // 8. System Design Lab

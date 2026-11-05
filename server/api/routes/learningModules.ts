@@ -613,7 +613,7 @@ learningModulesRouter.post('/ml-lab/workspaces', requireAuth, async (req: Reques
     const ws = MlLabService.createWorkspace(studentId, req.body);
     res.status(201).json({ success: true, data: ws });
   } catch (err: any) {
-    res.status(err.status || 400).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 400).json({ success: false, message: err.message });
   }
 });
 
@@ -623,7 +623,7 @@ learningModulesRouter.get('/ml-lab/workspaces/:workspaceId', requireAuth, async 
     const ws = MlLabService.getWorkspace(studentId, req.params.workspaceId);
     res.json({ success: true, data: ws });
   } catch (err: any) {
-    res.status(err.status || 404).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 404).json({ success: false, message: err.message });
   }
 });
 
@@ -633,7 +633,7 @@ learningModulesRouter.delete('/ml-lab/workspaces/:workspaceId', requireAuth, asy
     const result = MlLabService.deleteWorkspace(studentId, req.params.workspaceId);
     res.json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 404).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 404).json({ success: false, message: err.message });
   }
 });
 
@@ -643,7 +643,7 @@ learningModulesRouter.post('/ml-lab/workspaces/:workspaceId/files', requireAuth,
     const file = MlLabService.addFile(studentId, req.params.workspaceId, req.body);
     res.status(201).json({ success: true, data: file });
   } catch (err: any) {
-    res.status(err.status || 400).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 400).json({ success: false, message: err.message });
   }
 });
 
@@ -653,7 +653,7 @@ learningModulesRouter.put('/ml-lab/workspaces/:workspaceId/files/:fileId', requi
     const file = MlLabService.updateFile(studentId, req.params.workspaceId, req.params.fileId, req.body.content || '');
     res.json({ success: true, data: file });
   } catch (err: any) {
-    res.status(err.status || 400).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 400).json({ success: false, message: err.message });
   }
 });
 
@@ -663,7 +663,7 @@ learningModulesRouter.delete('/ml-lab/workspaces/:workspaceId/files/:fileId', re
     const result = MlLabService.deleteFile(studentId, req.params.workspaceId, req.params.fileId);
     res.json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 404).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 404).json({ success: false, message: err.message });
   }
 });
 
@@ -683,7 +683,7 @@ learningModulesRouter.get('/ml-lab/datasets/:datasetId', requireAuth, async (req
     const dataset = MlLabService.getDatasetById(studentId, req.params.datasetId);
     res.json({ success: true, data: dataset });
   } catch (err: any) {
-    res.status(err.status || 404).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 404).json({ success: false, message: err.message });
   }
 });
 
@@ -693,8 +693,20 @@ learningModulesRouter.post('/ml-lab/datasets/upload', requireAuth, async (req: R
     const dataset = MlLabService.uploadCustomDataset(studentId, req.body);
     res.status(201).json({ success: true, data: dataset });
   } catch (err: any) {
-    res.status(err.status || 400).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 400).json({ success: false, message: err.message });
   }
+});
+
+learningModulesRouter.delete('/ml-lab/datasets/:datasetId', requireAuth, (req: Request, res: Response) => {
+  try {
+    res.json({ success: true, data: MlLabService.deleteDataset(req.user!.userId, req.params.datasetId) });
+  } catch (err: any) {
+    res.status(err.statusCode || 400).json({ success: false, message: err.message });
+  }
+});
+
+learningModulesRouter.get('/ml-lab/predictions', requireAuth, (req: Request, res: Response) => {
+  res.json({ success: true, data: MlLabService.getPredictions(req.user!.userId, req.query.experiment_id as string) });
 });
 
 learningModulesRouter.get('/ml-lab/experiments', requireAuth, async (req: Request, res: Response) => {
@@ -713,7 +725,7 @@ learningModulesRouter.get('/ml-lab/experiments/:experimentId', requireAuth, asyn
     const experiment = MlLabService.getExperimentById(studentId, req.params.experimentId);
     res.json({ success: true, data: experiment });
   } catch (err: any) {
-    res.status(err.status || 404).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 404).json({ success: false, message: err.message });
   }
 });
 
@@ -723,7 +735,7 @@ learningModulesRouter.post('/ml-lab/experiments', requireAuth, async (req: Reque
     const experiment = await MlLabService.runExperiment(studentId, req.body);
     res.status(201).json({ success: true, data: experiment });
   } catch (err: any) {
-    res.status(err.status || 400).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 400).json({ success: false, message: err.message });
   }
 });
 
@@ -733,7 +745,7 @@ learningModulesRouter.post('/ml-lab/experiments/:experimentId/predict', requireA
     const result = MlLabService.predict(studentId, req.params.experimentId, req.body.inputs || {});
     res.json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 400).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 400).json({ success: false, message: err.message });
   }
 });
 

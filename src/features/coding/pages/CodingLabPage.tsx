@@ -208,7 +208,8 @@ export const CodingLabPage: React.FC<CodingLabPageProps> = ({ onNavigate }) => {
 
             <div className="flex items-center gap-1.5 flex-wrap">
               <span className="text-[11px] text-slate-500">Languages:</span>
-              {(progress?.languages_used?.length ? progress.languages_used : ['python', 'cpp']).map((l) => (
+              {!progress?.languages_used?.length && <span className="text-[11px] text-slate-400">none yet</span>}
+              {(progress?.languages_used || []).map((l) => (
                 <span
                   key={l}
                   className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono text-[10px] font-bold uppercase"

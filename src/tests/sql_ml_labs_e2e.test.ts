@@ -234,8 +234,9 @@ describe('SQL Lab & AI/ML Lab Master E2E Test Suite', () => {
 
       // k-NN has no training epochs, so no loss curve is invented for it.
       expect(Array.isArray(exp.insights.loss_curve)).toBe(true);
-      // The sandbox says which model it actually trained instead of claiming a Random Forest.
-      expect(exp.logs!.some((l) => l.level === 'WARN' && /not implemented in this sandbox/.test(l.message))).toBe(true);
+      // A real Random Forest is trained now (no silent substitution with k-NN).
+      expect((exp as any).algorithm).toMatch(/^Random Forest/);
+      expect(exp.logs!.some((l) => /not implemented in this sandbox/.test(l.message))).toBe(false);
       // Metrics come from the confusion matrix of real predictions.
       const cm = exp.metrics.confusion_matrix!;
       const total = cm.flat().reduce((a, b) => a + b, 0);
@@ -323,7 +324,7 @@ describe('SQL Lab & AI/ML Lab Master E2E Test Suite', () => {
       expect(pred.class_probabilities).toBeDefined();
       // A setosa-like flower must be classified as setosa by the trained model.
       expect(pred.predicted_label).toBe('setosa');
-      expect(pred.explanation).toContain('nearest training rows');
+      expect(pred.explanation).toMatch(/trees voted 'setosa'/);
     });
   });
 });
