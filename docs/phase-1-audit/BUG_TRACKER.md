@@ -50,6 +50,8 @@ Status: FIXED (with how it was verified), OPEN, BLOCKED.
 | P1-043 | P2 | Language Learning | Any lesson id (e.g. `les_fake_999`) could be marked complete and counted towards progress | `saveLessonProgress` stored any id | Lesson must be in the language's curriculum (404 otherwise); notes capped at 5000 chars | FIXED: HTTP 404 / 200 |
 | P1-044 | P2 | Language Learning | An unknown vocabulary rating ("MAYBE") advanced the card as a pass; a non-list `answers` on quiz submit crashed with 500 | Missing validation | 400 for both; rating is case-insensitive | FIXED: HTTP |
 | P1-045 | P3 | Language Learning | Toasts claimed "Writing evaluated by AI Coach!" and "Streak updated" on lesson completion (streak is not changed there); error toasts hid the server's reason | Static strings | Neutral success text; error toasts show the server message | FIXED: browser |
+| P1-046 | P3 | All 12 pages | 26 form fields (search boxes, AI composer, doubt question/details/code, deck and document filters, flashcard creation selects) had only a placeholder, so screen readers announced no name; the mobile sidebar close button had no name | No `aria-label` / label | `aria-label` added to each | FIXED: `scripts/audit/phase1-responsive.cjs` reports 0 unlabeled inputs and buttons at 360–1440px |
+| P1-047 | P3 | AI Tutor, Language Learning | AI Tutor had no `h1`; Language Learning had two (page title plus the language name / lesson title / explore banner) | Heading levels | Visually hidden `h1` on AI Tutor; sub-view titles changed to `h2` (same styles) | FIXED: sweep reports exactly one `h1` per page |
 
 ## Open
 | ID | P | Page | Defect | Next step |
@@ -60,3 +62,4 @@ Status: FIXED (with how it was verified), OPEN, BLOCKED.
 | P1-O04 | — | Documents / Knowledge Base | Template study material | FIXED as P1-029 |
 | P1-O05 | P3 | Flashcards | Due dates use the UTC calendar day (`toISOString`), so near midnight in IST a card can appear due a few hours early or late | Leave; note for a timezone pass |
 | — | note | Outside Phase 1 | `seedDefaultMockInterview` still seeds a session when called with `autoSeed`; no route passes it. `seedExternalProfiles` is already limited to demo accounts | None for Phase 1 |
+| P1-O06 | P3 | All pages (mobile) | The off-canvas sidebar stays in the tab order while closed below 1024px (it is moved off-screen, not hidden), so keyboard users tab through hidden links | Make the closed drawer `inert` below the `lg` breakpoint; outside the 12 pages' own code, left for the shared-shell pass |

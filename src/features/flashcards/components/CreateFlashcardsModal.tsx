@@ -534,6 +534,7 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <select
+                          aria-label="Card type"
                           value={card.type}
                           onChange={(e) => handleUpdateManualCard(idx, 'type', e.target.value)}
                           className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded-lg bg-white"
@@ -549,6 +550,7 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
 
                       <div>
                         <select
+                          aria-label="Card difficulty"
                           value={card.difficulty}
                           onChange={(e) => handleUpdateManualCard(idx, 'difficulty', e.target.value)}
                           className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded-lg bg-white"
@@ -613,6 +615,7 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
                     <div>
                       <label className="block text-xs font-semibold text-[#344054] mb-1">Difficulty Level</label>
                       <select
+                        aria-label="Difficulty"
                         value={aiDifficulty}
                         onChange={(e) => setAiDifficulty(e.target.value as any)}
                         className="w-full px-3 py-2 text-xs border border-[#D0D5DD] rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
@@ -628,6 +631,7 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
                     <div>
                       <label className="block text-xs font-semibold text-[#344054] mb-1">Card Style</label>
                       <select
+                        aria-label="Card style"
                         value={aiStyle}
                         onChange={(e) => setAiStyle(e.target.value as any)}
                         className="w-full px-3 py-2 text-xs border border-[#D0D5DD] rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
@@ -794,6 +798,7 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
                       <label className="block text-xs font-semibold text-[#344054] mb-1">Select Note</label>
                       {savedNotes.length > 0 ? (
                         <select
+                          aria-label="Note"
                           value={selectedNoteId}
                           onChange={(e) => setSelectedNoteId(e.target.value)}
                           className="w-full px-3 py-2 text-xs border border-[#D0D5DD] rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
@@ -817,6 +822,7 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
                       </label>
                       {savedDocs.length > 0 ? (
                         <select
+                          aria-label="Document"
                           value={selectedDocId}
                           onChange={(e) => setSelectedDocId(e.target.value)}
                           className="w-full px-3 py-2 text-xs border border-[#D0D5DD] rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
@@ -903,6 +909,7 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
                     <label className="block text-xs font-semibold text-[#344054] mb-1">Select Enrolled Course</label>
                     {enrolledCourses.length > 0 ? (
                       <select
+                        aria-label="Course"
                         value={selectedCourseId}
                         onChange={(e) => {
                           const cId = e.target.value;
@@ -936,6 +943,7 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
                       </label>
                       {enrolledCourses.find((c) => c.id === selectedCourseId)?.chapters?.length > 0 ? (
                         <select
+                          aria-label="Chapter"
                           value={selectedChapterId}
                           onChange={(e) => setSelectedChapterId(e.target.value)}
                           className="w-full px-3 py-2 text-xs border border-[#D0D5DD] rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"

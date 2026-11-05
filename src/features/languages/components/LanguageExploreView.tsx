@@ -61,9 +61,9 @@ export function LanguageExploreView({
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/25 text-indigo-400 text-xs font-medium mb-3">
             <Globe className="w-3.5 h-3.5" /> 150 Supported World & Regional Languages
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
             Explore & Master Global Languages
-          </h1>
+          </h2>
           <p className="text-sm text-slate-300 mt-2 leading-relaxed">
             From Spanish, German, Japanese, and Korean to Hindi, Telugu, Tamil, Arabic, and 140+ world languages.
             Select any language to build real vocabulary, grammar, and conversational fluency.

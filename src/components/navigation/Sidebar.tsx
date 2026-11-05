@@ -193,6 +193,7 @@ export function Sidebar({ currentPath, onNavigate }: { currentPath: string; onNa
           <button
             onClick={() => setMobileDrawerOpen(false)}
             className="p-1.5 text-slate-400 hover:text-white rounded-lg lg:hidden cursor-pointer"
+            aria-label="Close navigation sidebar"
           >
             <X className="h-5 w-5" />
           </button>

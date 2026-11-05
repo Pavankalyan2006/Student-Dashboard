@@ -313,6 +313,7 @@ export function FlashcardsPage({ onNavigate }: FlashcardsPageProps) {
               <div className="flex items-center gap-1.5 text-xs text-[#344054]">
                 <Filter className="w-3.5 h-3.5 text-gray-400" />
                 <select
+                  aria-label="Filter by subject"
                   value={selectedSubject}
                   onChange={(e) => setSelectedSubject(e.target.value)}
                   className="px-2.5 py-1.5 text-xs rounded-xl border border-[#D0D5DD] bg-white text-[#344054] focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -330,6 +331,7 @@ export function FlashcardsPage({ onNavigate }: FlashcardsPageProps) {
               <div className="flex items-center gap-1.5 text-xs text-[#344054]">
                 <ArrowUpDown className="w-3.5 h-3.5 text-gray-400" />
                 <select
+                  aria-label="Sort decks"
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as any)}
                   className="px-2.5 py-1.5 text-xs rounded-xl border border-[#D0D5DD] bg-white text-[#344054] focus:outline-none focus:ring-1 focus:ring-blue-500"

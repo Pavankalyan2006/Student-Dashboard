@@ -322,6 +322,7 @@ export function DocumentsPage({ onNavigate }: DocumentsPageProps) {
             <Search className="h-4 w-4 text-blue-500 absolute left-3 top-2.5" />
             <input
               type="text"
+              aria-label="Ask across your documents"
               placeholder="e.g. Which document explains CPU scheduling? What are the Coffman deadlock conditions?"
               value={aiQuery}
               onChange={(e) => setAiQuery(e.target.value)}
@@ -702,6 +703,7 @@ export function DocumentsPage({ onNavigate }: DocumentsPageProps) {
               <Search className="h-4 w-4 text-slate-400 absolute left-3 top-2.5" />
               <input
                 type="text"
+                aria-label="Search documents"
                 placeholder="Search by title, subject, tags, or description..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -713,6 +715,7 @@ export function DocumentsPage({ onNavigate }: DocumentsPageProps) {
             <div className="flex items-center gap-2 w-full sm:w-auto justify-end overflow-x-auto">
               {/* Category Dropdown */}
               <select
+                aria-label="Filter by category"
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
                 className="px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-blue-600 shadow-2xs"
@@ -727,6 +730,7 @@ export function DocumentsPage({ onNavigate }: DocumentsPageProps) {
 
               {/* Sort selector */}
               <select
+                aria-label="Sort documents"
                 value={sort}
                 onChange={(e) => setSort(e.target.value as any)}
                 className="px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-blue-600 shadow-2xs"

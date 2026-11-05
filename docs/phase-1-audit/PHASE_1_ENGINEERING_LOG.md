@@ -61,3 +61,14 @@
 - Tests: `phase1_learning_workspace.test.ts` 16, `languages_platform_master.test.ts` 20 (3 AI-off cases + stubbed model), `flashcards_master_production.test.ts` schedule test; full suite 818/818, `tsc` 0 errors.
 - Files: `server/services/{learningModulesService,languageLearningService}.ts`, `server/api/routes/{learningModules,languages}.ts`, `src/api/learningModulesApi.ts`, `src/features/study-planner/pages/StudyPlannerPage.tsx`, `src/features/languages/components/{ConversationPartnerView,WritingPracticeView,ContextualTranslatorView,LessonWorkspaceView}.tsx`.
 - Next: batch 8 (shared components, accessibility, security, responsive sweep, regression, final reports).
+
+## Batch 8 — shared components, security, responsive, regression, reports
+- Responsive: `scripts/audit/phase1-responsive.cjs`, 11 routes × 6 widths, 66/66 without overflow.
+- Accessibility: 26 fields and 1 button gained accessible names (P1-046); heading levels fixed on AI Tutor and Language Learning (P1-047); P1-O06 (closed mobile drawer in tab order) left open, P3.
+- Security: unauthenticated 401 on all Phase 1 data routes, forged header and token 401, no client-supplied student ids in Phase 1 routes.
+- Persistence: `scripts/audit/phase1-persistence.cjs`, 10 record types kept across restart and re-login, none visible to student B.
+- Regression: tsc 0, vitest 818/818, `api-checks.cjs` 59/59.
+- Reports written: INTERACTION_TEST_MATRIX, FRONTEND_BACKEND_MAPPING, API_TEST_REPORT, DATABASE_TEST_REPORT, AI_INTEGRATION_REPORT, FILE_UPLOAD_VERIFICATION, RESPONSIVE_TEST_REPORT, ACCESSIBILITY_REPORT, SECURITY_REPORT, FIX_IMPLEMENTATION_LOG, REGRESSION_TEST_REPORT, PHASE_1_FINAL_REPORT.
+- Readiness: FUNCTIONALLY VERIFIED WITH LIMITATIONS (AI model output BLOCKED without a key).
+- Phase 1 complete. Next step, if wanted: configure an AI key and re-run the stubbed scenarios against the real model.
+

@@ -148,6 +148,7 @@ export function AIComposer({
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
+          aria-label="Message the AI tutor"
           placeholder="Ask your AI Tutor about engineering concepts, problem steps, exam preparation, or code debugging..."
           rows={2}
           className="w-full resize-none bg-transparent px-2 py-1 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none"
