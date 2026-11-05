@@ -377,6 +377,9 @@ export interface SQLExecutionResult {
     cost_estimate: string;
     details: string;
   }[];
+  /** True when more rows matched than the sandbox returns. */
+  truncated?: boolean;
+  engine?: string;
 }
 
 export interface TableDataFilter {

@@ -122,6 +122,14 @@ export const CodeOutputPanel: React.FC<CodeOutputPanelProps> = ({
             <div className="flex items-center gap-1">
               <span>Exit Code: {result.exit_code}</span>
             </div>
+            {(result as any).isolation && (result as any).isolation !== 'namespace' && (
+              <span
+                className="px-1.5 py-0.5 rounded bg-amber-900/40 text-amber-300"
+                title="This server could not isolate the program from the host. Do not run untrusted code here."
+              >
+                Not isolated
+              </span>
+            )}
           </div>
         )}
       </div>
@@ -131,7 +139,7 @@ export const CodeOutputPanel: React.FC<CodeOutputPanelProps> = ({
         {isExecuting ? (
           <div className="flex flex-col items-center justify-center h-full gap-2 text-slate-400">
             <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-            <p className="text-xs">Executing code in isolated sandbox...</p>
+            <p className="text-xs" role="status">Running code...</p>
           </div>
         ) : outputTab === 'output' ? (
           <div>

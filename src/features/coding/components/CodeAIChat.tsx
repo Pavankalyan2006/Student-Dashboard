@@ -244,7 +244,7 @@ ${gen.code}
         ]);
       }
     } catch (err: any) {
-      toast.error('AI request failed. Please check network.');
+      toast.error(err?.message || 'AI request failed.');
       setMessages((prev) => [
         ...prev,
         {

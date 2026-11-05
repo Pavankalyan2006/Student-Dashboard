@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
-import { Editor } from '@monaco-editor/react';
+import { ResilientCodeEditor as Editor } from '../../../components/code/ResilientCodeEditor';
 import { dsaApi } from '../api/dsaApi';
 import { DSAProblem, DSATopic } from '../types/dsa';
 import { toast } from 'sonner';

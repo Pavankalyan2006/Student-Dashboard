@@ -179,7 +179,7 @@ solve()
       const result = await LearningModulesService.executeSandboxedSql(studentId, maliciousQuery);
 
       expect(result.success).toBe(false);
-      expect(result.error).toContain('prohibited');
+      expect(result.error).toMatch(/not SQLite syntax|disabled/);
     });
   });
 

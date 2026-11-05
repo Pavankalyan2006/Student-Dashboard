@@ -410,7 +410,7 @@ learningModulesRouter.post('/labs/:labId/experiments/:expId/viva/:qId', requireA
 learningModulesRouter.get('/sql-lab/workspaces', requireAuth, async (req: Request, res: Response) => {
   try {
     const studentId = req.user!.userId;
-    const workspaces = SqlLabSandboxService.getWorkspaces(studentId);
+    const workspaces = await SqlLabSandboxService.getWorkspaces(studentId);
     res.json({ success: true, data: workspaces });
   } catch (err: any) {
     res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
@@ -421,17 +421,26 @@ learningModulesRouter.post('/sql-lab/workspaces', requireAuth, async (req: Reque
   try {
     const studentId = req.user!.userId;
     const { name } = req.body;
-    const result = SqlLabSandboxService.createSchema(studentId, name || '');
+    const result = await SqlLabSandboxService.createSchema(studentId, name || '');
     res.status(201).json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 400).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 400).json({ success: false, message: err.message });
+  }
+});
+
+learningModulesRouter.delete('/sql-lab/workspaces/:dbName', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const result = await SqlLabSandboxService.deleteSchema(req.user!.userId, req.params.dbName);
+    res.json({ success: true, data: result });
+  } catch (err: any) {
+    res.status(err.statusCode || err.status || 400).json({ success: false, message: err.message });
   }
 });
 
 learningModulesRouter.get('/sql-lab/schemas', requireAuth, async (req: Request, res: Response) => {
   try {
     const studentId = req.user!.userId;
-    const schemas = SqlLabSandboxService.getSchemas(studentId);
+    const schemas = await SqlLabSandboxService.getSchemas(studentId);
     res.json({ success: true, data: schemas });
   } catch (err: any) {
     res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
@@ -441,7 +450,7 @@ learningModulesRouter.get('/sql-lab/schemas', requireAuth, async (req: Request, 
 learningModulesRouter.get('/sql-lab/schemas/:dbName/tables', requireAuth, async (req: Request, res: Response) => {
   try {
     const studentId = req.user!.userId;
-    const tables = SqlLabSandboxService.getSchemaTables(studentId, req.params.dbName);
+    const tables = await SqlLabSandboxService.getSchemaTables(studentId, req.params.dbName);
     res.json({ success: true, data: tables });
   } catch (err: any) {
     res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
@@ -451,20 +460,20 @@ learningModulesRouter.get('/sql-lab/schemas/:dbName/tables', requireAuth, async 
 learningModulesRouter.post('/sql-lab/schemas/:dbName/tables', requireAuth, async (req: Request, res: Response) => {
   try {
     const studentId = req.user!.userId;
-    const result = SqlLabSandboxService.createTable(studentId, req.params.dbName, req.body);
+    const result = await SqlLabSandboxService.createTable(studentId, req.params.dbName, req.body);
     res.status(201).json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 400).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 400).json({ success: false, message: err.message });
   }
 });
 
 learningModulesRouter.delete('/sql-lab/schemas/:dbName/tables/:tableName', requireAuth, async (req: Request, res: Response) => {
   try {
     const studentId = req.user!.userId;
-    const result = SqlLabSandboxService.dropTable(studentId, req.params.dbName, req.params.tableName);
+    const result = await SqlLabSandboxService.dropTable(studentId, req.params.dbName, req.params.tableName);
     res.json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 400).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 400).json({ success: false, message: err.message });
   }
 });
 
@@ -472,7 +481,7 @@ learningModulesRouter.get('/sql-lab/schemas/:dbName/tables/:tableName/data', req
   try {
     const studentId = req.user!.userId;
     const { page, limit, sort_by, sort_dir, search } = req.query;
-    const result = SqlLabSandboxService.getTableData(studentId, req.params.dbName, req.params.tableName, {
+    const result = await SqlLabSandboxService.getTableData(studentId, req.params.dbName, req.params.tableName, {
       page: page ? Number(page) : 1,
       limit: limit ? Number(limit) : 20,
       sort_by: sort_by as string,
@@ -488,30 +497,30 @@ learningModulesRouter.get('/sql-lab/schemas/:dbName/tables/:tableName/data', req
 learningModulesRouter.post('/sql-lab/schemas/:dbName/tables/:tableName/rows', requireAuth, async (req: Request, res: Response) => {
   try {
     const studentId = req.user!.userId;
-    const result = SqlLabSandboxService.insertRow(studentId, req.params.dbName, req.params.tableName, req.body);
+    const result = await SqlLabSandboxService.insertRow(studentId, req.params.dbName, req.params.tableName, req.body);
     res.status(201).json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 400).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 400).json({ success: false, message: err.message });
   }
 });
 
 learningModulesRouter.put('/sql-lab/schemas/:dbName/tables/:tableName/rows/:pkValue', requireAuth, async (req: Request, res: Response) => {
   try {
     const studentId = req.user!.userId;
-    const result = SqlLabSandboxService.updateRow(studentId, req.params.dbName, req.params.tableName, req.params.pkValue, req.body);
+    const result = await SqlLabSandboxService.updateRow(studentId, req.params.dbName, req.params.tableName, req.params.pkValue, req.body);
     res.json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 400).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 400).json({ success: false, message: err.message });
   }
 });
 
 learningModulesRouter.delete('/sql-lab/schemas/:dbName/tables/:tableName/rows/:pkValue', requireAuth, async (req: Request, res: Response) => {
   try {
     const studentId = req.user!.userId;
-    const result = SqlLabSandboxService.deleteRow(studentId, req.params.dbName, req.params.tableName, req.params.pkValue);
+    const result = await SqlLabSandboxService.deleteRow(studentId, req.params.dbName, req.params.tableName, req.params.pkValue);
     res.json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 400).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 400).json({ success: false, message: err.message });
   }
 });
 
@@ -519,10 +528,10 @@ learningModulesRouter.post('/sql-lab/schemas/:dbName/tables/:tableName/sample-da
   try {
     const studentId = req.user!.userId;
     const count = Number(req.body.count) || 3;
-    const result = SqlLabSandboxService.generateSampleRows(studentId, req.params.dbName, req.params.tableName, count);
+    const result = await SqlLabSandboxService.generateSampleRows(studentId, req.params.dbName, req.params.tableName, count);
     res.json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 400).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 400).json({ success: false, message: err.message });
   }
 });
 
@@ -542,6 +551,26 @@ learningModulesRouter.get('/sql-lab/history', requireAuth, async (req: Request, 
     res.json({ success: true, data: history });
   } catch (err: any) {
     res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
+  }
+});
+
+learningModulesRouter.get('/sql-lab/saved-queries', requireAuth, (req: Request, res: Response) => {
+  res.json({ success: true, data: SqlLabSandboxService.getSavedQueries(req.user!.userId) });
+});
+
+learningModulesRouter.post('/sql-lab/saved-queries', requireAuth, (req: Request, res: Response) => {
+  try {
+    res.status(201).json({ success: true, data: SqlLabSandboxService.saveQuery(req.user!.userId, req.body || {}) });
+  } catch (err: any) {
+    res.status(err.statusCode || 400).json({ success: false, message: err.message });
+  }
+});
+
+learningModulesRouter.delete('/sql-lab/saved-queries/:id', requireAuth, (req: Request, res: Response) => {
+  try {
+    res.json({ success: true, data: SqlLabSandboxService.deleteSavedQuery(req.user!.userId, req.params.id) });
+  } catch (err: any) {
+    res.status(err.statusCode || 400).json({ success: false, message: err.message });
   }
 });
 

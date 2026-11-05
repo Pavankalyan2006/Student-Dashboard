@@ -452,6 +452,21 @@ export const learningModulesApi = {
       const res = await apiClient.request<any>(`/sql-lab/history${queryStr}`);
       return unwrap<SQLQueryHistoryItem[]>(res, []) || [];
     },
+    getSavedQueries: async (): Promise<Array<{ id: string; name: string; query: string; schema_name: string; created_at: string }>> => {
+      const res = await apiClient.request<any>('/sql-lab/saved-queries');
+      return unwrap<any[]>(res, []) || [];
+    },
+    saveQuery: async (name: string, query: string, schemaName: string) => {
+      const res = await apiClient.request<any>('/sql-lab/saved-queries', {
+        method: 'POST',
+        body: JSON.stringify({ name, query, schema_name: schemaName }),
+      });
+      return unwrap<any>(res);
+    },
+    deleteSavedQuery: async (id: string) => {
+      const res = await apiClient.request<any>(`/sql-lab/saved-queries/${encodeURIComponent(id)}`, { method: 'DELETE' });
+      return unwrap<any>(res);
+    },
     getChallenges: async (): Promise<SQLChallenge[]> => {
       const res = await apiClient.request<any>('/sql-lab/challenges');
       return unwrap<SQLChallenge[]>(res, []) || [];

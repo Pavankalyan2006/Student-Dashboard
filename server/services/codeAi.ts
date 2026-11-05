@@ -1,4 +1,5 @@
 import { AIService } from '../ai/service';
+import { parseModelJson, rethrowAi } from '../ai/modelOutput';
 import {
   CodingLanguage,
   CodeExplanationResult,
@@ -47,22 +48,10 @@ Return a valid JSON object matching this schema EXACTLY (do not wrap in markdown
 
     try {
       const response = await AIService.generate([{ role: 'user', content: prompt }], 'student_learning_agent');
-      return this.parseJSON<CodeExplanationResult>(response.text, {
-        overview: `This ${params.language} program processes inputs and executes algorithms according to structured control flow.`,
-        step_by_step: [
-          'Initializes variables and reads input streams.',
-          'Processes collections and executes core algorithmic transformations.',
-          'Emits final computation outputs to standard output.',
-        ],
-        important_concepts: ['Asymptotic Analysis', 'Algorithmic Invariants', 'Memory Efficiency'],
-        time_complexity: '$\\mathcal{O}(N)$ where $N$ is the input size',
-        space_complexity: '$\\mathcal{O}(1)$ auxiliary space',
-        potential_issues: ['Check for empty inputs or unexpected boundary values.'],
-        suggestions: ['Consider adding inline docstrings and validating array bounds.'],
-      });
+      return parseModelJson<CodeExplanationResult>(response, 'AI coding assistant');
     } catch (err: any) {
       logger.error('Failed to explain code via AI', { error: err.message });
-      throw new Error('AI Code Explanation service temporarily unavailable.');
+      rethrowAi(err, 'AI coding assistant');
     }
   }
 
@@ -105,17 +94,10 @@ Diagnose the root cause. Return a valid JSON object matching this schema EXACTLY
 
     try {
       const response = await AIService.generate([{ role: 'user', content: prompt }], 'student_learning_agent');
-      return this.parseJSON<CodeDebugResult>(response.text, {
-        problem: 'Syntax or Runtime Invariant Violation',
-        cause: params.error || 'Unexpected runtime termination or logical mismatch.',
-        location: 'Around main processing block',
-        explanation: 'The code failed because inputs or array bounds were accessed outside their valid domain.',
-        suggested_fix: 'Validate bounds before indexing and verify input stream formatting.',
-        corrected_code: params.source_code,
-      });
+      return parseModelJson<CodeDebugResult>(response, 'AI coding assistant');
     } catch (err: any) {
       logger.error('Failed to debug code via AI', { error: err.message });
-      throw new Error('AI Debugging service temporarily unavailable.');
+      rethrowAi(err, 'AI coding assistant');
     }
   }
 
@@ -143,17 +125,10 @@ Return a valid JSON object matching this schema EXACTLY:
 
     try {
       const response = await AIService.generate([{ role: 'user', content: prompt }], 'student_learning_agent');
-      return this.parseJSON<CodeGenerationResult>(response.text, {
-        explanation: `Here is a complete, structured ${params.language} solution designed for B.Tech lab exercises.`,
-        code: `// ${params.language} solution for: ${params.prompt}\nconsole.log("Solution ready");`,
-        language: params.language,
-        example_input: '5',
-        example_output: '120',
-        complexity: 'Time: O(N), Space: O(1)',
-      });
+      return parseModelJson<CodeGenerationResult>(response, 'AI coding assistant');
     } catch (err: any) {
       logger.error('Failed to generate code via AI', { error: err.message });
-      throw new Error('AI Code Generation service temporarily unavailable.');
+      rethrowAi(err, 'AI coding assistant');
     }
   }
 
@@ -184,15 +159,10 @@ Return a valid JSON object matching this schema EXACTLY:
 
     try {
       const response = await AIService.generate([{ role: 'user', content: prompt }], 'student_learning_agent');
-      return this.parseJSON<CodeRefactorResult>(response.text, {
-        current_code: params.source_code,
-        suggested_code: params.source_code,
-        changes: ['Extracted reusable helper functions', 'Improved variable naming conventions'],
-        reason: 'Enhances code readability and modularity without changing runtime semantics.',
-      });
+      return parseModelJson<CodeRefactorResult>(response, 'AI coding assistant');
     } catch (err: any) {
       logger.error('Failed to refactor code via AI', { error: err.message });
-      throw new Error('AI Refactoring service temporarily unavailable.');
+      rethrowAi(err, 'AI coding assistant');
     }
   }
 
@@ -242,15 +212,10 @@ Return a valid JSON array of test cases matching this schema:
 
     try {
       const response = await AIService.generate([{ role: 'user', content: prompt }], 'student_learning_agent');
-      return this.parseJSON<GeneratedTestCase[]>(response.text, [
-        { type: 'normal', input: '5', expected: '25', explanation: 'Standard positive integer' },
-        { type: 'boundary', input: '0', expected: '0', explanation: 'Zero boundary test' },
-        { type: 'edge', input: '-1', expected: '-1', explanation: 'Negative numbers' },
-        { type: 'invalid', input: '', expected: '0', explanation: 'Empty stream' },
-      ]);
+      return parseModelJson<GeneratedTestCase[]>(response, 'AI coding assistant');
     } catch (err: any) {
       logger.error('Failed to generate test cases via AI', { error: err.message });
-      throw new Error('AI Test Case Generator temporarily unavailable.');
+      rethrowAi(err, 'AI coding assistant');
     }
   }
 
@@ -282,19 +247,10 @@ Return a valid JSON object matching this schema EXACTLY:
 
     try {
       const response = await AIService.generate([{ role: 'user', content: prompt }], 'student_learning_agent');
-      return this.parseJSON<CodeReviewResult>(response.text, {
-        correctness: 'The implementation correctly follows standard algorithmic logic.',
-        readability: 'Variable names are clear and logic flow is sequential.',
-        maintainability: 'Functions can be split into smaller helper modules.',
-        complexity: '$\\mathcal{O}(N)$ time complexity, $\\mathcal{O}(1)$ auxiliary space.',
-        edge_cases: ['Empty input sequence', 'Single element array', 'Large integer overflow'],
-        possible_bugs: ['Ensure zero division is guarded against.'],
-        security_issues: ['None identified: code executes within isolated memory boundaries.'],
-        style_improvements: ['Adhere strictly to official style guide conventions.'],
-      });
+      return parseModelJson<CodeReviewResult>(response, 'AI coding assistant');
     } catch (err: any) {
       logger.error('Failed to review code via AI', { error: err.message });
-      throw new Error('AI Code Review service temporarily unavailable.');
+      rethrowAi(err, 'AI coding assistant');
     }
   }
 
@@ -333,34 +289,10 @@ Return a valid JSON object:
 
     try {
       const response = await AIService.generate([{ role: 'user', content: prompt }], 'student_learning_agent');
-      return this.parseJSON<CodeHintResult>(response.text, {
-        level: params.level,
-        hint: 'Think about whether maintaining a running state or using a hash map can avoid redundant iterations.',
-        has_more: params.level < 3,
-        total_hints: 3,
-      });
+      return parseModelJson<CodeHintResult>(response, 'AI coding assistant');
     } catch (err: any) {
       logger.error('Failed to generate hint via AI', { error: err.message });
-      return {
-        level: params.level,
-        hint: 'Consider breaking down the problem into smaller subproblems or checking edge cases.',
-        has_more: false,
-        total_hints: 3,
-      };
-    }
-  }
-
-  private static parseJSON<T>(rawText: string, fallback: T): T {
-    try {
-      let cleaned = rawText.trim();
-      if (cleaned.startsWith('```json')) {
-        cleaned = cleaned.replace(/^```json\s*/i, '').replace(/```\s*$/, '');
-      } else if (cleaned.startsWith('```')) {
-        cleaned = cleaned.replace(/^```\s*/i, '').replace(/```\s*$/, '');
-      }
-      return JSON.parse(cleaned) as T;
-    } catch {
-      return fallback;
+      rethrowAi(err, 'AI coding assistant');
     }
   }
 }

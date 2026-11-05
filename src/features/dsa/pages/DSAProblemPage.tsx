@@ -4,7 +4,7 @@ import { dsaApi } from '../api/dsaApi';
 import { CodingLanguage } from '../../coding/types/coding';
 import { DSAHints } from '../components/DSAHints';
 import { DSAAITutor } from '../components/DSAAITutor';
-import Editor from '@monaco-editor/react';
+import { ResilientCodeEditor as Editor } from '../../../components/code/ResilientCodeEditor';
 import {
   ArrowLeft,
   Play,

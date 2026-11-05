@@ -1,6 +1,13 @@
 // server/services/sqlLabSandboxService.ts
-// Production-grade, fully isolated in-memory relational SQL Sandbox Engine for B.Tech students
-// Supports Visual Schema Builder, Table Designer, Foreign Keys, Row CRUD, and direct SQL execution.
+// SQL Lab sandbox backed by real SQLite (sql.js, WebAssembly) running in a worker thread.
+//
+// Each student owns separate SQLite databases ("schemas"). Nothing is shared between students and
+// nothing touches the platform's own data: the databases are in-memory images that only this
+// service reads and writes, persisted through the JSON snapshot as base64.
+//
+// Limits: 3 s per execution (the worker is restarted if exceeded), 500 returned rows,
+// 10 MB per database, 10 databases per student, 20 000 characters per query, 50 statements per run.
+// ATTACH, DETACH, VACUUM, REINDEX and PRAGMA (except read-only introspection pragmas) are blocked.
 
 import {
   SQLTableDefinition,
@@ -11,1151 +18,664 @@ import {
   TableDataFilter,
   TableDataResponse,
 } from '../models/learningModulesTypes';
+import { sqlEngine, WorkerReply } from '../execution/sqlEngine';
 
-interface TableStorage {
-  definition: SQLTableDefinition;
-  rows: Record<string, any>[];
-  autoIncrementCounter: number;
+export const SQL_LAB_LIMITS = {
+  maxRows: 500,
+  maxDatabases: 10,
+  maxQueryChars: 20000,
+};
+
+const SEED_SQL: Record<string, string> = {
+  university_db: `
+CREATE TABLE _lab_meta (table_name TEXT PRIMARY KEY, description TEXT, created_at TEXT);
+CREATE TABLE departments (
+  dept_id VARCHAR(10) PRIMARY KEY,
+  dept_name VARCHAR(100) NOT NULL UNIQUE,
+  building VARCHAR(50) DEFAULT 'Main Block',
+  budget DECIMAL(12,2) NOT NULL DEFAULT 5000000.00
+);
+CREATE TABLE students (
+  student_id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name VARCHAR(100) NOT NULL,
+  email VARCHAR(150) NOT NULL UNIQUE,
+  branch VARCHAR(50) NOT NULL,
+  dept_id VARCHAR(10) REFERENCES departments(dept_id) ON UPDATE CASCADE ON DELETE RESTRICT,
+  semester INTEGER NOT NULL DEFAULT 5,
+  cgpa DECIMAL(3,2) NOT NULL DEFAULT 7.50
+);
+CREATE TABLE courses (
+  course_id VARCHAR(20) PRIMARY KEY,
+  course_name VARCHAR(150) NOT NULL,
+  dept_id VARCHAR(10) REFERENCES departments(dept_id) ON UPDATE CASCADE ON DELETE CASCADE,
+  credits INTEGER NOT NULL DEFAULT 3
+);
+CREATE TABLE enrollments (
+  enrollment_id INTEGER PRIMARY KEY AUTOINCREMENT,
+  student_id INTEGER REFERENCES students(student_id) ON UPDATE CASCADE ON DELETE CASCADE,
+  course_id VARCHAR(20) REFERENCES courses(course_id) ON UPDATE CASCADE ON DELETE CASCADE,
+  grade VARCHAR(5) DEFAULT 'A',
+  score INTEGER DEFAULT 85
+);
+INSERT INTO departments VALUES
+  ('CSE','Computer Science and Engineering','Turing Block',8500000.00),
+  ('ECE','Electronics and Communication','Maxwell Block',7200000.00),
+  ('IT','Information Technology','Shannon Block',6000000.00),
+  ('MECH','Mechanical Engineering','Newton Block',5500000.00);
+INSERT INTO students (student_id,name,email,branch,dept_id,semester,cgpa) VALUES
+  (1,'Aarav Sharma','aarav.sharma@btech.edu','Computer Science','CSE',6,9.45),
+  (2,'Diya Patel','diya.patel@btech.edu','Computer Science','CSE',6,9.12),
+  (3,'Rohan Verma','rohan.verma@btech.edu','Electronics','ECE',4,8.40),
+  (4,'Ananya Iyer','ananya.iyer@btech.edu','Information Tech','IT',6,8.85),
+  (5,'Vikram Singh','vikram.singh@btech.edu','Mechanical','MECH',8,7.92);
+INSERT INTO courses VALUES
+  ('CS301','Database Management Systems','CSE',4),
+  ('CS302','Design and Analysis of Algorithms','CSE',4),
+  ('EC204','Signals and Systems','ECE',3),
+  ('IT305','Cloud Computing Technologies','IT',3);
+INSERT INTO enrollments (enrollment_id,student_id,course_id,grade,score) VALUES
+  (1,1,'CS301','A+',96),(2,2,'CS301','A',88),(3,3,'EC204','B+',79),(4,4,'IT305','A',91);
+INSERT INTO _lab_meta VALUES
+  ('departments','Academic departments and faculties',NULL),
+  ('students','Undergraduate engineering students (synthetic sample data)',NULL),
+  ('courses','Semester core and elective courses',NULL),
+  ('enrollments','Student course registrations and grades',NULL);`,
+  ecommerce_db: `
+CREATE TABLE _lab_meta (table_name TEXT PRIMARY KEY, description TEXT, created_at TEXT);
+CREATE TABLE products (
+  product_id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title VARCHAR(150) NOT NULL,
+  category VARCHAR(50) NOT NULL,
+  price DECIMAL(10,2) NOT NULL,
+  stock_quantity INTEGER NOT NULL DEFAULT 100
+);
+INSERT INTO products (product_id,title,category,price,stock_quantity) VALUES
+  (1,'Mechanical Keyboard RGB','Peripherals',4500.00,45),
+  (2,'Ultra-wide 27-inch Monitor','Monitors',18999.00,20),
+  (3,'Wireless Ergonomic Mouse','Peripherals',1850.00,80);
+INSERT INTO _lab_meta VALUES ('products','Inventory items and catalogs',NULL);`,
+};
+
+const META_SQL = 'CREATE TABLE IF NOT EXISTS _lab_meta (table_name TEXT PRIMARY KEY, description TEXT, created_at TEXT);';
+
+const qi = (name: string) => '"' + String(name).replace(/"/g, '""') + '"';
+const IDENT = /^[a-z_][a-z0-9_]*$/i;
+
+class SqlLabError extends Error {
+  statusCode: number;
+  constructor(message: string, statusCode = 400) {
+    super(message);
+    this.statusCode = statusCode;
+  }
 }
 
 export class SqlLabSandboxService {
-  // studentId -> dbName -> tableName -> TableStorage
-  private static studentDatabases: Map<string, Map<string, Map<string, TableStorage>>> = new Map();
-  // studentId -> Query History
+  /** studentId -> dbName -> base64 SQLite image ('' = new empty database). Persisted. */
+  private static studentDbImages: Map<string, Map<string, string>> = new Map();
+  /** studentId -> query history (newest first, 50 max). Persisted. */
   private static queryHistories: Map<string, SQLQueryHistoryItem[]> = new Map();
+  /** studentId -> saved queries. Persisted. */
+  private static savedQueries: Map<string, Array<{ id: string; name: string; query: string; schema_name: string; created_at: string }>> = new Map();
+  private static seeding = new Map<string, Promise<void>>();
 
-  // -------------------------------------------------------------
-  // Initialization & Seeding
-  // -------------------------------------------------------------
-  public static ensureStudentSandbox(studentId: string): Map<string, Map<string, TableStorage>> {
-    if (!this.studentDatabases.has(studentId)) {
-      const studentDbs = new Map<string, Map<string, TableStorage>>();
-      
-      // 1. Seed university_db
-      const universityDb = new Map<string, TableStorage>();
-      
-      // departments table
-      const deptDef: SQLTableDefinition = {
-        name: 'departments',
-        schema_name: 'university_db',
-        description: 'Academic departments and faculties',
-        columns: [
-          { name: 'dept_id', type: 'VARCHAR', length_precision: '10', is_primary_key: true, is_nullable: false },
-          { name: 'dept_name', type: 'VARCHAR', length_precision: '100', is_nullable: false, is_unique: true },
-          { name: 'building', type: 'VARCHAR', length_precision: '50', is_nullable: true, default_value: 'Main Block' },
-          { name: 'budget', type: 'DECIMAL', length_precision: '12,2', is_nullable: false, default_value: '5000000.00' },
-        ],
-        sample_rows: [
-          { dept_id: 'CSE', dept_name: 'Computer Science and Engineering', building: 'Turing Block', budget: 8500000.00 },
-          { dept_id: 'ECE', dept_name: 'Electronics and Communication', building: 'Maxwell Block', budget: 7200000.00 },
-          { dept_id: 'IT', dept_name: 'Information Technology', building: 'Shannon Block', budget: 6000000.00 },
-          { dept_id: 'MECH', dept_name: 'Mechanical Engineering', building: 'Newton Block', budget: 5500000.00 },
-        ],
-      };
-      universityDb.set('departments', {
-        definition: deptDef,
-        rows: [...deptDef.sample_rows],
-        autoIncrementCounter: 1,
-      });
+  public static getSavedQueries(studentId: string) {
+    return this.savedQueries.get(studentId) || [];
+  }
 
-      // students table
-      const studentsDef: SQLTableDefinition = {
-        name: 'students',
-        schema_name: 'university_db',
-        description: 'Undergraduate engineering students',
-        columns: [
-          { name: 'student_id', type: 'INTEGER', is_primary_key: true, is_auto_increment: true, is_nullable: false },
-          { name: 'name', type: 'VARCHAR', length_precision: '100', is_nullable: false },
-          { name: 'email', type: 'VARCHAR', length_precision: '150', is_nullable: false, is_unique: true },
-          { name: 'branch', type: 'VARCHAR', length_precision: '50', is_nullable: false },
-          { name: 'dept_id', type: 'VARCHAR', length_precision: '10', is_foreign_key: true, references: 'departments(dept_id)', foreign_key: {
-            source_column: 'dept_id',
-            referenced_table: 'departments',
-            referenced_column: 'dept_id',
-            on_update: 'CASCADE',
-            on_delete: 'RESTRICT',
-          } },
-          { name: 'semester', type: 'INTEGER', is_nullable: false, default_value: '5' },
-          { name: 'cgpa', type: 'DECIMAL', length_precision: '3,2', is_nullable: false, default_value: '7.50' },
-        ],
-        foreign_keys: [
-          {
-            source_column: 'dept_id',
-            referenced_table: 'departments',
-            referenced_column: 'dept_id',
-            on_update: 'CASCADE',
-            on_delete: 'RESTRICT',
-          },
-        ],
-        sample_rows: [
-          { student_id: 1, name: 'Aarav Sharma', email: 'aarav.sharma@btech.edu', branch: 'Computer Science', dept_id: 'CSE', semester: 6, cgpa: 9.45 },
-          { student_id: 2, name: 'Diya Patel', email: 'diya.patel@btech.edu', branch: 'Computer Science', dept_id: 'CSE', semester: 6, cgpa: 9.12 },
-          { student_id: 3, name: 'Rohan Verma', email: 'rohan.verma@btech.edu', branch: 'Electronics', dept_id: 'ECE', semester: 4, cgpa: 8.40 },
-          { student_id: 4, name: 'Ananya Iyer', email: 'ananya.iyer@btech.edu', branch: 'Information Tech', dept_id: 'IT', semester: 6, cgpa: 8.85 },
-          { student_id: 5, name: 'Vikram Singh', email: 'vikram.singh@btech.edu', branch: 'Mechanical', dept_id: 'MECH', semester: 8, cgpa: 7.92 },
-        ],
-      };
-      universityDb.set('students', {
-        definition: studentsDef,
-        rows: [...studentsDef.sample_rows],
-        autoIncrementCounter: 6,
-      });
+  public static saveQuery(studentId: string, input: { name?: string; query?: string; schema_name?: string }) {
+    const name = String(input?.name || '').trim();
+    const query = String(input?.query || '').trim();
+    if (!name) throw new SqlLabError('Give the query a name');
+    if (name.length > 100) throw new SqlLabError('Name must be at most 100 characters');
+    if (!query) throw new SqlLabError('Query cannot be empty');
+    if (query.length > SQL_LAB_LIMITS.maxQueryChars) throw new SqlLabError('Query is too long');
+    const list = this.savedQueries.get(studentId) || [];
+    if (list.length >= 100) throw new SqlLabError('You can save at most 100 queries');
+    const item = {
+      id: `sq_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      name,
+      query,
+      schema_name: String(input?.schema_name || 'university_db'),
+      created_at: new Date().toISOString(),
+    };
+    this.savedQueries.set(studentId, [item, ...list]);
+    return item;
+  }
 
-      // courses table
-      const coursesDef: SQLTableDefinition = {
-        name: 'courses',
-        schema_name: 'university_db',
-        description: 'Semester core and elective courses',
-        columns: [
-          { name: 'course_id', type: 'VARCHAR', length_precision: '20', is_primary_key: true, is_nullable: false },
-          { name: 'course_name', type: 'VARCHAR', length_precision: '150', is_nullable: false },
-          { name: 'dept_id', type: 'VARCHAR', length_precision: '10', is_foreign_key: true, references: 'departments(dept_id)', foreign_key: {
-            source_column: 'dept_id',
-            referenced_table: 'departments',
-            referenced_column: 'dept_id',
-            on_update: 'CASCADE',
-            on_delete: 'CASCADE',
-          } },
-          { name: 'credits', type: 'INTEGER', is_nullable: false, default_value: '3' },
-        ],
-        sample_rows: [
-          { course_id: 'CS301', course_name: 'Database Management Systems', dept_id: 'CSE', credits: 4 },
-          { course_id: 'CS302', course_name: 'Design and Analysis of Algorithms', dept_id: 'CSE', credits: 4 },
-          { course_id: 'EC204', course_name: 'Signals and Systems', dept_id: 'ECE', credits: 3 },
-          { course_id: 'IT305', course_name: 'Cloud Computing Technologies', dept_id: 'IT', credits: 3 },
-        ],
-      };
-      universityDb.set('courses', {
-        definition: coursesDef,
-        rows: [...coursesDef.sample_rows],
-        autoIncrementCounter: 1,
-      });
+  public static deleteSavedQuery(studentId: string, id: string) {
+    const list = this.savedQueries.get(studentId) || [];
+    if (!list.some((q) => q.id === id)) throw new SqlLabError('Saved query not found', 404);
+    this.savedQueries.set(studentId, list.filter((q) => q.id !== id));
+    return { success: true };
+  }
 
-      // enrollments table
-      const enrollDef: SQLTableDefinition = {
-        name: 'enrollments',
-        schema_name: 'university_db',
-        description: 'Student course registrations and grades',
-        columns: [
-          { name: 'enrollment_id', type: 'INTEGER', is_primary_key: true, is_auto_increment: true, is_nullable: false },
-          { name: 'student_id', type: 'INTEGER', is_foreign_key: true, references: 'students(student_id)', foreign_key: {
-            source_column: 'student_id',
-            referenced_table: 'students',
-            referenced_column: 'student_id',
-            on_update: 'CASCADE',
-            on_delete: 'CASCADE',
-          } },
-          { name: 'course_id', type: 'VARCHAR', length_precision: '20', is_foreign_key: true, references: 'courses(course_id)', foreign_key: {
-            source_column: 'course_id',
-            referenced_table: 'courses',
-            referenced_column: 'course_id',
-            on_update: 'CASCADE',
-            on_delete: 'CASCADE',
-          } },
-          { name: 'grade', type: 'VARCHAR', length_precision: '5', is_nullable: true, default_value: 'A' },
-          { name: 'score', type: 'INTEGER', is_nullable: true, default_value: '85' },
-        ],
-        foreign_keys: [
-          { source_column: 'student_id', referenced_table: 'students', referenced_column: 'student_id', on_update: 'CASCADE', on_delete: 'CASCADE' },
-          { source_column: 'course_id', referenced_table: 'courses', referenced_column: 'course_id', on_update: 'CASCADE', on_delete: 'CASCADE' },
-        ],
-        sample_rows: [
-          { enrollment_id: 1, student_id: 1, course_id: 'CS301', grade: 'A+', score: 96 },
-          { enrollment_id: 2, student_id: 2, course_id: 'CS301', grade: 'A', score: 88 },
-          { enrollment_id: 3, student_id: 3, course_id: 'EC204', grade: 'B+', score: 79 },
-          { enrollment_id: 4, student_id: 4, course_id: 'IT305', grade: 'A', score: 91 },
-        ],
-      };
-      universityDb.set('enrollments', {
-        definition: enrollDef,
-        rows: [...enrollDef.sample_rows],
-        autoIncrementCounter: 5,
-      });
+  private static key(studentId: string, dbName: string) {
+    return `${studentId}::${dbName}`;
+  }
 
-      studentDbs.set('university_db', universityDb);
-
-      // 2. Seed ecommerce_db
-      const ecommerceDb = new Map<string, TableStorage>();
-      const prodDef: SQLTableDefinition = {
-        name: 'products',
-        schema_name: 'ecommerce_db',
-        description: 'Inventory items and catalogs',
-        columns: [
-          { name: 'product_id', type: 'INTEGER', is_primary_key: true, is_auto_increment: true, is_nullable: false },
-          { name: 'title', type: 'VARCHAR', length_precision: '150', is_nullable: false },
-          { name: 'category', type: 'VARCHAR', length_precision: '50', is_nullable: false },
-          { name: 'price', type: 'DECIMAL', length_precision: '10,2', is_nullable: false },
-          { name: 'stock_quantity', type: 'INTEGER', is_nullable: false, default_value: '100' },
-        ],
-        sample_rows: [
-          { product_id: 1, title: 'Mechanical Keyboard RGB', category: 'Peripherals', price: 4500.00, stock_quantity: 45 },
-          { product_id: 2, title: 'Ultra-wide 27-inch Monitor', category: 'Monitors', price: 18999.00, stock_quantity: 20 },
-          { product_id: 3, title: 'Wireless Ergonomic Mouse', category: 'Peripherals', price: 1850.00, stock_quantity: 80 },
-        ],
-      };
-      ecommerceDb.set('products', {
-        definition: prodDef,
-        rows: [...prodDef.sample_rows],
-        autoIncrementCounter: 4,
-      });
-      studentDbs.set('ecommerce_db', ecommerceDb);
-
-      this.studentDatabases.set(studentId, studentDbs);
+  private static images(studentId: string): Map<string, string> {
+    let m = this.studentDbImages.get(studentId);
+    if (!m) {
+      m = new Map();
+      this.studentDbImages.set(studentId, m);
     }
-    return this.studentDatabases.get(studentId)!;
+    return m;
+  }
+
+  /** Creates the two sample databases the first time a student opens the lab. */
+  public static async ensureStudentSandbox(studentId: string): Promise<Map<string, string>> {
+    if (this.studentDbImages.has(studentId)) return this.studentDbImages.get(studentId)!;
+    let pending = this.seeding.get(studentId);
+    if (!pending) {
+      pending = (async () => {
+        const imgs = new Map<string, string>();
+        for (const [name, sql] of Object.entries(SEED_SQL)) {
+          const reply = await sqlEngine.request(this.key(studentId, name), '', { op: 'run', sql, persist: true }, 10000);
+          if (!reply.ok) throw new SqlLabError(`Could not create sample database '${name}': ${reply.error}`, 500);
+          imgs.set(name, reply.image);
+        }
+        this.studentDbImages.set(studentId, imgs);
+      })().finally(() => this.seeding.delete(studentId));
+      this.seeding.set(studentId, pending);
+    }
+    await pending;
+    return this.studentDbImages.get(studentId)!;
+  }
+
+  private static async requireDb(studentId: string, dbName: string): Promise<string> {
+    const dbs = await this.ensureStudentSandbox(studentId);
+    if (!dbs.has(dbName)) throw new SqlLabError(`Database '${dbName}' does not exist in your sandbox`, 404);
+    return dbs.get(dbName)!;
+  }
+
+  /** Runs SQL against one student database and stores the new image when asked. */
+  private static async exec(
+    studentId: string,
+    dbName: string,
+    sql: string,
+    opts: { params?: any[]; student?: boolean; persist?: boolean; maxRows?: number } = {}
+  ): Promise<WorkerReply> {
+    const image = await this.requireDb(studentId, dbName);
+    const reply = await sqlEngine.request(this.key(studentId, dbName), image, {
+      op: 'run',
+      sql,
+      params: opts.params,
+      student: !!opts.student,
+      persist: opts.persist !== false,
+      maxRows: opts.maxRows || SQL_LAB_LIMITS.maxRows,
+    });
+    if (typeof reply.image === 'string') this.images(studentId).set(dbName, reply.image);
+    return reply;
+  }
+
+  private static async must(studentId: string, dbName: string, sql: string, params?: any[], persist = true): Promise<WorkerReply> {
+    const r = await this.exec(studentId, dbName, sql, { params, persist });
+    if (!r.ok) throw new SqlLabError(this.explainError(r.error || 'SQL error'));
+    return r;
   }
 
   // -------------------------------------------------------------
-  // Workspace / Schema Operations
+  // Workspaces / schemas
   // -------------------------------------------------------------
-  public static getWorkspaces(studentId: string): Array<{ name: string; table_count: number }> {
-    const dbs = this.ensureStudentSandbox(studentId);
-    const result: Array<{ name: string; table_count: number }> = [];
-    for (const [name, tables] of dbs.entries()) {
-      result.push({
-        name,
-        table_count: tables.size,
-      });
-    }
-    return result;
+  public static async getWorkspaces(studentId: string): Promise<Array<{ name: string; table_count: number }>> {
+    const schemas = await this.getSchemas(studentId);
+    return Object.entries(schemas).map(([name, tables]) => ({ name, table_count: tables.length }));
   }
 
-  public static createSchema(studentId: string, schemaName: string): { success: boolean; message: string } {
-    const trimmed = schemaName.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_');
-    if (!trimmed) {
-      throw new Error('Schema name must contain valid alphanumeric characters');
-    }
-    const dbs = this.ensureStudentSandbox(studentId);
-    if (dbs.has(trimmed)) {
-      throw new Error(`Schema '${trimmed}' already exists in your sandbox`);
-    }
-    dbs.set(trimmed, new Map<string, TableStorage>());
+  public static async createSchema(studentId: string, schemaName: string): Promise<{ success: boolean; message: string }> {
+    const trimmed = (schemaName || '').trim().toLowerCase().replace(/[^a-z0-9_]/g, '_');
+    if (!trimmed || !/[a-z0-9]/.test(trimmed)) throw new SqlLabError('Schema name must contain letters or digits');
+    if (trimmed.length > 40) throw new SqlLabError('Schema name must be at most 40 characters');
+    const dbs = await this.ensureStudentSandbox(studentId);
+    if (dbs.has(trimmed)) throw new SqlLabError(`Schema '${trimmed}' already exists in your sandbox`, 409);
+    if (dbs.size >= SQL_LAB_LIMITS.maxDatabases) throw new SqlLabError(`You can have at most ${SQL_LAB_LIMITS.maxDatabases} databases.`);
+    dbs.set(trimmed, '');
+    await this.must(studentId, trimmed, META_SQL);
     return { success: true, message: `Schema '${trimmed}' created successfully.` };
   }
 
-  public static getSchemas(studentId: string): Record<string, SQLTableDefinition[]> {
-    const dbs = this.ensureStudentSandbox(studentId);
+  public static async deleteSchema(studentId: string, schemaName: string): Promise<{ success: boolean; message: string }> {
+    const dbs = await this.ensureStudentSandbox(studentId);
+    if (!dbs.has(schemaName)) throw new SqlLabError(`Database '${schemaName}' does not exist in your sandbox`, 404);
+    dbs.delete(schemaName);
+    sqlEngine.forget(this.key(studentId, schemaName));
+    return { success: true, message: `Database '${schemaName}' deleted.` };
+  }
+
+  public static async getSchemas(studentId: string): Promise<Record<string, SQLTableDefinition[]>> {
+    const dbs = await this.ensureStudentSandbox(studentId);
     const result: Record<string, SQLTableDefinition[]> = {};
-    for (const [dbName, tables] of dbs.entries()) {
-      result[dbName] = Array.from(tables.values()).map((t) => t.definition);
-    }
+    for (const name of dbs.keys()) result[name] = await this.getSchemaTables(studentId, name);
     return result;
   }
 
-  public static getSchemaTables(studentId: string, dbName: string): SQLTableDefinition[] {
-    const dbs = this.ensureStudentSandbox(studentId);
-    const targetDb = dbs.get(dbName);
-    if (!targetDb) {
-      return [];
-    }
-    return Array.from(targetDb.values()).map((t) => t.definition);
+  public static async getSchemaTables(studentId: string, dbName: string): Promise<SQLTableDefinition[]> {
+    const dbs = await this.ensureStudentSandbox(studentId);
+    if (!dbs.has(dbName)) return [];
+    const reply = await sqlEngine.request(this.key(studentId, dbName), dbs.get(dbName), { op: 'introspect' });
+    if (!reply.ok) throw new SqlLabError(reply.error || 'Could not read the schema', 500);
+    return (reply.tables as any[]).map((t) => this.toDefinition(dbName, t));
+  }
+
+  /** Converts SQLite catalog information into the shape the SQL Lab UI uses. */
+  private static toDefinition(dbName: string, t: any): SQLTableDefinition {
+    const fks: SQLForeignKeyConstraint[] = (t.fks || []).map((f: any) => ({
+      source_column: f.from,
+      referenced_table: f.table,
+      referenced_column: f.to || '',
+      on_update: f.on_update,
+      on_delete: f.on_delete,
+    }));
+    const uniqueSingle = new Set<string>(
+      (t.indexes || []).filter((i: any) => i.is_unique && i.origin === 'u' && i.columns.length === 1).map((i: any) => i.columns[0])
+    );
+    const pkCols = (t.info || []).filter((c: any) => c.pk > 0);
+    const autoinc = /AUTOINCREMENT/i.test(t.sql || '');
+    const columns: SQLTableColumn[] = (t.info || []).map((c: any) => {
+      const m = String(c.type || '').match(/^([A-Za-z ]+?)\s*(?:\(([^)]*)\))?$/);
+      const fk = fks.find((f) => f.source_column === c.name);
+      let dflt = c.dflt_value;
+      if (typeof dflt === 'string' && /^'.*'$/.test(dflt)) dflt = dflt.slice(1, -1).replace(/''/g, "'");
+      return {
+        name: c.name,
+        type: (m ? m[1] : c.type || 'TEXT').toUpperCase().trim() || 'TEXT',
+        length_precision: m && m[2] ? m[2].replace(/\s+/g, '') : undefined,
+        is_nullable: !c.notnull && !(c.pk > 0),
+        is_primary_key: c.pk > 0,
+        is_unique: uniqueSingle.has(c.name),
+        // An INTEGER PRIMARY KEY is SQLite's rowid alias and is assigned automatically.
+        is_auto_increment: c.pk > 0 && pkCols.length === 1 && /^INTEGER$/i.test(c.type || '') ? true : autoinc && c.pk > 0,
+        default_value: dflt === null || dflt === undefined ? undefined : String(dflt),
+        is_foreign_key: !!fk,
+        references: fk ? `${fk.referenced_table}(${fk.referenced_column})` : undefined,
+        foreign_key: fk,
+      };
+    });
+    return {
+      name: t.name,
+      schema_name: dbName,
+      description: t.meta?.description || undefined,
+      columns,
+      foreign_keys: fks,
+      indexes: (t.indexes || [])
+        .filter((i: any) => i.origin === 'c')
+        .map((i: any) => ({ name: i.name, columns: i.columns, is_unique: i.is_unique })),
+      sample_rows: t.sample || [],
+      row_count: t.count,
+      create_sql: t.sql,
+      created_at: t.meta?.created_at || undefined,
+    } as SQLTableDefinition;
   }
 
   // -------------------------------------------------------------
-  // Visual Table Designer & SQL Compilation
+  // Visual table designer
   // -------------------------------------------------------------
+  /** SQLite DDL for a designer definition. Types are kept as written (SQLite accepts them). */
   public static generateCreateTableSql(tableDef: SQLTableDefinition): string {
-    const tableName = tableDef.name.trim();
-    const colsSql = tableDef.columns.map((col) => {
-      let line = `  "${col.name}" ${col.type}`;
-      if (col.length_precision) {
-        line += `(${col.length_precision})`;
+    const tableName = String(tableDef?.name || '').trim().toLowerCase();
+    const cols = tableDef?.columns || [];
+    const pkCount = cols.filter((c) => c.is_primary_key).length;
+    const lines = cols.map((col) => {
+      const type = String(col.type || 'TEXT').toUpperCase().replace(/[^A-Z ]/g, '');
+      const lp = col.length_precision ? String(col.length_precision).replace(/[^0-9,]/g, '') : '';
+      const auto = col.is_auto_increment && col.is_primary_key && pkCount === 1;
+      // SQLite only auto-increments an "INTEGER PRIMARY KEY" column.
+      let line = `  ${qi(col.name.trim().toLowerCase())} ${auto ? 'INTEGER' : type}${!auto && lp ? `(${lp})` : ''}`;
+      if (col.is_primary_key && pkCount === 1) line += auto ? ' PRIMARY KEY AUTOINCREMENT' : ' PRIMARY KEY';
+      if (!col.is_nullable && !col.is_primary_key) line += ' NOT NULL';
+      if (col.is_unique && !col.is_primary_key) line += ' UNIQUE';
+      if (col.default_value !== undefined && col.default_value !== null && col.default_value !== '') {
+        const v = String(col.default_value);
+        line += ` DEFAULT ${/^-?\d+(\.\d+)?$/.test(v) ? v : `'${v.replace(/'/g, "''")}'`}`;
       }
-      if (col.is_primary_key) {
-        line += ' PRIMARY KEY';
-      }
-      if (col.is_auto_increment) {
-        line += ' AUTO_INCREMENT';
-      }
-      if (!col.is_nullable && !col.is_primary_key) {
-        line += ' NOT NULL';
-      }
-      if (col.is_unique && !col.is_primary_key) {
-        line += ' UNIQUE';
-      }
-      if (col.default_value !== undefined && col.default_value !== '') {
-        const val = col.default_value;
-        const isNum = !isNaN(Number(val));
-        line += ` DEFAULT ${isNum ? val : `'${val}'`}`;
-      }
-      if (col.check_constraint) {
-        line += ` CHECK (${col.check_constraint})`;
-      }
+      if (col.check_constraint) line += ` CHECK (${col.check_constraint})`;
       return line;
     });
-
-    // Foreign Keys
-    const fkConstraints = tableDef.foreign_keys || [];
-    for (const fk of fkConstraints) {
-      let fkLine = `  CONSTRAINT fk_${tableName}_${fk.source_column} FOREIGN KEY ("${fk.source_column}") REFERENCES "${fk.referenced_table}" ("${fk.referenced_column}")`;
-      if (fk.on_delete) {
-        fkLine += ` ON DELETE ${fk.on_delete}`;
-      }
-      if (fk.on_update) {
-        fkLine += ` ON UPDATE ${fk.on_update}`;
-      }
-      colsSql.push(fkLine);
+    if (pkCount > 1) {
+      lines.push(`  PRIMARY KEY (${cols.filter((c) => c.is_primary_key).map((c) => qi(c.name.trim().toLowerCase())).join(', ')})`);
     }
-
-    return `CREATE TABLE "${tableName}" (\n${colsSql.join(',\n')}\n);`;
+    const fks = [
+      ...(tableDef?.foreign_keys || []),
+      ...cols.filter((c) => c.foreign_key && !(tableDef?.foreign_keys || []).some((f) => f.source_column === c.name)).map((c) => ({ ...c.foreign_key!, source_column: c.name })),
+    ];
+    for (const fk of fks) {
+      let l = `  FOREIGN KEY (${qi(fk.source_column.toLowerCase())}) REFERENCES ${qi(fk.referenced_table.toLowerCase())} (${qi(fk.referenced_column.toLowerCase())})`;
+      if (fk.on_delete) l += ` ON DELETE ${fk.on_delete}`;
+      if (fk.on_update) l += ` ON UPDATE ${fk.on_update}`;
+      lines.push(l);
+    }
+    return `CREATE TABLE ${qi(tableName)} (\n${lines.join(',\n')}\n);`;
   }
 
-  public static createTable(
+  public static async createTable(
     studentId: string,
     dbName: string,
     tableDef: SQLTableDefinition
-  ): { success: boolean; generated_sql: string; table: SQLTableDefinition } {
-    const dbs = this.ensureStudentSandbox(studentId);
-    let targetDb = dbs.get(dbName);
-    if (!targetDb) {
-      targetDb = new Map<string, TableStorage>();
-      dbs.set(dbName, targetDb);
+  ): Promise<{ success: boolean; generated_sql: string; table: SQLTableDefinition }> {
+    const dbs = await this.ensureStudentSandbox(studentId);
+    if (!dbs.has(dbName)) await this.createSchema(studentId, dbName);
+    const tableName = String(tableDef?.name || '').trim().toLowerCase();
+    if (!tableName || !/^[a-z0-9_]+$/.test(tableName) || tableName.startsWith('sqlite_') || tableName === '_lab_meta') {
+      throw new SqlLabError('Table name must contain only lowercase letters, digits and underscores');
     }
-
-    const tableName = tableDef.name.trim().toLowerCase();
-    if (!tableName || !/^[a-z0-9_]+$/.test(tableName)) {
-      throw new Error('Table name must contain only lowercase alphanumeric characters and underscores');
-    }
-
-    if (targetDb.has(tableName)) {
-      throw new Error(`Table '${tableName}' already exists in database '${dbName}'`);
-    }
-
-    if (!tableDef.columns || tableDef.columns.length === 0) {
-      throw new Error('Table must have at least one column');
-    }
-
-    // Check duplicate column names
-    const colNames = new Set<string>();
+    if (!tableDef.columns || tableDef.columns.length === 0) throw new SqlLabError('Table must have at least one column');
+    const names = new Set<string>();
     for (const c of tableDef.columns) {
-      const cName = c.name.trim().toLowerCase();
-      if (!cName) {
-        throw new Error('Column name cannot be empty');
-      }
-      if (colNames.has(cName)) {
-        throw new Error(`Duplicate column name '${cName}' in table definition`);
-      }
-      colNames.add(cName);
+      const n = String(c.name || '').trim().toLowerCase();
+      if (!n) throw new SqlLabError('Column name cannot be empty');
+      if (!IDENT.test(n)) throw new SqlLabError(`Column name '${c.name}' must start with a letter and use only letters, digits and underscores`);
+      if (names.has(n)) throw new SqlLabError(`Duplicate column name '${n}' in table definition`);
+      names.add(n);
     }
-
-    // Validate foreign keys
-    if (tableDef.foreign_keys && tableDef.foreign_keys.length > 0) {
-      for (const fk of tableDef.foreign_keys) {
-        if (!colNames.has(fk.source_column.toLowerCase())) {
-          throw new Error(`Foreign key source column '${fk.source_column}' does not exist in table definition`);
-        }
-        const refTableStorage = targetDb.get(fk.referenced_table.toLowerCase());
-        if (!refTableStorage) {
-          throw new Error(`Referenced table '${fk.referenced_table}' does not exist in schema '${dbName}'`);
-        }
-        const refCol = refTableStorage.definition.columns.find(
-          (c) => c.name.toLowerCase() === fk.referenced_column.toLowerCase()
-        );
-        if (!refCol) {
-          throw new Error(
-            `Referenced column '${fk.referenced_column}' does not exist in table '${fk.referenced_table}'`
-          );
-        }
+    for (const fk of tableDef.foreign_keys || []) {
+      if (!names.has(String(fk.source_column).toLowerCase())) {
+        throw new SqlLabError(`Foreign key source column '${fk.source_column}' does not exist in table definition`);
       }
     }
-
+    const existing = await this.getSchemaTables(studentId, dbName);
+    if (existing.some((t) => t.name === tableName)) throw new SqlLabError(`Table '${tableName}' already exists in database '${dbName}'`, 409);
+    for (const fk of tableDef.foreign_keys || []) {
+      const ref = existing.find((t) => t.name === fk.referenced_table.toLowerCase());
+      if (!ref) throw new SqlLabError(`Referenced table '${fk.referenced_table}' does not exist in schema '${dbName}'`);
+      if (!ref.columns.some((c) => c.name === fk.referenced_column.toLowerCase())) {
+        throw new SqlLabError(`Referenced column '${fk.referenced_column}' does not exist in table '${fk.referenced_table}'`);
+      }
+    }
     const generatedSql = this.generateCreateTableSql(tableDef);
-
-    const newDef: SQLTableDefinition = {
-      ...tableDef,
-      name: tableName,
-      schema_name: dbName,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      sample_rows: [],
-    };
-
-    targetDb.set(tableName, {
-      definition: newDef,
-      rows: [],
-      autoIncrementCounter: 1,
-    });
-
-    // Append to query history
-    this.recordQueryHistory(studentId, dbName, generatedSql, true, 4, 0);
-
-    return {
-      success: true,
-      generated_sql: generatedSql,
-      table: newDef,
-    };
+    const t0 = Date.now();
+    await this.must(
+      studentId,
+      dbName,
+      `${META_SQL}\n${generatedSql}\nINSERT OR REPLACE INTO _lab_meta VALUES (${this.lit(tableName)}, ${this.lit(tableDef.description || '')}, ${this.lit(new Date().toISOString())});`
+    );
+    this.recordQueryHistory(studentId, dbName, generatedSql, true, Date.now() - t0, 0);
+    const table = (await this.getSchemaTables(studentId, dbName)).find((t) => t.name === tableName)!;
+    return { success: true, generated_sql: generatedSql, table };
   }
 
-  public static dropTable(studentId: string, dbName: string, tableName: string): { success: boolean; message: string } {
-    const dbs = this.ensureStudentSandbox(studentId);
-    const targetDb = dbs.get(dbName);
-    if (!targetDb || !targetDb.has(tableName)) {
-      throw new Error(`Table '${tableName}' does not exist in database '${dbName}'`);
-    }
+  private static lit(v: string): string {
+    return `'${String(v).replace(/'/g, "''")}'`;
+  }
 
-    // Check if any other table references this table via foreign key
-    for (const [otherName, otherStorage] of targetDb.entries()) {
-      if (otherName === tableName) continue;
-      const fks = otherStorage.definition.foreign_keys || [];
-      for (const fk of fks) {
-        if (fk.referenced_table.toLowerCase() === tableName.toLowerCase() && fk.on_delete === 'RESTRICT') {
-          throw new Error(
-            `Cannot drop table '${tableName}': referenced by foreign key in table '${otherName}' (RESTRICT rule)`
-          );
-        }
-      }
+  public static async dropTable(studentId: string, dbName: string, tableName: string): Promise<{ success: boolean; message: string }> {
+    const tables = await this.getSchemaTables(studentId, dbName);
+    if (!tables.some((t) => t.name === tableName)) throw new SqlLabError(`Table '${tableName}' does not exist in database '${dbName}'`, 404);
+    const sql = `DROP TABLE ${qi(tableName)};`;
+    const t0 = Date.now();
+    const r = await this.exec(studentId, dbName, `${sql} DELETE FROM _lab_meta WHERE table_name = ${this.lit(tableName)};`);
+    if (!r.ok) {
+      this.recordQueryHistory(studentId, dbName, sql, false, Date.now() - t0, 0, r.error);
+      throw new SqlLabError(`Cannot drop table '${tableName}': ${this.explainError(r.error || '')}`);
     }
-
-    targetDb.delete(tableName);
-    const sql = `DROP TABLE "${tableName}";`;
-    this.recordQueryHistory(studentId, dbName, sql, true, 2, 0);
+    this.recordQueryHistory(studentId, dbName, sql, true, Date.now() - t0, 0);
     return { success: true, message: `Table '${tableName}' dropped successfully.` };
   }
 
   // -------------------------------------------------------------
-  // Table Data Management (CRUD, Sorting, Pagination, Sample Data)
+  // Table data (pagination, search, sorting, row CRUD, sample data)
   // -------------------------------------------------------------
-  public static getTableData(
-    studentId: string,
-    dbName: string,
-    tableName: string,
-    filter: TableDataFilter = {}
-  ): TableDataResponse {
-    const dbs = this.ensureStudentSandbox(studentId);
-    const targetDb = dbs.get(dbName);
-    if (!targetDb || !targetDb.has(tableName)) {
-      throw new Error(`Table '${tableName}' not found in database '${dbName}'`);
-    }
+  private static async tableDef(studentId: string, dbName: string, tableName: string): Promise<SQLTableDefinition> {
+    const t = (await this.getSchemaTables(studentId, dbName)).find((x) => x.name === tableName);
+    if (!t) throw new SqlLabError(`Table '${tableName}' not found in database '${dbName}'`, 404);
+    return t;
+  }
 
-    const storage = targetDb.get(tableName)!;
-    let rows = [...storage.rows];
-
-    // Search filter
-    if (filter.search && filter.search.trim()) {
-      const q = filter.search.toLowerCase().trim();
-      rows = rows.filter((r) =>
-        Object.values(r).some((val) => String(val).toLowerCase().includes(q))
-      );
-    }
-
-    // Sorting
-    if (filter.sort_by) {
-      const col = filter.sort_by;
-      const dir = filter.sort_dir === 'DESC' ? -1 : 1;
-      rows.sort((a, b) => {
-        const valA = a[col];
-        const valB = b[col];
-        if (valA === valB) return 0;
-        if (valA === null || valA === undefined) return 1;
-        if (valB === null || valB === undefined) return -1;
-        return valA > valB ? dir : -dir;
-      });
-    }
-
-    const totalRows = rows.length;
+  public static async getTableData(studentId: string, dbName: string, tableName: string, filter: TableDataFilter = {}): Promise<TableDataResponse> {
+    const def = await this.tableDef(studentId, dbName, tableName);
     const limit = Math.max(1, Math.min(100, Number(filter.limit) || 20));
     const page = Math.max(1, Number(filter.page) || 1);
-    const totalPages = Math.ceil(totalRows / limit) || 1;
-    const startIndex = (page - 1) * limit;
-    const paginatedRows = rows.slice(startIndex, startIndex + limit);
-
+    const params: any[] = [];
+    let where = '';
+    if (filter.search && filter.search.trim()) {
+      const q = `%${filter.search.trim().toLowerCase()}%`;
+      where = ' WHERE ' + def.columns.map((c) => `LOWER(CAST(${qi(c.name)} AS TEXT)) LIKE ?`).join(' OR ');
+      def.columns.forEach(() => params.push(q));
+    }
+    const sortCol = filter.sort_by && def.columns.some((c) => c.name === filter.sort_by) ? filter.sort_by : null;
+    const order = sortCol ? ` ORDER BY ${qi(sortCol)} ${filter.sort_dir === 'DESC' ? 'DESC' : 'ASC'}` : ' ORDER BY rowid';
+    const countR = await this.must(studentId, dbName, `SELECT COUNT(*) AS n FROM ${qi(tableName)}${where}`, params, false);
+    const total = Number(countR.results[0]?.rows[0]?.n || 0);
+    const rowsR = await this.must(
+      studentId,
+      dbName,
+      `SELECT * FROM ${qi(tableName)}${where}${order} LIMIT ${limit} OFFSET ${(page - 1) * limit}`,
+      params,
+      false
+    );
     return {
       table_name: tableName,
-      columns: storage.definition.columns,
-      rows: paginatedRows,
-      total_rows: totalRows,
+      columns: def.columns,
+      rows: rowsR.results[0]?.rows || [],
+      total_rows: total,
       page,
       limit,
-      total_pages: totalPages,
+      total_pages: Math.max(1, Math.ceil(total / limit)),
     };
   }
 
-  public static insertRow(
+  private static coerce(col: SQLTableColumn, val: any): any {
+    if (val === undefined || val === '') return undefined;
+    if (val === null) return null;
+    const t = col.type.toUpperCase();
+    if (/INT/.test(t)) {
+      const n = Number(val);
+      if (!Number.isInteger(n)) throw new SqlLabError(`Invalid integer value '${val}' for column '${col.name}'`);
+      return n;
+    }
+    if (/DEC|NUM|REAL|FLOA|DOUB/.test(t)) {
+      const n = Number(val);
+      if (!Number.isFinite(n)) throw new SqlLabError(`Invalid numeric value '${val}' for column '${col.name}'`);
+      return n;
+    }
+    if (/BOOL/.test(t)) return val === true || val === 'true' || val === 1 || val === '1' ? 1 : 0;
+    return String(val);
+  }
+
+  public static async insertRow(
     studentId: string,
     dbName: string,
     tableName: string,
     rowData: Record<string, any>
-  ): { success: boolean; inserted_row: Record<string, any> } {
-    const dbs = this.ensureStudentSandbox(studentId);
-    const targetDb = dbs.get(dbName);
-    if (!targetDb || !targetDb.has(tableName)) {
-      throw new Error(`Table '${tableName}' not found in database '${dbName}'`);
+  ): Promise<{ success: boolean; inserted_row: Record<string, any> }> {
+    const def = await this.tableDef(studentId, dbName, tableName);
+    const cols: string[] = [];
+    const vals: any[] = [];
+    for (const c of def.columns) {
+      const v = this.coerce(c, rowData?.[c.name]);
+      if (v === undefined) continue; // let SQLite apply DEFAULT / AUTOINCREMENT / NOT NULL
+      cols.push(c.name);
+      vals.push(v);
     }
-
-    const storage = targetDb.get(tableName)!;
-    const def = storage.definition;
-    const newRow: Record<string, any> = {};
-
-    for (const col of def.columns) {
-      let val = rowData[col.name];
-
-      // Auto-increment primary key
-      if (col.is_auto_increment && col.is_primary_key && (val === undefined || val === null || val === '')) {
-        val = storage.autoIncrementCounter++;
-      } else if (val === undefined || val === null || val === '') {
-        if (col.default_value !== undefined && col.default_value !== '') {
-          val = isNaN(Number(col.default_value)) ? col.default_value : Number(col.default_value);
-        } else if (!col.is_nullable && !col.is_auto_increment) {
-          throw new Error(`Column '${col.name}' cannot be null (NOT NULL constraint)`);
-        } else {
-          val = null;
-        }
-      } else {
-        // Type conversion
-        if (['INTEGER', 'BIGINT'].includes(col.type)) {
-          const num = parseInt(val, 10);
-          if (isNaN(num)) throw new Error(`Invalid integer value '${val}' for column '${col.name}'`);
-          val = num;
-        } else if (['DECIMAL', 'FLOAT'].includes(col.type)) {
-          const num = parseFloat(val);
-          if (isNaN(num)) throw new Error(`Invalid numeric value '${val}' for column '${col.name}'`);
-          val = num;
-        } else if (col.type === 'BOOLEAN') {
-          val = Boolean(val === true || val === 'true' || val === 1 || val === '1');
-        }
-      }
-
-      // Check Primary Key Uniqueness
-      if (col.is_primary_key) {
-        const duplicate = storage.rows.some((r) => r[col.name] === val);
-        if (duplicate) {
-          throw new Error(`Duplicate entry '${val}' for PRIMARY KEY in column '${col.name}'`);
-        }
-      }
-
-      // Check Unique Constraint
-      if (col.is_unique && val !== null) {
-        const duplicate = storage.rows.some((r) => r[col.name] === val);
-        if (duplicate) {
-          throw new Error(`Duplicate entry '${val}' for UNIQUE constraint on column '${col.name}'`);
-        }
-      }
-
-      // Check Foreign Key Reference
-      if (col.foreign_key && val !== null) {
-        const fk = col.foreign_key;
-        const refTableStorage = targetDb.get(fk.referenced_table.toLowerCase());
-        if (refTableStorage) {
-          const refExists = refTableStorage.rows.some(
-            (r) => String(r[fk.referenced_column]) === String(val)
-          );
-          if (!refExists) {
-            throw new Error(
-              `Foreign key constraint failed: Value '${val}' for column '${col.name}' does not exist in referenced table '${fk.referenced_table}' (${fk.referenced_column})`
-            );
-          }
-        }
-      }
-
-      newRow[col.name] = val;
+    const sql = cols.length
+      ? `INSERT INTO ${qi(tableName)} (${cols.map(qi).join(', ')}) VALUES (${cols.map(() => '?').join(', ')}) RETURNING *`
+      : `INSERT INTO ${qi(tableName)} DEFAULT VALUES RETURNING *`;
+    const t0 = Date.now();
+    const r = await this.exec(studentId, dbName, sql, { params: vals });
+    const shown = `INSERT INTO ${qi(tableName)} (${cols.join(', ')}) VALUES (${vals.map((v) => (typeof v === 'string' ? this.lit(v) : v === null ? 'NULL' : v)).join(', ')});`;
+    if (!r.ok) {
+      this.recordQueryHistory(studentId, dbName, shown, false, Date.now() - t0, 0, r.error);
+      throw new SqlLabError(this.explainError(r.error || ''));
     }
-
-    storage.rows.push(newRow);
-    storage.definition.sample_rows = storage.rows.slice(0, 10);
-
-    const colsStr = Object.keys(newRow).join(', ');
-    const valsStr = Object.values(newRow)
-      .map((v) => (typeof v === 'string' ? `'${v}'` : v === null ? 'NULL' : v))
-      .join(', ');
-    this.recordQueryHistory(
-      studentId,
-      dbName,
-      `INSERT INTO "${tableName}" (${colsStr}) VALUES (${valsStr});`,
-      true,
-      3,
-      1
-    );
-
-    return { success: true, inserted_row: newRow };
+    this.recordQueryHistory(studentId, dbName, shown, true, Date.now() - t0, 1);
+    return { success: true, inserted_row: r.results[0]?.rows[0] || {} };
   }
 
-  public static updateRow(
+  public static async updateRow(
     studentId: string,
     dbName: string,
     tableName: string,
     primaryKeyVal: any,
     updatedFields: Record<string, any>
-  ): { success: boolean; updated_row: Record<string, any> } {
-    const dbs = this.ensureStudentSandbox(studentId);
-    const targetDb = dbs.get(dbName);
-    if (!targetDb || !targetDb.has(tableName)) {
-      throw new Error(`Table '${tableName}' not found in database '${dbName}'`);
+  ): Promise<{ success: boolean; updated_row: Record<string, any> }> {
+    const def = await this.tableDef(studentId, dbName, tableName);
+    const pk = def.columns.find((c) => c.is_primary_key);
+    if (!pk) throw new SqlLabError(`Table '${tableName}' does not have a primary key column`);
+    const sets: string[] = [];
+    const vals: any[] = [];
+    for (const c of def.columns) {
+      if (!updatedFields || !(c.name in updatedFields)) continue;
+      const raw = updatedFields[c.name];
+      const v = raw === '' ? null : this.coerce(c, raw);
+      sets.push(`${qi(c.name)} = ?`);
+      vals.push(v === undefined ? null : v);
     }
-
-    const storage = targetDb.get(tableName)!;
-    const pkCol = storage.definition.columns.find((c) => c.is_primary_key);
-    if (!pkCol) {
-      throw new Error(`Table '${tableName}' does not have a primary key column`);
+    if (!sets.length) throw new SqlLabError('No columns to update');
+    const t0 = Date.now();
+    const r = await this.exec(studentId, dbName, `UPDATE ${qi(tableName)} SET ${sets.join(', ')} WHERE ${qi(pk.name)} = ? RETURNING *`, {
+      params: [...vals, this.coerce(pk, primaryKeyVal) ?? primaryKeyVal],
+    });
+    const shown = `UPDATE ${qi(tableName)} SET ${sets.length} column(s) WHERE ${pk.name} = ${this.lit(String(primaryKeyVal))};`;
+    if (!r.ok) {
+      this.recordQueryHistory(studentId, dbName, shown, false, Date.now() - t0, 0, r.error);
+      throw new SqlLabError(this.explainError(r.error || ''));
     }
-
-    const rowIndex = storage.rows.findIndex((r) => String(r[pkCol.name]) === String(primaryKeyVal));
-    if (rowIndex === -1) {
-      throw new Error(`Row with ${pkCol.name}='${primaryKeyVal}' not found`);
-    }
-
-    const existingRow = storage.rows[rowIndex];
-    const newRow = { ...existingRow, ...updatedFields };
-
-    // Validate foreign keys and unique constraints
-    for (const col of storage.definition.columns) {
-      if (updatedFields[col.name] !== undefined) {
-        const val = newRow[col.name];
-        if (col.is_unique && !col.is_primary_key && val !== null) {
-          const duplicate = storage.rows.some(
-            (r, idx) => idx !== rowIndex && r[col.name] === val
-          );
-          if (duplicate) {
-            throw new Error(`Duplicate entry '${val}' for UNIQUE constraint on column '${col.name}'`);
-          }
-        }
-        if (col.foreign_key && val !== null) {
-          const fk = col.foreign_key;
-          const refTableStorage = targetDb.get(fk.referenced_table.toLowerCase());
-          if (refTableStorage) {
-            const exists = refTableStorage.rows.some(
-              (r) => String(r[fk.referenced_column]) === String(val)
-            );
-            if (!exists) {
-              throw new Error(
-                `Foreign key constraint failed on update: '${val}' does not exist in '${fk.referenced_table}'`
-              );
-            }
-          }
-        }
-      }
-    }
-
-    storage.rows[rowIndex] = newRow;
-    storage.definition.sample_rows = storage.rows.slice(0, 10);
-
-    this.recordQueryHistory(
-      studentId,
-      dbName,
-      `UPDATE "${tableName}" SET ... WHERE "${pkCol.name}" = '${primaryKeyVal}';`,
-      true,
-      3,
-      1
-    );
-
-    return { success: true, updated_row: newRow };
+    const row = r.results[0]?.rows[0];
+    if (!row) throw new SqlLabError(`Row with ${pk.name}='${primaryKeyVal}' not found`, 404);
+    this.recordQueryHistory(studentId, dbName, shown, true, Date.now() - t0, 1);
+    return { success: true, updated_row: row };
   }
 
-  public static deleteRow(
-    studentId: string,
-    dbName: string,
-    tableName: string,
-    primaryKeyVal: any
-  ): { success: boolean; message: string } {
-    const dbs = this.ensureStudentSandbox(studentId);
-    const targetDb = dbs.get(dbName);
-    if (!targetDb || !targetDb.has(tableName)) {
-      throw new Error(`Table '${tableName}' not found in database '${dbName}'`);
+  public static async deleteRow(studentId: string, dbName: string, tableName: string, primaryKeyVal: any): Promise<{ success: boolean; message: string }> {
+    const def = await this.tableDef(studentId, dbName, tableName);
+    const pk = def.columns.find((c) => c.is_primary_key);
+    if (!pk) throw new SqlLabError(`Table '${tableName}' does not have a primary key column`);
+    const t0 = Date.now();
+    const shown = `DELETE FROM ${qi(tableName)} WHERE ${pk.name} = ${this.lit(String(primaryKeyVal))};`;
+    const r = await this.exec(studentId, dbName, `DELETE FROM ${qi(tableName)} WHERE ${qi(pk.name)} = ?`, {
+      params: [this.coerce(pk, primaryKeyVal) ?? primaryKeyVal],
+    });
+    if (!r.ok) {
+      this.recordQueryHistory(studentId, dbName, shown, false, Date.now() - t0, 0, r.error);
+      throw new SqlLabError(this.explainError(r.error || ''));
     }
-
-    const storage = targetDb.get(tableName)!;
-    const pkCol = storage.definition.columns.find((c) => c.is_primary_key);
-    if (!pkCol) {
-      throw new Error(`Table '${tableName}' does not have a primary key column`);
-    }
-
-    // Check FK references from other tables
-    for (const [otherName, otherStorage] of targetDb.entries()) {
-      if (otherName === tableName) continue;
-      for (const fk of otherStorage.definition.foreign_keys || []) {
-        if (fk.referenced_table.toLowerCase() === tableName.toLowerCase() && fk.referenced_column === pkCol.name) {
-          const matchingChildRows = otherStorage.rows.filter(
-            (r) => String(r[fk.source_column]) === String(primaryKeyVal)
-          );
-          if (matchingChildRows.length > 0) {
-            if (fk.on_delete === 'RESTRICT' || !fk.on_delete) {
-              throw new Error(
-                `Cannot delete row: foreign key constraint fails in table '${otherName}' (${matchingChildRows.length} dependent records exist)`
-              );
-            } else if (fk.on_delete === 'CASCADE') {
-              otherStorage.rows = otherStorage.rows.filter(
-                (r) => String(r[fk.source_column]) !== String(primaryKeyVal)
-              );
-            } else if (fk.on_delete === 'SET NULL') {
-              otherStorage.rows.forEach((r) => {
-                if (String(r[fk.source_column]) === String(primaryKeyVal)) {
-                  r[fk.source_column] = null;
-                }
-              });
-            }
-          }
-        }
-      }
-    }
-
-    const beforeCount = storage.rows.length;
-    storage.rows = storage.rows.filter((r) => String(r[pkCol.name]) !== String(primaryKeyVal));
-    const deletedCount = beforeCount - storage.rows.length;
-
-    storage.definition.sample_rows = storage.rows.slice(0, 10);
-    this.recordQueryHistory(
-      studentId,
-      dbName,
-      `DELETE FROM "${tableName}" WHERE "${pkCol.name}" = '${primaryKeyVal}';`,
-      true,
-      3,
-      deletedCount
-    );
-
-    return { success: true, message: `Row deleted successfully.` };
+    if (!r.changes) throw new SqlLabError(`Row with ${pk.name}='${primaryKeyVal}' not found`, 404);
+    this.recordQueryHistory(studentId, dbName, shown, true, Date.now() - t0, r.changes);
+    return { success: true, message: 'Row deleted successfully.' };
   }
 
-  public static generateSampleRows(
-    studentId: string,
-    dbName: string,
-    tableName: string,
-    count: number = 3
-  ): { success: boolean; generated_count: number } {
-    const dbs = this.ensureStudentSandbox(studentId);
-    const targetDb = dbs.get(dbName);
-    if (!targetDb || !targetDb.has(tableName)) {
-      throw new Error(`Table '${tableName}' not found in database '${dbName}'`);
-    }
-
-    const storage = targetDb.get(tableName)!;
-    const def = storage.definition;
-    const sampleNames = ['Siddharth Rao', 'Pooja Hegde', 'Kiran Kumar', 'Riya Sen', 'Rahul Dravid', 'Meera Nair'];
-    const sampleEmails = ['siddharth@btech.edu', 'pooja@btech.edu', 'kiran@btech.edu', 'riya@btech.edu'];
-
+  /** Inserts synthetic rows (clearly sample data) that satisfy the table's types and foreign keys. */
+  public static async generateSampleRows(studentId: string, dbName: string, tableName: string, count = 3): Promise<{ success: boolean; generated_count: number }> {
+    const def = await this.tableDef(studentId, dbName, tableName);
+    const n = Math.max(1, Math.min(50, Number(count) || 3));
+    const names = ['Siddharth Rao', 'Pooja Hegde', 'Kiran Kumar', 'Riya Sen', 'Arjun Das', 'Meera Nair'];
     let added = 0;
-    for (let i = 0; i < count; i++) {
+    const errors: string[] = [];
+    for (let i = 0; i < n; i++) {
       const row: Record<string, any> = {};
       for (const col of def.columns) {
-        if (col.is_auto_increment) {
-          row[col.name] = storage.autoIncrementCounter++;
-        } else if (col.foreign_key) {
-          // Find referenced value
-          const refStorage = targetDb.get(col.foreign_key.referenced_table.toLowerCase());
-          if (refStorage && refStorage.rows.length > 0) {
-            const randomParent = refStorage.rows[Math.floor(Math.random() * refStorage.rows.length)];
-            row[col.name] = randomParent[col.foreign_key.referenced_column];
-          } else {
-            row[col.name] = null;
-          }
-        } else if (col.type === 'INTEGER' || col.type === 'BIGINT') {
-          row[col.name] = Math.floor(Math.random() * 50) + 1;
-        } else if (col.type === 'DECIMAL' || col.type === 'FLOAT') {
-          row[col.name] = parseFloat((Math.random() * 5 + 5).toFixed(2));
-        } else if (col.type === 'BOOLEAN') {
-          row[col.name] = Math.random() > 0.5;
-        } else if (col.type === 'DATE') {
-          row[col.name] = new Date().toISOString().split('T')[0];
-        } else if (col.name.includes('email')) {
-          row[col.name] = `student_${Date.now()}_${i}@btech.edu`;
-        } else if (col.name.includes('name')) {
-          row[col.name] = sampleNames[(storage.rows.length + i) % sampleNames.length];
-        } else {
-          row[col.name] = `Sample ${col.name} ${storage.rows.length + i + 1}`;
+        const t = col.type.toUpperCase();
+        if (col.is_auto_increment) continue;
+        if (col.foreign_key) {
+          const ref = await this.exec(studentId, dbName, `SELECT ${qi(col.foreign_key.referenced_column)} AS v FROM ${qi(col.foreign_key.referenced_table)} ORDER BY RANDOM() LIMIT 1`, { params: [], persist: false });
+          row[col.name] = ref.ok ? ref.results[0]?.rows[0]?.v ?? null : null;
+        } else if (/INT/.test(t)) row[col.name] = col.is_primary_key || col.is_unique ? Date.now() % 1e6 + i * 7 + Math.floor(Math.random() * 1000) : Math.floor(Math.random() * 50) + 1;
+        else if (/DEC|NUM|REAL|FLOA|DOUB/.test(t)) row[col.name] = Number((Math.random() * 5 + 5).toFixed(2));
+        else if (/BOOL/.test(t)) row[col.name] = Math.random() > 0.5 ? 1 : 0;
+        else if (/DATE|TIME/.test(t)) row[col.name] = new Date(Date.now() - i * 864e5).toISOString().slice(0, 10);
+        else if (/email/i.test(col.name)) row[col.name] = `sample_${Date.now()}_${i}@example.test`;
+        else if (/name/i.test(col.name)) row[col.name] = names[(i + Math.floor(Math.random() * names.length)) % names.length];
+        else row[col.name] = `Sample ${col.name} ${Date.now() % 100000}-${i}`;
+        if (col.length_precision && typeof row[col.name] === 'string') {
+          const len = Number(String(col.length_precision).split(',')[0]);
+          if (len > 0) row[col.name] = row[col.name].slice(0, len);
         }
       }
-      storage.rows.push(row);
-      added++;
+      try {
+        await this.insertRow(studentId, dbName, tableName, row);
+        added++;
+      } catch (e: any) {
+        errors.push(e.message);
+      }
     }
-
-    storage.definition.sample_rows = storage.rows.slice(0, 10);
+    if (!added) throw new SqlLabError(`No sample rows could be inserted: ${errors[0] || 'unknown error'}`);
     return { success: true, generated_count: added };
   }
 
   // -------------------------------------------------------------
-  // Real In-Memory SQL Execution Engine (SELECT, JOIN, GROUP BY, WHERE, DDL)
+  // Student SQL execution
   // -------------------------------------------------------------
-  public static async executeSandboxedSql(
-    studentId: string,
-    dbName: string,
-    query: string
-  ): Promise<SQLExecutionResult> {
+  public static async executeSandboxedSql(studentId: string, dbName: string, query: string): Promise<SQLExecutionResult> {
     const startTime = Date.now();
-    const trimmed = query.trim();
-    if (!trimmed) {
-      throw new Error('SQL query cannot be empty');
-    }
-
-    const upper = trimmed.toUpperCase();
-
-    // Security Guard: Prevent malicious or injection attempts against host
-    if (
-      upper.includes('SHUTDOWN') ||
-      upper.includes('XP_CMDSHELL') ||
-      upper.includes('SYSTEM(') ||
-      upper.includes('EXEC(') ||
-      upper.includes('DROP DATABASE') ||
-      upper.includes('CREATE DATABASE')
-    ) {
-      return {
-        success: false,
-        columns: [],
-        rows: [],
-        row_count: 0,
-        execution_time_ms: 2,
-        error: 'Execution blocked: Destructive database administration commands are prohibited in student sandbox.',
-      };
-    }
-
-    const dbs = this.ensureStudentSandbox(studentId);
-    let targetDb = dbs.get(dbName);
-    if (!targetDb) {
-      targetDb = dbs.get('university_db') || dbs.values().next().value!;
-    }
-
-    try {
-      // 1. CREATE TABLE statement
-      if (upper.startsWith('CREATE TABLE')) {
-        const match = trimmed.match(/CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?["`]?([a-zA-Z0-9_]+)["`]?\s*\(([\s\S]+)\)/i);
-        if (!match) {
-          throw new Error('Syntax error in CREATE TABLE statement. Expected format: CREATE TABLE table_name (col1 TYPE, col2 TYPE);');
-        }
-        const parsedTableName = match[1].toLowerCase();
-        const body = match[2];
-        const lines = body.split(',').map((l) => l.trim()).filter(Boolean);
-
-        const columns: SQLTableColumn[] = [];
-        const foreignKeys: SQLForeignKeyConstraint[] = [];
-
-        for (const line of lines) {
-          if (line.toUpperCase().startsWith('FOREIGN KEY') || line.toUpperCase().startsWith('CONSTRAINT')) {
-            const fkMatch = line.match(/(?:CONSTRAINT\s+\w+\s+)?FOREIGN\s+KEY\s*\(["`]?(\w+)["`]?\)\s+REFERENCES\s+["`]?(\w+)["`]?\s*\(["`]?(\w+)["`]?\)/i);
-            if (fkMatch) {
-              foreignKeys.push({
-                source_column: fkMatch[1],
-                referenced_table: fkMatch[2],
-                referenced_column: fkMatch[3],
-                on_delete: 'RESTRICT',
-                on_update: 'CASCADE',
-              });
-            }
-            continue;
-          }
-
-          const colParts = line.split(/\s+/);
-          const colName = colParts[0].replace(/["`]/g, '');
-          const colTypeRaw = colParts[1] || 'VARCHAR';
-          const typeMatch = colTypeRaw.match(/^([a-zA-Z]+)(?:\(([^)]+)\))?/);
-          const type = (typeMatch ? typeMatch[1].toUpperCase() : 'VARCHAR') as any;
-          const length_precision = typeMatch ? typeMatch[2] : undefined;
-
-          const is_primary_key = line.toUpperCase().includes('PRIMARY KEY');
-          const is_nullable = !line.toUpperCase().includes('NOT NULL');
-          const is_unique = line.toUpperCase().includes('UNIQUE');
-          const is_auto_increment = line.toUpperCase().includes('AUTO_INCREMENT') || line.toUpperCase().includes('SERIAL');
-
-          columns.push({
-            name: colName,
-            type,
-            length_precision,
-            is_primary_key,
-            is_nullable,
-            is_unique,
-            is_auto_increment,
-          });
-        }
-
-        const createRes = this.createTable(studentId, dbName, {
-          name: parsedTableName,
-          columns,
-          foreign_keys: foreignKeys,
-          sample_rows: [],
-        });
-
-        return {
-          success: true,
-          columns: ['status', 'table_name'],
-          rows: [{ status: 'Table created successfully', table_name: parsedTableName }],
-          row_count: 1,
-          affected_rows: 1,
-          execution_time_ms: Date.now() - startTime + 5,
-          explanation: `Table "${parsedTableName}" successfully allocated in schema "${dbName}".`,
-        };
-      }
-
-      // 2. DROP TABLE statement
-      if (upper.startsWith('DROP TABLE')) {
-        const match = trimmed.match(/DROP\s+TABLE\s+(?:IF\s+EXISTS\s+)?["`]?([a-zA-Z0-9_]+)["`]?/i);
-        if (!match) throw new Error('Syntax error in DROP TABLE statement.');
-        const parsedTableName = match[1].toLowerCase();
-        this.dropTable(studentId, dbName, parsedTableName);
-        return {
-          success: true,
-          columns: ['status', 'table_name'],
-          rows: [{ status: 'Table dropped successfully', table_name: parsedTableName }],
-          row_count: 1,
-          affected_rows: 1,
-          execution_time_ms: Date.now() - startTime + 3,
-        };
-      }
-
-      // 3. INSERT INTO statement
-      if (upper.startsWith('INSERT INTO')) {
-        const match = trimmed.match(/INSERT\s+INTO\s+["`]?([a-zA-Z0-9_]+)["`]?\s*(?:\(([^)]+)\))?\s+VALUES\s*\(([^)]+)\)/i);
-        if (!match) {
-          throw new Error('Syntax error in INSERT statement. Expected format: INSERT INTO table_name (col1, col2) VALUES (val1, val2);');
-        }
-        const tableName = match[1].toLowerCase();
-        const cols = match[2] ? match[2].split(',').map((c) => c.trim().replace(/["`]/g, '')) : [];
-        const rawVals = match[3].split(',').map((v) => {
-          const t = v.trim();
-          if (t.startsWith("'") && t.endsWith("'")) return t.slice(1, -1);
-          if (t.toUpperCase() === 'NULL') return null;
-          if (!isNaN(Number(t))) return Number(t);
-          return t;
-        });
-
-        const rowData: Record<string, any> = {};
-        if (cols.length > 0) {
-          cols.forEach((col, idx) => {
-            rowData[col] = rawVals[idx];
-          });
-        } else {
-          const storage = targetDb.get(tableName);
-          if (storage) {
-            storage.definition.columns.forEach((col, idx) => {
-              rowData[col.name] = rawVals[idx];
-            });
-          }
-        }
-
-        const insertRes = this.insertRow(studentId, dbName, tableName, rowData);
-        return {
-          success: true,
-          columns: Object.keys(insertRes.inserted_row),
-          rows: [insertRes.inserted_row],
-          row_count: 1,
-          affected_rows: 1,
-          execution_time_ms: Date.now() - startTime + 4,
-          explanation: `1 row inserted into "${tableName}".`,
-        };
-      }
-
-      // 4. SELECT statement Execution Engine
-      if (upper.startsWith('SELECT')) {
-        // Extract FROM table
-        const fromMatch = trimmed.match(/FROM\s+["`]?([a-zA-Z0-9_]+)["`]?/i);
-        if (!fromMatch) {
-          // The sandbox evaluates SELECTs against tables only; say so instead of returning a
-          // canned row that looks like a query result.
-          throw new Error('This SQL sandbox runs SELECT queries against a table. Add a FROM clause (for example: SELECT * FROM students).');
-        }
-
-        const primaryTableName = fromMatch[1].toLowerCase();
-        const primaryStorage = targetDb.get(primaryTableName);
-        if (!primaryStorage) {
-          throw new Error(`Table '${primaryTableName}' does not exist in schema '${dbName}'`);
-        }
-
-        let workingRows: Record<string, any>[] = primaryStorage.rows.map((r) => ({ ...r }));
-        let explanationPlan = `Sequential Table Scan on "${primaryTableName}" (${workingRows.length} rows)`;
-
-        // JOIN evaluation
-        const joinMatch = trimmed.match(/(?:INNER\s+|LEFT\s+)?JOIN\s+["`]?([a-zA-Z0-9_]+)["`]?\s*(?:AS\s+)?([a-zA-Z0-9_]+)?\s+ON\s+([a-zA-Z0-9_.]+)\s*=\s*([a-zA-Z0-9_.]+)/i);
-        if (joinMatch) {
-          const joinedTableName = joinMatch[1].toLowerCase();
-          const leftKey = joinMatch[3].replace(/["`]/g, '');
-          const rightKey = joinMatch[4].replace(/["`]/g, '');
-          const joinedStorage = targetDb.get(joinedTableName);
-
-          if (joinedStorage) {
-            const joinedRows: Record<string, any>[] = [];
-            const isLeftJoin = upper.includes('LEFT JOIN');
-
-            const pCol = leftKey.includes('.') ? leftKey.split('.')[1] : leftKey;
-            const jCol = rightKey.includes('.') ? rightKey.split('.')[1] : rightKey;
-
-            for (const pRow of workingRows) {
-              const pVal = pRow[pCol] !== undefined ? pRow[pCol] : pRow[jCol];
-              const matches = joinedStorage.rows.filter((jRow) => {
-                const jVal = jRow[jCol] !== undefined ? jRow[jCol] : jRow[pCol];
-                return String(pVal) === String(jVal);
-              });
-
-              if (matches.length > 0) {
-                for (const m of matches) {
-                  joinedRows.push({ ...pRow, ...m });
-                }
-              } else if (isLeftJoin) {
-                const nulls: Record<string, any> = {};
-                joinedStorage.definition.columns.forEach((c) => {
-                  nulls[c.name] = null;
-                });
-                joinedRows.push({ ...pRow, ...nulls });
-              }
-            }
-            workingRows = joinedRows;
-            explanationPlan += ` -> Hash Join with "${joinedTableName}" on ${leftKey} = ${rightKey}`;
-          }
-        }
-
-        // WHERE clause evaluation
-        const whereMatch = trimmed.match(/WHERE\s+([\s\S]+?)(?:\s+GROUP\s+BY|\s+ORDER\s+BY|\s+LIMIT|;|$)/i);
-        if (whereMatch) {
-          const whereClause = whereMatch[1].trim();
-          workingRows = workingRows.filter((row) => {
-            // Support simple comparisons: col = 'val', col >= num, col LIKE '%val%'
-            const eqMatch = whereClause.match(/([a-zA-Z0-9_.]+)\s*(=|!=|>|<|>=|<=)\s*(['"]?[^'"]+['"]?)/);
-            if (eqMatch) {
-              const colName = eqMatch[1].replace(/["`]/g, '').split('.').pop()!;
-              const op = eqMatch[2];
-              const targetValRaw = eqMatch[3].trim().replace(/^['"]|['"]$/g, '');
-              const rowVal = row[colName];
-
-              if (op === '=') return String(rowVal).toLowerCase() === targetValRaw.toLowerCase();
-              if (op === '!=') return String(rowVal).toLowerCase() !== targetValRaw.toLowerCase();
-              const numRow = Number(rowVal);
-              const numTarget = Number(targetValRaw);
-              if (!isNaN(numRow) && !isNaN(numTarget)) {
-                if (op === '>') return numRow > numTarget;
-                if (op === '<') return numRow < numTarget;
-                if (op === '>=') return numRow >= numTarget;
-                if (op === '<=') return numRow <= numTarget;
-              }
-            }
-            return true;
-          });
-          explanationPlan += ` -> Filter applied: ${whereClause}`;
-        }
-
-        // GROUP BY evaluation
-        const groupByMatch = trimmed.match(/GROUP\s+BY\s+([a-zA-Z0-9_,.\s]+?)(?:\s+HAVING|\s+ORDER\s+BY|\s+LIMIT|;|$)/i);
-        if (groupByMatch) {
-          const groupCol = groupByMatch[1].trim().split(',')[0].trim().replace(/["`]/g, '').split('.').pop()!;
-          const groups = new Map<any, Record<string, any>[]>();
-          for (const row of workingRows) {
-            const key = row[groupCol];
-            if (!groups.has(key)) groups.set(key, []);
-            groups.get(key)!.push(row);
-          }
-
-          const aggregatedRows: Record<string, any>[] = [];
-          for (const [key, groupRows] of groups.entries()) {
-            const aggRow: Record<string, any> = { [groupCol]: key };
-            // Check for COUNT, AVG, SUM
-            if (upper.includes('COUNT(')) {
-              aggRow['total_students'] = groupRows.length;
-              aggRow['count'] = groupRows.length;
-            }
-            if (upper.includes('AVG(') || upper.includes('ROUND(AVG')) {
-              const cgpaSum = groupRows.reduce((acc, r) => acc + (Number(r.cgpa) || 0), 0);
-              const avg = parseFloat((cgpaSum / groupRows.length).toFixed(2));
-              aggRow['avg_cgpa'] = avg;
-              aggRow['avg'] = avg;
-            }
-            if (upper.includes('MAX(')) {
-              aggRow['top_cgpa'] = Math.max(...groupRows.map((r) => Number(r.cgpa) || 0));
-            }
-            aggregatedRows.push(aggRow);
-          }
-          workingRows = aggregatedRows;
-          explanationPlan += ` -> HashAggregate on ("${groupCol}")`;
-        }
-
-        // ORDER BY evaluation
-        const orderByMatch = trimmed.match(/ORDER\s+BY\s+([a-zA-Z0-9_.]+)(?:\s+(ASC|DESC))?/i);
-        if (orderByMatch) {
-          const orderCol = orderByMatch[1].replace(/["`]/g, '').split('.').pop()!;
-          const isDesc = orderByMatch[2] ? orderByMatch[2].toUpperCase() === 'DESC' : false;
-          workingRows.sort((a, b) => {
-            const vA = a[orderCol];
-            const vB = b[orderCol];
-            if (vA === vB) return 0;
-            if (vA === undefined) return 1;
-            if (vB === undefined) return -1;
-            return isDesc ? (vA < vB ? 1 : -1) : (vA > vB ? 1 : -1);
-          });
-          explanationPlan += ` -> Sort pass on ("${orderCol}" ${isDesc ? 'DESC' : 'ASC'})`;
-        }
-
-        // LIMIT evaluation
-        const limitMatch = trimmed.match(/LIMIT\s+(\d+)/i);
-        if (limitMatch) {
-          const lim = parseInt(limitMatch[1], 10);
-          workingRows = workingRows.slice(0, lim);
-        }
-
-        const resultColumns = workingRows.length > 0
-          ? Object.keys(workingRows[0])
-          : primaryStorage.definition.columns.map((c) => c.name);
-
-        const duration = Date.now() - startTime + 3;
-        this.recordQueryHistory(studentId, dbName, query, true, duration, workingRows.length);
-
-        return {
-          success: true,
-          columns: resultColumns,
-          rows: workingRows,
-          row_count: workingRows.length,
-          execution_time_ms: duration,
-          explanation: explanationPlan,
-          optimization_tips: [
-            'Ensure indexes on columns used in WHERE predicates and JOIN conditions.',
-            'For high-cardinality aggregations, consider composite indexing on (group_col, metric_col).',
-          ],
-          // No cost model exists in the sandbox, so no cost estimates are shown.
-          query_plan: [
-            { operation: 'Seq Scan', cost_estimate: 'n/a', details: `Scanned ${primaryTableName}` },
-            { operation: 'Execution', cost_estimate: 'n/a', details: explanationPlan },
-          ],
-        };
-      }
-
-      // Statements the sandbox does not implement must not report success without doing anything.
-      throw new Error(
-        'This SQL sandbox supports CREATE TABLE, DROP TABLE, INSERT INTO and SELECT. ' +
-          'Other statements (for example UPDATE or DELETE) are not supported here yet; use the table editor to change rows.'
-      );
-    } catch (err: any) {
+    const trimmed = (query || '').trim();
+    const fail = (error: string): SQLExecutionResult => {
       const duration = Date.now() - startTime;
-      this.recordQueryHistory(studentId, dbName, query, false, duration, 0, err.message);
-      return {
-        success: false,
-        columns: [],
-        rows: [],
-        row_count: 0,
-        execution_time_ms: duration,
-        error: err.message || 'SQL Execution Error in student sandbox',
-      };
+      this.recordQueryHistory(studentId, dbName, trimmed || '(empty)', false, duration, 0, error);
+      return { success: false, columns: [], rows: [], row_count: 0, execution_time_ms: duration, error };
+    };
+    if (!trimmed) return fail('SQL query cannot be empty');
+    if (trimmed.length > SQL_LAB_LIMITS.maxQueryChars) return fail(`Query is longer than ${SQL_LAB_LIMITS.maxQueryChars} characters.`);
+    if (/^\s*(CREATE|DROP)\s+DATABASE\b/i.test(trimmed)) {
+      return fail('Use the "New database" button to create databases; CREATE/DROP DATABASE is not SQLite syntax.');
     }
+
+    const dbs = await this.ensureStudentSandbox(studentId);
+    if (!dbs.has(dbName)) return fail(`Database '${dbName}' does not exist in your sandbox`);
+
+    const r = await this.exec(studentId, dbName, trimmed, { student: true });
+    const duration = Date.now() - startTime;
+    if (!r.ok) {
+      const msg = this.explainError(r.error || 'SQL error');
+      const where = r.failedAt && r.statements > 1 ? ` (statement ${r.failedAt}; earlier statements were applied)` : '';
+      this.recordQueryHistory(studentId, dbName, trimmed, false, duration, 0, msg);
+      return { success: false, columns: [], rows: [], row_count: 0, execution_time_ms: duration, error: msg + where };
+    }
+    const last = r.results[r.results.length - 1];
+    const rows = last?.rows || [];
+    const notes: string[] = [];
+    if (r.truncated) notes.push(`Only the first ${SQL_LAB_LIMITS.maxRows} rows are shown.`);
+    if (r.transactionRolledBack) notes.push('A transaction was left open at the end of the run and was rolled back; finish transactions with COMMIT in the same run.');
+    const explanation = last
+      ? `${rows.length} row(s) returned${r.statements > 1 ? ` by the last of ${r.statements} statements` : ''}.`
+      : `${r.statements} statement(s) executed; ${r.changes} row(s) changed.`;
+    this.recordQueryHistory(studentId, dbName, trimmed, true, duration, last ? rows.length : r.changes);
+    return {
+      success: true,
+      columns: last?.columns || [],
+      rows,
+      row_count: rows.length,
+      affected_rows: r.changes,
+      execution_time_ms: duration,
+      explanation: [explanation, ...notes].join(' '),
+      truncated: !!r.truncated,
+      engine: 'SQLite (sql.js)',
+    } as SQLExecutionResult;
+  }
+
+  /** Adds a plain-language hint to common SQLite error messages. */
+  public static explainError(err: string): string {
+    const e = err || 'SQL error';
+    if (/no such table: (\S+)/i.test(e)) return `${e}. Check the table name in the schema browser.`;
+    if (/no such column: (\S+)/i.test(e)) return `${e}. Check the column name and the table alias.`;
+    if (/FOREIGN KEY constraint failed/i.test(e)) return `${e}: the value must exist in the referenced table, and a referenced row cannot be removed while rows still point to it.`;
+    if (/UNIQUE constraint failed: (\S+)/i.test(e)) return `${e}: another row already has this value.`;
+    if (/NOT NULL constraint failed: (\S+)/i.test(e)) return `${e}: this column needs a value.`;
+    if (/syntax error/i.test(e)) return `${e}. Check commas, quotes and keyword order near the reported token.`;
+    if (/database or disk is full/i.test(e)) return 'This database reached its 10 MB size limit.';
+    return e;
   }
 
   // -------------------------------------------------------------
-  // Query History Management
+  // Query history
   // -------------------------------------------------------------
-  public static recordQueryHistory(
-    studentId: string,
-    schemaName: string,
-    query: string,
-    success: boolean,
-    durationMs: number,
-    rowCount?: number,
-    error?: string
-  ) {
-    if (!this.queryHistories.has(studentId)) {
-      this.queryHistories.set(studentId, []);
-    }
+  public static recordQueryHistory(studentId: string, schemaName: string, query: string, success: boolean, durationMs: number, rowCount?: number, error?: string) {
+    if (!this.queryHistories.has(studentId)) this.queryHistories.set(studentId, []);
     const history = this.queryHistories.get(studentId)!;
     history.unshift({
       id: `qh_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
       student_id: studentId,
       schema_name: schemaName,
-      query,
+      query: query.slice(0, 5000),
       success,
       duration_ms: durationMs,
       row_count: rowCount,
       error,
       executed_at: new Date().toISOString(),
     });
-
-    if (history.length > 50) {
-      history.pop();
-    }
+    if (history.length > 50) history.pop();
   }
 
   public static getQueryHistory(studentId: string, schemaName?: string): SQLQueryHistoryItem[] {
     const history = this.queryHistories.get(studentId) || [];
-    if (schemaName) {
-      return history.filter((h) => h.schema_name === schemaName);
-    }
-    return history;
+    return schemaName ? history.filter((h) => h.schema_name === schemaName) : history;
   }
 }

@@ -13,212 +13,147 @@ describe('SQL Lab & AI/ML Lab Master E2E Test Suite', () => {
   // =========================================================================
   // PART A: SQL LAB TESTS
   // =========================================================================
-  describe('Part A: SQL Lab Schema Builder, Table Designer & Relational Sandbox', () => {
-    beforeEach(() => {
-      SqlLabSandboxService.ensureStudentSandbox(studentA);
-      SqlLabSandboxService.ensureStudentSandbox(studentB);
+  describe('Part A: SQL Lab on real SQLite, per-student databases', () => {
+    const uidA = `${studentA}_${Date.now()}`;
+    const uidB = `${studentB}_${Date.now()}`;
+    beforeEach(async () => {
+      await SqlLabSandboxService.ensureStudentSandbox(uidA);
+      await SqlLabSandboxService.ensureStudentSandbox(uidB);
     });
 
-    it('1. Initializes isolated sandbox with university_db and ecommerce_db', () => {
-      const workspaces = SqlLabSandboxService.getWorkspaces(studentA);
-      expect(workspaces.length).toBeGreaterThanOrEqual(2);
-      const names = workspaces.map((w) => w.name);
-      expect(names).toContain('university_db');
-      expect(names).toContain('ecommerce_db');
-
-      const schemas = SqlLabSandboxService.getSchemas(studentA);
-      expect(schemas['university_db']).toBeDefined();
-      expect(schemas['university_db'].length).toBeGreaterThanOrEqual(3);
+    it('1. Initializes isolated sandbox with university_db and ecommerce_db', async () => {
+      const names = (await SqlLabSandboxService.getWorkspaces(uidA)).map((w) => w.name);
+      expect(names).toEqual(expect.arrayContaining(['university_db', 'ecommerce_db']));
+      const schemas = await SqlLabSandboxService.getSchemas(uidA);
+      expect(schemas['university_db'].map((t) => t.name).sort()).toEqual(['courses', 'departments', 'enrollments', 'students']);
+      // The internal metadata table is never listed.
+      expect(schemas['university_db'].some((t) => t.name === '_lab_meta')).toBe(false);
     });
 
-    it('2. Creates a custom schema workspace and verifies isolation from other students', () => {
-      const res = SqlLabSandboxService.createSchema(studentA, 'hospital_db');
+    it('2. Creates a custom schema and keeps it invisible to other students', async () => {
+      const res = await SqlLabSandboxService.createSchema(uidA, 'hospital_db');
       expect(res.success).toBe(true);
-
-      const aliceWorkspaces = SqlLabSandboxService.getWorkspaces(studentA);
-      expect(aliceWorkspaces.map((w) => w.name)).toContain('hospital_db');
-
-      // Student B should NOT have hospital_db
-      const bobWorkspaces = SqlLabSandboxService.getWorkspaces(studentB);
-      expect(bobWorkspaces.map((w) => w.name)).not.toContain('hospital_db');
+      expect((await SqlLabSandboxService.getWorkspaces(uidA)).map((w) => w.name)).toContain('hospital_db');
+      expect((await SqlLabSandboxService.getWorkspaces(uidB)).map((w) => w.name)).not.toContain('hospital_db');
+      const bQuery = await SqlLabSandboxService.executeSandboxedSql(uidB, 'hospital_db', 'SELECT 1');
+      expect(bQuery.success).toBe(false);
     });
 
-    it('3. Generates correct SQL DDL and creates table manually through Table Designer', () => {
+    it('3. Table designer generates SQLite DDL and creates the table', async () => {
       const patientTableDef: SQLTableDefinition = {
         name: 'patients',
         schema_name: 'hospital_db',
-        description: 'Hospital patient admissions',
         columns: [
           { name: 'patient_id', type: 'INTEGER', is_primary_key: true, is_auto_increment: true, is_nullable: false },
           { name: 'name', type: 'VARCHAR', length_precision: '100', is_nullable: false },
-          { name: 'age', type: 'INTEGER', is_nullable: false, default_value: '30' },
-          { name: 'blood_group', type: 'VARCHAR', length_precision: '5', is_nullable: true, default_value: 'O+' },
+          { name: 'blood_group', type: 'VARCHAR', length_precision: '5', is_nullable: true },
         ],
         sample_rows: [],
       };
-
       const sqlPreview = SqlLabSandboxService.generateCreateTableSql(patientTableDef);
       expect(sqlPreview).toContain('CREATE TABLE "patients"');
-      expect(sqlPreview).toContain('"patient_id" INTEGER PRIMARY KEY AUTO_INCREMENT');
+      expect(sqlPreview).toContain('"patient_id" INTEGER PRIMARY KEY AUTOINCREMENT');
       expect(sqlPreview).toContain('"name" VARCHAR(100) NOT NULL');
-
-      const creation = SqlLabSandboxService.createTable(studentA, 'hospital_db', patientTableDef);
+      await SqlLabSandboxService.createSchema(uidA, 'hospital_db').catch(() => undefined);
+      const creation = await SqlLabSandboxService.createTable(uidA, 'hospital_db', patientTableDef);
       expect(creation.success).toBe(true);
       expect(creation.table.name).toBe('patients');
-
-      // Verify table exists in schema tables
-      const tables = SqlLabSandboxService.getSchemaTables(studentA, 'hospital_db');
-      expect(tables.map((t) => t.name)).toContain('patients');
+      expect(creation.table.columns.find((c) => c.name === 'patient_id')?.is_auto_increment).toBe(true);
+      expect(creation.table.columns.find((c) => c.name === 'name')?.is_nullable).toBe(false);
     });
 
-    it('4. Inserts row and validates NOT NULL & PRIMARY KEY uniqueness constraints', () => {
-      // Valid insert
-      const insert1 = SqlLabSandboxService.insertRow(studentA, 'hospital_db', 'patients', {
-        name: 'Rajesh Kumar',
-        age: 42,
-        blood_group: 'B+',
-      });
+    it('4. Row editor enforces NOT NULL and PRIMARY KEY uniqueness', async () => {
+      const insert1 = await SqlLabSandboxService.insertRow(uidA, 'hospital_db', 'patients', { name: 'Synthetic Patient', blood_group: 'O+' });
       expect(insert1.success).toBe(true);
       expect(insert1.inserted_row.patient_id).toBe(1);
-
-      // Rejects missing NOT NULL column
-      expect(() => {
-        SqlLabSandboxService.insertRow(studentA, 'hospital_db', 'patients', {
-          age: 25,
-        });
-      }).toThrow(/cannot be null/i);
-
-      // Rejects duplicate explicit primary key
-      expect(() => {
-        SqlLabSandboxService.insertRow(studentA, 'hospital_db', 'patients', {
-          patient_id: 1,
-          name: 'Duplicate Patient',
-          age: 33,
-        });
-      }).toThrow(/Duplicate entry '1' for PRIMARY KEY/i);
+      await expect(SqlLabSandboxService.insertRow(uidA, 'hospital_db', 'patients', { blood_group: 'A+' })).rejects.toThrow(/NOT NULL/);
+      await expect(SqlLabSandboxService.insertRow(uidA, 'hospital_db', 'patients', { patient_id: 1, name: 'Dup' })).rejects.toThrow(/UNIQUE|PRIMARY/);
     });
 
-    it('5. Enforces Foreign Key relationships and ON DELETE RESTRICT rules', () => {
-      // Create admissions table referencing patients(patient_id)
+    it('5. Enforces foreign keys and ON DELETE RESTRICT', async () => {
       const admissionsDef: SQLTableDefinition = {
         name: 'admissions',
         schema_name: 'hospital_db',
         columns: [
           { name: 'admission_id', type: 'INTEGER', is_primary_key: true, is_auto_increment: true, is_nullable: false },
-          {
-            name: 'patient_id',
-            type: 'INTEGER',
-            is_foreign_key: true,
-            references: 'patients(patient_id)',
-            foreign_key: {
-              source_column: 'patient_id',
-              referenced_table: 'patients',
-              referenced_column: 'patient_id',
-              on_delete: 'RESTRICT',
-              on_update: 'CASCADE',
-            },
-          },
+          { name: 'patient_id', type: 'INTEGER', is_foreign_key: true },
           { name: 'ward', type: 'VARCHAR', length_precision: '20', is_nullable: false, default_value: 'ICU' },
         ],
-        foreign_keys: [
-          {
-            source_column: 'patient_id',
-            referenced_table: 'patients',
-            referenced_column: 'patient_id',
-            on_delete: 'RESTRICT',
-            on_update: 'CASCADE',
-          },
-        ],
+        foreign_keys: [{ source_column: 'patient_id', referenced_table: 'patients', referenced_column: 'patient_id', on_delete: 'RESTRICT', on_update: 'CASCADE' }],
         sample_rows: [],
       };
-
-      SqlLabSandboxService.createTable(studentA, 'hospital_db', admissionsDef);
-
-      // Foreign key rejection: patient_id 999 does not exist
-      expect(() => {
-        SqlLabSandboxService.insertRow(studentA, 'hospital_db', 'admissions', {
-          patient_id: 999,
-          ward: 'General',
-        });
-      }).toThrow(/Foreign key constraint failed/i);
-
-      // Successful insert referencing existing patient_id 1
-      const admInsert = SqlLabSandboxService.insertRow(studentA, 'hospital_db', 'admissions', {
-        patient_id: 1,
-        ward: 'General',
-      });
-      expect(admInsert.success).toBe(true);
-
-      // RESTRICT check: Deleting patient 1 should be blocked because child admission exists
-      expect(() => {
-        SqlLabSandboxService.deleteRow(studentA, 'hospital_db', 'patients', 1);
-      }).toThrow(/foreign key constraint fails/i);
-
-      // RESTRICT check: Dropping patients table should be blocked because admissions references it
-      expect(() => {
-        SqlLabSandboxService.dropTable(studentA, 'hospital_db', 'patients');
-      }).toThrow(/referenced by foreign key/i);
+      await SqlLabSandboxService.createTable(uidA, 'hospital_db', admissionsDef);
+      await expect(SqlLabSandboxService.insertRow(uidA, 'hospital_db', 'admissions', { patient_id: 999 })).rejects.toThrow(/FOREIGN KEY/);
+      const adm = await SqlLabSandboxService.insertRow(uidA, 'hospital_db', 'admissions', { patient_id: 1 });
+      expect(adm.inserted_row.ward).toBe('ICU');
+      await expect(SqlLabSandboxService.deleteRow(uidA, 'hospital_db', 'patients', 1)).rejects.toThrow(/FOREIGN KEY/);
+      await expect(SqlLabSandboxService.dropTable(uidA, 'hospital_db', 'patients')).rejects.toThrow(/FOREIGN KEY/);
     });
 
-    it('6. Executes real SQL queries (SELECT, WHERE, JOIN, GROUP BY, DDL)', async () => {
-      // 1. Basic SELECT from students in university_db
-      const resSelect = await SqlLabSandboxService.executeSandboxedSql(
-        studentA,
-        'university_db',
-        'SELECT student_id, name, branch FROM students WHERE branch = "Computer Science";'
-      );
-      expect(resSelect.success).toBe(true);
-      expect(resSelect.rows.length).toBeGreaterThanOrEqual(1);
-      expect(resSelect.rows.every((r) => r.branch === 'Computer Science')).toBe(true);
+    it('6. Executes real SQL with correct results (WHERE with AND, projection, JOIN, GROUP BY/HAVING, window, CTE, subquery)', async () => {
+      const run = (q: string) => SqlLabSandboxService.executeSandboxedSql(uidA, 'university_db', q);
+      const w = await run("SELECT name, cgpa FROM students WHERE branch = 'Computer Science' AND cgpa > 9.2");
+      expect(w.success).toBe(true);
+      expect(w.columns).toEqual(['name', 'cgpa']);
+      expect(w.rows).toEqual([{ name: 'Aarav Sharma', cgpa: 9.45 }]);
 
-      // 2. Hash Join between students and departments
-      const resJoin = await SqlLabSandboxService.executeSandboxedSql(
-        studentA,
-        'university_db',
-        'SELECT s.name, s.branch, d.building FROM students s JOIN departments d ON s.dept_id = d.dept_id;'
-      );
-      expect(resJoin.success).toBe(true);
-      expect(resJoin.columns).toContain('building');
-      expect(resJoin.explanation).toContain('Hash Join');
+      const j = await run('SELECT s.name, d.building FROM students s JOIN departments d ON s.dept_id = d.dept_id ORDER BY s.student_id LIMIT 2');
+      expect(j.rows).toEqual([{ name: 'Aarav Sharma', building: 'Turing Block' }, { name: 'Diya Patel', building: 'Turing Block' }]);
 
-      // 3. GROUP BY aggregate
-      const resGroup = await SqlLabSandboxService.executeSandboxedSql(
-        studentA,
-        'university_db',
-        'SELECT branch, COUNT(*) AS count, AVG(cgpa) AS avg_cgpa FROM students GROUP BY branch;'
-      );
-      expect(resGroup.success).toBe(true);
-      expect(resGroup.columns).toContain('branch');
-      expect(resGroup.columns).toContain('avg_cgpa');
+      const g = await run('SELECT dept_id, COUNT(*) AS n, ROUND(AVG(cgpa),2) AS avg_cgpa FROM students GROUP BY dept_id HAVING COUNT(*) > 1');
+      expect(g.rows).toEqual([{ dept_id: 'CSE', n: 2, avg_cgpa: 9.29 }]);
 
-      // 4. SQL Execution blocks malicious administration attempts
-      const resMalicious = await SqlLabSandboxService.executeSandboxedSql(
-        studentA,
-        'university_db',
-        'SHUTDOWN IMMEDIATE;'
-      );
-      expect(resMalicious.success).toBe(false);
-      expect(resMalicious.error).toContain('Destructive database administration commands are prohibited');
+      const win = await run('SELECT name, RANK() OVER (ORDER BY cgpa DESC) AS r FROM students ORDER BY r LIMIT 1');
+      expect(win.rows[0]).toEqual({ name: 'Aarav Sharma', r: 1 });
+
+      const cte = await run('WITH top AS (SELECT * FROM students WHERE cgpa > (SELECT AVG(cgpa) FROM students)) SELECT COUNT(*) AS c FROM top');
+      expect(cte.rows[0].c).toBe(3);
+
+      const dml = await run("UPDATE students SET semester = semester + 1 WHERE dept_id = 'CSE'; SELECT SUM(semester) AS s FROM students WHERE dept_id = 'CSE'");
+      expect(dml.success).toBe(true);
+      expect(dml.affected_rows).toBe(2);
+      expect(dml.rows[0].s).toBe(14);
+
+      const tx = await run("BEGIN; DELETE FROM enrollments; ROLLBACK; SELECT COUNT(*) AS c FROM enrollments");
+      expect(tx.rows[0].c).toBe(4);
+
+      const alter = await run('ALTER TABLE courses ADD COLUMN level INTEGER DEFAULT 1; SELECT level FROM courses LIMIT 1');
+      expect(alter.rows[0].level).toBe(1);
+
+      const bad = await run('SELEC * FROM students');
+      expect(bad.success).toBe(false);
+      expect(bad.error).toMatch(/syntax error/);
     });
 
-    it('7. Tests Table Data Viewer pagination, sorting, and sample data generation', () => {
-      const initialData = SqlLabSandboxService.getTableData(studentA, 'university_db', 'students', {
-        page: 1,
-        limit: 2,
-        sort_by: 'cgpa',
-        sort_dir: 'DESC',
-      });
+    it('7. Blocks host-reaching statements and stops runaway queries without blocking the server', async () => {
+      const run = (q: string) => SqlLabSandboxService.executeSandboxedSql(uidA, 'university_db', q);
+      expect((await run("ATTACH DATABASE '/etc/passwd' AS x")).error).toMatch(/disabled/);
+      expect((await run('PRAGMA foreign_keys = OFF')).error).toMatch(/disabled/);
+      expect((await run('PRAGMA table_info(students)')).success).toBe(true);
+      const t0 = Date.now();
+      const loop = await run('WITH RECURSIVE c(x) AS (SELECT 1 UNION ALL SELECT x+1 FROM c) SELECT COUNT(*) FROM c');
+      expect(loop.success).toBe(false);
+      expect(loop.error).toMatch(/time limit/);
+      expect(Date.now() - t0).toBeLessThan(10000);
+      // The engine recovers and the data is intact after the restart.
+      expect((await run('SELECT COUNT(*) AS c FROM students')).rows[0].c).toBe(5);
+      const big = await run('WITH RECURSIVE c(x) AS (SELECT 1 UNION ALL SELECT x+1 FROM c WHERE x < 5000) SELECT x FROM c');
+      expect(big.rows.length).toBe(500);
+      expect(big.truncated).toBe(true);
+    }, 20000);
+
+    it('8. Table data viewer paginates and sorts; sample data satisfies constraints', async () => {
+      const initialData = await SqlLabSandboxService.getTableData(uidB, 'university_db', 'students', { page: 1, limit: 2, sort_by: 'cgpa', sort_dir: 'DESC' });
       expect(initialData.rows.length).toBe(2);
-      expect(initialData.total_rows).toBeGreaterThanOrEqual(5);
-      expect(Number(initialData.rows[0].cgpa)).toBeGreaterThanOrEqual(Number(initialData.rows[1].cgpa));
-
-      // Generate 3 sample rows
-      const sampleGen = SqlLabSandboxService.generateSampleRows(studentA, 'university_db', 'students', 3);
-      expect(sampleGen.success).toBe(true);
+      expect(initialData.total_rows).toBe(5);
+      expect(initialData.rows[0].cgpa).toBe(9.45);
+      const sampleGen = await SqlLabSandboxService.generateSampleRows(uidB, 'university_db', 'students', 3);
       expect(sampleGen.generated_count).toBe(3);
-
-      const afterData = SqlLabSandboxService.getTableData(studentA, 'university_db', 'students');
-      expect(afterData.total_rows).toBe(initialData.total_rows + 3);
+      const afterData = await SqlLabSandboxService.getTableData(uidB, 'university_db', 'students');
+      expect(afterData.total_rows).toBe(8);
+      // Student A's changes in test 6 never reached student B.
+      const semB = await SqlLabSandboxService.executeSandboxedSql(uidB, 'university_db', "SELECT SUM(semester) AS s FROM students WHERE dept_id = 'CSE' AND student_id <= 5");
+      expect(semB.rows[0].s).toBe(12);
     });
   });
 
