@@ -383,7 +383,24 @@ describe('AI Flashcards Production & Spaced Repetition Master Test Suite', () =>
   // 5. AI Generation & Multi-Source Grounding (Notes, Docs, Courses)
   // =========================================================================
   describe('5. AI Generation & Source Grounding', () => {
+    it('refuses to invent topic flashcards when the AI provider is unavailable', async () => {
+      await expect(
+        LearningModulesService.generateAIFlashcards(primaryStudentId, { topic: 'Deadlocks', subject: 'OS', count: 3 } as any)
+      ).rejects.toMatchObject({ statusCode: expect.any(Number) });
+    });
+
     it('generates high-yield flashcards from topic with technical concepts', async () => {
+      // No real model in tests; topic/course flashcards are model-only, so stub a well-formed reply.
+      const cardsSpy = vi.spyOn(AIService, 'generate').mockResolvedValue({
+        text: JSON.stringify({
+          title: 'Stub deck',
+          cards: [
+            { front: 'What does a TLB cache?', back: 'Page table entries.', type: 'CONCEPT', difficulty: 'EASY' },
+            { front: 'What causes a page fault?', back: 'Accessing a page not in memory.', type: 'CONCEPT', difficulty: 'MEDIUM' },
+            { front: 'Which policy shows Belady anomaly?', back: 'FIFO.', type: 'CONCEPT', difficulty: 'MEDIUM' },
+          ],
+        }),
+      } as any);
       const genRes = await LearningModulesService.generateAIFlashcards(
         primaryStudentId,
         {
@@ -393,7 +410,7 @@ describe('AI Flashcards Production & Spaced Repetition Master Test Suite', () =>
           style: 'CONCEPT',
           count: 4,
         }
-      );
+      ).finally(() => cardsSpy.mockRestore());
 
       expect(genRes.cards.length).toBeGreaterThanOrEqual(3);
       expect(genRes.cards[0].front).toBeDefined();
@@ -437,12 +454,23 @@ describe('AI Flashcards Production & Spaced Repetition Master Test Suite', () =>
       expect(coursesRes.items.length).toBeGreaterThanOrEqual(1);
       const course = coursesRes.items[0];
 
+      // No real model in tests; topic/course flashcards are model-only, so stub a well-formed reply.
+      const cardsSpy = vi.spyOn(AIService, 'generate').mockResolvedValue({
+        text: JSON.stringify({
+          title: 'Stub deck',
+          cards: [
+            { front: 'What does a TLB cache?', back: 'Page table entries.', type: 'CONCEPT', difficulty: 'EASY' },
+            { front: 'What causes a page fault?', back: 'Accessing a page not in memory.', type: 'CONCEPT', difficulty: 'MEDIUM' },
+            { front: 'Which policy shows Belady anomaly?', back: 'FIFO.', type: 'CONCEPT', difficulty: 'MEDIUM' },
+          ],
+        }),
+      } as any);
       const courseRes = await LearningModulesService.generateFromCourse(
         primaryStudentId,
         course.id,
         undefined,
         4
-      );
+      ).finally(() => cardsSpy.mockRestore());
 
       expect(courseRes.title).toBeDefined();
       expect(courseRes.source_id).toBe(course.id);

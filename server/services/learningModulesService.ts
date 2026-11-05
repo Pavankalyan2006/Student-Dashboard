@@ -32,7 +32,7 @@ import {
   JobDescriptionSkillAnalysis,
 } from '../models/learningModulesTypes';
 import { db } from '../db/database';
-import { NotFoundError, ValidationError, AuthorizationError } from '../core/exceptions';
+import { NotFoundError, ValidationError, AuthorizationError, AppError } from '../core/exceptions';
 import { logger } from '../core/logging';
 import { OnboardingService } from './onboardingService';
 import { SqlLabSandboxService } from './sqlLabSandboxService';
@@ -1319,6 +1319,17 @@ Answer the doubt accurately. Return valid JSON only:
     let confidence = 4;
     let ratingString = 'GOOD';
 
+    if (typeof ratingOrConfidence === 'string' && /^\d+$/.test(ratingOrConfidence.trim())) {
+      ratingOrConfidence = Number(ratingOrConfidence);
+    }
+    if (typeof ratingOrConfidence === 'string') {
+      if (!['AGAIN', 'HARD', 'GOOD', 'EASY'].includes(ratingOrConfidence.toUpperCase())) {
+        throw new ValidationError('Rating must be AGAIN, HARD, GOOD or EASY');
+      }
+    } else if (!Number.isInteger(ratingOrConfidence) || ratingOrConfidence < 0 || ratingOrConfidence > 5) {
+      throw new ValidationError('Rating must be AGAIN, HARD, GOOD, EASY or a whole number from 0 to 5');
+    }
+
     if (typeof ratingOrConfidence === 'string') {
       const upper = ratingOrConfidence.toUpperCase();
       ratingString = upper;
@@ -1518,92 +1529,50 @@ Output JSON format:
   ]
 }`;
 
-    try {
-      const aiResult = await AIService.generate(
-        [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt },
-        ],
-        'revision_notes_prompt',
-        0.3
-      );
+    // Cards come from the model only. Without real output nothing is returned for saving,
+    // rather than generic template cards that mention the topic name.
+    const aiResult = await AIService.generate(
+      [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+      'revision_notes_prompt',
+      0.3
+    );
+    if (AIService.isUnavailableResult(aiResult)) {
+      throw new AppError('Flashcard generation needs the AI provider, which is not available right now. Nothing was generated.', 503, 'AI_UNAVAILABLE');
+    }
 
+    let parsed: any = null;
+    try {
       const raw = aiResult.text.trim();
-      let cleanJson = raw;
       const jsonStart = raw.indexOf('{');
       const jsonEnd = raw.lastIndexOf('}');
-      if (jsonStart !== -1 && jsonEnd !== -1) {
-        cleanJson = raw.slice(jsonStart, jsonEnd + 1);
-      }
-
-      const parsed = JSON.parse(cleanJson);
-      if (Array.isArray(parsed.cards) && parsed.cards.length > 0) {
-        return {
-          title: parsed.title || `${req.topic} Flashcards`,
-          subject: parsed.subject || subject,
-          cards: parsed.cards.map((c: any) => ({
-            front: c.front || 'Test Concept',
-            back: c.back || 'Concept Explanation',
-            type: c.type || 'CONCEPT',
-            topic: c.topic || req.topic,
-            difficulty: c.difficulty || 'MEDIUM',
-            explanation: c.explanation || '',
-            example: c.example || '',
-          })),
-          is_fallback: false,
-        };
-      }
-      throw new Error('AI returned empty cards array');
-    } catch (err: any) {
-      logger.warn(`AI Flashcard generation fallback used for topic '${req.topic}': ${err?.message || err}`);
-
-      // High-quality deterministic academic fallback
-      const fallbackCards = [
-        {
-          front: `What is the core definition and theoretical foundation of ${req.topic}?`,
-          back: `${req.topic} is an essential module in ${subject}. It establishes theoretical guarantees, runtime constraints, and system correctness in engineering architectures.`,
-          type: 'DEFINITION' as const,
-          topic: req.topic,
-          difficulty: 'EASY' as const,
-          explanation: `Fundamental conceptual principle in ${subject}.`,
-          example: `Standard university end-semester exam question.`,
-        },
-        {
-          front: `What are the primary operational trade-offs and constraints associated with ${req.topic}?`,
-          back: `The primary trade-offs balance computational complexity, memory footprint, and implementation overhead. Operating under constrained resources requires strict state management.`,
-          type: 'CONCEPT' as const,
-          topic: req.topic,
-          difficulty: 'MEDIUM' as const,
-          explanation: `System trade-offs dictate optimal deployment strategies.`,
-          example: `High-throughput processing pipelines and distributed services.`,
-        },
-        {
-          front: `State the mathematical invariant or algorithmic property governing ${req.topic}.`,
-          back: `The state transition preserves invariants across iterative steps, ensuring convergence to an optimal or stable fixed point without unexpected deadlock or overflow.`,
-          type: 'FORMULA' as const,
-          topic: req.topic,
-          difficulty: 'HARD' as const,
-          explanation: `Invariants guarantee safety and correctness under edge cases.`,
-          example: `Proof by induction or contradiction in formal specification.`,
-        },
-        {
-          front: `How does ${req.topic} compare to its closest alternative in practical systems?`,
-          back: `While alternative approaches may optimize for simpler code paths, ${req.topic} provides robust asymptotic bounds and predictable error handling under peak load.`,
-          type: 'COMPARISON' as const,
-          topic: req.topic,
-          difficulty: 'MEDIUM' as const,
-          explanation: `Design pattern comparison for engineering technical interviews.`,
-          example: `Production system benchmarking.`,
-        },
-      ];
-
-      return {
-        title: `${req.topic} Flashcards`,
-        subject,
-        cards: fallbackCards.slice(0, count),
-        is_fallback: true,
-      };
+      parsed = JSON.parse(jsonStart !== -1 && jsonEnd !== -1 ? raw.slice(jsonStart, jsonEnd + 1) : raw);
+    } catch {
+      parsed = null;
     }
+    const cards = (Array.isArray(parsed?.cards) ? parsed.cards : [])
+      .filter((c: any) => typeof c?.front === 'string' && c.front.trim() && typeof c?.back === 'string' && c.back.trim())
+      .map((c: any) => ({
+        front: c.front,
+        back: c.back,
+        type: c.type || 'CONCEPT',
+        topic: c.topic || req.topic,
+        difficulty: ['EASY', 'MEDIUM', 'HARD'].includes(c.difficulty) ? c.difficulty : 'MEDIUM',
+        explanation: c.explanation || '',
+        example: c.example || '',
+      }));
+    if (cards.length === 0) {
+      logger.warn(`AI flashcard generation returned no usable cards for topic '${req.topic}'`);
+      throw new AppError('The AI provider returned no usable flashcards. Please try again.', 502, 'AI_BAD_RESPONSE');
+    }
+    return {
+      title: parsed.title || `${req.topic} Flashcards`,
+      subject: parsed.subject || subject,
+      cards,
+      is_fallback: false,
+    };
   }
 
   public static async generateFromNote(

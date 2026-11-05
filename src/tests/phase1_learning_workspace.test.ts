@@ -224,3 +224,25 @@ describe('Phase 1 › Documents upload validation', () => {
     ).rejects.toThrow(/Unsupported/);
   });
 });
+
+describe('Phase 1 › Flashcard reviews', () => {
+  it('rejects an unknown rating instead of recording it as GOOD, and schedules AGAIN for tomorrow', async () => {
+    const { LearningModulesService } = await import('../../server/services/learningModulesService');
+    await db.initialize();
+    const s = uid('std_p1_fc');
+    const deck = await LearningModulesService.createFlashcardDeck(s, {
+      title: 'OS', subject: 'OS', cards: [{ front: 'TLB?', back: 'PTE cache' }],
+    } as any);
+    const card = deck.cards[0];
+    await expect(LearningModulesService.reviewFlashcard(s, deck.id, card.id, 'BOGUS' as any)).rejects.toThrow(/Rating must be/);
+    await expect(LearningModulesService.reviewFlashcard(s, deck.id, card.id, 9)).rejects.toThrow(/Rating must be/);
+    const after = await LearningModulesService.getFlashcardDeckById(s, deck.id);
+    expect(after.cards[0].review_count || 0).toBe(0);
+
+    const again = await LearningModulesService.reviewFlashcard(s, deck.id, card.id, 'AGAIN');
+    expect(again.state).toBe('LEARNING');
+    expect(again.interval_days).toBe(1);
+    // Another student cannot review this card.
+    await expect(LearningModulesService.reviewFlashcard(uid('std_p1_fc_b'), deck.id, card.id, 'GOOD')).rejects.toThrow(/not found/i);
+  });
+});

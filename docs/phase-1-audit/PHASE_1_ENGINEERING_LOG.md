@@ -45,3 +45,10 @@
 - PR #3 CI was green on e729552 before this batch.
 - Files: `server/services/{documents,documentSummary,knowledgeBaseService,learningModulesService}.ts`, `server/ai/provider.ts`, `src/features/doubts/pages/DoubtSolverPage.tsx`, tests `documents`, `knowledge_base_master`, `learning_modules_e2e`, `phase1_learning_workspace` (13).
 - Next: batch 6 (Flashcards, Spaced Revision).
+
+## Batch 6 — Flashcards, Spaced Revision
+- `/revision` and `/flashcards` render the same page. New student: no decks, zero stats, empty due list (P1-016 already removed the sample decks).
+- HTTP with A/B: create deck (empty title → 400), add card (empty → 400), B get/edit/add/review/delete → 404. SM-2 checked: GOOD on a new card → REVIEW, next day; AGAIN → LEARNING, interval 1 day, ease −0.2.
+- Fixed P1-031 (due queue reviews never saved, found in the browser), P1-032 (invalid ratings counted as GOOD), P1-033 (template topic/course cards). Deck from a document already returns 503 since P1-029; deck from a note since P1-022.
+- Tests: `phase1_learning_workspace.test.ts` 14, `flashcards_master_production.test.ts` updated; full suite 814/814.
+- Next: batch 7 (Study Planner, Language Learning).

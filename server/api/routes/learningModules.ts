@@ -268,7 +268,11 @@ learningModulesRouter.post('/flashcards/decks/:deckId/cards/:cardId/review', req
   try {
     const studentId = req.user!.userId;
     const { confidence, rating } = req.body;
-    const ratingParam = rating || confidence || 3;
+    // A review must say how it went; a missing rating is not silently recorded as GOOD.
+    const ratingParam = rating ?? confidence;
+    if (ratingParam === undefined || ratingParam === null || ratingParam === '') {
+      return res.status(400).json({ success: false, message: 'Rating is required (AGAIN, HARD, GOOD or EASY)' });
+    }
     const card = await LearningModulesService.reviewFlashcard(studentId, req.params.deckId, req.params.cardId, ratingParam);
     res.json({ success: true, data: card });
   } catch (err: any) {
