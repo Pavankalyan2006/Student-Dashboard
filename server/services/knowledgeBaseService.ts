@@ -510,8 +510,14 @@ Provide a comprehensive, pedagogical answer citing the sources:`;
       { role: 'user', content: userPrompt },
     ];
 
+    let aiAnswered = true;
     try {
       const aiResult = await AIService.generate(messages, undefined, 0.4);
+      if (AIService.isUnavailableResult(aiResult)) {
+        // Fall through to the extractive answer below instead of returning the notice with a
+        // made-up confidence score.
+        throw new Error('AI provider unavailable');
+      }
       const rawText = aiResult.text || '';
 
       // Parse JSON block if present
@@ -536,16 +542,19 @@ Provide a comprehensive, pedagogical answer citing the sources:`;
       logger.error('AI generation failed, synthesizing deterministic response', { error: err });
       if (relevantChunks.length > 0) {
         answer = `Based on your indexed materials:\n\n${relevantChunks.map((c) => c.content).slice(0, 3).join('\n\n')}\n\n*Source: ${citations[0]?.document_title || 'Indexed Document'} (Page ${citations[0]?.page_number || 1})*`;
-        keyConcepts = ['Key Terminology', 'Engineering Analysis'];
+        // Extractive answer: the passages themselves, no AI synthesis, so no concepts are claimed.
+        aiAnswered = false;
+        confidenceScore = 0;
         followUps = ['Would you like to generate a flashcard set for this topic?', 'Shall we create a practice quiz?'];
       } else {
-        answer = `I could not find directly matching passages in your uploaded documents for "${question}". Upload or index related lecture notes, syllabi, or textbook PDFs into your Knowledge Base for targeted synthesis.`;
-        confidenceScore = 0.5;
+        answer = `AI answers are unavailable right now and no passages in your indexed documents match "${question}". Upload or index related lecture notes, syllabi, or textbook PDFs into your Knowledge Base.`;
+        aiAnswered = false;
+        confidenceScore = 0;
         followUps = ['How do I upload lecture notes?', 'Can I organize notes by semester?'];
       }
     }
 
-    if (keyConcepts.length === 0) {
+    if (keyConcepts.length === 0 && aiAnswered) {
       keyConcepts = ['Core Concept', 'Implementation Details'];
     }
     if (followUps.length === 0) {

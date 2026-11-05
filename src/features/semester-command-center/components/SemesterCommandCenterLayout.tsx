@@ -67,7 +67,7 @@ export function SemesterCommandCenterLayout({
             </div>
           </div>
 
-          <div className="flex items-center gap-3 self-stretch md:self-auto justify-between md:justify-end border-t md:border-t-0 pt-3 md:pt-0 border-slate-800">
+          <div className="flex flex-wrap items-center gap-3 self-stretch md:self-auto justify-between md:justify-end border-t md:border-t-0 pt-3 md:pt-0 border-slate-800">
             <div className="flex items-center gap-2 bg-slate-950/70 border border-slate-800 px-3 py-1.5 rounded-lg text-xs">
               <Clock className="w-3.5 h-3.5 text-indigo-400" />
               <span className="text-slate-400">Week:</span>

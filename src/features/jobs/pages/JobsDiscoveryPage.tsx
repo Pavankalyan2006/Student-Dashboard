@@ -451,7 +451,7 @@ export const JobsDiscoveryPage: React.FC<JobsDiscoveryPageProps> = ({ onNavigate
           />
         </div>
 
-        <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
+        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-between md:justify-start">
           <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-slate-700 dark:text-slate-300">
             <input
               type="checkbox"

@@ -3193,6 +3193,11 @@ print(power_mod(2, 10, 1000))  # Output: 24
   }
 
   // Dashboard methods (Phase 2)
+  /**
+   * Dashboard data built only from the student's own records: enrollments and lesson progress,
+   * projects, quiz attempts, DSA progress, the activity log and bookmarks. A student with no
+   * records gets zeros and empty lists (is_new_student = true); nothing is filled in.
+   */
   public async getStudentDashboardData(userId: string): Promise<DashboardData> {
     await this.initialize();
     const student = this.students.get(userId);
@@ -3200,126 +3205,146 @@ print(power_mod(2, 10, 1000))  # Output: 24
       throw new NotFoundError(`Student with ID '${userId}' not found`);
     }
 
-    // Initialize today's tasks if not already populated for this student
+    // Today's plan only holds tasks the student (or a module acting for them) added.
     if (!this.todayPlans.has(userId)) {
-      const defaultTasks: TodayPlanTask[] = [
-        {
-          id: `task_1_${userId}`,
-          title: 'Complete AVL Tree Rotations & Invariants lesson',
-          type: 'course',
-          estimated_time: '30 min',
-          is_completed: true,
-          action_url: '/courses',
-        },
-        {
-          id: `task_2_${userId}`,
-          title: 'Solve 3 Binary Search Tree lab problems',
-          type: 'dsa',
-          estimated_time: '45 min',
-          is_completed: false,
-          action_url: '/dsa',
-        },
-        {
-          id: `task_3_${userId}`,
-          title: 'Review Machine Learning Gradient Descent Notes',
-          type: 'notes',
-          estimated_time: '20 min',
-          is_completed: false,
-          action_url: '/notes',
-        },
-        {
-          id: `task_4_${userId}`,
-          title: 'Take Operating Systems Virtual Memory Quiz',
-          type: 'quiz',
-          estimated_time: '15 min',
-          is_completed: false,
-          action_url: '/quiz',
-        },
-        {
-          id: `task_5_${userId}`,
-          title: 'Draft System Architecture for Capstone Project',
-          type: 'project',
-          estimated_time: '40 min',
-          is_completed: false,
-          action_url: '/projects',
-        },
-      ];
-      this.todayPlans.set(userId, defaultTasks);
+      this.todayPlans.set(userId, []);
     }
-
     const todayTasks = this.todayPlans.get(userId) || [];
 
-    // Is this a brand-new student without prior records?
-    const isNew = student.email.startsWith('new_') || (student.created_at && Date.now() - new Date(student.created_at).getTime() < 1000 * 60 * 5);
+    const [coursesResult, activities, streak, projects, quizAttempts, bookmarks] = await Promise.all([
+      this.getCourses({ limit: 1000 }, userId),
+      this.getStudentActivities(userId),
+      this.getLearningStreak(userId).catch(() => null),
+      this.getProjects(userId),
+      this.getQuizAttempts(userId).catch(() => [] as any[]),
+      this.getBookmarks(userId).catch(() => [] as any[]),
+    ]);
 
-    if (isNew) {
-      return {
-        student: {
-          id: student.id,
-          name: student.name,
-          email: student.email,
-          branch: student.branch,
-          semester: student.semester,
-          role: student.role,
-          avatar_url: student.avatar_url,
-          learning_streak: 1,
-          focus_topic: 'Getting Started with B.Tech Curriculum',
-        },
-        summary: {
-          overall_progress: 0,
-          streak_days: 1,
-          longest_streak: 1,
-          courses_active: 0,
-          projects_active: 0,
-          dsa_solved: 0,
-          study_hours_this_week: 0,
-          credits_completed: 0,
-          total_credits: 160,
-        },
-        continue_learning: null,
-        today_plan: [],
-        course_progress: [],
-        recommendations: [
-          {
-            id: 'rec_onboarding_1',
-            title: 'Explore Semester 1-8 Curriculum Roadmaps',
-            type: 'course',
-            reason: 'Select your registered branch and semester to begin',
-            difficulty: 'Beginner',
-            estimated_time: '10 min',
-            action_url: '/courses',
-          },
-          {
-            id: 'rec_onboarding_2',
-            title: 'Diagnostic Engineering Skill Assessment',
-            type: 'quiz',
-            reason: 'Identify your strengths and target improvement areas',
-            difficulty: 'Beginner',
-            estimated_time: '15 min',
-            action_url: '/quiz',
-          },
-        ],
-        weak_areas: [],
-        strengths: [],
-        recent_activity: [],
-        projects: [],
-        upcoming_items: [],
-        bookmarks: [],
-        analytics: {
-          weekly_study_minutes: [
-            { day: 'Mon', minutes: 0, problems_solved: 0 },
-            { day: 'Tue', minutes: 0, problems_solved: 0 },
-            { day: 'Wed', minutes: 0, problems_solved: 0 },
-            { day: 'Thu', minutes: 0, problems_solved: 0 },
-            { day: 'Fri', minutes: 0, problems_solved: 0 },
-            { day: 'Sat', minutes: 0, problems_solved: 0 },
-            { day: 'Sun', minutes: 0, problems_solved: 0 },
-          ],
-          category_distribution: [],
-        },
-        is_new_student: true,
-      };
+    const relTime = (iso?: string): string => {
+      if (!iso) return 'Not opened yet';
+      const diff = Date.now() - new Date(iso).getTime();
+      if (isNaN(diff)) return 'Not opened yet';
+      const mins = Math.floor(diff / 60000);
+      if (mins < 60) return mins <= 1 ? 'Just now' : `${mins} minutes ago`;
+      const hrs = Math.floor(mins / 60);
+      if (hrs < 24) return `${hrs} hour${hrs === 1 ? '' : 's'} ago`;
+      const days = Math.floor(hrs / 24);
+      return days === 1 ? 'Yesterday' : `${days} days ago`;
+    };
+
+    const colors = ['#2563EB', '#4F46E5', '#7C3AED', '#0891B2', '#059669', '#D97706'];
+    const enrolled = coursesResult.items.filter((c) => c.is_enrolled && !(c as any).is_archived);
+    const enrollmentOf = (courseId: string) => this.enrollments.get(`${userId}_${courseId}`) as any;
+    const lastTouched = (courseId: string) => {
+      const e = enrollmentOf(courseId);
+      return e?.last_accessed_at || e?.updated_at || e?.enrolled_at || e?.created_at;
+    };
+    const byRecent = [...enrolled].sort(
+      (a, b) => new Date(lastTouched(b.id) || 0).getTime() - new Date(lastTouched(a.id) || 0).getTime()
+    );
+
+    const course_progress: CourseProgressItem[] = byRecent.map((c, i) => ({
+      id: c.id,
+      name: c.title,
+      code: c.code,
+      progress: c.progress_percentage ?? 0,
+      completed_lessons: c.completed_lessons ?? 0,
+      total_lessons: c.total_lessons ?? 0,
+      last_accessed: relTime(lastTouched(c.id)),
+      category: (c as any).category || 'Course',
+      color: colors[i % colors.length],
+    }));
+
+    const resumeCourse = byRecent.find((c) => (c.progress_percentage ?? 0) < 100 && c.next_recommended_lesson);
+    const continue_learning: ContinueLearningItem | null = resumeCourse
+      ? {
+          course_id: resumeCourse.id,
+          course_name: resumeCourse.code ? `${resumeCourse.title} (${resumeCourse.code})` : resumeCourse.title,
+          lesson_id: resumeCourse.next_recommended_lesson!.id,
+          lesson_title: resumeCourse.next_recommended_lesson!.title,
+          progress: resumeCourse.progress_percentage ?? 0,
+          next_topic: resumeCourse.next_recommended_lesson!.title,
+          category: (resumeCourse as any).category || 'Course',
+          total_lessons: resumeCourse.total_lessons ?? 0,
+          completed_lessons: resumeCourse.completed_lessons ?? 0,
+        }
+      : null;
+
+    const overall_progress = enrolled.length
+      ? Math.round(enrolled.reduce((sum, c) => sum + (c.progress_percentage ?? 0), 0) / enrolled.length)
+      : 0;
+
+    const weekAgo = Date.now() - 7 * 86400000;
+    const minutesOf = (a: any) => Number(a?.metadata?.duration_minutes) || 0;
+    const study_minutes_week = activities
+      .filter((a) => new Date(a.created_at).getTime() >= weekAgo)
+      .reduce((sum, a) => sum + minutesOf(a), 0);
+
+    let dsaSolved = 0;
+    try {
+      const { DSAService } = await import('../services/dsa');
+      dsaSolved = (await DSAService.getProgress(userId)).problems_solved.length;
+    } catch {
+      dsaSolved = activities.filter((a) => a.activity_type === 'DSA_PROBLEM_SOLVED').length;
     }
+
+    const typeOf = (t: string): RecentActivityItem['type'] =>
+      t.includes('QUIZ') ? 'quiz' : t.includes('DSA') || t.includes('CODING') || t.includes('PROBLEM') ? 'dsa'
+        : t.includes('NOTE') ? 'note' : t.includes('DOCUMENT') ? 'document' : t.includes('PROJECT') ? 'project' : 'lesson';
+    const linkOf = (k: RecentActivityItem['type']) =>
+      ({ quiz: '/quiz', dsa: '/dsa', note: '/notes', document: '/documents', project: '/projects', lesson: '/courses' })[k];
+    const recent_activity: RecentActivityItem[] = [...activities]
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, 5)
+      .map((a) => {
+        const k = typeOf(String(a.activity_type || ''));
+        return {
+          id: a.id,
+          title: a.title,
+          type: k,
+          timestamp: a.created_at,
+          formatted_time: relTime(a.created_at),
+          link: (a.metadata as any)?.link || linkOf(k),
+          status: 'completed' as const,
+        };
+      });
+
+    const projectItems: ActiveProjectItem[] = projects
+      .filter((p: any) => p.status !== 'ARCHIVED')
+      .map((p: any) => {
+        const milestones: any[] = Array.isArray(p.milestones) ? p.milestones : [];
+        const doneMs = milestones.filter((m) => m.status === 'COMPLETED' || m.is_completed || m.completed).length;
+        const progress = typeof p.progress_percentage === 'number' ? p.progress_percentage
+          : typeof p.progress === 'number' ? p.progress
+          : milestones.length ? Math.round((doneMs / milestones.length) * 100)
+          : p.status === 'COMPLETED' ? 100 : 0;
+        const nextMs = milestones.find((m) => !(m.status === 'COMPLETED' || m.is_completed || m.completed));
+        return {
+          id: p.id,
+          title: p.title,
+          progress,
+          current_milestone: nextMs?.title || (p.status === 'COMPLETED' ? 'Completed' : 'No milestones yet'),
+          next_step: nextMs?.title ? `Work on: ${nextMs.title}` : p.status === 'COMPLETED' ? 'Add it to your resume' : 'Add milestones to track progress',
+          tech_stack: p.technologies || p.tech_stack || p.tags || [],
+          link: `/projects/${p.id}`,
+        };
+      });
+
+    const doneAttempts = quizAttempts.filter((a: any) => a.status === 'COMPLETED' || !!a.completed_at);
+
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const weekly = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => ({ day, minutes: 0, problems_solved: 0 }));
+    for (const a of activities) {
+      const t = new Date(a.created_at);
+      if (isNaN(t.getTime()) || t.getTime() < weekAgo) continue;
+      const row = weekly.find((w) => w.day === dayNames[t.getDay()]);
+      if (!row) continue;
+      row.minutes += minutesOf(a);
+      if (/PROBLEM_SOLVED/.test(String(a.activity_type))) row.problems_solved++;
+    }
+
+    const hasRecords = enrolled.length > 0 || projects.length > 0 || activities.length > 0 || doneAttempts.length > 0 || dsaSolved > 0;
+    const currentStreak = streak?.current_streak ?? 0;
 
     return {
       student: {
@@ -3330,294 +3355,63 @@ print(power_mod(2, 10, 1000))  # Output: 24
         semester: student.semester,
         role: student.role,
         avatar_url: student.avatar_url,
-        learning_streak: 7,
-        focus_topic: 'Binary Search Trees & Asymptotic Analysis',
+        learning_streak: currentStreak,
+        focus_topic: continue_learning ? continue_learning.course_name : 'Getting Started with B.Tech Curriculum',
       },
       summary: {
-        overall_progress: 68,
-        streak_days: 7,
-        longest_streak: 14,
-        courses_active: 4,
-        projects_active: 2,
-        dsa_solved: 142,
-        study_hours_this_week: 22.5,
-        credits_completed: 98,
+        overall_progress,
+        streak_days: currentStreak,
+        longest_streak: streak?.longest_streak ?? 0,
+        courses_active: enrolled.filter((c) => (c.progress_percentage ?? 0) < 100).length,
+        projects_active: projects.filter((p: any) => p.status !== 'COMPLETED' && p.status !== 'ARCHIVED').length,
+        dsa_solved: dsaSolved,
+        study_hours_this_week: Math.round((study_minutes_week / 60) * 10) / 10,
+        // Credits are not tracked anywhere yet, so none are claimed.
+        credits_completed: 0,
         total_credits: 160,
       },
-      continue_learning: {
-        course_id: 'crs_daa_01',
-        course_name: 'Design and Analysis of Algorithms (DAA)',
-        lesson_id: 'lsn_bst_06',
-        lesson_title: 'Binary Search Trees & AVL Rotations',
-        progress: 58,
-        next_topic: 'Red-Black Tree Balancing Invariants',
-        category: 'Core Computer Science',
-        total_lessons: 12,
-        completed_lessons: 7,
-      },
+      continue_learning,
       today_plan: todayTasks,
-      course_progress: [
-        {
-          id: 'crs_daa_01',
-          name: 'Design and Analysis of Algorithms',
-          code: 'CS401',
-          progress: 58,
-          completed_lessons: 7,
-          total_lessons: 12,
-          last_accessed: '2 hours ago',
-          category: 'Core Algorithms',
-          color: '#2563EB',
-        },
-        {
-          id: 'crs_ai_02',
-          name: 'Artificial Intelligence & Neural Networks',
-          code: 'CS602',
-          progress: 72,
-          completed_lessons: 18,
-          total_lessons: 25,
-          last_accessed: 'Yesterday',
-          category: 'Specialization',
-          color: '#4F46E5',
-        },
-        {
-          id: 'crs_os_03',
-          name: 'Operating Systems & Kernel Internals',
-          code: 'CS403',
-          progress: 85,
-          completed_lessons: 22,
-          total_lessons: 26,
-          last_accessed: '3 days ago',
-          category: 'Systems Architecture',
-          color: '#0891B2',
-        },
-        {
-          id: 'crs_db_04',
-          name: 'Database Systems & Distributed Queries',
-          code: 'CS501',
-          progress: 44,
-          completed_lessons: 11,
-          total_lessons: 25,
-          last_accessed: '4 days ago',
-          category: 'Data Engineering',
-          color: '#16A34A',
-        },
-      ],
+      course_progress,
       recommendations: [
         {
-          id: 'rec_1',
-          title: 'AVL Tree Double Rotations Implementation',
-          type: 'dsa',
-          reason: 'Because you recently completed Binary Search Trees',
-          difficulty: 'Intermediate',
-          estimated_time: '25 min',
-          action_url: '/dsa',
-        },
-        {
-          id: 'rec_2',
-          title: 'Cross-Entropy Loss in Multiclass Classification',
+          id: 'rec_onboarding_1',
+          title: enrolled.length ? 'Continue your enrolled courses' : 'Explore Semester 1-8 Curriculum Roadmaps',
           type: 'course',
-          reason: 'Next recommended concept in Neural Networks track',
-          difficulty: 'Intermediate',
-          estimated_time: '30 min',
+          reason: enrolled.length ? `You are enrolled in ${enrolled.length} course${enrolled.length === 1 ? '' : 's'}` : 'Select your registered branch and semester to begin',
+          difficulty: 'Beginner',
+          estimated_time: '10 min',
           action_url: '/courses',
         },
         {
-          id: 'rec_3',
-          title: 'Containerizing FastAPI Services with Multi-Stage Builds',
-          type: 'project',
-          reason: 'Prerequisite for your Autonomous Multi-Agent Capstone',
-          difficulty: 'Beginner',
-          estimated_time: '40 min',
-          action_url: '/projects',
-        },
-        {
-          id: 'rec_4',
-          title: 'Virtual Memory Paging Diagnostics Quiz',
+          id: 'rec_onboarding_2',
+          title: doneAttempts.length ? 'Take another practice quiz' : 'Diagnostic Engineering Skill Assessment',
           type: 'quiz',
-          reason: 'Strengthen identified weak areas before semester exams',
-          difficulty: 'Intermediate',
+          reason: doneAttempts.length ? `You have completed ${doneAttempts.length} quiz attempt${doneAttempts.length === 1 ? '' : 's'}` : 'Identify your strengths and target improvement areas',
+          difficulty: 'Beginner',
           estimated_time: '15 min',
           action_url: '/quiz',
         },
       ],
-      weak_areas: [
-        {
-          topic: 'Dynamic Programming (0/1 Knapsack & Memoization)',
-          score: 48,
-          subject: 'Algorithms',
-          recommendation: 'Practice 2D State Table Transformations',
-          action_url: '/dsa',
-        },
-        {
-          topic: 'Graph Shortest Paths (Dijkstra vs Bellman-Ford)',
-          score: 52,
-          subject: 'Algorithms',
-          recommendation: 'Review Negative Weight Edge Relaxation Invariants',
-          action_url: '/dsa',
-        },
-        {
-          topic: 'Paging vs Segmentation TLB Miss Calculations',
-          score: 56,
-          subject: 'Operating Systems',
-          recommendation: 'Review Multi-Level Inverted Page Tables',
-          action_url: '/quiz',
-        },
-      ],
-      strengths: [
-        {
-          topic: 'Relational SQL & Normalization (1NF - BCNF)',
-          score: 92,
-          subject: 'DBMS',
-        },
-        {
-          topic: 'Binary Search & Divide and Conquer Patterns',
-          score: 88,
-          subject: 'Algorithms',
-        },
-        {
-          topic: 'Asynchronous Python & Pydantic Data Validation',
-          score: 85,
-          subject: 'Coding Lab',
-        },
-      ],
-      recent_activity: [
-        {
-          id: 'act_1',
-          title: 'Completed Lesson: Binary Search Trees Overview',
-          type: 'lesson',
-          timestamp: new Date(Date.now() - 1000 * 60 * 120).toISOString(),
-          formatted_time: '2 hours ago',
-          link: '/courses',
-          status: 'completed',
-        },
-        {
-          id: 'act_2',
-          title: 'Solved Problem: Validate Binary Search Tree (Medium)',
-          type: 'dsa',
-          timestamp: new Date(Date.now() - 1000 * 60 * 240).toISOString(),
-          formatted_time: '4 hours ago',
-          link: '/dsa',
-          status: 'submitted',
-        },
-        {
-          id: 'act_3',
-          title: 'Generated Notes: Virtual Memory & TLB Miss Handling',
-          type: 'note',
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-          formatted_time: 'Yesterday',
-          link: '/notes',
-          status: 'completed',
-        },
-        {
-          id: 'act_4',
-          title: 'Completed Quiz: Algorithm Asymptotics Diagnostic (85%)',
-          type: 'quiz',
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
-          formatted_time: '2 days ago',
-          link: '/quiz',
-          status: 'completed',
-        },
-        {
-          id: 'act_5',
-          title: 'Uploaded Document: Computer Networks RFC 793 Spec',
-          type: 'document',
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 72).toISOString(),
-          formatted_time: '3 days ago',
-          link: '/documents',
-          status: 'completed',
-        },
-      ],
-      projects: [
-        {
-          id: 'prj_01',
-          title: 'Autonomous Multi-Agent Academic Research Engine',
-          progress: 72,
-          current_milestone: 'Tool Registry & RAG Architecture',
-          next_step: 'Implement Vector Similarity Retrieval Cache',
-          tech_stack: ['TypeScript', 'FastAPI', 'PostgreSQL', 'Gemini'],
-          link: '/projects',
-        },
-        {
-          id: 'prj_02',
-          title: 'B.Tech Smart Campus Real-Time Attendance System',
-          progress: 45,
-          current_milestone: 'Feature Extraction Pipeline',
-          next_step: 'Mount Secure WebSocket Frame Streaming',
-          tech_stack: ['Python', 'OpenCV', 'React', 'Tailwind'],
-          link: '/projects',
-        },
-      ],
-      upcoming_items: [
-        {
-          id: 'up_1',
-          title: 'Operating Systems Mid-Semester Evaluation',
-          type: 'quiz',
-          date: 'Oct 14, 2026',
-          time: '10:00 AM',
-          status: 'Scheduled',
-          link: '/quiz',
-        },
-        {
-          id: 'up_2',
-          title: 'Capstone Project Phase 2 Architecture Review',
-          type: 'milestone',
-          date: 'Oct 18, 2026',
-          time: '02:30 PM',
-          status: 'Upcoming',
-          link: '/projects',
-        },
-        {
-          id: 'up_3',
-          title: 'Tier-1 Campus Placement: Data Structures Online Round',
-          type: 'interview',
-          date: 'Oct 22, 2026',
-          time: '11:00 AM',
-          status: 'Registration Open',
-          link: '/placement',
-        },
-      ],
-      bookmarks: [
-        {
-          id: 'bm_1',
-          title: 'AVL Tree Balancing & Rotations Visualizer',
-          type: 'DSA Lab',
-          link: '/dsa',
-          created_at: '2 days ago',
-        },
-        {
-          id: 'bm_2',
-          title: 'Operating Systems Page Replacement Cheatsheet',
-          type: 'Notes',
-          link: '/notes',
-          created_at: '3 days ago',
-        },
-        {
-          id: 'bm_3',
-          title: 'TCP 3-Way Handshake & Congestion Control RFC',
-          type: 'Documents',
-          link: '/documents',
-          created_at: '5 days ago',
-        },
-      ],
+      // Weak areas and strengths come from the quiz module's topic analysis (see /quiz/progress);
+      // they are not invented here.
+      weak_areas: [],
+      strengths: [],
+      recent_activity,
+      projects: projectItems,
+      upcoming_items: [],
+      bookmarks: bookmarks.slice(0, 5).map((b: any) => ({
+        id: b.id,
+        title: b.title,
+        type: b.category || b.entity_type,
+        link: b.url,
+        created_at: b.created_at,
+      })),
       analytics: {
-        weekly_study_minutes: [
-          { day: 'Mon', minutes: 180, problems_solved: 3 },
-          { day: 'Tue', minutes: 240, problems_solved: 5 },
-          { day: 'Wed', minutes: 120, problems_solved: 2 },
-          { day: 'Thu', minutes: 310, problems_solved: 6 },
-          { day: 'Fri', minutes: 200, problems_solved: 4 },
-          { day: 'Sat', minutes: 280, problems_solved: 5 },
-          { day: 'Sun', minutes: 190, problems_solved: 3 },
-        ],
-        category_distribution: [
-          { category: 'Courses', progress: 72 },
-          { category: 'DSA Practice', progress: 64 },
-          { category: 'Coding Labs', progress: 80 },
-          { category: 'Projects', progress: 58 },
-          { category: 'Placement', progress: 45 },
-        ],
+        weekly_study_minutes: weekly,
+        category_distribution: course_progress.map((c) => ({ category: c.name, progress: c.progress })),
       },
-      is_new_student: false,
+      is_new_student: !hasRecords,
       recent_documents: Array.from(this.documents.values())
         .filter((d) => d.student_id === userId)
         .sort((a, b) => new Date(b.last_opened_at).getTime() - new Date(a.last_opened_at).getTime())
@@ -3642,6 +3436,17 @@ print(power_mod(2, 10, 1000))  # Output: 24
           tags: d.metadata.tags || [],
         })),
     };
+  }
+
+  /** Stores suggested tasks as today's plan only when the student has none yet; returns the plan. */
+  public async seedTodayPlanIfEmpty(userId: string, tasks: TodayPlanTask[]): Promise<TodayPlanTask[]> {
+    await this.initialize();
+    const existing = this.todayPlans.get(userId) || [];
+    if (existing.length === 0 && tasks.length > 0) {
+      this.todayPlans.set(userId, tasks);
+      return tasks;
+    }
+    return existing;
   }
 
   public async toggleTodayTask(userId: string, taskId: string): Promise<TodayPlanTask> {
@@ -3862,34 +3667,28 @@ print(power_mod(2, 10, 1000))  # Output: 24
 
     return {
       student: this.toSafeStudent(student),
+      // Only the student's real state; empty values when there is none (the AI is told nothing invented).
       current_course: {
-        name: dash.continue_learning?.course_name || 'Design and Analysis of Algorithms',
-        code: 'CS401',
-        progress: dash.continue_learning?.progress || 58,
+        name: dash.continue_learning?.course_name || 'No active course',
+        code: dash.course_progress.find((c) => c.id === dash.continue_learning?.course_id)?.code || '',
+        progress: dash.continue_learning?.progress ?? 0,
       },
       current_lesson: {
-        title: dash.continue_learning?.lesson_title || 'Binary Search Trees & AVL Rotations',
-        topic: dash.continue_learning?.next_topic || 'Red-Black Tree Balancing',
-        progress: 58,
+        title: dash.continue_learning?.lesson_title || 'No lesson in progress',
+        topic: dash.continue_learning?.next_topic || '',
+        progress: dash.continue_learning?.progress ?? 0,
       },
       current_project: {
-        title: dash.projects[0]?.title || 'Autonomous Multi-Agent Academic Research Engine',
-        progress: dash.projects[0]?.progress || 72,
-        milestone: dash.projects[0]?.current_milestone || 'Tool Registry & RAG Integration',
+        title: dash.projects[0]?.title || 'No active project',
+        progress: dash.projects[0]?.progress ?? 0,
+        milestone: dash.projects[0]?.current_milestone || '',
       },
-      recent_topics: [
-        'Binary Search Trees',
-        'AVL Tree Rotations',
-        'Virtual Memory Paging',
-        'Multi-Agent System Design',
-      ],
+      recent_topics: dash.recent_activity.map((a) => a.title).slice(0, 4),
       weak_areas: dash.weak_areas.map((w) => w.topic),
       suggested_actions: [
-        'Practice AVL Rotations in DSA Lab',
-        'Review Inverted Page Table Calculations',
-        'Generate Quiz on Tree Balancing',
-        'Debug Capstone RAG Embedding Pipeline',
-      ],
+        ...(dash.continue_learning ? [`Continue ${dash.continue_learning.lesson_title} in ${dash.continue_learning.course_name}`] : []),
+        ...dash.today_plan.filter((t) => !t.is_completed).map((t) => t.title),
+      ].slice(0, 4),
     };
   }
 
@@ -6572,7 +6371,9 @@ print(power_mod(2, 10, 1000))  # Output: 24
     const all = Array.from(this.quizzes.values());
     if (!studentId) return all.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     return all
-      .filter((q) => !q.student_id || q.student_id === studentId || q.student_id === 'std_01j8k9x2p4' || q.status === 'READY')
+      // Only quizzes the student may attempt (matches QuizAttemptService.startAttempt):
+      // shared quizzes with no owner, or the student's own. Other students' quizzes stay private.
+      .filter((q) => !q.student_id || q.student_id === studentId)
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }
 
@@ -12942,11 +12743,14 @@ print(power_mod(2, 10, 1000))  # Output: 24
     // Rating distribution
     const dist = { again: 0, hard: 0, good: 0, easy: 0 };
     reviews.forEach((r) => {
+      // The stored rating is authoritative; confidence is only a fallback for legacy reviews
+      // (reviewFlashcard stores GOOD with confidence 3, which used to be counted as HARD).
       const rat = (r.rating || '').toLowerCase();
-      if (rat === 'again' || r.confidence === 1) dist.again++;
-      else if (rat === 'hard' || r.confidence === 2 || r.confidence === 3) dist.hard++;
-      else if (rat === 'good' || r.confidence === 4) dist.good++;
-      else if (rat === 'easy' || r.confidence === 5) dist.easy++;
+      if (rat === 'again' || rat === 'hard' || rat === 'good' || rat === 'easy') dist[rat as keyof typeof dist]++;
+      else if (r.confidence === 1) dist.again++;
+      else if (r.confidence === 2 || r.confidence === 3) dist.hard++;
+      else if (r.confidence === 4) dist.good++;
+      else if (r.confidence === 5) dist.easy++;
     });
 
     // Consecutive streak calculation

@@ -372,7 +372,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
         actions={
           <div className="flex items-center gap-2">
             {/* Workspace Selector */}
-            <div className="flex items-center gap-1.5 bg-slate-100 border border-slate-300 rounded-lg px-2.5 py-1">
+            <div className="flex items-center gap-1.5 min-w-0 max-w-full bg-slate-100 border border-slate-300 rounded-lg px-2.5 py-1">
               <Layers className="w-4 h-4 text-slate-500" />
               <select
                 value={selectedWorkspace?.id || ''}
@@ -386,7 +386,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
                     }
                   }
                 }}
-                className="bg-transparent text-sm font-semibold text-slate-800 focus:outline-none cursor-pointer"
+                className="bg-transparent text-sm font-semibold text-slate-800 focus:outline-none cursor-pointer min-w-0 max-w-[14rem] sm:max-w-xs"
               >
                 {workspaces.map((w) => (
                   <option key={w.id} value={w.id}>

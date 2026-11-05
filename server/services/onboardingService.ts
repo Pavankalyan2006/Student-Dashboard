@@ -507,27 +507,30 @@ export class OnboardingService {
     const academic_dates: AcademicDate[] = [
       {
         id: `date_slip_${studentId}`,
-        label: `Slip Test: ${subjects[0]?.name || 'Core Foundations'}`,
+        label: `Slip Test: ${subjects[0]?.name || 'Core Foundations'} (estimated)`,
         date: formatDate(14),
         type: 'SLIP_TEST',
         subject_id: subjects[0]?.id,
-        notes: 'Covers Unit 1 & Unit 2 core fundamentals',
+        notes: 'Covers Unit 1 & Unit 2 core fundamentals. Estimated date from a typical semester calendar: replace it with your college\'s actual date.',
+        is_estimate: true,
       },
       {
         id: `date_internal_${studentId}`,
-        label: `Mid-Semester Internal Exam`,
+        label: `Mid-Semester Internal Exam (estimated)`,
         date: formatDate(35),
         type: 'INTERNAL_EXAM',
         subject_id: subjects[0]?.id,
-        notes: 'Midterm assessment across all enrolled subjects',
+        notes: 'Midterm assessment across all enrolled subjects. Estimated date from a typical semester calendar: replace it with your college\'s actual date.',
+        is_estimate: true,
       },
       {
         id: `date_endsem_${studentId}`,
-        label: `End-Semester Final Examinations`,
+        label: `End-Semester Final Examinations (estimated)`,
         date: formatDate(85),
         type: 'END_SEMESTER',
         subject_id: subjects[0]?.id,
-        notes: 'Comprehensive university degree exams',
+        notes: 'Comprehensive university degree exams. Estimated date from a typical semester calendar: replace it with your college\'s actual date.',
+        is_estimate: true,
       },
     ];
 
@@ -539,6 +542,7 @@ export class OnboardingService {
       academic_dates,
       semester_start_date: formatDate(-30),
       semester_end_date: formatDate(90),
+      is_template: true,
       updated_at: now.toISOString(),
     };
 
@@ -576,6 +580,7 @@ export class OnboardingService {
       syllabus_reference: data.syllabus_reference ?? existing?.syllabus_reference,
       academic_priorities: data.academic_priorities ?? existing?.academic_priorities,
       study_materials_notes: data.study_materials_notes ?? existing?.study_materials_notes,
+      is_template: false,
       updated_at: now,
     };
 
@@ -973,6 +978,9 @@ export class OnboardingService {
     const onboarding = await this.getOnboardingStatus(studentId);
     const education = await this.getEducationProfile(studentId);
     const semester = await this.getSemesterSyllabus(studentId);
+    // The auto-generated branch template is not something the student filled in, so it must not
+    // count towards profile completion.
+    const semesterFilled = semester && !semester.is_template ? semester : null;
     const prefs = await this.getLearningPreferences(studentId);
     const skills = await this.getSkillsAssessment(studentId);
     const history = await this.getAcademicHistory(studentId);
@@ -1017,18 +1025,18 @@ export class OnboardingService {
       {
         section: 'SEMESTER_SYLLABUS',
         label: 'Semester & Syllabus',
-        completed: Boolean(semester?.subjects?.length),
-        completion_percentage: semester ? Math.min(100,
-          (semester.academic_year ? 15 : 0) +
-          (semester.semester_number ? 15 : 0) +
-          (semester.subjects?.length ? Math.min(40, semester.subjects.length * 10) : 0) +
-          (semester.academic_dates?.length ? Math.min(30, semester.academic_dates.length * 5) : 0)
+        completed: Boolean(semesterFilled?.subjects?.length),
+        completion_percentage: semesterFilled ? Math.min(100,
+          (semesterFilled.academic_year ? 15 : 0) +
+          (semesterFilled.semester_number ? 15 : 0) +
+          (semesterFilled.subjects?.length ? Math.min(40, semesterFilled.subjects.length * 10) : 0) +
+          (semesterFilled.academic_dates?.length ? Math.min(30, semesterFilled.academic_dates.length * 5) : 0)
         ) : 0,
-        required_fields_filled: semester ? [semester.semester_number, semester.subjects?.length].filter(Boolean).length : 0,
+        required_fields_filled: semesterFilled ? [semesterFilled.semester_number, semesterFilled.subjects?.length].filter(Boolean).length : 0,
         total_required_fields: 2,
-        optional_fields_filled: semester ? [semester.semester_start_date, semester.semester_end_date, semester.academic_dates?.length].filter(Boolean).length : 0,
+        optional_fields_filled: semesterFilled ? [semesterFilled.semester_start_date, semesterFilled.semester_end_date, semesterFilled.academic_dates?.length].filter(Boolean).length : 0,
         total_optional_fields: 5,
-        last_updated: semester?.updated_at || null,
+        last_updated: semesterFilled?.updated_at || null,
       },
       {
         section: 'LEARNING_PREFERENCES',

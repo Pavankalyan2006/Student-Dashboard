@@ -138,6 +138,8 @@ export interface AcademicDate {
         'ASSIGNMENT' | 'PROJECT_REVIEW' | 'END_SEMESTER' | 'OTHER';
   subject_id?: string;
   notes?: string;
+  /** True for placeholder dates generated from a typical semester calendar, not entered by the student. */
+  is_estimate?: boolean;
 }
 
 export interface SemesterSyllabusData {
@@ -151,6 +153,8 @@ export interface SemesterSyllabusData {
   syllabus_reference?: string;
   academic_priorities?: string[];
   study_materials_notes?: string;
+  /** True while this is the auto-generated branch template the student has not saved yet. */
+  is_template?: boolean;
   updated_at: string;
 }
 

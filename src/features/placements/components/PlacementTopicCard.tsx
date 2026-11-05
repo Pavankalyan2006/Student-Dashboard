@@ -43,7 +43,7 @@ export const PlacementTopicCard: React.FC<Props> = ({ topic, onSelect }) => {
         </p>
       </div>
 
-      <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+      <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1 font-medium">
             <BookOpen className="h-3.5 w-3.5 text-slate-400" />

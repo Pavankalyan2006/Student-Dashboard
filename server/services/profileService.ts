@@ -76,7 +76,24 @@ export class ProfileService {
     studentId: string,
     updates: Partial<StudentProfile>
   ): Promise<StudentProfile> {
-    return db.updateStudentProfile(studentId, updates);
+    const updated = await db.updateStudentProfile(studentId, updates);
+
+    // Keep the education profile (read by the dashboard, semester centre and AI context) in step
+    // with academic fields edited on the profile page; otherwise the dashboard keeps showing the
+    // old branch/semester.
+    const semester = updates.semester !== undefined ? Number(updates.semester) : undefined;
+    const institution = (updates as any).college_name as string | undefined;
+    if (updates.branch || semester || institution) {
+      const edu = OnboardingService.getEducationProfileSync(studentId);
+      if (edu) {
+        await OnboardingService.saveEducationProfile(studentId, {
+          ...(updates.branch ? { branch: updates.branch } : {}),
+          ...(semester && semester > 0 ? { current_semester: semester, current_year: Math.ceil(semester / 2) } : {}),
+          ...(institution ? { institution } : {}),
+        });
+      }
+    }
+    return updated;
   }
 
   /**

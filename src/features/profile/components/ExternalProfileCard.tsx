@@ -238,7 +238,7 @@ export const ExternalProfileCard: React.FC<ExternalProfileCardProps> = ({
     <div className="bg-slate-900/80 border border-slate-800 hover:border-slate-700/80 rounded-2xl p-5 transition-all duration-300 flex flex-col justify-between group shadow-lg hover:shadow-indigo-500/5">
       <div>
         {/* Header: Platform & Badges */}
-        <div className="flex items-start justify-between gap-3 mb-3">
+        <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-xl bg-slate-800/90 border border-slate-700/80 flex items-center justify-center font-bold text-xl text-white shadow-inner">
               {profile.platform_name.charAt(0)}
@@ -293,7 +293,7 @@ export const ExternalProfileCard: React.FC<ExternalProfileCardProps> = ({
         )}
 
         {/* Sync Time & Sharing Permissions */}
-        <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400 mb-4">
+        <div className="pt-3 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400 mb-4">
           <div className="flex items-center gap-1.5">
             <Clock className="w-3.5 h-3.5 text-slate-400" />
             <span>Synced: {formatLastSync(profile.last_successful_sync)}</span>

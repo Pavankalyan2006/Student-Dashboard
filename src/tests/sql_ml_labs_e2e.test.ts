@@ -297,9 +297,15 @@ describe('SQL Lab & AI/ML Lab Master E2E Test Suite', () => {
       expect(exp.metrics.confusion_matrix).toBeDefined();
       expect(exp.metrics.confusion_matrix!.length).toBe(3); // 3-class iris
 
-      // Loss curve must exist with real iterations
-      expect(exp.insights.loss_curve).toBeDefined();
-      expect(exp.insights.loss_curve!.length).toBeGreaterThanOrEqual(10);
+      // k-NN has no training epochs, so no loss curve is invented for it.
+      expect(Array.isArray(exp.insights.loss_curve)).toBe(true);
+      // The sandbox says which model it actually trained instead of claiming a Random Forest.
+      expect(exp.logs!.some((l) => l.level === 'WARN' && /not implemented in this sandbox/.test(l.message))).toBe(true);
+      // Metrics come from the confusion matrix of real predictions.
+      const cm = exp.metrics.confusion_matrix!;
+      const total = cm.flat().reduce((a, b) => a + b, 0);
+      const diag = cm.reduce((a, row, i) => a + row[i], 0);
+      expect(exp.metrics.accuracy).toBeCloseTo(diag / total, 4);
 
       // Feature importances must be calculated
       expect(exp.insights.feature_importance).toBeDefined();
@@ -346,7 +352,10 @@ describe('SQL Lab & AI/ML Lab Master E2E Test Suite', () => {
 
       expect(exp.status).toBe('COMPLETED');
       expect(exp.metrics.inertia).toBeGreaterThan(0);
-      expect(exp.metrics.silhouette_score).toBeGreaterThan(0.5);
+      // Real silhouette score (computed from the clustered rows), so only its valid range is fixed.
+      expect(exp.metrics.silhouette_score).toBeGreaterThan(0);
+      expect(exp.metrics.silhouette_score).toBeLessThanOrEqual(1);
+      expect(exp.insights.loss_curve!.length).toBe(20);
       expect(exp.metrics.cluster_distribution).toBeDefined();
       expect(Object.keys(exp.metrics.cluster_distribution!).length).toBe(3);
     });
@@ -377,7 +386,9 @@ describe('SQL Lab & AI/ML Lab Master E2E Test Suite', () => {
       expect(pred.predicted_value).toBeDefined();
       expect(pred.confidence).toBeGreaterThan(0.5);
       expect(pred.class_probabilities).toBeDefined();
-      expect(pred.explanation).toContain('sepal_length');
+      // A setosa-like flower must be classified as setosa by the trained model.
+      expect(pred.predicted_label).toBe('setosa');
+      expect(pred.explanation).toContain('nearest training rows');
     });
   });
 });

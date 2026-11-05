@@ -261,7 +261,7 @@ export const QuizPage: React.FC<QuizPageProps> = ({ onNavigate }) => {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center rounded-lg border border-slate-200 dark:border-slate-800 p-0.5 bg-slate-50 dark:bg-slate-800/60 text-xs">
+            <div className="flex flex-wrap items-center rounded-lg border border-slate-200 dark:border-slate-800 p-0.5 bg-slate-50 dark:bg-slate-800/60 text-xs">
               {(['ALL', 'TOPIC', 'COURSE', 'DSA', 'NOTES', 'DOCUMENT'] as const).map((src) => (
                 <button
                   key={src}

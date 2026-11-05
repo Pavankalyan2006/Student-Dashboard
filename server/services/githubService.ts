@@ -193,11 +193,18 @@ export class GitHubService {
       logger.info(`GitHub API repos lookup note: ${err.message}.`);
     }
 
+    if (!ghProfile) {
+      // Without a verified GitHub profile there is nothing real to show, so do not store a
+      // connection with a placeholder avatar, bio and repository count.
+      throw new ValidationError(
+        `Could not verify the GitHub account '${githubUsername}' (GitHub did not respond or the user does not exist), so nothing was connected.`
+      );
+    }
+
     const username = ghProfile?.login || githubUsername;
     const name = ghProfile?.name || student?.name || 'Engineering Student';
     const avatarUrl =
-      ghProfile?.avatar_url ||
-      `https://avatars.githubusercontent.com/u/${Date.now().toString().slice(-6)}?v=4`;
+      ghProfile?.avatar_url || '';
 
     const conn: GitHubConnection = {
       id: `gh_conn_${Date.now()}`,
@@ -206,14 +213,12 @@ export class GitHubService {
       username,
       name,
       avatar_url: avatarUrl,
-      bio: ghProfile?.bio || 'B.Tech Student & Software Engineering Learner',
+      bio: ghProfile?.bio || '',
       company: ghProfile?.company || undefined,
       public_repos:
         ghProfile?.public_repos !== undefined
           ? ghProfile.public_repos
-          : fetchedRepos.length > 0
-          ? fetchedRepos.length
-          : 3,
+          : fetchedRepos.length,
       following: ghProfile?.following || 0,
       profile_url: ghProfile?.html_url || `https://github.com/${username}`,
       encrypted_token: this.encryptToken(token || `gho_${crypto.randomBytes(20).toString('hex')}`),
@@ -258,199 +263,9 @@ export class GitHubService {
         };
         await db.saveGitHubRepository(repoRecord);
       }
-    } else {
-      // If no live repos found (offline or brand new user), ensure demo projects are available
-      const existingRepos = await db.getGitHubRepositories(studentId);
-      if (existingRepos.length === 0) {
-        const demoRepo1: GitHubRepository = {
-          id: `gh_repo_${Date.now()}_1`,
-          student_id: studentId,
-          github_connection_id: conn.id,
-          external_repo_id: `ext_${Date.now()}_1`,
-          owner: conn.username,
-          name: 'b.tech-ai-learning-platform',
-          full_name: `${conn.username}/b.tech-ai-learning-platform`,
-          description: 'Autonomous AI-powered learning and research environment for B.Tech students.',
-          visibility: 'PUBLIC',
-          default_branch: 'main',
-          language: 'TypeScript',
-          stars: 42,
-          forks: 8,
-          open_issues_count: 2,
-          url: `https://github.com/${conn.username}/b.tech-ai-learning-platform`,
-          clone_url: `https://github.com/${conn.username}/b.tech-ai-learning-platform.git`,
-          topics: ['education', 'rag', 'typescript', 'express', 'react'],
-          license: 'MIT',
-          is_featured: true,
-          featured_metadata: {
-            title: 'B.Tech AI Learning Platform',
-            role: 'Lead Architect & Full Stack Developer',
-            custom_description: 'An AI-powered academic knowledge base and coding lab system with page-grounded retrieval.',
-            tech_stack: ['TypeScript', 'Express', 'React', 'Gemini AI', 'pgvector'],
-            key_features: ['RAG with Citation Provenance', 'Code Secret Redaction', 'Active Recall Decks'],
-            challenges_solved: 'Mitigated LLM hallucinations by isolating retrieved chunks in strict defensive boundaries.',
-          },
-          linked_project_id: 'prj_01',
-          analysis_status: 'ANALYZED',
-          last_synced_at: now,
-          created_at: now,
-          updated_at: now,
-        };
-
-        const demoRepo2: GitHubRepository = {
-          id: `gh_repo_${Date.now()}_2`,
-          student_id: studentId,
-          github_connection_id: conn.id,
-          external_repo_id: `ext_${Date.now()}_2`,
-          owner: conn.username,
-          name: 'distributed-vector-retrieval',
-          full_name: `${conn.username}/distributed-vector-retrieval`,
-          description: 'High-concurrency vector index benchmarks using pgvector and Python FastAPI.',
-          visibility: 'PUBLIC',
-          default_branch: 'main',
-          language: 'Python',
-          stars: 12,
-          forks: 3,
-          open_issues_count: 1,
-          url: `https://github.com/${conn.username}/distributed-vector-retrieval`,
-          clone_url: `https://github.com/${conn.username}/distributed-vector-retrieval.git`,
-          topics: ['fastapi', 'python', 'vector-search', 'benchmarks'],
-          license: 'Apache-2.0',
-          is_featured: false,
-          linked_project_id: 'prj_02',
-          analysis_status: 'NOT_ANALYZED',
-          last_synced_at: now,
-          created_at: now,
-          updated_at: now,
-        };
-
-        const demoRepo3: GitHubRepository = {
-          id: `gh_repo_${Date.now()}_3`,
-          student_id: studentId,
-          github_connection_id: conn.id,
-          external_repo_id: `ext_${Date.now()}_3`,
-          owner: conn.username,
-          name: 'academic-capstone-private',
-          full_name: `${conn.username}/academic-capstone-private`,
-          description: 'Private academic capstone microservices with Spring Boot and PostgreSQL.',
-          visibility: 'PRIVATE',
-          default_branch: 'main',
-          language: 'Java',
-          stars: 5,
-          forks: 1,
-          open_issues_count: 0,
-          url: `https://github.com/${conn.username}/academic-capstone-private`,
-          clone_url: `https://github.com/${conn.username}/academic-capstone-private.git`,
-          topics: ['java', 'spring-boot', 'capstone', 'microservices'],
-          license: 'Proprietary',
-          is_featured: false,
-          analysis_status: 'NOT_ANALYZED',
-          last_synced_at: now,
-          created_at: now,
-          updated_at: now,
-        };
-
-        await db.saveGitHubRepository(demoRepo1);
-        await db.saveGitHubRepository(demoRepo2);
-        await db.saveGitHubRepository(demoRepo3);
-
-        // Seed files for demoRepo1
-        await db.saveGitHubRepositoryFiles(demoRepo1.id, [
-          {
-            path: 'package.json',
-            name: 'package.json',
-            type: 'file',
-            size: 2450,
-            sha: 'f1a92e8',
-            content: `{\n  "name": "b.tech-ai-learning-platform",\n  "version": "1.0.0",\n  "dependencies": {\n    "express": "^4.21.0",\n    "react": "^18.3.1",\n    "typescript": "^5.5.4"\n  }\n}`,
-          },
-          {
-            path: 'README.md',
-            name: 'README.md',
-            type: 'file',
-            size: 1820,
-            sha: 'a8b29c4',
-            content: `# B.Tech Student AI Learning Platform\n\nFull-stack student learning platform with RAG, AI research, and coding intelligence.`,
-          },
-          {
-            path: 'server/server.ts',
-            name: 'server.ts',
-            type: 'file',
-            size: 3200,
-            sha: 'b7c8d9e',
-            content: `import express from 'express';\nconst app = express();\napp.listen(3000, () => console.log('Server active on port 3000'));`,
-          },
-        ]);
-
-        // Seed real commits for demoRepo1
-        await db.saveGitHubCommits(demoRepo1.id, [
-          {
-            id: `ghc_${demoRepo1.id}_1`,
-            repository_id: demoRepo1.id,
-            sha: 'a1b2c3d4e5f6',
-            message: 'feat(core): implement secure OAuth token isolation and AES-256 encryption',
-            author_name: conn.name || conn.username,
-            author_email: `${conn.username}@btech.edu`,
-            committed_at: new Date(Date.now() - 3600000 * 2).toISOString(),
-            date: new Date(Date.now() - 3600000 * 2).toISOString(),
-            changed_files_count: 6,
-            url: `${demoRepo1.url}/commit/a1b2c3d4e5f6`,
-            additions: 120,
-            deletions: 15,
-          },
-          {
-            id: `ghc_${demoRepo1.id}_2`,
-            repository_id: demoRepo1.id,
-            sha: 'f7e8d9c0b1a2',
-            message: 'docs: update README with architectural component diagram and setup instructions',
-            author_name: conn.name || conn.username,
-            author_email: `${conn.username}@btech.edu`,
-            committed_at: new Date(Date.now() - 86400000).toISOString(),
-            date: new Date(Date.now() - 86400000).toISOString(),
-            changed_files_count: 2,
-            url: `${demoRepo1.url}/commit/f7e8d9c0b1a2`,
-            additions: 45,
-            deletions: 8,
-          },
-        ]);
-
-        // Seed issues for demoRepo1
-        await db.saveGitHubIssues(demoRepo1.id, [
-          {
-            id: `ghi_${demoRepo1.id}_1`,
-            repository_id: demoRepo1.id,
-            number: 1,
-            title: 'Implement rate limiting failover caching for GitHub API',
-            body: 'Cache GitHub API responses and fall back to cached data when the rate limit is hit.',
-            comments_count: 0,
-            state: 'open',
-            author: conn.username,
-            labels: ['enhancement', 'security'],
-            created_at: new Date(Date.now() - 86400000 * 2).toISOString(),
-            updated_at: new Date(Date.now() - 3600000 * 4).toISOString(),
-            url: `${demoRepo1.url}/issues/1`,
-          },
-        ]);
-
-        // Seed pull requests for demoRepo1
-        await db.saveGitHubPullRequests(demoRepo1.id, [
-          {
-            id: `ghpr_${demoRepo1.id}_1`,
-            repository_id: demoRepo1.id,
-            number: 2,
-            title: 'refactor: decouple repository sync from browser socket dependency',
-            body: 'Moves repository sync off the browser socket so it can run in the background.',
-            state: 'open',
-            author: conn.username,
-            head_branch: 'feature/resilient-sync',
-            base_branch: 'main',
-            created_at: new Date(Date.now() - 86400000).toISOString(),
-            updated_at: new Date(Date.now() - 3600000).toISOString(),
-            url: `${demoRepo1.url}/pull/2`,
-          },
-        ]);
-      }
     }
+    // No repositories are invented when GitHub returns none or cannot be reached.
+
 
     const { encrypted_token, ...safeConn } = conn;
     return safeConn;
@@ -472,8 +287,11 @@ export class GitHubService {
       const user = await this.githubFetch('/user', token);
       return await this.connectAccount(studentId, user.login || customUsername, token);
     } catch (err: any) {
-      logger.warn(`GitHub token validation failed: ${err.message}. Attempting fallback connection.`);
-      return await this.connectAccount(studentId, customUsername || 'student-engineer', token);
+      // Do not create a connection with an invented profile when GitHub did not accept the token.
+      logger.warn(`GitHub token validation failed: ${err.message}`);
+      throw new ValidationError(
+        'GitHub did not accept this token (or GitHub could not be reached), so no account was connected. Check the token and try again.'
+      );
     }
   }
 
@@ -1136,8 +954,40 @@ Rules:
    * File Tree & Contents
    */
   public static async getRepositoryFiles(repoId: string, studentId: string): Promise<GitHubRepositoryFile[]> {
-    await this.getRepository(repoId, studentId);
-    return await db.getGitHubRepositoryFiles(repoId, studentId);
+    const repo = await this.getRepository(repoId, studentId);
+    const cached = await db.getGitHubRepositoryFiles(repoId, studentId);
+    if (cached.length > 0) return cached;
+    // Fetch the real file tree from GitHub (no contents) and cache it.
+    try {
+      const token = await this.getStoredToken(studentId);
+      const tree = await this.githubFetch(
+        `/repos/${repo.full_name}/git/trees/${encodeURIComponent(repo.default_branch || 'main')}?recursive=1`,
+        token
+      );
+      const files: GitHubRepositoryFile[] = (tree?.tree || []).slice(0, 2000).map((t: any) => ({
+        path: t.path,
+        name: String(t.path).split('/').pop() || t.path,
+        type: t.type === 'tree' ? 'dir' : 'file',
+        size: t.size || 0,
+        sha: t.sha,
+      }));
+      if (files.length) await db.saveGitHubRepositoryFiles(repoId, files);
+      return files;
+    } catch (err: any) {
+      logger.info(`GitHub file tree unavailable for ${repo.full_name}: ${err.message}`);
+      return [];
+    }
+  }
+
+  /** Decrypted token of the student's stored GitHub connection, if any. */
+  private static async getStoredToken(studentId: string): Promise<string | undefined> {
+    const conn = await db.getGitHubConnection(studentId);
+    if (!conn?.encrypted_token) return undefined;
+    try {
+      return this.decryptToken(conn.encrypted_token) || undefined;
+    } catch {
+      return undefined;
+    }
   }
 
   public static async getFileContent(
@@ -1157,8 +1007,31 @@ Rules:
    * Commits, Issues, Pull Requests
    */
   public static async getCommits(repoId: string, studentId: string): Promise<GitHubCommit[]> {
-    await this.getRepository(repoId, studentId);
-    return await db.getGitHubCommits(repoId, studentId);
+    const repo = await this.getRepository(repoId, studentId);
+    const cached = await db.getGitHubCommits(repoId, studentId);
+    if (cached.length > 0) return cached;
+    // Fetch real commit history from GitHub and cache it.
+    try {
+      const token = await this.getStoredToken(studentId);
+      const raw = await this.githubFetch(`/repos/${repo.full_name}/commits?per_page=30`, token);
+      const commits: GitHubCommit[] = (Array.isArray(raw) ? raw : []).map((c: any) => ({
+        id: c.sha,
+        repository_id: repoId,
+        sha: c.sha,
+        message: c.commit?.message || '',
+        author_name: c.commit?.author?.name || c.author?.login || 'unknown',
+        author_email: c.commit?.author?.email,
+        date: c.commit?.author?.date || '',
+        committed_at: c.commit?.author?.date,
+        url: c.html_url,
+        changed_files_count: Array.isArray(c.files) ? c.files.length : 0,
+      }));
+      if (commits.length) await db.saveGitHubCommits(repoId, commits);
+      return commits;
+    } catch (err: any) {
+      logger.info(`GitHub commits unavailable for ${repo.full_name}: ${err.message}`);
+      return [];
+    }
   }
 
   public static async getIssues(repoId: string, studentId: string): Promise<GitHubIssue[]> {

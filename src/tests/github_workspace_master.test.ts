@@ -1,8 +1,12 @@
 import { describe, it, expect, beforeEach } from 'vitest';
+import { useMockGitHubApi } from './helpers/mockGitHubApi';
 import { db } from '../../server/db/database';
 import { GitHubService } from '../../server/services/githubService';
 import { GitHubAnalysisService } from '../../server/services/githubAnalysisService';
 import { ResumeService } from '../../server/services/resumeService';
+
+
+useMockGitHubApi();
 
 describe('GitHub Workspace Master Test Suite — 23 Compliance Assertions', () => {
   const studentA = 'std_master_student_01';

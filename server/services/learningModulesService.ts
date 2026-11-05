@@ -271,6 +271,7 @@ export class LearningModulesService {
     const thirdSubject = syllabus?.subjects?.[2]?.name || 'Data Structures & Algorithms';
     const branchName = edu?.branch || 'B.Tech Engineering';
     const semNumber = syllabus?.semester_number || edu?.current_semester || 6;
+    const isDemo = studentId === 'std_demo_1' || studentId === 'std_01j8k9x2p4';
 
     // 1. Study Plan
     const planId = 'plan_sem6_primary_' + studentId;
@@ -282,7 +283,8 @@ export class LearningModulesService {
       description: `Targeted daily and weekly preparation covering ${primarySubject}, ${secondSubject}, ${thirdSubject}, and placement practice.`,
       target_date: new Date(Date.now() + 60 * 24 * 3600 * 1000).toISOString().split('T')[0],
       total_hours_target: 120,
-      completed_hours: 38,
+      // A starter plan generated from the student's own subjects; nothing is marked done for them.
+      completed_hours: isDemo ? 38 : 0,
       status: 'ACTIVE',
       tasks: [
         {
@@ -327,10 +329,10 @@ export class LearningModulesService {
           start_time: '03:00 PM',
           duration_minutes: 60,
           priority: 'MEDIUM',
-          status: 'COMPLETED',
-          completed_at: new Date(Date.now() - 3600000).toISOString(),
+          status: isDemo ? 'COMPLETED' : 'PENDING',
+          completed_at: isDemo ? new Date(Date.now() - 3600000).toISOString() : undefined,
           date: new Date().toISOString().split('T')[0],
-          notes: `Completed conceptual revision and formula summary for ${thirdSubject}.`,
+          notes: isDemo ? `Completed conceptual revision and formula summary for ${thirdSubject}.` : `Conceptual revision and formula summary for ${thirdSubject}.`,
           created_at: new Date().toISOString(),
         },
         {
@@ -351,7 +353,17 @@ export class LearningModulesService {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
-    this.studyPlans.set(planId, studyPlan);
+    // Never overwrite a plan the student already has (other list pages call this seeder too).
+    if (!this.studyPlans.has(planId)) {
+      this.studyPlans.set(planId, studyPlan);
+    }
+
+    // Everything below (exam results, doubts, decks, lab work, ML runs, designs, knowledge items and
+    // internship applications with offers) is demo content. Only the two demo accounts get it; a real
+    // student with an empty list sees an empty list, not invented history.
+    if (!isDemo) {
+      return;
+    }
 
     // 2. Exams
     const examId = 'exam_midterm_' + studentId;

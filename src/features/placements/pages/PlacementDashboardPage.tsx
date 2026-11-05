@@ -306,7 +306,7 @@ export const PlacementDashboardPage: React.FC<Props> = ({ onNavigate }) => {
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-blue-600 font-semibold">
+              <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs text-blue-600 font-semibold">
                 <span>View Hiring Rounds</span>
                 <ArrowRight className="h-3.5 w-3.5 transform group-hover:translate-x-0.5 transition-transform" />
               </div>

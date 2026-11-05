@@ -266,14 +266,14 @@ export class GeminiProvider implements AIProvider {
       const relevant = sentences.find((s) => qKeywords.some((k) => s.toLowerCase().includes(k))) || sentences[0] || cleanExcerpt;
 
       const qaJson = {
-        answer: `Based on the uploaded study material (Page ${pageNum}):\n\n${relevant}\n\nThis aligns with verified engineering curriculum guidelines.`,
+        answer: `AI answers are unavailable, so here is the most relevant passage from your document (Page ${pageNum}):\n\n${relevant}`,
         citations: [
           {
             page_number: pageNum,
             quoted_text: relevant.slice(0, 100)
           }
         ],
-        confidence: 'grounded',
+        confidence: 'extractive',
         follow_up_questions: [
           'Summarize this topic for exams',
           'What are the key formulas or theorems?'

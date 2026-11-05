@@ -57,7 +57,8 @@ describe('Phase 3 AI Learning Agent & Tool Orchestration', () => {
       { studentId, role: 'STUDENT' }
     );
 
-    expect(progress.solvedCount).toBeGreaterThanOrEqual(100);
+    // The count is the student's real solved-problem count from the DSA module.
+    expect(progress.solvedCount).toBe(progress.problems_solved.length);
     expect(progress.topics).toBeDefined();
   });
 

@@ -15,3 +15,14 @@ Regression tests in `audit_regressions.test.ts` were run against the original
 
 Known flaky test (pre-existing): `practice_labs_e2e.test.ts` › "trains ML model…" asserts
 accuracy ≥ 0.9 on a randomly generated dataset; failed once in five runs, unrelated to these changes.
+
+## Batch 2 (2026-11-05)
+
+| Command | Result |
+|---------|--------|
+| `npx vitest run` | 48 files, 795/795 pass. Tests that asserted fabricated values were changed to assert values derived from the student's records (dashboard, DSA solved count, resume, platform sync, ML metrics, GitHub via mocked API) |
+| `npx tsc --noEmit` | 0 errors |
+| `npm run build` | passes (existing chunk-size warning) |
+| Responsive sweep, 42 routes × 6 widths | 28 overflowing combinations before; 0 after (252 loads) |
+
+The ML accuracy flake (OPEN-004) no longer applies: the split and the built-in datasets are seeded.

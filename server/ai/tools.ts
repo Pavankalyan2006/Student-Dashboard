@@ -419,12 +419,14 @@ ToolRegistry.register({
   confirmationRequired: false,
   category: 'READ_ONLY',
   handler: async (_params, context) => {
-    const dash = await db.getStudentDashboardData(context.studentId);
+    const { QuizProgressService } = await import('../services/quizProgress');
+    const qp = await QuizProgressService.getStudentProgress(context.studentId);
     return {
-      weak_areas: dash.weak_areas,
-      strengths: dash.strengths,
-      quizzes_completed: 18,
-      average_score: 82.4,
+      weak_areas: qp.weak_areas || [],
+      strengths: qp.strong_areas || [],
+      quizzes_completed: qp.completed_quizzes ?? qp.total_quizzes_completed ?? 0,
+      average_score: qp.average_score ?? 0,
+      recent_scores: qp.recent_scores || [],
     };
   },
 });
@@ -438,16 +440,24 @@ ToolRegistry.register({
   confirmationRequired: false,
   category: 'READ_ONLY',
   handler: async (_params, context) => {
-    const dash = await db.getStudentDashboardData(context.studentId);
+    const progress = await DSAService.getProgress(context.studentId);
+    const [topics, problems] = await Promise.all([DSAService.getTopics(), DSAService.getProblems({})]);
+    const solved = new Set(progress.problems_solved);
+    const attempted = new Set(progress.problems_attempted);
+    // Per-topic counts from the student's own solved/attempted problems; topics with no work are omitted.
+    const topicRows = topics
+      .map((t: any) => {
+        const inTopic = problems.filter((p: any) => p.topic_id === t.id);
+        const solvedN = inTopic.filter((p: any) => solved.has(p.id)).length;
+        const attemptedN = inTopic.filter((p: any) => attempted.has(p.id) || solved.has(p.id)).length;
+        return { name: t.name || t.title || t.id, solved: solvedN, attempted: attemptedN, total: inTopic.length };
+      })
+      .filter((r) => r.attempted > 0);
     return {
-      solvedCount: dash.summary.dsa_solved,
-      topics: [
-        { name: 'Arrays & Two Pointers', solved: 42, mastery: '90%' },
-        { name: 'Binary Search & Trees', solved: 35, mastery: '82%' },
-        { name: 'Graphs & BFS/DFS', solved: 24, mastery: '52%' },
-        { name: 'Dynamic Programming', solved: 18, mastery: '48%' },
-      ],
-      recommended_topics: ['Dynamic Programming (0/1 Knapsack)', 'Graph Shortest Paths'],
+      ...progress,
+      solvedCount: progress.problems_solved.length,
+      topics: topicRows,
+      recommended_topics: progress.weak_topics,
     };
   },
 });
@@ -1646,18 +1656,24 @@ ToolRegistry.register({
   confirmationRequired: false,
   category: 'READ_ONLY',
   handler: async (_params, context) => {
-    const dash = await db.getStudentDashboardData(context.studentId);
     const progress = await DSAService.getProgress(context.studentId);
+    const [topics, problems] = await Promise.all([DSAService.getTopics(), DSAService.getProblems({})]);
+    const solved = new Set(progress.problems_solved);
+    const attempted = new Set(progress.problems_attempted);
+    // Per-topic counts from the student's own solved/attempted problems; topics with no work are omitted.
+    const topicRows = topics
+      .map((t: any) => {
+        const inTopic = problems.filter((p: any) => p.topic_id === t.id);
+        const solvedN = inTopic.filter((p: any) => solved.has(p.id)).length;
+        const attemptedN = inTopic.filter((p: any) => attempted.has(p.id) || solved.has(p.id)).length;
+        return { name: t.name || t.title || t.id, solved: solvedN, attempted: attemptedN, total: inTopic.length };
+      })
+      .filter((r) => r.attempted > 0);
     return {
       ...progress,
-      solvedCount: Math.max(dash.summary.dsa_solved, progress.problems_solved.length),
-      topics: [
-        { name: 'Arrays & Two Pointers', solved: 42, mastery: '90%' },
-        { name: 'Binary Search & Trees', solved: 35, mastery: '82%' },
-        { name: 'Graphs & BFS/DFS', solved: 24, mastery: '52%' },
-        { name: 'Dynamic Programming', solved: 18, mastery: '48%' },
-      ],
-      recommended_topics: progress.weak_topics.length > 0 ? progress.weak_topics : ['Dynamic Programming', 'Graph Shortest Paths'],
+      solvedCount: progress.problems_solved.length,
+      topics: topicRows,
+      recommended_topics: progress.weak_topics,
     };
   },
 });

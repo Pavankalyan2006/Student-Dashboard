@@ -46,7 +46,11 @@ export class PlacementService {
           : 0);
 
     // Dimension 3: Coding
-    const codingScore = Math.min(100, Math.round(15 * 5));
+    // Coding Lab problems the student actually solved (was a constant 75 / "12 solved").
+    const { CodingService } = await import('./coding');
+    const codingSummary = await CodingService.getStudentProgress(studentId).catch(() => null);
+    const codingSolved = codingSummary?.problems_completed ?? 0;
+    const codingScore = Math.min(100, Math.round((codingSolved / 25) * 100));
 
     // Dimension 4: DSA
     const dsaSolved = dsaProgress?.problems_solved?.length || 0;
@@ -139,7 +143,7 @@ export class PlacementService {
         },
         coding: {
           score: codingScore,
-          metric_value: 12,
+          metric_value: codingSolved,
           metric_label: 'Problems Solved',
           label: 'Coding Proficiency',
         },

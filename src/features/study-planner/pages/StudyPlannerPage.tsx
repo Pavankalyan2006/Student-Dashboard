@@ -220,7 +220,7 @@ export function StudyPlannerPage({ onNavigate }: StudyPlannerPageProps) {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex items-center gap-2 border-b border-[#E4E7EC] pb-2">
+      <div className="flex items-center gap-2 border-b border-[#E4E7EC] pb-2 overflow-x-auto">
         <button
           onClick={() => setActiveTab('today')}
           className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
@@ -404,7 +404,7 @@ export function StudyPlannerPage({ onNavigate }: StudyPlannerPageProps) {
                       )}
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex flex-wrap items-center gap-2 shrink-0">
                       {task.status !== 'COMPLETED' ? (
                         <>
                           <Button

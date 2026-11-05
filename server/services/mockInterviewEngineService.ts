@@ -568,7 +568,8 @@ export class MockInterviewEngineService {
       }
     });
 
-    const avgScore = answers.length > 0 ? Math.round(totalScore / answers.length) : 60;
+    // No answers means no evidence: score 0 rather than an assumed 60.
+    const avgScore = answers.length > 0 ? Math.round(totalScore / answers.length) : 0;
 
     // Aggregate dimension rubric scores
     const rubricMap: Record<string, { total: number; count: number; weight: number }> = {};
