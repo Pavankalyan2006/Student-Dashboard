@@ -964,7 +964,11 @@ export function ExperimentWorkspace({
                 {vq.ai_evaluation && (
                   <div className="p-4 rounded-xl bg-white border border-gray-200 shadow-xs space-y-2 mt-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-gray-700">Evaluation Scorecard:</span>
+                      <span className="text-xs font-bold text-gray-700">
+                        {(vq.ai_evaluation as any).method === 'AI_MODEL'
+                          ? 'AI practice feedback (not an official viva mark):'
+                          : 'Keyword check (automatic, not AI and not an official mark):'}
+                      </span>
                       <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-blue-100 text-blue-800">
                         Score: {vq.ai_evaluation.score} / 10
                       </span>

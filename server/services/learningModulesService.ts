@@ -1811,75 +1811,29 @@ Output JSON format:
   // ==========================================
   // 5. Lab Assistant + Viva Methods
   // ==========================================
+  // Lab data is owned by LabAssistantService and always scoped to the signed-in student.
+  // (These used to fall back to shared demo labs and to a length-based viva "score"; removed in Phase 2.)
   public static async getLabs(studentId: string): Promise<any[]> {
-    const dbLabs = await db.getLabCourses(studentId);
-    if (dbLabs.length > 0) {
-      const result = [];
-      for (const d of dbLabs) {
-        const exps = await db.getLabExperiments(d.id, studentId);
-        result.push({
-          ...d,
-          title: d.name,
-          experiments: exps.map((e) => ({
-            ...e,
-            objective: e.aim || e.objective || '',
-            procedure: e.procedure || e.procedure_steps?.map((s) => s.text) || [],
-          })),
-        });
-      }
-      return result;
-    }
-    return Array.from(this.labs.values());
+    const { LabAssistantService } = await import('./labAssistantService');
+    const labs = await LabAssistantService.getLabs(studentId);
+    return labs.map((l: any) => ({ ...l, title: l.title || l.name }));
   }
 
   public static async getLabById(studentId: string, labId: string): Promise<any> {
-    const dbLab = await db.getLabCourseById(labId, studentId);
-    if (dbLab) {
-      const exps = await db.getLabExperiments(labId, studentId);
-      return {
-        ...dbLab,
-        title: dbLab.name,
-        experiments: exps.map((e) => ({
-          ...e,
-          objective: e.aim || e.objective || '',
-          procedure: e.procedure || e.procedure_steps?.map((s) => s.text) || [],
-        })),
-      };
-    }
-    const lab = this.labs.get(labId);
-    if (!lab) throw new NotFoundError(`Lab '${labId}' not found`);
-    return lab;
+    const { LabAssistantService } = await import('./labAssistantService');
+    const lab: any = await LabAssistantService.getLabById(studentId, labId);
+    return { ...lab, title: lab.title || lab.name };
   }
 
   public static async evaluateVivaAnswer(
     studentId: string,
-    labId: string,
+    _labId: string,
     experimentId: string,
     questionId: string,
     studentAnswer: string
   ): Promise<any> {
-    const dbExp = await db.getLabExperimentById(experimentId, studentId);
-    if (dbExp) {
-      const { LabAssistantService } = await import('./labAssistantService');
-      return LabAssistantService.evaluateVivaAnswer(studentId, experimentId, questionId, studentAnswer);
-    }
-    const lab = await this.getLabById(studentId, labId);
-    const exp = lab.experiments.find((e: any) => e.id === experimentId);
-    if (!exp) throw new NotFoundError(`Experiment '${experimentId}' not found`);
-    const q = exp.viva_questions.find((item: any) => item.id === questionId);
-    if (!q) throw new NotFoundError(`Question '${questionId}' not found`);
-
-    q.student_answer = studentAnswer;
-    const lengthQuality = studentAnswer.trim().length > 30 ? 9 : 6;
-    q.ai_evaluation = {
-      score: lengthQuality,
-      correctness: 'Answer identifies core conceptual invariants and demonstrates fundamental understanding.',
-      missing_concepts: ['Consider mentioning standard IEEE/ISO specification references or performance edge cases.'],
-      clarity: 'Well-structured explanation with clear terminology.',
-      improvement: 'Mention practical real-world production tradeoffs when answering in an oral viva.',
-    };
-
-    return q;
+    const { LabAssistantService } = await import('./labAssistantService');
+    return LabAssistantService.evaluateVivaAnswer(studentId, experimentId, questionId, studentAnswer);
   }
 
   // ==========================================

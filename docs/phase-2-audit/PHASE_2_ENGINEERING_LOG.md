@@ -32,3 +32,20 @@ See the last entry. Probe scripts live in `scripts/audit/phase2-*.cjs` and need 
   Evidence: `scripts/audit/phase2-batch2.cjs create` 19/19 PASS, `verify` after restart 6/6 PASS; `src/tests/phase2_ml_lab.test.ts`
   8 tests; browser run of upload, train k-NN, predict, blank-input error and history (`/tmp/p2/ui-b2.cjs`, no page errors).
   Full suite 838/838 before the final UI tweak.
+- 2026-11-05 14:40 Batch 3 done (System Design, Lab Assistant, Viva).
+  System Design: the interview score was `Math.random()*15+80` with a fixed STRONG_HIRE debrief, step feedback was canned
+  praise, and the AI tutor returned six fixed texts. Now: a transparent per-step checklist (regexes in
+  `SystemDesignService.INTERVIEW_CHECKLIST`) scores coverage of the student's own notes, labelled "not an interviewer's
+  hiring decision"; steps must be answered in order; the AI tutor calls the model with the student's diagram and returns
+  503 AI_UNAVAILABLE without one. Evaluator consistency/cost feedback now reflects the diagram.
+  Lab Assistant: legacy `/labs` routes in learningModules.ts shadowed labAssistant.ts and fell back to the demo student's
+  labs (a new student saw `std_demo_1` data) and a length-based viva score; removed, and the legacy service methods now
+  delegate to the owner-scoped service (also used by AI agent tools). `POST .../viva/generate` was swallowed by
+  `.../viva/:qId` (always 404); fixed. A client-supplied experiment id let one student overwrite another's experiment;
+  ids are now only reused for the same student and lab. Report GET fell back to another experiment's report; fixed.
+  Reports no longer show the expected output as the actual output or a default "completed successfully" conclusion.
+  AI extraction, viva generation and doubts return 503/502 instead of heuristic or template text, and save nothing on failure.
+  Viva feedback uses the model when configured, otherwise a labelled keyword check (`method: KEYWORD_MATCH`).
+  Evidence: `src/tests/phase2_batch3.test.ts` (6 HTTP tests), updated system design / lab assistant tests; full suite 846/846;
+  browser: new student sees no demo labs, lab card shows 0/1 progress, viva shows the keyword-check label.
+  Out of scope but observed: Mock Interview pages show fallback scores (`?? 82`, `|| 80`, `|| 70`) and Writing Practice `|| 88`.

@@ -192,16 +192,26 @@ export function InterviewPracticeModal({
             <div className="space-y-6">
               <div className="p-6 bg-slate-950 border border-slate-800 rounded-2xl text-center space-y-3">
                 <Award className="w-12 h-12 text-indigo-400 mx-auto" />
-                <h3 className="text-xl font-bold text-white">Interview Debrief & Assessment</h3>
+                <h3 className="text-xl font-bold text-white">Practice Debrief</h3>
                 <div className="text-4xl font-extrabold text-emerald-400">{session.overall_score}%</div>
-                <div className="inline-block px-3 py-1 bg-emerald-950/70 border border-emerald-800 rounded-full text-xs font-semibold text-emerald-300">
-                  {session.debrief_feedback?.overall_verdict || 'STRONG_HIRE'}
-                </div>
+                <div className="text-[11px] text-slate-400">checklist coverage</div>
+                {session.debrief_feedback?.overall_verdict && (
+                  <p className="text-xs text-slate-300 max-w-xl mx-auto">{session.debrief_feedback.overall_verdict}</p>
+                )}
+                {session.debrief_feedback?.rubric_scores && (
+                  <div className="flex flex-wrap justify-center gap-2 pt-1">
+                    {Object.entries(session.debrief_feedback.rubric_scores).map(([k, v]) => (
+                      <span key={k} className="px-2 py-0.5 rounded-full border border-slate-700 text-[11px] text-slate-300">
+                        {k}: {v}%
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="p-4 bg-slate-950/80 border border-slate-800 rounded-xl space-y-2">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-400">Key Strengths</h4>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-400">Fully covered steps</h4>
                   <ul className="space-y-1.5 text-xs text-slate-300">
                     {session.debrief_feedback?.strengths.map((s, i) => (
                       <li key={i}>✓ {s}</li>
@@ -209,7 +219,7 @@ export function InterviewPracticeModal({
                   </ul>
                 </div>
                 <div className="p-4 bg-slate-950/80 border border-slate-800 rounded-xl space-y-2">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-amber-400">Areas for Improvement</h4>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-amber-400">Points to add</h4>
                   <ul className="space-y-1.5 text-xs text-slate-300">
                     {session.debrief_feedback?.improvements.map((s, i) => (
                       <li key={i}>• {s}</li>
@@ -269,7 +279,7 @@ export function InterviewPracticeModal({
               {/* Interviewer Feedback on Previous Step */}
               {session.step_index > 0 && (
                 <div className="p-3 bg-indigo-950/30 border border-indigo-800/40 rounded-xl text-xs text-indigo-300">
-                  <div className="font-bold mb-1">Previous Step Feedback:</div>
+                  <div className="font-bold mb-1">Previous step checklist:</div>
                   <p className="text-slate-300">
                     {session.step_responses[INTERVIEW_STEPS[session.step_index - 1].key]?.interviewer_feedback}
                   </p>

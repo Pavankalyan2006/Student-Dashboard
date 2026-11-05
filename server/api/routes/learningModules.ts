@@ -373,36 +373,9 @@ learningModulesRouter.post('/flashcards/decks/:deckId/schedule-task', requireAut
 // ==========================================
 // 5. Lab Assistant + Viva Routes
 // ==========================================
-learningModulesRouter.get('/labs', requireAuth, async (req: Request, res: Response) => {
-  try {
-    const studentId = req.user!.userId;
-    const labs = await LearningModulesService.getLabs(studentId);
-    res.json({ success: true, data: labs });
-  } catch (err: any) {
-    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
-  }
-});
-
-learningModulesRouter.get('/labs/:labId', requireAuth, async (req: Request, res: Response) => {
-  try {
-    const studentId = req.user!.userId;
-    const lab = await LearningModulesService.getLabById(studentId, req.params.labId);
-    res.json({ success: true, data: lab });
-  } catch (err: any) {
-    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
-  }
-});
-
-learningModulesRouter.post('/labs/:labId/experiments/:expId/viva/:qId', requireAuth, async (req: Request, res: Response) => {
-  try {
-    const studentId = req.user!.userId;
-    const { student_answer } = req.body;
-    const evaluated = await LearningModulesService.evaluateVivaAnswer(studentId, req.params.labId, req.params.expId, req.params.qId, student_answer || '');
-    res.json({ success: true, data: evaluated });
-  } catch (err: any) {
-    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
-  }
-});
+// The Lab Assistant and Viva endpoints live in routes/labAssistant.ts (mounted at /labs).
+// Legacy copies here used to shadow them: they fell back to shared demo labs (other students could see
+// them) and scored viva answers by length. They were removed in Phase 2.
 
 // ==========================================
 // 6. SQL / Database Lab Routes

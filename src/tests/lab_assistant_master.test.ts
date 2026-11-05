@@ -728,7 +728,7 @@ Conclusion: Predictive parser verified successfully.
   });
 
   // 19. Handling missing AI configuration
-  it('19. provides deterministic pedagogical fallback for viva evaluation when AI is offline', async () => {
+  it('19. without an AI model, viva feedback is a labelled keyword check with an honest score', async () => {
     const lab = await LabAssistantService.createLab(studentA, {
       name: 'Computer Architecture Lab',
       subject: 'Computer Architecture',
@@ -767,9 +767,14 @@ Conclusion: Predictive parser verified successfully.
       'Ripple carry adder has O(N) propagation delay because each bit must wait for the carry out of the previous stage, whereas Carry Lookahead computes generate and propagate signals in parallel.'
     );
 
-    expect(evalResult.ai_evaluation).toBeDefined();
-    expect(evalResult.ai_evaluation!.score).toBeGreaterThanOrEqual(7);
-    expect(evalResult.ai_evaluation!.correctness).toBeDefined();
+    // No AI model: a labelled keyword check. The answer mentions 6 of the 10 reference terms
+    // (ripple, carry, delay, lookahead, propagate, generate), so it scores 6, not an inflated band.
+    const ev: any = evalResult.ai_evaluation;
+    expect(ev.method).toBe('KEYWORD_MATCH');
+    expect(ev.score).toBe(6);
+    expect(ev.correctness).toMatch(/6 of 10 key terms/);
+    expect(ev.missing_concepts).toEqual(expect.arrayContaining(['linear', 'cascade']));
+    expect(ev.clarity).toMatch(/Not assessed/);
   });
 
   // 20. Real analytics and onboarding for new students
