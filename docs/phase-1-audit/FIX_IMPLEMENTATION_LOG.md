@@ -10,7 +10,7 @@ Every fix is listed with its root cause in `BUG_TRACKER.md` (P1-001..P1-047). Th
 | 38079e3 | 5 | P1-024..030: upload validation for new docs and versions, extractive summaries, study material 503, doubts saved OPEN | `documents.ts`, `documentSummary.ts`, `provider.ts`, `knowledgeBaseService.ts`, `learningModulesService.ts`, `DoubtSolverPage.tsx` |
 | a1124f0 | 6 | P1-031..033: due-queue reviews saved, rating validation, flashcard generator 503 | `FlashcardStudyModal.tsx`, flashcard routes, `learningModulesService.ts` |
 | f9daf7d | 7 | P1-034..045: Study Planner seed, add-task, hours, dates; Language writing, partner and translate 503, status codes, translate auth, lesson and rating validation, toasts | `learningModulesService.ts`, `languageLearningService.ts`, `languages.ts`, `StudyPlannerPage.tsx`, `features/languages/*` |
-| (batch 8 commit) | 8 | P1-046..047: accessible names and heading levels; audit scripts for responsive and persistence checks; reports | 12 component files, `scripts/audit/phase1-*.cjs`, `docs/phase-1-audit/*` |
+| 66abad1 | 8 | P1-046..047: accessible names and heading levels; audit scripts for responsive and persistence checks; reports | 12 component files, `scripts/audit/phase1-*.cjs`, `docs/phase-1-audit/*` |
 
 **Test changes.** Tests were changed only where they asserted the old wrong behaviour:
 - template AI output, now stubbed model plus an AI-off case;
