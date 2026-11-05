@@ -29,3 +29,12 @@
 - Evidence: `phase1_learning_workspace.test.ts` now 9 tests (the 2 agent tests fail against the old handlers); browser checks of attach and the agent plan; full suite 804/804, `tsc` 0 errors.
 - Files: `server/services/quizGeneration.ts`, `server/api/routes/ai.ts`, `server/ai/{service,provider}.ts`, `server/ai/orchestration/{agentHandlers,master,planner}.ts`, `server/models/types.ts`, `server/db/database.ts` (flashcard seed guard), `src/features/ai-agent/{api/conversationApi.ts,types/ai.ts,components/AIComposer.tsx,components/ChatWorkspace.tsx,components/MessageItem.tsx,components/RichCards.tsx}`, tests `quiz`, `ai_tutor_master`, `agent`, `resume_career_skills` (stubbed model via `helpers/mockAIModel.ts`).
 - Next: batch 4 (Courses, Notes).
+
+## Batch 4 — Courses, Notes
+- Courses over HTTP with A/B: catalog list/search/stats (108 courses), enroll, lesson complete (progress 8%, next lesson advances), invalid progress → 400, unknown lesson → 404, unauthenticated enroll → 401, B cannot edit/add chapters to catalog courses (403), B cannot read A's private course or lesson (403). Archive is per student (A unaffected by B).
+- Found and fixed P1-020 (P0: enrolling in / tracking another student's private course), P1-021 (archive enrolled you), P1-023 (aria-pressed).
+- Notes over HTTP with A/B: create (empty title → 400), read/patch/delete/favorite/versions by B → 403, versions recorded on edit, search and tag filter scoped to the owner, generate/regenerate → 503 with AI off. Fixed P1-022 (template takeaways, flashcards, quiz). P1-O01 closed as not a defect.
+- Browser: grid/list toggle, course search, note favorite (persisted), summarize error toast.
+- Tests: `phase1_learning_workspace.test.ts` 11, `notes.test.ts` updated with a stubbed model and an AI-off case; full suite green.
+- Files: `server/db/database.ts`, `server/services/notes.ts`, `src/features/courses/components/{CourseCard,CourseHero,CourseFilters}.tsx`, `src/tests/notes.test.ts`, `src/tests/phase1_learning_workspace.test.ts`.
+- Next: batch 5 (Documents, Doubt Solver).

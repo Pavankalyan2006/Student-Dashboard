@@ -164,3 +164,31 @@ describe('Phase 1 › AI Agent reports only real tool results', () => {
     expect(res.summary).not.toMatch(/140|Dynamic Programming/);
   });
 });
+
+describe('Phase 1 › Courses: private courses stay private', () => {
+  it('another student cannot enroll in, bookmark or record progress on a private course', async () => {
+    const { CourseService } = await import('../../server/services/courses');
+    await db.initialize();
+    const a = uid('std_p1_crs_a');
+    const b = uid('std_p1_crs_b');
+    const course = await CourseService.createCustomCourse(a, { title: 'Private Compilers', code: 'PC1' } as any);
+    const chapter = await CourseService.addChapter(course.id, a, { title: 'Lexing' });
+    const lesson = await CourseService.addLesson(course.id, chapter.id, a, { title: 'Tokens', content: 'Tokens are units.' } as any);
+
+    await expect(db.enrollStudentInCourse(b, course.id)).rejects.toThrow(/permission/i);
+    await expect(db.toggleCourseBookmark(b, course.id)).rejects.toThrow(/permission/i);
+    await expect(db.completeLesson(b, lesson.id)).rejects.toThrow(/permission/i);
+    await expect(db.updateLessonProgress(b, lesson.id, 50)).rejects.toThrow(/permission/i);
+    // The owner still can.
+    const done = await db.completeLesson(a, lesson.id);
+    expect(done.progress.status).toBe('COMPLETED');
+  });
+
+  it('archiving a catalog course you are not enrolled in is rejected instead of enrolling you', async () => {
+    await db.initialize();
+    const s = uid('std_p1_arch');
+    await expect(db.archiveCourse('crs_cat_001', s, true)).rejects.toThrow(/enrolled/);
+    const course = await db.getCourseById('crs_cat_001', s);
+    expect(course?.is_enrolled).toBe(false);
+  });
+});

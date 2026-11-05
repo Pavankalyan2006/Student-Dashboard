@@ -1,7 +1,8 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { db } from '../../server/db/database';
 import { NotesService } from '../../server/services/notes';
 import { ToolRegistry } from '../../server/ai/tools';
+import { AIService } from '../../server/ai/service';
 
 describe('Phase 5 AI Notes Generator & Student Learning Materials', () => {
   const studentA = 'std_01j8k9x2p4';
@@ -121,9 +122,40 @@ describe('Phase 5 AI Notes Generator & Student Learning Materials', () => {
     expect(results.items[0].title.toLowerCase()).toContain('normalization');
   });
 
+  it('refuses to generate flashcards or quiz when the AI provider is unavailable', async () => {
+    const res = await NotesService.listNotes(studentA, { limit: 1 });
+    const target = res.items[0];
+    // Tests have no real model (no key, or the mock provider's plain-text reply). Each call must fail
+    // with an AI error instead of returning template flashcards or questions.
+    const aiError = (e: any) => [503, 502].includes(e?.statusCode) && ['AI_UNAVAILABLE', 'AI_BAD_RESPONSE'].includes(e?.code);
+    await NotesService.generateFlashcards(studentA, target.id).then(
+      () => expect.fail('flashcards should not be generated without a model'),
+      (e) => expect(aiError(e)).toBe(true)
+    );
+    await NotesService.generateQuiz(studentA, target.id).then(
+      () => expect.fail('quiz should not be generated without a model'),
+      (e) => expect(aiError(e)).toBe(true)
+    );
+  });
+
   it('generates revision flashcards and practice quiz MCQs from note', async () => {
     const res = await NotesService.listNotes(studentA, { limit: 1 });
     const target = res.items[0];
+    // Stub the model with well-formed output; one MCQ has an out-of-range answer and must be dropped.
+    const spy = vi.spyOn(AIService, 'generate').mockImplementation(async (messages: any[]) => {
+      const prompt = messages.map((m: any) => m.content).join('\n');
+      if (prompt.includes('flashcards for active recall')) {
+        return { text: JSON.stringify({ flashcards: [{ question: 'What is 2NF?', answer: 'No partial dependency on a key.', difficulty: 'easy' }] }) } as any;
+      }
+      return {
+        text: JSON.stringify({
+          questions: [
+            { question: 'Which form removes transitive dependencies?', options: ['1NF', '2NF', '3NF'], correct_answer_index: 2, explanation: '3NF removes transitive dependencies.' },
+            { question: 'Broken question', options: ['A', 'B'], correct_answer_index: 5, explanation: 'x' },
+          ],
+        }),
+      } as any;
+    });
 
     const flashcards = await NotesService.generateFlashcards(studentA, target.id);
     expect(flashcards.length).toBeGreaterThanOrEqual(1);
@@ -134,6 +166,8 @@ describe('Phase 5 AI Notes Generator & Student Learning Materials', () => {
     expect(quiz.length).toBeGreaterThanOrEqual(1);
     expect(quiz[0].options.length).toBeGreaterThanOrEqual(2);
     expect(quiz[0].explanation).toBeDefined();
+    expect(quiz.map((q) => q.question)).toEqual(['Which form removes transitive dependencies?']);
+    spy.mockRestore();
   });
 
   it('executes AI Tool Registry tools for Notes in authenticated student context', async () => {

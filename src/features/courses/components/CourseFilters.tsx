@@ -276,6 +276,7 @@ export function CourseFilters({
                 type="button"
                 onClick={() => onViewModeChange('grid')}
                 aria-label="Grid view"
+                aria-pressed={viewMode === 'grid'}
                 className={`p-1.5 rounded-md transition-colors cursor-pointer ${
                   viewMode === 'grid'
                     ? 'bg-white text-[#2563EB] shadow-xs'
@@ -288,6 +289,7 @@ export function CourseFilters({
                 type="button"
                 onClick={() => onViewModeChange('list')}
                 aria-label="List view"
+                aria-pressed={viewMode === 'list'}
                 className={`p-1.5 rounded-md transition-colors cursor-pointer ${
                   viewMode === 'list'
                     ? 'bg-white text-[#2563EB] shadow-xs'
@@ -326,6 +328,7 @@ export function CourseFilters({
               type="button"
               onClick={() => onViewModeChange('grid')}
               aria-label="Grid view"
+              aria-pressed={viewMode === 'grid'}
               className={`p-1.5 rounded-md transition-colors ${
                 viewMode === 'grid' ? 'bg-white text-[#2563EB] shadow-xs' : 'text-slate-400'
               }`}
@@ -336,6 +339,7 @@ export function CourseFilters({
               type="button"
               onClick={() => onViewModeChange('list')}
               aria-label="List view"
+              aria-pressed={viewMode === 'list'}
               className={`p-1.5 rounded-md transition-colors ${
                 viewMode === 'list' ? 'bg-white text-[#2563EB] shadow-xs' : 'text-slate-400'
               }`}
