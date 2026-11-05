@@ -91,15 +91,18 @@ solve()
       expect(evalResult.passed_tests).toBe(evalResult.total_tests);
     });
 
-    it('provides Code AI diagnostics: explanation, complexity, and concepts', async () => {
-      const explanation = await CodeAIService.explainCode({
-        language: 'python',
-        source_code: 'def fib(n):\n    if n <= 1: return n\n    return fib(n-1) + fib(n-2)',
-      });
-      expect(explanation.overview).toBeDefined();
-      expect(explanation.time_complexity).toBeDefined();
-      expect(explanation.space_complexity).toBeDefined();
-      expect(explanation.step_by_step.length).toBeGreaterThanOrEqual(1);
+    it('Code AI diagnostics report 503 instead of template text when no model is configured', async () => {
+      // With a model this returns the model's explanation (covered with a stub in coding.test.ts).
+      const { AIService } = await import('../../server/ai/service');
+      const { vi } = await import('vitest');
+      const spy = vi.spyOn(AIService, 'generate').mockResolvedValue({ text: '**AI unavailable.** No AI provider is configured.' } as any);
+      await expect(
+        CodeAIService.explainCode({
+          language: 'python',
+          source_code: 'def fib(n):\n    if n <= 1: return n\n    return fib(n-1) + fib(n-2)',
+        })
+      ).rejects.toMatchObject({ statusCode: 503, code: 'AI_UNAVAILABLE' });
+      spy.mockRestore();
     });
   });
 
