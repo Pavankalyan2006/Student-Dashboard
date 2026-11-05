@@ -43,6 +43,15 @@ learningModulesRouter.post('/study-planner/plans', requireAuth, async (req: Requ
   }
 });
 
+learningModulesRouter.post('/study-planner/plans/:planId/tasks', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const task = await LearningModulesService.addStudyPlanTask(req.user!.userId, req.params.planId, req.body || {});
+    res.status(201).json({ success: true, data: task });
+  } catch (err: any) {
+    res.status(err.statusCode || err.status || 500).json({ success: false, message: err.message });
+  }
+});
+
 learningModulesRouter.patch('/study-planner/plans/:planId/tasks/:taskId', requireAuth, async (req: Request, res: Response) => {
   try {
     const studentId = req.user!.userId;
@@ -268,7 +277,11 @@ learningModulesRouter.post('/flashcards/decks/:deckId/cards/:cardId/review', req
   try {
     const studentId = req.user!.userId;
     const { confidence, rating } = req.body;
-    const ratingParam = rating || confidence || 3;
+    // A review must say how it went; a missing rating is not silently recorded as GOOD.
+    const ratingParam = rating ?? confidence;
+    if (ratingParam === undefined || ratingParam === null || ratingParam === '') {
+      return res.status(400).json({ success: false, message: 'Rating is required (AGAIN, HARD, GOOD or EASY)' });
+    }
     const card = await LearningModulesService.reviewFlashcard(studentId, req.params.deckId, req.params.cardId, ratingParam);
     res.json({ success: true, data: card });
   } catch (err: any) {

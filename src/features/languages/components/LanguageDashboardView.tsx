@@ -113,7 +113,7 @@ export function LanguageDashboardView({
             <span className="text-5xl filter drop-shadow">{lang?.flag_emoji || '🌐'}</span>
             <div>
               <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-extrabold text-white">{lang?.name}</h1>
+                <h2 className="text-2xl font-extrabold text-white">{lang?.name}</h2>
                 <span className="text-xs px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-medium">
                   {lang?.native_name}
                 </span>

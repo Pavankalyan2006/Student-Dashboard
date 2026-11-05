@@ -1,7 +1,7 @@
 import { AIService } from '../ai/service';
 import { db } from '../db/database';
 import { logger } from '../core/logging';
-import { ValidationError } from '../core/exceptions';
+import { ValidationError, AppError } from '../core/exceptions';
 import {
   Quiz,
   QuizQuestion,
@@ -65,16 +65,14 @@ export class QuizGenerationService {
       });
     }
 
-    // 3. Fallback Synthesizer if LLM returned insufficient questions
-    if (rawQuestions.length < questionCount) {
-      const fallbackQuestions = this.synthesizeFallbackQuestions({
-        topic: resolvedTopic,
-        difficulty,
-        count: questionCount - rawQuestions.length,
-        sourceType,
-        citation,
-      });
-      rawQuestions = [...rawQuestions, ...fallbackQuestions];
+    // 3. No template questions are invented when the model produced none: the quiz would look
+    //    AI-generated but test nothing real. Fewer questions than requested are kept as they are.
+    if (rawQuestions.length === 0) {
+      throw new AppError(
+        'Quiz generation needs the AI provider, which is not available right now. No quiz was created.',
+        503,
+        'AI_UNAVAILABLE'
+      );
     }
 
     // 4. Validate & Quality Gate
@@ -332,9 +330,9 @@ Return ONLY a valid JSON object matching this schema EXACTLY:
 
         // Ensure correct answer is in options
         const exists = options.some((opt: string) => opt.toLowerCase() === String(correctAnswer).toLowerCase());
-        if (!exists) {
-          correctAnswer = options[0];
-        }
+        // A question whose answer is not one of its options cannot be scored; drop it rather than
+        // marking an arbitrary option as correct.
+        if (!exists) continue;
       } else if (qType === 'MULTI_SELECT') {
         if (!options || options.length < 3) continue;
         if (!Array.isArray(correctAnswer)) {

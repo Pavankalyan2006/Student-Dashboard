@@ -51,6 +51,16 @@ export class GeminiProvider implements AIProvider {
     this.supportedModels = Array.from(new Set(pool.filter(Boolean)));
   }
 
+  /** True when an API key is set; says nothing about whether the last call succeeded. */
+  public get configured(): boolean {
+    return Boolean(this.apiKey);
+  }
+
+  /** The first model the provider will try. */
+  public get primaryModel(): string {
+    return this.supportedModels[0];
+  }
+
   /**
    * Performs direct REST invocation to Google Generative Language API
    */
@@ -199,43 +209,31 @@ export class GeminiProvider implements AIProvider {
         .map((l) => l.trim())
         .filter((l) => l.length > 25 && !l.startsWith('---') && !l.startsWith('[Page'));
 
-      const overviewText = lines.slice(0, 3).join(' ') ||
-        `This study document presents core curriculum concepts, analytical theorems, and structured engineering principles for ${docTitle}.`;
+      // No model answered: build an extractive summary from the document's own sentences only.
+      // Fields that need a model (exam points, definitions, formulas, conclusion) stay empty
+      // rather than being filled with generic study advice or invented formulas.
+      const overviewText = lines.slice(0, 3).join(' ');
 
       const topics = lines
         .slice(0, 5)
         .map((l) => l.split(/[:.!?]/)[0].trim())
         .filter((t) => t.length > 4 && t.length < 60);
 
-      const concepts = lines.slice(2, 6).map((l) => `${l.slice(0, 160)}...`);
+      const concepts = lines.slice(2, 6).map((l) => (l.length > 160 ? `${l.slice(0, 160)}...` : l));
 
       const summaryJson = {
-        title: `${docTitle} - Structured Summary`,
-        overview: overviewText.slice(0, 400),
-        main_topics: topics.length > 0 ? topics : ['Core Foundations', 'System Architecture', 'Analytical Bounds'],
-        key_concepts: concepts.length > 0 ? concepts : [
-          'State Invariants: Systems maintain consistent properties across state transitions.',
-          'Efficiency Bounds: Mathematical validation under worst-case operational constraints.',
-          'Modular Architecture: Clear component interfaces prevent unintended coupling.'
-        ],
-        important_points: [
-          'Review fundamental definitions and theorems for semester examinations.',
-          'Trace algorithmic boundary conditions and edge cases.',
-          'Verify mathematical expressions and unit consistency.'
-        ],
+        title: `${docTitle} - Extractive Summary (AI unavailable)`,
+        overview: overviewText
+          ? overviewText.slice(0, 400)
+          : 'AI summaries are unavailable and no readable text was found in this document to extract.',
+        main_topics: topics,
+        key_concepts: concepts,
+        important_points: [],
         summary: overviewText,
-        exam_points: [
-          `State the core formal definition of ${docTitle}.`,
-          'Derive the asymptotic bounds or governing mathematical equations.',
-          'Differentiate key behavioral trade-offs described in this module.'
-        ],
-        definitions: [
-          { term: docTitle.split(' ')[0] || 'Specification', definition: 'Foundational concept and formal mathematical rules outlined in the study text.' }
-        ],
-        formulas: [
-          { name: 'Complexity Invariant', formula: '$$T(n) = \\mathcal{O}(\\log n)$$', explanation: 'Optimal logarithmic execution bound' }
-        ],
-        conclusion: `Mastery of these principles ensures a solid academic foundation for examinations and viva.`
+        exam_points: [],
+        definitions: [],
+        formulas: [],
+        conclusion: '',
       };
 
       return {

@@ -249,6 +249,7 @@ export const FlashcardDeckDetailModal: React.FC<FlashcardDeckDetailModalProps> =
                   <div>
                     <label className="block text-xs font-semibold text-[#344054] mb-1">Card Type</label>
                     <select
+                      aria-label="Card type"
                       value={cardType}
                       onChange={(e) => setCardType(e.target.value as FlashcardType)}
                       className="w-full px-3 py-2 text-xs border border-[#D0D5DD] rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"

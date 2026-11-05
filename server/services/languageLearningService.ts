@@ -26,7 +26,7 @@ import {
 } from '../db/languageCatalog';
 import { AIService } from '../ai/service';
 import { AIMessage } from '../ai/provider';
-import { ValidationError, NotFoundError, AuthorizationError } from '../core/exceptions';
+import { ValidationError, NotFoundError, AuthorizationError, AppError } from '../core/exceptions';
 import { logger } from '../core/logging';
 
 export class LanguageLearningService {
@@ -443,6 +443,16 @@ export class LanguageLearningService {
     notes?: string
   ): Promise<{ success: boolean; completed_lessons_count: number }> {
     const code = langCode.toLowerCase();
+    // Only lessons that exist in this language's curriculum can be completed; an arbitrary id
+    // used to be stored and counted towards progress.
+    await this.getLanguageByCode(code);
+    const paths = await this.getLearningPaths(code);
+    if (!paths.some((p) => p.lessons.some((l) => l.id === lessonId))) {
+      throw new NotFoundError(`Lesson '${lessonId}' is not part of the ${code} curriculum.`);
+    }
+    if (notes !== undefined && (typeof notes !== 'string' || notes.length > 5000)) {
+      throw new ValidationError('Lesson notes must be text of at most 5000 characters.');
+    }
     if (completed) {
       await db.saveLanguageLessonProgress(studentId, code, lessonId, {
         completed_at: new Date().toISOString(),
@@ -561,7 +571,11 @@ export class LanguageLearningService {
       GOOD: 4,
       EASY: 5,
     };
-    const grade = gradeMap[rating];
+    const grade = gradeMap[String(rating).toUpperCase() as ReviewRating];
+    if (grade === undefined) {
+      // An unknown rating used to fall through as a pass and advance the card.
+      throw new ValidationError('Rating must be AGAIN, HARD, GOOD or EASY.');
+    }
 
     if (grade < 3) {
       // Repeat from start if failed
@@ -647,25 +661,12 @@ Evaluate and respond ONLY with a valid JSON object matching this schema:
         aiFeedback = JSON.parse(jsonMatch[0]);
       }
     } catch (err) {
-      logger.warn('AI writing feedback evaluation failed; using deterministic pedagogical fallback', { error: err instanceof Error ? err.message : String(err) });
+      logger.warn('AI writing feedback evaluation failed; returning 503', { error: err instanceof Error ? err.message : String(err) });
     }
 
-    // High-fidelity fallback if AI is offline
-    if (!aiFeedback) {
-      aiFeedback = {
-        corrected_text: params.student_text,
-        grammar_score: 85,
-        vocabulary_score: 85,
-        clarity_score: 90,
-        overall_score: 87,
-        spelling_corrections: [],
-        grammar_points: [
-          `Your response successfully conveys meaning in ${lang.name}.`,
-          `Ensure proper verb agreements and subject-verb placement according to standard ${lang.name} rules.`,
-        ],
-        tone_analysis: 'Polite and clear communication',
-        positive_reinforcement: `Great effort practicing written expression in ${lang.name}! Consistency will build natural fluency.`,
-      };
+    // Scores and corrections come only from the model; nothing is saved with invented scores.
+    if (!aiFeedback || typeof aiFeedback.overall_score !== 'number') {
+      throw new AppError('Writing feedback needs the AI provider, which is not available right now. Your text was not submitted.', 503, 'AI_UNAVAILABLE');
     }
 
     const submission: WritingSubmission = {
@@ -746,13 +747,15 @@ Evaluate and respond ONLY with a valid JSON object matching this schema:
 
     const lang = await this.getLanguageByCode(session.language_code);
 
-    // Append student message
-    session.messages.push({
+    if (!messageText || !String(messageText).trim()) {
+      throw new ValidationError('Message cannot be empty.');
+    }
+    const studentMessage = {
       id: `msg_${Date.now()}_std`,
-      sender: 'student',
+      sender: 'student' as const,
       text: messageText,
       timestamp: new Date().toISOString(),
-    });
+    };
 
     let aiReplyText = '';
     let aiTranslation = '';
@@ -763,7 +766,7 @@ Evaluate and respond ONLY with a valid JSON object matching this schema:
 Scenario: "${session.scenario}"
 Mode: ${session.mode === 'CORRECTION' ? 'Correction Mode (point out errors, provide better phrasing)' : 'Practice Mode (respond naturally)'}.
 Current conversation history:
-${session.messages.map((m) => `${m.sender.toUpperCase()}: ${m.text}`).join('\n')}
+${[...session.messages, studentMessage].map((m) => `${m.sender.toUpperCase()}: ${m.text}`).join('\n')}
 
 Respond ONLY with a valid JSON object matching this schema:
 {
@@ -781,16 +784,15 @@ Respond ONLY with a valid JSON object matching this schema:
         aiCorrection = parsed.correction_note;
       }
     } catch (err) {
-      logger.warn('AI conversation generation failed; using deterministic fallback', { error: err instanceof Error ? err.message : String(err) });
+      logger.warn('AI conversation generation failed; returning 503', { error: err instanceof Error ? err.message : String(err) });
     }
 
+    // No model reply: the conversation is left unchanged rather than answered with a stock phrase.
     if (!aiReplyText) {
-      aiReplyText = `${lang.sample_phrase}`;
-      aiTranslation = `${lang.sample_translation}`;
-      if (session.mode === 'CORRECTION') {
-        aiCorrection = `Good attempt! Ensure verb conjugation matches the subject in ${lang.name}.`;
-      }
+      throw new AppError('The conversation partner needs the AI provider, which is not available right now. Your message was not sent.', 503, 'AI_UNAVAILABLE');
     }
+
+    session.messages.push(studentMessage);
 
     // Append AI reply
     session.messages.push({
@@ -861,28 +863,11 @@ Provide a rich linguistic breakdown. Respond ONLY in valid JSON:
         };
       }
     } catch (err) {
-      logger.warn('AI contextual translation failed; using deterministic fallback', { error: err instanceof Error ? err.message : String(err) });
+      logger.warn('AI contextual translation failed; returning 503', { error: err instanceof Error ? err.message : String(err) });
     }
 
-    if (!result) {
-      result = {
-        source_lang: src.code,
-        target_lang: tgt.code,
-        input_text: inputText,
-        primary_translation: tgt.sample_phrase,
-        transliteration: tgt.pronunciation_guide,
-        alternative_translations: [tgt.sample_translation],
-        formal_variant: tgt.sample_phrase,
-        informal_variant: tgt.sample_phrase,
-        word_breakdown: [
-          { word: inputText, meaning: tgt.sample_translation, pos: 'Phrase' },
-        ],
-        grammar_explanation: `Direct contextual translation from ${src.name} to ${tgt.name}.`,
-        contextual_warning: `Tone and register may vary based on speaker relationship in ${tgt.name}.`,
-        example_sentences: [
-          { target: tgt.sample_phrase, source: tgt.sample_translation },
-        ],
-      };
+    if (!result || !result.primary_translation) {
+      throw new AppError('Translation needs the AI provider, which is not available right now.', 503, 'AI_UNAVAILABLE');
     }
 
     return result;
@@ -901,6 +886,12 @@ Provide a rich linguistic breakdown. Respond ONLY in valid JSON:
     const code = langCode.toLowerCase();
     const lesson = await this.getLesson(studentId, code, quizId);
     const questions = lesson.quiz_questions || [];
+    if (!Array.isArray(answers)) {
+      throw new ValidationError('answers must be a list of { question_id, selected_index }.');
+    }
+    if (questions.length === 0) {
+      throw new ValidationError('This lesson has no quiz questions.');
+    }
 
     let correctCount = 0;
     const questionResults: QuizSubmissionResult['question_results'] = [];

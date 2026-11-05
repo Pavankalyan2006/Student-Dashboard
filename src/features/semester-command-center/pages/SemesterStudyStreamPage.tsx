@@ -77,8 +77,9 @@ export function SemesterStudyStreamPage({ onNavigate }: SemesterStudyStreamPageP
     }
   };
 
+  // There is no server-side stream recalculation; this reloads the saved stream instead of claiming one.
   const handleRecalculateStream = () => {
-    toast.success('AI Semester Orchestrator recalculated optimal stream timeline!');
+    loadData();
   };
 
   if (loading && nodes.length === 0) {
@@ -135,7 +136,7 @@ export function SemesterStudyStreamPage({ onNavigate }: SemesterStudyStreamPageP
                 className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs"
               >
                 <Sparkles className="w-3.5 h-3.5 mr-1" />
-                Recalculate Stream
+                Refresh Stream
               </Button>
             </div>
           </div>

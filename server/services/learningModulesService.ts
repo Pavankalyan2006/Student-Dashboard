@@ -32,7 +32,7 @@ import {
   JobDescriptionSkillAnalysis,
 } from '../models/learningModulesTypes';
 import { db } from '../db/database';
-import { NotFoundError, ValidationError, AuthorizationError } from '../core/exceptions';
+import { NotFoundError, ValidationError, AuthorizationError, AppError } from '../core/exceptions';
 import { logger } from '../core/logging';
 import { OnboardingService } from './onboardingService';
 import { SqlLabSandboxService } from './sqlLabSandboxService';
@@ -273,6 +273,12 @@ export class LearningModulesService {
     const semNumber = syllabus?.semester_number || edu?.current_semester || 6;
     const isDemo = studentId === 'std_demo_1' || studentId === 'std_01j8k9x2p4';
 
+    // A real student gets a starter plan only when they have saved a syllabus to build it from;
+    // otherwise the subjects above would be placeholders, so they start with no plan.
+    if (!isDemo && !(syllabus?.subjects?.length)) {
+      return;
+    }
+
     // 1. Study Plan
     const planId = 'plan_sem6_primary_' + studentId;
     const studyPlan: StudyPlan = {
@@ -300,7 +306,8 @@ export class LearningModulesService {
           status: 'PENDING',
           date: new Date().toISOString().split('T')[0],
           notes: `Focus on core principles, definitions, and university paper questions for ${primarySubject}.`,
-          ai_recommendation: `Recommended: Complete 3 practice problems from Unit 1 for ${primarySubject}.`,
+          // Not model output, so only the demo accounts carry this sample recommendation.
+          ai_recommendation: isDemo ? `Recommended: Complete 3 practice problems from Unit 1 for ${primarySubject}.` : undefined,
           created_at: new Date().toISOString(),
         },
         {
@@ -316,7 +323,7 @@ export class LearningModulesService {
           status: 'PENDING',
           date: new Date().toISOString().split('T')[0],
           notes: `Hands-on practice and algorithm implementation for ${secondSubject}.`,
-          ai_recommendation: `Practice standard coding and laboratory patterns for ${secondSubject}.`,
+          ai_recommendation: isDemo ? `Practice standard coding and laboratory patterns for ${secondSubject}.` : undefined,
           created_at: new Date().toISOString(),
         },
         {
@@ -845,15 +852,68 @@ export class LearningModulesService {
     taskId: string,
     status: 'COMPLETED' | 'SKIPPED' | 'RESCHEDULED' | 'IN_PROGRESS' | 'PENDING'
   ): Promise<StudyPlanTask> {
+    const allowed = ['COMPLETED', 'SKIPPED', 'RESCHEDULED', 'IN_PROGRESS', 'PENDING'];
+    if (!allowed.includes(status)) {
+      throw new ValidationError(`Status must be one of ${allowed.join(', ')}`);
+    }
     const plan = await this.getStudyPlanById(studentId, planId);
     const task = plan.tasks.find((t) => t.id === taskId);
     if (!task) throw new NotFoundError(`Task '${taskId}' not found`);
+    const wasCompleted = task.status === 'COMPLETED';
     task.status = status;
-    if (status === 'COMPLETED') {
+    // Count a task's hours once, and take them back if it is un-completed.
+    const hours = (task.duration_minutes || 0) / 60;
+    if (status === 'COMPLETED' && !wasCompleted) {
       task.completed_at = new Date().toISOString();
-      plan.completed_hours = Math.round((plan.completed_hours + task.duration_minutes / 60) * 10) / 10;
+      plan.completed_hours = Math.round((plan.completed_hours + hours) * 10) / 10;
+    } else if (status !== 'COMPLETED' && wasCompleted) {
+      task.completed_at = undefined;
+      plan.completed_hours = Math.max(0, Math.round((plan.completed_hours - hours) * 10) / 10);
     }
     plan.updated_at = new Date().toISOString();
+    this.studyPlans.set(plan.id, plan);
+    return task;
+  }
+
+  /** Adds a task the student wrote to one of their own plans. */
+  public static async addStudyPlanTask(
+    studentId: string,
+    planId: string,
+    data: { title?: string; subject?: string; topic?: string; date?: string; start_time?: string; duration_minutes?: number; priority?: string; notes?: string }
+  ): Promise<StudyPlanTask> {
+    const plan = await this.getStudyPlanById(studentId, planId);
+    const title = String(data.title || '').trim();
+    if (!title) throw new ValidationError('Task title is required');
+    const date = String(data.date || new Date().toISOString().split('T')[0]);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(Date.parse(date))) {
+      throw new ValidationError('Task date must be a valid date (YYYY-MM-DD)');
+    }
+    const duration = Number(data.duration_minutes ?? 60);
+    if (!Number.isInteger(duration) || duration < 5 || duration > 600) {
+      throw new ValidationError('Duration must be a whole number of minutes between 5 and 600');
+    }
+    const priority = String(data.priority || 'MEDIUM').toUpperCase();
+    if (!['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].includes(priority)) {
+      throw new ValidationError('Priority must be LOW, MEDIUM, HIGH or CRITICAL');
+    }
+    const task: StudyPlanTask = {
+      id: `task_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      plan_id: plan.id,
+      student_id: studentId,
+      title,
+      subject: String(data.subject || '').trim(),
+      topic: String(data.topic || '').trim(),
+      start_time: data.start_time,
+      duration_minutes: duration,
+      priority: priority as StudyPlanTask['priority'],
+      status: 'PENDING',
+      date,
+      notes: data.notes,
+      created_at: new Date().toISOString(),
+    } as StudyPlanTask;
+    plan.tasks.push(task);
+    plan.updated_at = new Date().toISOString();
+    this.studyPlans.set(plan.id, plan);
     return task;
   }
 
@@ -863,7 +923,8 @@ export class LearningModulesService {
     const tasks: StudyPlanTask[] = [];
     for (const p of plans) {
       for (const t of p.tasks) {
-        if (t.date === today || t.status === 'PENDING') {
+        // Today's tasks plus overdue ones still pending; future tasks wait for their day.
+        if (t.date === today || (t.status === 'PENDING' && (!t.date || t.date < today))) {
           tasks.push(t);
         }
       }
@@ -946,29 +1007,52 @@ export class LearningModulesService {
     return doubt;
   }
 
+  /** Asks the model for a structured resolution; returns null when there is no usable model output. */
+  private static async resolveDoubtWithAI(data: Partial<StudentDoubt>): Promise<DoubtResolution | null> {
+    const prompt = `A B.Tech student asks a doubt${data.topic ? ` about ${data.topic}` : ''}.
+TITLE: ${data.title}
+QUESTION: ${String(data.question_text).slice(0, 3000)}
+${data.code_snippet ? `CODE:\n${String(data.code_snippet).slice(0, 3000)}` : ''}
+
+Answer the doubt accurately. Return valid JSON only:
+{"direct_answer": "...", "simple_explanation": "...", "detailed_explanation": "...", "example": "...", "common_mistake": "...", "related_concepts": ["..."], "suggested_practice": "...", "quiz_question": {"question": "...", "options": ["...", "...", "...", "..."], "correct": 0, "explanation": "..."}}`;
+    let res;
+    try {
+      res = await AIService.generate([{ role: 'user', content: prompt }], 'student_learning_agent', 0.3);
+    } catch {
+      return null;
+    }
+    if (!res || AIService.isUnavailableResult(res)) return null;
+    try {
+      const m = res.text.match(/\{[\s\S]*\}/);
+      const parsed = m ? JSON.parse(m[0]) : null;
+      if (!parsed || typeof parsed.direct_answer !== 'string' || !parsed.direct_answer.trim()) return null;
+      const q = parsed.quiz_question;
+      const quizOk = q && Array.isArray(q.options) && q.options.length >= 2 && Number.isInteger(q.correct) && q.correct >= 0 && q.correct < q.options.length;
+      return {
+        direct_answer: parsed.direct_answer,
+        simple_explanation: String(parsed.simple_explanation || ''),
+        detailed_explanation: String(parsed.detailed_explanation || ''),
+        example: String(parsed.example || ''),
+        common_mistake: String(parsed.common_mistake || ''),
+        related_concepts: Array.isArray(parsed.related_concepts) ? parsed.related_concepts.map(String) : [],
+        suggested_practice: String(parsed.suggested_practice || ''),
+        quiz_question: quizOk ? { question: String(q.question), options: q.options.map(String), correct: q.correct, explanation: String(q.explanation || '') } : undefined,
+      };
+    } catch {
+      return null;
+    }
+  }
+
   public static async createDoubt(studentId: string, data: Partial<StudentDoubt>): Promise<StudentDoubt> {
     if (!data.title || !data.question_text) {
       throw new ValidationError('Doubt title and question text are required');
     }
     const doubtId = `doubt_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
-    
-    // Auto-generate high-quality educational resolution
-    const resolution: DoubtResolution = {
-      direct_answer: `Here is the core technical explanation for "${data.title}": The fundamental invariant revolves around maintaining mathematical consistency and algorithmic correctness.`,
-      simple_explanation: `In simple terms: ${data.question_text.slice(0, 150)}... This problem is addressed by breaking the operation into atomic invariant steps that preserve system balance.`,
-      detailed_explanation: `Detailed Mathematical & Architectural Reasoning:\n1. State Definition: The input parameters define the domain constraints.\n2. Invariant Property: The invariant holds true before and after the operation.\n3. Complexity Analysis: The computational cost is bounded by O(log N) or O(N) depending on recursive partitioning.\n4. Edge Cases: Handle empty input, single element, boundary conditions, and overflow.`,
-      example: `Example Demonstration:\nSuppose we input: [10, 20, 30]. The system evaluates the recurrence relation at each node step and preserves the invariant properties.`,
-      common_mistake: 'Failing to check base cases or boundary conditions before invoking recursive operations.',
-      related_concepts: ['Asymptotic Invariants', 'Recursion & Induction', 'System Optimization'],
-      suggested_practice: 'Try implementing the solution from scratch with unit tests checking null and boundary cases.',
-      quiz_question: {
-        question: `What is the primary technical advantage of preserving invariants in ${data.topic || 'computer systems'}?`,
-        options: ['Guarantees mathematical correctness at every state', 'Eliminates all hardware memory constraints', 'Doubles processor clock frequency', 'Removes need for unit testing'],
-        correct: 0,
-        explanation: 'Invariants guarantee that regardless of state transitions, system correctness holds true at all times.',
-      },
-    };
 
+    // The resolution comes from the model. Without one, the doubt is saved as OPEN with no
+    // resolution, so the student keeps the question in history and nothing invented is shown.
+    const resolution = await this.resolveDoubtWithAI(data);
     const doubt: StudentDoubt = {
       id: doubtId,
       student_id: studentId,
@@ -978,11 +1062,11 @@ export class LearningModulesService {
       topic: data.topic || 'General Computer Science',
       course_id: data.course_id,
       course_name: data.course_name,
-      status: 'RESOLVED',
-      resolution,
-      tags: data.tags || ['engineering', 'academic'],
+      status: resolution ? 'RESOLVED' : 'OPEN',
+      resolution: resolution || undefined,
+      tags: data.tags || [],
       created_at: new Date().toISOString(),
-      resolved_at: new Date().toISOString(),
+      resolved_at: resolution ? new Date().toISOString() : undefined,
     };
 
     this.doubts.set(doubtId, doubt);
@@ -1296,6 +1380,17 @@ export class LearningModulesService {
     let confidence = 4;
     let ratingString = 'GOOD';
 
+    if (typeof ratingOrConfidence === 'string' && /^\d+$/.test(ratingOrConfidence.trim())) {
+      ratingOrConfidence = Number(ratingOrConfidence);
+    }
+    if (typeof ratingOrConfidence === 'string') {
+      if (!['AGAIN', 'HARD', 'GOOD', 'EASY'].includes(ratingOrConfidence.toUpperCase())) {
+        throw new ValidationError('Rating must be AGAIN, HARD, GOOD or EASY');
+      }
+    } else if (!Number.isInteger(ratingOrConfidence) || ratingOrConfidence < 0 || ratingOrConfidence > 5) {
+      throw new ValidationError('Rating must be AGAIN, HARD, GOOD, EASY or a whole number from 0 to 5');
+    }
+
     if (typeof ratingOrConfidence === 'string') {
       const upper = ratingOrConfidence.toUpperCase();
       ratingString = upper;
@@ -1495,92 +1590,50 @@ Output JSON format:
   ]
 }`;
 
-    try {
-      const aiResult = await AIService.generate(
-        [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt },
-        ],
-        'revision_notes_prompt',
-        0.3
-      );
+    // Cards come from the model only. Without real output nothing is returned for saving,
+    // rather than generic template cards that mention the topic name.
+    const aiResult = await AIService.generate(
+      [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+      'revision_notes_prompt',
+      0.3
+    );
+    if (AIService.isUnavailableResult(aiResult)) {
+      throw new AppError('Flashcard generation needs the AI provider, which is not available right now. Nothing was generated.', 503, 'AI_UNAVAILABLE');
+    }
 
+    let parsed: any = null;
+    try {
       const raw = aiResult.text.trim();
-      let cleanJson = raw;
       const jsonStart = raw.indexOf('{');
       const jsonEnd = raw.lastIndexOf('}');
-      if (jsonStart !== -1 && jsonEnd !== -1) {
-        cleanJson = raw.slice(jsonStart, jsonEnd + 1);
-      }
-
-      const parsed = JSON.parse(cleanJson);
-      if (Array.isArray(parsed.cards) && parsed.cards.length > 0) {
-        return {
-          title: parsed.title || `${req.topic} Flashcards`,
-          subject: parsed.subject || subject,
-          cards: parsed.cards.map((c: any) => ({
-            front: c.front || 'Test Concept',
-            back: c.back || 'Concept Explanation',
-            type: c.type || 'CONCEPT',
-            topic: c.topic || req.topic,
-            difficulty: c.difficulty || 'MEDIUM',
-            explanation: c.explanation || '',
-            example: c.example || '',
-          })),
-          is_fallback: false,
-        };
-      }
-      throw new Error('AI returned empty cards array');
-    } catch (err: any) {
-      logger.warn(`AI Flashcard generation fallback used for topic '${req.topic}': ${err?.message || err}`);
-
-      // High-quality deterministic academic fallback
-      const fallbackCards = [
-        {
-          front: `What is the core definition and theoretical foundation of ${req.topic}?`,
-          back: `${req.topic} is an essential module in ${subject}. It establishes theoretical guarantees, runtime constraints, and system correctness in engineering architectures.`,
-          type: 'DEFINITION' as const,
-          topic: req.topic,
-          difficulty: 'EASY' as const,
-          explanation: `Fundamental conceptual principle in ${subject}.`,
-          example: `Standard university end-semester exam question.`,
-        },
-        {
-          front: `What are the primary operational trade-offs and constraints associated with ${req.topic}?`,
-          back: `The primary trade-offs balance computational complexity, memory footprint, and implementation overhead. Operating under constrained resources requires strict state management.`,
-          type: 'CONCEPT' as const,
-          topic: req.topic,
-          difficulty: 'MEDIUM' as const,
-          explanation: `System trade-offs dictate optimal deployment strategies.`,
-          example: `High-throughput processing pipelines and distributed services.`,
-        },
-        {
-          front: `State the mathematical invariant or algorithmic property governing ${req.topic}.`,
-          back: `The state transition preserves invariants across iterative steps, ensuring convergence to an optimal or stable fixed point without unexpected deadlock or overflow.`,
-          type: 'FORMULA' as const,
-          topic: req.topic,
-          difficulty: 'HARD' as const,
-          explanation: `Invariants guarantee safety and correctness under edge cases.`,
-          example: `Proof by induction or contradiction in formal specification.`,
-        },
-        {
-          front: `How does ${req.topic} compare to its closest alternative in practical systems?`,
-          back: `While alternative approaches may optimize for simpler code paths, ${req.topic} provides robust asymptotic bounds and predictable error handling under peak load.`,
-          type: 'COMPARISON' as const,
-          topic: req.topic,
-          difficulty: 'MEDIUM' as const,
-          explanation: `Design pattern comparison for engineering technical interviews.`,
-          example: `Production system benchmarking.`,
-        },
-      ];
-
-      return {
-        title: `${req.topic} Flashcards`,
-        subject,
-        cards: fallbackCards.slice(0, count),
-        is_fallback: true,
-      };
+      parsed = JSON.parse(jsonStart !== -1 && jsonEnd !== -1 ? raw.slice(jsonStart, jsonEnd + 1) : raw);
+    } catch {
+      parsed = null;
     }
+    const cards = (Array.isArray(parsed?.cards) ? parsed.cards : [])
+      .filter((c: any) => typeof c?.front === 'string' && c.front.trim() && typeof c?.back === 'string' && c.back.trim())
+      .map((c: any) => ({
+        front: c.front,
+        back: c.back,
+        type: c.type || 'CONCEPT',
+        topic: c.topic || req.topic,
+        difficulty: ['EASY', 'MEDIUM', 'HARD'].includes(c.difficulty) ? c.difficulty : 'MEDIUM',
+        explanation: c.explanation || '',
+        example: c.example || '',
+      }));
+    if (cards.length === 0) {
+      logger.warn(`AI flashcard generation returned no usable cards for topic '${req.topic}'`);
+      throw new AppError('The AI provider returned no usable flashcards. Please try again.', 502, 'AI_BAD_RESPONSE');
+    }
+    return {
+      title: parsed.title || `${req.topic} Flashcards`,
+      subject: parsed.subject || subject,
+      cards,
+      is_fallback: false,
+    };
   }
 
   public static async generateFromNote(
@@ -1718,6 +1771,9 @@ Output JSON format:
     durationMinutes: number = 20
   ): Promise<StudyPlanTask> {
     const deck = await this.getFlashcardDeckById(studentId, deckId);
+    if (scheduledDate !== undefined && (!/^\d{4}-\d{2}-\d{2}$/.test(scheduledDate) || Number.isNaN(Date.parse(scheduledDate)))) {
+      throw new ValidationError('Scheduled date must be a valid date (YYYY-MM-DD)');
+    }
     const plans = await this.getStudyPlans(studentId);
     let plan = plans[0];
     if (!plan) {

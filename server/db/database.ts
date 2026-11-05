@@ -4357,9 +4357,10 @@ print(power_mod(2, 10, 1000))  # Output: 24
     }
 
     const key = `${studentId}_${courseId}`;
-    let enrollment = this.enrollments.get(key);
+    const enrollment = this.enrollments.get(key);
     if (!enrollment) {
-      enrollment = await this.enrollStudentInCourse(studentId, courseId);
+      // Archiving hides one of the student's own courses; it must not enroll them as a side effect.
+      throw new ValidationError('You can only archive a course you are enrolled in');
     }
 
     enrollment.is_archived = archive;
@@ -4601,12 +4602,18 @@ print(power_mod(2, 10, 1000))  # Output: 24
     };
   }
 
+  /** A custom course belongs to the student who created it; nobody else may enroll in or track it. */
+  private assertCourseAccessible(course: Course | undefined, courseId: string, studentId: string): Course {
+    if (!course) throw new NotFoundError(`Course '${courseId}' not found`);
+    if (course.is_custom && course.student_id !== studentId) {
+      throw new AuthorizationError('You do not have permission to access this private course');
+    }
+    return course;
+  }
+
   public async enrollStudentInCourse(studentId: string, courseId: string): Promise<CourseEnrollment> {
     await this.initialize();
-    const course = this.courses.get(courseId);
-    if (!course) {
-      throw new NotFoundError(`Course '${courseId}' not found`);
-    }
+    const course = this.assertCourseAccessible(this.courses.get(courseId), courseId, studentId);
 
     const key = `${studentId}_${courseId}`;
     let enrollment = this.enrollments.get(key);
@@ -4639,6 +4646,7 @@ print(power_mod(2, 10, 1000))  # Output: 24
 
   public async toggleCourseBookmark(studentId: string, courseId: string): Promise<{ bookmarked: boolean }> {
     await this.initialize();
+    this.assertCourseAccessible(this.courses.get(courseId), courseId, studentId);
     const key = `${studentId}_${courseId}`;
     const exists = this.courseBookmarks.get(key);
 
@@ -4711,6 +4719,7 @@ print(power_mod(2, 10, 1000))  # Output: 24
     if (!lesson) {
       throw new NotFoundError(`Lesson '${lessonId}' not found`);
     }
+    this.assertCourseAccessible(this.courses.get(lesson.course_id), lesson.course_id, studentId);
 
     const key = `${studentId}_${lessonId}`;
     let prog = this.lessonProgress.get(key);
@@ -4748,6 +4757,7 @@ print(power_mod(2, 10, 1000))  # Output: 24
     if (!lesson) {
       throw new NotFoundError(`Lesson '${lessonId}' not found`);
     }
+    this.assertCourseAccessible(this.courses.get(lesson.course_id), lesson.course_id, studentId);
 
     // Auto-enroll if not enrolled yet
     const enrollmentKey = `${studentId}_${lesson.course_id}`;
@@ -12150,6 +12160,8 @@ print(power_mod(2, 10, 1000))  # Output: 24
   // =========================================================================
 
   public seedDefaultFlashcards(studentId: string): void {
+    // Sample decks with review history are demo content; real students start with no decks.
+    if (studentId !== 'std_demo_1' && studentId !== 'std_01j8k9x2p4') return;
     const existing = Array.from(this.flashcardDecksStore.values()).filter((d) => d.student_id === studentId);
     if (existing.length > 0) return;
 

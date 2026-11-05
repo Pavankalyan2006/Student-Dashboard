@@ -3,7 +3,7 @@ import { AIService } from '../../ai/service';
 import { AgentService } from '../../ai/agent';
 import { db } from '../../db/database';
 import { requireAuth } from '../../middleware/auth';
-import { ValidationError, NotFoundError } from '../../core/exceptions';
+import { ValidationError, NotFoundError, AppError } from '../../core/exceptions';
 import { LearningModulesService } from '../../services/learningModulesService';
 import { QuizGenerationService } from '../../services/quizGeneration';
 import { NotesService } from '../../services/notes';
@@ -27,6 +27,11 @@ aiRouter.get('/ai/conversations', requireAuth, async (req, res, next) => {
 });
 
 // POST /api/v1/ai/conversations - Create a new conversation
+// GET /api/v1/ai/status - Whether an AI provider is configured (no secrets are returned)
+aiRouter.get('/ai/status', requireAuth, (_req, res) => {
+  res.json({ success: true, data: AIService.getStatus() });
+});
+
 aiRouter.post('/ai/conversations', requireAuth, async (req, res, next) => {
   try {
     const studentId = req.user!.userId;
@@ -480,24 +485,40 @@ aiRouter.post('/ai/tutor/generate-flashcards', requireAuth, async (req, res, nex
       throw new ValidationError("Parameter 'topic' is required");
     }
 
-    const deckCards = Array.isArray(cards) && cards.length > 0
-      ? cards
-      : [
+    let deckCards: any[] = Array.isArray(cards) ? cards.filter((c: any) => c?.front && c?.back) : [];
+    if (deckCards.length === 0) {
+      // Cards come from the model, based on the tutor answer the student picked. Without a model
+      // there is nothing real to put on a card, so no deck is created.
+      const source = typeof req.body.source_text === 'string' ? req.body.source_text.slice(0, 6000) : '';
+      const result = await AIService.generate(
+        [
           {
-            front: `What is the core definition and invariant of ${topic}?`,
-            back: `Formulated during AI Tutor session. Represents core theoretical invariant and boundary correctness for ${topic}.`,
-            topic,
-            type: 'CONCEPT',
-            difficulty: 'MEDIUM',
+            role: 'user',
+            content:
+              `Create 3 to 6 active-recall flashcards about "${topic}"` +
+              (source ? ` using only this explanation:\n<<<\n${source}\n>>>` : '.') +
+              `\nReturn ONLY JSON: [{"front": "question", "back": "answer"}]`,
           },
-          {
-            front: `What is the primary examination pitfall or common mistake with ${topic}?`,
-            back: `Confusing worst-case asymptotic upper bounds with average behavior, or omitting base cases.`,
-            topic,
-            type: 'DEFINITION',
-            difficulty: 'HARD',
-          },
-        ];
+        ],
+        'student_learning_agent',
+        0.3
+      );
+      if (AIService.isUnavailableResult(result)) {
+        throw new AppError('Flashcard generation needs the AI provider, which is not available right now. No deck was created.', 503, 'AI_UNAVAILABLE');
+      }
+      try {
+        const match = result.text.match(/\[[\s\S]*\]/);
+        const parsed = match ? JSON.parse(match[0]) : [];
+        deckCards = (Array.isArray(parsed) ? parsed : [])
+          .filter((c: any) => typeof c?.front === 'string' && typeof c?.back === 'string' && c.front.trim() && c.back.trim())
+          .map((c: any) => ({ front: c.front.trim(), back: c.back.trim(), topic, type: 'CONCEPT', difficulty: 'MEDIUM' }));
+      } catch {
+        deckCards = [];
+      }
+      if (deckCards.length === 0) {
+        throw new AppError('The AI response did not contain usable flashcards. No deck was created.', 502, 'AI_BAD_RESPONSE');
+      }
+    }
 
     const deck = await LearningModulesService.createFlashcardDeck(studentId, {
       title: `${topic} - AI Tutor Deck`,

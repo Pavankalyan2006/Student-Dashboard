@@ -1,7 +1,8 @@
 // src/tests/knowledge_base_master.test.ts
 // Comprehensive Test Suite for Knowledge Base & Document Repository System
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { AIService } from '../../server/ai/service';
 import { knowledgeBaseService } from '../../server/services/knowledgeBaseService';
 import { database } from '../../server/db/database';
 
@@ -153,6 +154,36 @@ describe('Knowledge Base & Document Repository System', () => {
   });
 
   describe('6. Active Recall & Interactive Study Material Generation', () => {
+    it('saves no study material when the AI provider is unavailable', async () => {
+      const before = (await knowledgeBaseService.getStudyMaterials(TEST_STUDENT_ID, sampleDocId)).length;
+      await expect(
+        knowledgeBaseService.generateStudyMaterial(TEST_STUDENT_ID, { document_id: sampleDocId, type: 'FLASHCARDS' })
+      ).rejects.toMatchObject({ statusCode: expect.any(Number) });
+      const after = (await knowledgeBaseService.getStudyMaterials(TEST_STUDENT_ID, sampleDocId)).length;
+      expect(after).toBe(before);
+    });
+
+    // The remaining tests check parsing and storage of model output, so the model is stubbed.
+    let spy: { mockRestore: () => void } | undefined;
+    beforeEach((ctx) => {
+      if (ctx.task.name.startsWith('saves no study material')) return;
+      spy = vi.spyOn(AIService, 'generate').mockImplementation(async (messages: any[]) => {
+        const prompt = messages.map((m: any) => m.content).join('\n');
+        const payload = prompt.includes('"flashcards"')
+          ? { title: 'Stub flashcards', flashcards: [{ id: 'fc-1', question: 'What is a TLB?', answer: 'A cache of page table entries.', difficulty: 'EASY', topic: 'Paging' }] }
+          : prompt.includes('"quiz_questions"')
+          ? { title: 'Stub quiz', quiz_questions: [{ id: 'q-1', question: 'What does a TLB cache?', options: ['PTEs', 'Disk blocks', 'Inodes', 'Sockets'], correct_answer_index: 0, explanation: 'TLB caches page table entries.', topic: 'Paging' }] }
+          : prompt.includes('"formula_sheet"')
+          ? { title: 'Stub formulas', formula_sheet: [{ name: 'EMAT', formula: 'h*t1 + (1-h)*t2', description: 'Average access time', variables: 'h hit ratio', complexity: 'O(1)' }] }
+          : { title: 'Stub summary', summary: 'Stub summary of the document.', key_takeaways: ['Takeaway one'], prerequisites: [] };
+        return { text: JSON.stringify(payload) } as any;
+      });
+    });
+    afterEach(() => {
+      spy?.mockRestore();
+      spy = undefined;
+    });
+
     it('generates interactive flashcards with questions, answers, and difficulty', async () => {
       const material = await knowledgeBaseService.generateStudyMaterial(TEST_STUDENT_ID, {
         document_id: sampleDocId,

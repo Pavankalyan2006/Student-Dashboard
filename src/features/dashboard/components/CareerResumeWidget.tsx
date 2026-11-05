@@ -87,14 +87,14 @@ export const CareerResumeWidget: React.FC<CareerResumeWidgetProps> = ({ onNaviga
         <div>
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold text-slate-900 dark:text-white">
-              {resumeData ? resumeData.resume.title : 'Software Engineer Resume'}
+              {resumeData ? resumeData.resume.title : 'No resume yet'}
             </span>
             <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">
-              {resumeData?.resume.status || 'DRAFT'}
+              {resumeData?.resume.status || 'NOT STARTED'}
             </span>
           </div>
           <span className="text-[11px] text-slate-500 block mt-0.5">
-            Completeness: <strong>{resumeData?.completeness_score || 85}%</strong> • Template: {resumeData?.resume.template || 'TECHNICAL'}
+            Completeness: <strong>{resumeData?.completeness_score ?? 0}%</strong>{resumeData?.resume.template ? ` • Template: ${resumeData.resume.template}` : ''}
           </span>
         </div>
         <button

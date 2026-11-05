@@ -304,7 +304,7 @@ export function CourseCard({
                     </DropdownMenuItem>
                   )}
 
-                  {onArchiveCourse && (
+                  {onArchiveCourse && (course.is_enrolled || course.is_archived) && (
                     <DropdownMenuItem
                       onClick={() => onArchiveCourse(course.id, !course.is_archived)}
                     >

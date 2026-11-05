@@ -229,6 +229,7 @@ export function ConversationSidebar({
             type="text"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
+            aria-label="Search conversations"
             placeholder="Search conversations..."
             className="w-full pl-8 pr-2.5 py-1.5 bg-slate-50 border border-[#E4E7EC] rounded-lg text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#2563EB] focus:bg-white transition-all"
           />

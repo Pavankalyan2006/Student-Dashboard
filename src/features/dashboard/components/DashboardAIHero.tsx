@@ -94,6 +94,7 @@ export function DashboardAIHero({ onNavigate }: { onNavigate: (path: string) => 
             type="text"
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
+            aria-label="Ask the AI tutor"
             placeholder="Ask AI: Explain AVL Tree rotations, debug my code, or generate a quiz..."
             className="w-full h-11 pl-4 pr-24 rounded-xl bg-white/10 text-xs sm:text-sm text-white placeholder:text-slate-400 border border-white/15 focus:outline-none focus:ring-2 focus:ring-[#38BDF8] focus:bg-white/15 transition-all shadow-inner"
           />

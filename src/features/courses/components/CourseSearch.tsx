@@ -25,6 +25,7 @@ export function CourseSearch({
         type="text"
         value={localText}
         onChange={(e) => setLocalText(e.target.value)}
+        aria-label="Search courses"
         placeholder="Search courses by name, code, topic, or skills..."
         className="w-full h-10 pl-9 pr-8 rounded-xl bg-white border border-[#E4E7EC] text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 focus:border-[#2563EB] transition-all shadow-2xs"
       />

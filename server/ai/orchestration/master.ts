@@ -168,6 +168,11 @@ export class MasterAgent {
 
       const toolSummaries: ToolExecutionSummary[] = [];
 
+      // Give every agent the student's request so it can act on what was asked.
+      for (const t of plan.tasks) {
+        if (t.params.query === undefined) t.params.query = userMessage;
+      }
+
       // 5. Execute agent plan via AgentExecutor
       const agentResults = await AgentExecutor.executePlan(plan, agentContext, {
         onTaskStart: (task) => {
@@ -192,7 +197,10 @@ export class MasterAgent {
         },
         onTaskFailed: (task, err) => {
           const stepItem = frontendPlanSteps.find((s) => s.title.includes(task.title));
-          if (stepItem) stepItem.status = 'pending';
+          if (stepItem) {
+            stepItem.status = 'failed';
+            stepItem.note = err;
+          }
         },
       });
 
@@ -267,6 +275,21 @@ ${activeLessonData.content?.slice(0, 1500) || 'Core Lesson Curriculum'}`;
         llmGeneratedAnswer = genResult.text;
       } catch (err: any) {
         logger.warn('Direct AIService generation failed in MasterAgent, using rule synthesizer', err);
+      }
+
+      // The explanation step is only done when the model actually answered.
+      if (!llmGeneratedAnswer || llmGeneratedAnswer.startsWith('**AI unavailable.**')) {
+        let changed = false;
+        for (const task of plan.tasks) {
+          if (task.agent !== 'LearningAgent') continue;
+          const stepItem = frontendPlanSteps.find((s) => s.title.includes(task.title));
+          if (stepItem && stepItem.status === 'completed') {
+            stepItem.status = 'failed';
+            stepItem.note = 'No explanation was generated because the AI provider is not available.';
+            changed = true;
+          }
+        }
+        if (changed) yield { type: 'agent_plan', data: { steps: frontendPlanSteps } };
       }
 
       // 7. Synthesize final response incorporating LLM answer and tool findings

@@ -57,7 +57,7 @@ languageLearningRouter.get('/enrollments/my', requireAuth, async (req: Request, 
 });
 
 // Contextual Translation Helper
-languageLearningRouter.post('/translate', async (req: Request, res: Response) => {
+languageLearningRouter.post('/translate', requireAuth, async (req: Request, res: Response) => {
   try {
     const { source_lang, target_lang, text } = req.body;
     if (!source_lang || !target_lang || !text) {
@@ -79,7 +79,7 @@ languageLearningRouter.get('/:code', async (req: Request, res: Response) => {
     const lang = await LanguageLearningService.getLanguageByCode(code);
     res.json({ success: true, data: lang });
   } catch (err: any) {
-    res.status(err.status || 404).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 404).json({ success: false, message: err.message });
   }
 });
 
@@ -90,7 +90,7 @@ languageLearningRouter.get('/:code/capabilities', async (req: Request, res: Resp
     const lang = await LanguageLearningService.getLanguageByCode(code);
     res.json({ success: true, data: lang.capabilities });
   } catch (err: any) {
-    res.status(err.status || 404).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 404).json({ success: false, message: err.message });
   }
 });
 
@@ -109,7 +109,7 @@ languageLearningRouter.post('/:code/enroll', requireAuth, async (req: Request, r
     res.status(201).json({ success: true, data: enrollment });
   } catch (err: any) {
     logger.error('Error in POST /languages/:code/enroll', err);
-    res.status(err.status || 400).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 400).json({ success: false, message: err.message });
   }
 });
 
@@ -135,7 +135,7 @@ languageLearningRouter.get('/:code/dashboard', requireAuth, async (req: Request,
     const dashboard = await LanguageLearningService.getStudentDashboard(studentId, code);
     res.json({ success: true, data: dashboard });
   } catch (err: any) {
-    res.status(err.status || 400).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 400).json({ success: false, message: err.message });
   }
 });
 
@@ -145,7 +145,7 @@ languageLearningRouter.get('/:code/paths', async (req: Request, res: Response) =
     const paths = await LanguageLearningService.getLearningPaths(code);
     res.json({ success: true, data: paths });
   } catch (err: any) {
-    res.status(err.status || 404).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 404).json({ success: false, message: err.message });
   }
 });
 
@@ -157,7 +157,7 @@ languageLearningRouter.get('/:code/lessons/:lessonId', requireAuth, async (req: 
     const lesson = await LanguageLearningService.getLesson(studentId, code, lessonId);
     res.json({ success: true, data: lesson });
   } catch (err: any) {
-    res.status(err.status || 404).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 404).json({ success: false, message: err.message });
   }
 });
 
@@ -170,7 +170,7 @@ languageLearningRouter.post('/:code/lessons/:lessonId/complete', requireAuth, as
     const result = await LanguageLearningService.saveLessonProgress(studentId, code, lessonId, true, notes);
     res.json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 400).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 400).json({ success: false, message: err.message });
   }
 });
 
@@ -186,7 +186,7 @@ languageLearningRouter.get('/:code/vocabulary', requireAuth, async (req: Request
     const cards = await LanguageLearningService.getVocabularyCards(studentId, code, topic ? String(topic) : undefined);
     res.json({ success: true, data: cards });
   } catch (err: any) {
-    res.status(err.status || 400).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 400).json({ success: false, message: err.message });
   }
 });
 
@@ -198,7 +198,7 @@ languageLearningRouter.post('/:code/vocabulary/:cardId/bookmark', requireAuth, a
     const card = await LanguageLearningService.bookmarkVocab(studentId, code, cardId, !!bookmarked);
     res.json({ success: true, data: card });
   } catch (err: any) {
-    res.status(err.status || 400).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 400).json({ success: false, message: err.message });
   }
 });
 
@@ -213,7 +213,7 @@ languageLearningRouter.post('/:code/vocabulary/:cardId/review', requireAuth, asy
     const card = await LanguageLearningService.reviewSpacedVocab(studentId, code, cardId, rating);
     res.json({ success: true, data: card });
   } catch (err: any) {
-    res.status(err.status || 400).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 400).json({ success: false, message: err.message });
   }
 });
 
@@ -224,7 +224,7 @@ languageLearningRouter.get('/:code/revisions/due', requireAuth, async (req: Requ
     const due = await LanguageLearningService.getDueRevisions(studentId, code);
     res.json({ success: true, data: due });
   } catch (err: any) {
-    res.status(err.status || 400).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 400).json({ success: false, message: err.message });
   }
 });
 
@@ -239,7 +239,7 @@ languageLearningRouter.get('/:code/writing', requireAuth, async (req: Request, r
     const submissions = await LanguageLearningService.getWritingSubmissions(studentId, code);
     res.json({ success: true, data: submissions });
   } catch (err: any) {
-    res.status(err.status || 400).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 400).json({ success: false, message: err.message });
   }
 });
 
@@ -255,7 +255,7 @@ languageLearningRouter.post('/:code/writing', requireAuth, async (req: Request, 
     });
     res.status(201).json({ success: true, data: submission });
   } catch (err: any) {
-    res.status(err.status || 400).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 400).json({ success: false, message: err.message });
   }
 });
 
@@ -270,7 +270,7 @@ languageLearningRouter.get('/:code/conversations', requireAuth, async (req: Requ
     const sessions = await LanguageLearningService.getConversationSessions(studentId, code);
     res.json({ success: true, data: sessions });
   } catch (err: any) {
-    res.status(err.status || 400).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 400).json({ success: false, message: err.message });
   }
 });
 
@@ -282,7 +282,7 @@ languageLearningRouter.post('/:code/conversations', requireAuth, async (req: Req
     const session = await LanguageLearningService.startConversation(studentId, code, scenario, mode);
     res.status(201).json({ success: true, data: session });
   } catch (err: any) {
-    res.status(err.status || 400).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 400).json({ success: false, message: err.message });
   }
 });
 
@@ -297,7 +297,7 @@ languageLearningRouter.post('/:code/conversations/:sessionId/message', requireAu
     const session = await LanguageLearningService.sendConversationMessage(studentId, sessionId, text);
     res.json({ success: true, data: session });
   } catch (err: any) {
-    res.status(err.status || 400).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 400).json({ success: false, message: err.message });
   }
 });
 
@@ -313,6 +313,6 @@ languageLearningRouter.post('/:code/quizzes/:quizId/submit', requireAuth, async 
     const result = await LanguageLearningService.submitQuiz(studentId, code, quizId, answers || []);
     res.json({ success: true, data: result });
   } catch (err: any) {
-    res.status(err.status || 400).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 400).json({ success: false, message: err.message });
   }
 });

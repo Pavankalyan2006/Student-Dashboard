@@ -234,7 +234,8 @@ export interface AgentPlanItem {
   step: number;
   title: string;
   description: string;
-  status: 'pending' | 'in_progress' | 'completed';
+  note?: string;
+  status: 'pending' | 'in_progress' | 'completed' | 'failed';
 }
 
 export interface AICitationItem {

@@ -87,7 +87,7 @@ export const FlashcardStudyModal: React.FC<FlashcardStudyModalProps> = ({
 
     try {
       setIsSubmitting(true);
-      const updatedCard = await onReviewCard(deck.id, currentCard.id, rating);
+      const updatedCard = await onReviewCard(currentCard.deck_id || deck.id, currentCard.id, rating);
 
       // Record session review
       const ratingStr = typeof rating === 'string' ? rating : rating >= 4 ? 'GOOD' : 'AGAIN';

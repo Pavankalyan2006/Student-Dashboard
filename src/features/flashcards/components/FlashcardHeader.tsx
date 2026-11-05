@@ -77,6 +77,7 @@ export const FlashcardHeader: React.FC<FlashcardHeaderProps> = ({
           type="text"
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
+          aria-label="Search decks and cards"
           placeholder="Search decks, questions, answers, syllabus topics, or tags..."
           className="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border border-[#D0D5DD] bg-white placeholder-[#667085] text-[#101828] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm"
         />

@@ -9,6 +9,10 @@ import { ToolRegistry } from '../../server/ai/tools';
 import { NotesService } from '../../server/services/notes';
 import { toDeliveryQuestion, QuizQuestion } from '../../server/models/quizTypes';
 
+import { useMockQuizModel } from './helpers/mockAIModel';
+
+useMockQuizModel();
+
 describe('Phase 9: AI Quiz & Adaptive Assessment System', () => {
   const studentA = 'std_01j8k9x2p4';
   const studentB = 'std_test_isolated_student';

@@ -119,7 +119,7 @@ export function SemesterSubjectsSyllabusPage({ initialSubjectId, onNavigate }: S
 
     try {
       const created = await semesterCommandCenterApi.addSubject(newSubForm);
-      toast.success(`Subject "${created.name}" created with 5 default syllabus units!`);
+      toast.success(`Subject "${created.name}" added.`);
       setShowAddSubjectModal(false);
       setNewSubForm({
         name: '',

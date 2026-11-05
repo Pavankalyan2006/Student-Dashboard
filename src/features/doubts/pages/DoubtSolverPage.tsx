@@ -77,7 +77,11 @@ export function DoubtSolverPage({ onNavigate }: DoubtSolverPageProps) {
         code_snippet: codeSnippet || undefined,
         topic: subject,
       });
-      toast.success('Doubt resolved by DoubtSolverAgent!');
+      if (created.status === 'RESOLVED') {
+        toast.success('Doubt answered');
+      } else {
+        toast.info('Doubt saved. The AI provider is not available, so it has no answer yet.');
+      }
       setTitle('');
       setQuestionText('');
       setCodeSnippet('');
@@ -151,6 +155,7 @@ export function DoubtSolverPage({ onNavigate }: DoubtSolverPageProps) {
                 <div>
                   <label className="block text-xs font-semibold text-[#344054] mb-1">Subject Area</label>
                   <select
+                    aria-label="Subject"
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
                     className="w-full px-3 py-2 text-sm border border-[#D0D5DD] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -168,6 +173,7 @@ export function DoubtSolverPage({ onNavigate }: DoubtSolverPageProps) {
                   <label className="block text-xs font-semibold text-[#344054] mb-1">Doubt Title / Question</label>
                   <input
                     type="text"
+                    aria-label="Doubt question"
                     placeholder="e.g. Why does BCNF guarantee absence of redundancy?"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
@@ -179,6 +185,7 @@ export function DoubtSolverPage({ onNavigate }: DoubtSolverPageProps) {
                 <div>
                   <label className="block text-xs font-semibold text-[#344054] mb-1">Detailed Explanation / Context</label>
                   <textarea
+                    aria-label="Doubt details"
                     placeholder="Explain where you are stuck or what concept is conflicting..."
                     value={questionText}
                     onChange={(e) => setQuestionText(e.target.value)}
@@ -194,6 +201,7 @@ export function DoubtSolverPage({ onNavigate }: DoubtSolverPageProps) {
                     Code / SQL / Expression (Optional)
                   </label>
                   <textarea
+                    aria-label="Code, SQL or expression (optional)"
                     placeholder="Paste code or SQL snippet..."
                     value={codeSnippet}
                     onChange={(e) => setCodeSnippet(e.target.value)}
@@ -402,6 +410,17 @@ export function DoubtSolverPage({ onNavigate }: DoubtSolverPageProps) {
                   </div>
                 </div>
               )}
+            </div>
+          ) : selectedDoubt ? (
+            <div className="p-6 rounded-xl border border-[#E4E7EC] bg-white shadow-sm space-y-3">
+              <span className="text-xs font-bold text-amber-800 bg-amber-50 px-2.5 py-1 rounded-md">{selectedDoubt.status}</span>
+              <h2 className="text-lg font-bold text-[#101828]">{selectedDoubt.title}</h2>
+              <p className="text-xs text-[#475467] bg-gray-50 p-2.5 rounded-lg border border-gray-100 italic">
+                "{selectedDoubt.question_text}"
+              </p>
+              <p className="text-sm text-[#475467]">
+                This doubt has no answer yet. It was saved while the AI provider was not available.
+              </p>
             </div>
           ) : (
             <EmptyState

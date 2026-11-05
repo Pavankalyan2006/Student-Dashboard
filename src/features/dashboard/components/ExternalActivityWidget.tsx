@@ -89,7 +89,7 @@ export const ExternalActivityWidget: React.FC<ExternalActivityWidgetProps> = ({ 
             <ExternalLink className="w-3 h-3 text-slate-500 group-hover:text-indigo-400" />
           </div>
           <div className="text-lg font-bold text-white mt-1">
-            {connectedCount || 6} <span className="text-xs font-normal text-slate-400">connected</span>
+            {connectedCount} <span className="text-xs font-normal text-slate-400">connected</span>
           </div>
         </div>
 

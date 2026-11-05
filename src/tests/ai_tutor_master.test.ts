@@ -8,6 +8,10 @@ import { NotesService } from '../../server/services/notes';
 import { PromptService } from '../../server/ai/prompts';
 import { AgentRouter } from '../../server/ai/orchestration/router';
 
+import { useMockQuizModel } from './helpers/mockAIModel';
+
+useMockQuizModel();
+
 describe('AI Academic Tutor - Complete Master System Tests', () => {
   const studentA = 'std_01j8k9x2p4';
   let studentB: any = null;

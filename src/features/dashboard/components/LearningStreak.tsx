@@ -3,21 +3,19 @@ import { Flame, Calendar, Trophy } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../../../components/ui/card';
 
 export function LearningStreak({
-  streakDays = 7,
-  longestStreak = 14,
+  streakDays = 0,
+  longestStreak = 0,
 }: {
   streakDays?: number;
   longestStreak?: number;
 }) {
-  const days = [
-    { day: 'M', active: true },
-    { day: 'T', active: true },
-    { day: 'W', active: true },
-    { day: 'T', active: true },
-    { day: 'F', active: true },
-    { day: 'S', active: true },
-    { day: 'S', active: true },
-  ];
+  // Last 7 calendar days ending today; a day is active when it falls inside the current streak.
+  const labels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (6 - i));
+    return { day: labels[d.getDay()], active: 6 - i < streakDays };
+  });
 
   return (
     <Card className="border border-[#E4E7EC] bg-white flex flex-col justify-between">

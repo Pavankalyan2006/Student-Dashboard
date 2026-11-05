@@ -279,6 +279,22 @@ Return a fresh structured JSON object matching the note schema (title, overview,
   }
 
   /**
+   * Returns the model's JSON payload, or throws when there is no real model output.
+   * Callers must not substitute template content: 503 when the provider is unavailable,
+   * 502 when the model answered with something that is not the requested JSON.
+   */
+  private static parseModelJson(res: { text: string }, what: string): any {
+    if (AIService.isUnavailableResult(res as any)) {
+      throw new AppError(`${what} needs the AI provider, which is not available right now. Nothing was generated.`, 503, 'AI_UNAVAILABLE');
+    }
+    try {
+      return JSON.parse(this.extractJsonString(res.text));
+    } catch {
+      throw new AppError(`The AI provider returned an unreadable response, so nothing was generated. Please try again.`, 502, 'AI_BAD_RESPONSE');
+    }
+  }
+
+  /**
    * Summarizes a note into concise bullet points and executive takeaway.
    */
   public static async summarizeNote(
@@ -304,23 +320,12 @@ ${note.content.slice(0, 3000)}
 Return JSON: { "summary": "...", "key_takeaways": ["point 1", "point 2"] }`;
 
     const res = await AIService.generate([{ role: 'user', content: prompt }], 'revision_notes_prompt', 0.3);
-    try {
-      const cleanJson = this.extractJsonString(res.text);
-      const parsed = JSON.parse(cleanJson);
-      return {
-        summary: parsed.summary || note.description,
-        key_takeaways: Array.isArray(parsed.key_takeaways) ? parsed.key_takeaways : [note.description],
-      };
-    } catch {
-      return {
-        summary: note.description,
-        key_takeaways: [
-          'Core definitions and foundational axioms',
-          'Primary complexity bounds and analysis',
-          'Common pitfalls and examination scoring points',
-        ],
-      };
+    const parsed = this.parseModelJson(res, 'Note summary');
+    const takeaways = Array.isArray(parsed.key_takeaways) ? parsed.key_takeaways.filter((t: any) => typeof t === 'string' && t.trim()) : [];
+    if (typeof parsed.summary !== 'string' || !parsed.summary.trim()) {
+      throw new AppError('The AI provider returned no summary. Please try again.', 502, 'AI_BAD_RESPONSE');
     }
+    return { summary: parsed.summary, key_takeaways: takeaways };
   }
 
   /**
@@ -353,46 +358,20 @@ Return valid JSON with an array of flashcard objects:
 }`;
 
     const res = await AIService.generate([{ role: 'user', content: prompt }], 'revision_notes_prompt', 0.3);
-    try {
-      const cleanJson = this.extractJsonString(res.text);
-      const parsed = JSON.parse(cleanJson);
-      if (Array.isArray(parsed.flashcards) && parsed.flashcards.length > 0) {
-        return parsed.flashcards.map((f: any, idx: number) => ({
-          id: f.id || `fc_${noteId}_${idx + 1}`,
-          question: f.question || 'Concept Question',
-          answer: f.answer || 'Answer',
-          concept: f.concept || note.title,
-          difficulty: f.difficulty || 'medium',
-        }));
-      }
-    } catch (err) {
-      logger.warn('Failed to parse AI flashcard output, returning synthesized cards', { error: { message: String(err) } });
+    const parsed = this.parseModelJson(res, 'Flashcard generation');
+    const cards = (Array.isArray(parsed.flashcards) ? parsed.flashcards : [])
+      .filter((f: any) => typeof f?.question === 'string' && f.question.trim() && typeof f?.answer === 'string' && f.answer.trim())
+      .map((f: any, idx: number) => ({
+        id: f.id || `fc_${noteId}_${idx + 1}`,
+        question: f.question,
+        answer: f.answer,
+        concept: f.concept || note.title,
+        difficulty: ['easy', 'medium', 'hard'].includes(f.difficulty) ? f.difficulty : 'medium',
+      }));
+    if (cards.length === 0) {
+      throw new AppError('The AI provider returned no usable flashcards. Please try again.', 502, 'AI_BAD_RESPONSE');
     }
-
-    // High quality fallback flashcards synthesized from note content
-    return [
-      {
-        id: `fc_${noteId}_1`,
-        question: `What is the primary objective of ${note.title}?`,
-        answer: note.description || 'To systematically master engineering principles and eliminate inefficiencies.',
-        concept: 'Foundations',
-        difficulty: 'easy',
-      },
-      {
-        id: `fc_${noteId}_2`,
-        question: `What are the necessary mathematical conditions or invariants in ${note.title}?`,
-        answer: 'Mathematical invariants guarantee correctness, bounded runtime, and safety against edge case states.',
-        concept: 'Formal Invariants',
-        difficulty: 'medium',
-      },
-      {
-        id: `fc_${noteId}_3`,
-        question: `What is the common student mistake or examination trap associated with ${note.title}?`,
-        answer: 'Confusing worst-case asymptotic bounds with average-case behavior, or omitting base cases in recursive analysis.',
-        concept: 'Exam Traps',
-        difficulty: 'hard',
-      },
-    ];
+    return cards;
   }
 
   /**
@@ -426,38 +405,31 @@ Return valid JSON with an array of quiz questions:
 }`;
 
     const res = await AIService.generate([{ role: 'user', content: prompt }], 'exam_notes_prompt', 0.3);
-    try {
-      const cleanJson = this.extractJsonString(res.text);
-      const parsed = JSON.parse(cleanJson);
-      if (Array.isArray(parsed.questions) && parsed.questions.length > 0) {
-        return parsed.questions.map((q: any, idx: number) => ({
-          id: q.id || `q_${noteId}_${idx + 1}`,
-          question: q.question,
-          options: Array.isArray(q.options) && q.options.length >= 2 ? q.options : ['True', 'False'],
-          correct_answer_index: typeof q.correct_answer_index === 'number' ? q.correct_answer_index : 0,
-          explanation: q.explanation || 'Verified correct engineering explanation.',
-          topic: q.topic || note.title,
-        }));
-      }
-    } catch (err) {
-      logger.warn('Failed to parse AI quiz output, returning synthesized questions', { error: { message: String(err) } });
+    const parsed = this.parseModelJson(res, 'Quiz generation');
+    // Keep only questions whose correct answer is one of their own options.
+    const questions = (Array.isArray(parsed.questions) ? parsed.questions : [])
+      .filter(
+        (q: any) =>
+          typeof q?.question === 'string' &&
+          q.question.trim() &&
+          Array.isArray(q.options) &&
+          q.options.length >= 2 &&
+          Number.isInteger(q.correct_answer_index) &&
+          q.correct_answer_index >= 0 &&
+          q.correct_answer_index < q.options.length
+      )
+      .map((q: any, idx: number) => ({
+        id: q.id || `q_${noteId}_${idx + 1}`,
+        question: q.question,
+        options: q.options,
+        correct_answer_index: q.correct_answer_index,
+        explanation: typeof q.explanation === 'string' ? q.explanation : '',
+        topic: q.topic || note.title,
+      }));
+    if (questions.length === 0) {
+      throw new AppError('The AI provider returned no usable questions. Please try again.', 502, 'AI_BAD_RESPONSE');
     }
-
-    return [
-      {
-        id: `q_${noteId}_1`,
-        question: `In the context of ${note.title}, which of the following statements is mathematically sound?`,
-        options: [
-          'The worst-case complexity ceiling is strictly bounded by Big-O notation',
-          'Space complexity is always independent of recursive call stack depth',
-          'Hardware caching makes all O(1) operations take equal time',
-          'All non-prime attributes can be dropped without losing data',
-        ],
-        correct_answer_index: 0,
-        explanation: 'Big-O notation formally defines the asymptotic upper bound ceiling f(n) <= c * g(n).',
-        topic: note.title,
-      },
-    ];
+    return questions;
   }
 
   /**
@@ -488,6 +460,9 @@ STUDENT INSTRUCTION: ${instruction}
 Explain clearly using Markdown with KaTeX formulas ($...$) where helpful. Keep it concise, pedagogically friendly, and mathematically sound.`;
 
     const res = await AIService.generate([{ role: 'user', content: prompt }], 'student_learning_agent', 0.5);
+    if (AIService.isUnavailableResult(res)) {
+      throw new AppError('Explaining a section needs the AI provider, which is not available right now.', 503, 'AI_UNAVAILABLE');
+    }
     return {
       explanation: res.text,
       key_takeaway: `Mastery focus: ${sectionTitle}`,

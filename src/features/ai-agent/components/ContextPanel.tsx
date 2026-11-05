@@ -126,6 +126,7 @@ export function ContextPanel({
           Teaching Mode
         </label>
         <select
+          aria-label="Tutor mode"
           value={selectedContext.mode || 'EXPLAIN'}
           onChange={(e) => onContextChange({ ...selectedContext, mode: e.target.value })}
           className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#2563EB]"

@@ -21,7 +21,8 @@ export interface AgentPlanItem {
   step: number;
   title: string;
   description: string;
-  status: 'pending' | 'in_progress' | 'completed';
+  status: 'pending' | 'in_progress' | 'completed' | 'failed';
+  note?: string;
 }
 
 export interface AICitationItem {

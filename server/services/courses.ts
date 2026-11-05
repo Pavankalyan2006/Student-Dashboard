@@ -169,7 +169,7 @@ export class CourseService {
     }
 
     const subjects = semesterCommandCenterService.getSubjects(studentId);
-    const targetSubject = subjects.find((s) => s.id === subjectId) || semesterCommandCenterService.getSubjectById(subjectId);
+    const targetSubject = subjects.find((s) => s.id === subjectId) || semesterCommandCenterService.getSubjectById(studentId, subjectId);
 
     if (!targetSubject) {
       throw new NotFoundError(`Academic subject '${subjectId}' not found in curriculum`);

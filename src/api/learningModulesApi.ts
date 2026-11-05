@@ -66,6 +66,16 @@ export const learningModulesApi = {
       });
       return unwrap<StudyPlanTask>(res);
     },
+    addTask: async (
+      planId: string,
+      task: { title: string; subject?: string; date?: string; duration_minutes?: number; priority?: string }
+    ): Promise<StudyPlanTask> => {
+      const res = await apiClient.request<any>(`/study-planner/plans/${encodeURIComponent(planId)}/tasks`, {
+        method: 'POST',
+        body: JSON.stringify(task),
+      });
+      return unwrap<StudyPlanTask>(res);
+    },
     getTodayTasks: async (): Promise<StudyPlanTask[]> => {
       const res = await apiClient.request<any>('/study-planner/today');
       return unwrap<StudyPlanTask[]>(res, []) || [];

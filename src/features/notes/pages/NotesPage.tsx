@@ -170,6 +170,7 @@ export function NotesPage({ onNavigate }: NotesPageProps) {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            aria-label="Search notes"
             placeholder="Search notes by topic, keyword, or tag..."
             className="w-full h-9 pl-9 pr-3 rounded-lg border border-[#D0D5DD] bg-white text-xs text-[#101828] placeholder-[#98A2B3] focus:outline-none focus:ring-2 focus:ring-[#2563EB] transition"
           />

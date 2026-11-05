@@ -1,5 +1,6 @@
 // src/tests/flashcards_master_production.test.ts
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { AIService } from '../../server/ai/service';
 import { db } from '../../server/db/database';
 import { LearningModulesService } from '../../server/services/learningModulesService';
 import { EventBus } from '../../server/events/eventBus';
@@ -382,7 +383,24 @@ describe('AI Flashcards Production & Spaced Repetition Master Test Suite', () =>
   // 5. AI Generation & Multi-Source Grounding (Notes, Docs, Courses)
   // =========================================================================
   describe('5. AI Generation & Source Grounding', () => {
+    it('refuses to invent topic flashcards when the AI provider is unavailable', async () => {
+      await expect(
+        LearningModulesService.generateAIFlashcards(primaryStudentId, { topic: 'Deadlocks', subject: 'OS', count: 3 } as any)
+      ).rejects.toMatchObject({ statusCode: expect.any(Number) });
+    });
+
     it('generates high-yield flashcards from topic with technical concepts', async () => {
+      // No real model in tests; topic/course flashcards are model-only, so stub a well-formed reply.
+      const cardsSpy = vi.spyOn(AIService, 'generate').mockResolvedValue({
+        text: JSON.stringify({
+          title: 'Stub deck',
+          cards: [
+            { front: 'What does a TLB cache?', back: 'Page table entries.', type: 'CONCEPT', difficulty: 'EASY' },
+            { front: 'What causes a page fault?', back: 'Accessing a page not in memory.', type: 'CONCEPT', difficulty: 'MEDIUM' },
+            { front: 'Which policy shows Belady anomaly?', back: 'FIFO.', type: 'CONCEPT', difficulty: 'MEDIUM' },
+          ],
+        }),
+      } as any);
       const genRes = await LearningModulesService.generateAIFlashcards(
         primaryStudentId,
         {
@@ -392,7 +410,7 @@ describe('AI Flashcards Production & Spaced Repetition Master Test Suite', () =>
           style: 'CONCEPT',
           count: 4,
         }
-      );
+      ).finally(() => cardsSpy.mockRestore());
 
       expect(genRes.cards.length).toBeGreaterThanOrEqual(3);
       expect(genRes.cards[0].front).toBeDefined();
@@ -406,10 +424,11 @@ describe('AI Flashcards Production & Spaced Repetition Master Test Suite', () =>
       expect(notes.length).toBeGreaterThanOrEqual(1);
       const note = notes[0];
 
-      const noteRes = await LearningModulesService.generateFromNote(
-        primaryStudentId,
-        note.id
-      );
+      // No real model in tests; note flashcards are model-only, so stub a well-formed reply.
+      const spy = vi.spyOn(AIService, 'generate').mockResolvedValue({
+        text: JSON.stringify({ flashcards: [{ question: `Key idea of ${note.title}?`, answer: 'Stub answer for the test.', difficulty: 'easy' }] }),
+      } as any);
+      const noteRes = await LearningModulesService.generateFromNote(primaryStudentId, note.id).finally(() => spy.mockRestore());
 
       expect(noteRes.title).toBeDefined();
       expect(noteRes.source_id).toBe(note.id);
@@ -435,12 +454,23 @@ describe('AI Flashcards Production & Spaced Repetition Master Test Suite', () =>
       expect(coursesRes.items.length).toBeGreaterThanOrEqual(1);
       const course = coursesRes.items[0];
 
+      // No real model in tests; topic/course flashcards are model-only, so stub a well-formed reply.
+      const cardsSpy = vi.spyOn(AIService, 'generate').mockResolvedValue({
+        text: JSON.stringify({
+          title: 'Stub deck',
+          cards: [
+            { front: 'What does a TLB cache?', back: 'Page table entries.', type: 'CONCEPT', difficulty: 'EASY' },
+            { front: 'What causes a page fault?', back: 'Accessing a page not in memory.', type: 'CONCEPT', difficulty: 'MEDIUM' },
+            { front: 'Which policy shows Belady anomaly?', back: 'FIFO.', type: 'CONCEPT', difficulty: 'MEDIUM' },
+          ],
+        }),
+      } as any);
       const courseRes = await LearningModulesService.generateFromCourse(
         primaryStudentId,
         course.id,
         undefined,
         4
-      );
+      ).finally(() => cardsSpy.mockRestore());
 
       expect(courseRes.title).toBeDefined();
       expect(courseRes.source_id).toBe(course.id);
@@ -468,10 +498,16 @@ describe('AI Flashcards Production & Spaced Repetition Master Test Suite', () =>
       const decks = await LearningModulesService.getFlashcardDecks(primaryStudentId);
       const deck = decks[0];
 
+      // A free-text date cannot be placed on the planner's calendar, so it is rejected.
+      await expect(
+        LearningModulesService.scheduleReviewTask(primaryStudentId, deck.id, 'Tomorrow at 7:00 PM', 30)
+      ).rejects.toThrow(/valid date/);
+
+      const today = new Date().toISOString().split('T')[0];
       const scheduledTask = await LearningModulesService.scheduleReviewTask(
         primaryStudentId,
         deck.id,
-        'Tomorrow at 7:00 PM',
+        today,
         30
       );
 

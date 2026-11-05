@@ -605,120 +605,298 @@ let recoveryPlans: AcademicRecoveryPlan[] = [
   },
 ];
 
-export const semesterCommandCenterService = {
-  // 1. Get Complete Semester Overview & Dashboard Data
-  getOverview: (studentId?: string): SemesterOverviewDashboardData => {
-    let activeSubjects = semesterSubjects;
-    let config = currentSemesterConfig;
-    let events = academicEvents.filter((e) => e.status === 'UPCOMING');
+// ---------------------------------------------------------------------------
+// Per-student state.
+// The arrays above are the original demo seed. They are copied only for the demo
+// accounts; every other student starts empty and builds their own semester from the
+// syllabus they entered during onboarding plus what they add on this page.
+// ---------------------------------------------------------------------------
+const DEMO_STUDENT_IDS = new Set(['std_demo_1', 'std_01j8k9x2p4', 'std_demo_btech']);
 
-    if (studentId) {
-      try {
-        const edu = OnboardingService.getEducationProfileSync(studentId);
-        const syllabus = OnboardingService.getSemesterSyllabusSync(studentId);
+interface TopicProgress {
+  completed: boolean;
+  revision_count: number;
+}
 
-        if (edu) {
-          config = {
-            ...config,
-            semester_number: edu.current_semester || config.semester_number,
-            branch: (edu.branch as AcademicSemesterConfig['branch']) || config.branch,
-          };
-        }
+export interface StudentSemesterState {
+  config: AcademicSemesterConfig;
+  config_customized: boolean;
+  seed_subjects: SemesterSubject[]; // demo accounts only
+  custom_subjects: SemesterSubject[];
+  topic_progress: Record<string, TopicProgress>;
+  events: AcademicEvent[];
+  stream_nodes: SemesterStudyStreamNode[];
+  slip_tests: SlipTest[];
+  minor_exams: MinorExam[];
+  end_sem: EndSemReadiness[];
+  recovery_plans: AcademicRecoveryPlan[];
+  phases: AcademicPhase[];
+}
 
-        if (syllabus && syllabus.subjects && syllabus.subjects.length > 0) {
-          const colors = ['#2563EB', '#4F46E5', '#7C3AED', '#0891B2', '#059669', '#D97706'];
-          const typeMap: Record<string, SemesterSubject['subject_type']> = {
-            THEORY: 'CORE',
-            CORE: 'CORE',
-            LAB: 'LAB',
-            PROJECT: 'PROJECT',
-            ELECTIVE: 'ELECTIVE',
-            AUDIT: 'OTHER',
-          };
-          activeSubjects = syllabus.subjects.map((s, idx): SemesterSubject => {
-            const units = (s.syllabus_units || []).map((u, ui) => ({
-              id: `unit_${s.id}_${ui}`,
-              unit_number: u.unit_number || ui + 1,
-              name: u.title || `Unit ${ui + 1}`,
-              status: 'NOT_STARTED' as const,
-              topics: (u.topics || []).map((t, ti) => ({
-                id: `topic_${s.id}_${ui}_${ti}`,
-                name: t || `Topic ${ti + 1}`,
-                estimated_hours: 2,
-                conceptual_difficulty: 'MEDIUM' as const,
-                practical_difficulty: 'MEDIUM' as const,
-                completed: false,
-                revision_count: 0,
-              })),
-            }));
-            return {
-              id: s.id,
-              semester_id: config.id,
-              name: s.name,
-              code: s.code || `CS${config.semester_number}0${idx + 1}`,
-              credits: s.credits || 4,
-              subject_type: typeMap[s.subject_type] || 'OTHER',
-              difficulty: 'MEDIUM',
-              priority: idx < 2 ? 'HIGH' : 'MEDIUM',
-              // No topic is marked complete yet for a syllabus the student just entered.
-              progress_percent: 0,
-              syllabus_remaining_percent: 100,
-              target_grade: 'A',
-              units:
-                units.length > 0
-                  ? units
-                  : [
-                      {
-                        id: `unit_${s.id}_1`,
-                        unit_number: 1,
-                        name: 'Core Theory & Mathematical Invariants',
-                        status: 'NOT_STARTED',
-                        topics: [
-                          { id: `top_${s.id}_1`, name: 'Fundamental Concepts', estimated_hours: 3, conceptual_difficulty: 'EASY', practical_difficulty: 'EASY', completed: false, revision_count: 0 },
-                          { id: `top_${s.id}_2`, name: 'Analytical Formulations', estimated_hours: 4, conceptual_difficulty: 'MEDIUM', practical_difficulty: 'MEDIUM', completed: false, revision_count: 0 },
-                        ],
-                      },
-                    ],
-            };
-          });
+/** Holder object so the snapshot persistence can save and restore the Map. */
+export const semesterStateStore: { states: Map<string, StudentSemesterState> } = {
+  states: new Map(),
+};
 
-          if (syllabus.academic_dates && syllabus.academic_dates.length > 0) {
-            const eventTypeMap: Record<string, AcademicEvent['event_type']> = {
-              INTERNAL_EXAM: 'MINOR_1',
-              MINOR_EXAM: 'MINOR_1',
-              SLIP_TEST: 'SLIP_TEST',
-              QUIZ: 'QUIZ',
-              LAB_ASSESSMENT: 'LAB_EXAM',
-              ASSIGNMENT: 'ASSIGNMENT',
-              PROJECT_REVIEW: 'PROJECT_REVIEW',
-              END_SEMESTER: 'END_SEMESTER',
-            };
-            events = syllabus.academic_dates.map((d, i): AcademicEvent => ({
-              id: d.id,
-              student_id: studentId,
-              subject_id: d.subject_id || activeSubjects[i % activeSubjects.length]?.id,
-              title: d.label || 'Academic Assessment',
-              event_type: eventTypeMap[d.type] || 'OTHER',
-              date: d.date,
-              priority: 'HIGH',
-              syllabus_scope: 'Units 1-3 Comprehensive',
-              status: 'UPCOMING',
-              notes: d.notes,
-            }));
-          }
-        }
-      } catch {}
+const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v));
+
+function blankConfig(studentId: string): AcademicSemesterConfig {
+  const now = new Date().toISOString();
+  return {
+    id: `sem_${studentId}`,
+    student_id: studentId,
+    semester_number: 1,
+    academic_year: '',
+    branch: 'CSE' as AcademicSemesterConfig['branch'],
+    section: '',
+    start_date: '',
+    end_date: '',
+    total_teaching_weeks: 16,
+    current_week: 0,
+    current_phase_number: 1,
+    daily_study_hours_budget: 0,
+    academic_goals: [],
+    created_at: now,
+    updated_at: now,
+  };
+}
+
+function stateFor(studentId: string): StudentSemesterState {
+  let st = semesterStateStore.states.get(studentId);
+  if (st) return st;
+  if (DEMO_STUDENT_IDS.has(studentId)) {
+    st = {
+      config: { ...clone(currentSemesterConfig), student_id: studentId },
+      config_customized: true,
+      seed_subjects: clone(semesterSubjects),
+      custom_subjects: [],
+      topic_progress: {},
+      events: clone(academicEvents),
+      stream_nodes: clone(studyStreamNodes),
+      slip_tests: clone(slipTests),
+      minor_exams: clone(minorExams),
+      end_sem: clone(endSemReadinessList),
+      recovery_plans: clone(recoveryPlans),
+      phases: clone(academicPhases),
+    };
+  } else {
+    st = {
+      config: blankConfig(studentId),
+      config_customized: false,
+      seed_subjects: [],
+      custom_subjects: [],
+      topic_progress: {},
+      events: [],
+      stream_nodes: [],
+      slip_tests: [],
+      minor_exams: [],
+      end_sem: [],
+      recovery_plans: [],
+      // Generic semester lifecycle without invented dates.
+      phases: academicPhases.map((ph) => ({ ...ph, start_date: '', end_date: '', is_current: ph.phase_number === 1 })),
+    };
+  }
+  semesterStateStore.states.set(studentId, st);
+  return st;
+}
+
+function computeCurrentWeek(cfg: AcademicSemesterConfig): number {
+  if (!cfg.start_date) return cfg.current_week || 0;
+  const start = new Date(cfg.start_date).getTime();
+  if (Number.isNaN(start)) return cfg.current_week || 0;
+  const week = Math.floor((Date.now() - start) / (7 * 24 * 3600 * 1000)) + 1;
+  return Math.max(0, Math.min(cfg.total_teaching_weeks || week, week));
+}
+
+function recalcProgress(sub: SemesterSubject): SemesterSubject {
+  const topics = sub.units.flatMap((u) => u.topics || []);
+  const done = topics.filter((t) => t.completed).length;
+  sub.progress_percent = topics.length ? Math.round((done / topics.length) * 100) : 0;
+  sub.syllabus_remaining_percent = 100 - sub.progress_percent;
+  for (const u of sub.units) {
+    const ut = u.topics || [];
+    const ud = ut.filter((t) => t.completed).length;
+    u.status = ut.length && ud === ut.length ? 'COMPLETED' : ud > 0 ? 'IN_PROGRESS' : 'NOT_STARTED';
+  }
+  return sub;
+}
+
+/** Subjects from the student's onboarding syllabus, with their saved topic progress applied. */
+function syllabusSubjects(studentId: string, st: StudentSemesterState): SemesterSubject[] {
+  let syllabus: any;
+  try {
+    syllabus = OnboardingService.getSemesterSyllabusSync(studentId);
+  } catch {
+    return [];
+  }
+  if (!syllabus?.subjects?.length) return [];
+  const typeMap: Record<string, SemesterSubject['subject_type']> = {
+    THEORY: 'CORE', CORE: 'CORE', LAB: 'LAB', PROJECT: 'PROJECT', ELECTIVE: 'ELECTIVE', AUDIT: 'OTHER',
+  };
+  return syllabus.subjects.map((s: any, idx: number): SemesterSubject => {
+    const units: SemesterUnit[] = (s.syllabus_units || []).map((u: any, ui: number) => ({
+      id: `unit_${s.id}_${ui}`,
+      unit_number: u.unit_number || ui + 1,
+      name: u.title || `Unit ${ui + 1}`,
+      status: 'NOT_STARTED' as const,
+      topics: (u.topics || []).map((t: string, ti: number): SemesterTopic => {
+        const id = `topic_${s.id}_${ui}_${ti}`;
+        const saved = st.topic_progress[id];
+        return {
+          id,
+          name: t || `Topic ${ti + 1}`,
+          estimated_hours: 2,
+          conceptual_difficulty: 'MEDIUM',
+          practical_difficulty: 'MEDIUM',
+          completed: saved?.completed ?? false,
+          revision_count: saved?.revision_count ?? 0,
+        };
+      }),
+    }));
+    return recalcProgress({
+      id: s.id,
+      semester_id: st.config.id,
+      name: s.name,
+      code: s.code || '',
+      credits: s.credits || 0,
+      subject_type: typeMap[s.subject_type] || 'OTHER',
+      difficulty: 'MEDIUM',
+      priority: 'MEDIUM',
+      progress_percent: 0,
+      syllabus_remaining_percent: 100,
+      units,
+    });
+  });
+}
+
+function syllabusEvents(studentId: string, subjects: SemesterSubject[]): AcademicEvent[] {
+  let syllabus: any;
+  try {
+    syllabus = OnboardingService.getSemesterSyllabusSync(studentId);
+  } catch {
+    return [];
+  }
+  if (!syllabus?.academic_dates?.length) return [];
+  const eventTypeMap: Record<string, AcademicEvent['event_type']> = {
+    INTERNAL_EXAM: 'MINOR_1', MINOR_EXAM: 'MINOR_1', SLIP_TEST: 'SLIP_TEST', QUIZ: 'QUIZ',
+    LAB_ASSESSMENT: 'LAB_EXAM', ASSIGNMENT: 'ASSIGNMENT', PROJECT_REVIEW: 'PROJECT_REVIEW', END_SEMESTER: 'END_SEMESTER',
+  };
+  return syllabus.academic_dates.map((d: any): AcademicEvent => ({
+    id: d.id,
+    student_id: studentId,
+    subject_id: d.subject_id || undefined,
+    title: d.label || 'Academic date',
+    event_type: eventTypeMap[d.type] || 'OTHER',
+    date: d.date,
+    priority: 'MEDIUM',
+    status: new Date(d.date).getTime() < Date.now() ? 'COMPLETED' : 'UPCOMING',
+    notes: d.notes,
+  }));
+}
+
+function allSubjects(studentId: string): SemesterSubject[] {
+  const st = stateFor(studentId);
+  const fromSyllabus = syllabusSubjects(studentId, st);
+  const base = fromSyllabus.length ? fromSyllabus : st.seed_subjects;
+  return [...base, ...st.custom_subjects];
+}
+
+function effectiveConfig(studentId: string): AcademicSemesterConfig {
+  const st = stateFor(studentId);
+  let cfg = st.config;
+  try {
+    const edu = OnboardingService.getEducationProfileSync(studentId);
+    if (edu && !st.config_customized) {
+      cfg = {
+        ...cfg,
+        semester_number: edu.current_semester || cfg.semester_number,
+        branch: (edu.branch as AcademicSemesterConfig['branch']) || cfg.branch,
+      };
     }
+  } catch {}
+  return { ...cfg, current_week: computeCurrentWeek(cfg) };
+}
 
-    const activePhase = academicPhases.find((p) => p.is_current) || academicPhases[5];
-    const totalSyllabus = activeSubjects.reduce((acc, s) => acc + s.progress_percent, 0);
-    const avgSyllabusProgress = Math.round(totalSyllabus / Math.max(activeSubjects.length, 1));
-    // Derived from the subjects' own topic records; areas with no tracking yet report 0.
-    const allTopics = activeSubjects.flatMap((sub) => (sub.units || []).flatMap((u) => u.topics || []));
+function deriveGuidance(studentId: string, subjects: SemesterSubject[], st: StudentSemesterState): DailyAcademicGuidance {
+  const today = new Date().toISOString().split('T')[0];
+  const pending = subjects
+    .map((sub) => {
+      const unit = sub.units.find((u) => (u.topics || []).some((t) => !t.completed));
+      return { sub, unit };
+    })
+    .filter((x) => x.unit)
+    .sort((a, b) => a.sub.progress_percent - b.sub.progress_percent);
+  const first = pending[0];
+  const second = pending[1];
+  const firstTopics = first ? first.unit!.topics.filter((t) => !t.completed).slice(0, 3) : [];
+  const dayMs = 24 * 3600 * 1000;
+  return {
+    date: today,
+    primary_focus: {
+      subject_name: first?.sub.name || '',
+      unit_name: first?.unit?.name || '',
+      target_topics: firstTopics.map((t) => t.name),
+      estimated_minutes: firstTopics.reduce((a, t) => a + (t.estimated_hours || 0) * 60, 0),
+    },
+    secondary_focus: {
+      subject_name: second?.sub.name || '',
+      task_description: second ? `Continue ${second.unit!.name}` : '',
+      estimated_minutes: second ? 45 : 0,
+    },
+    quick_practice: { title: '', action_url: '', count: 0 },
+    upcoming_slip_tests: st.slip_tests
+      .filter((t) => t.status === 'SCHEDULED' && new Date(t.date).getTime() >= Date.now() - dayMs)
+      .map((t) => ({
+        subject_name: subjects.find((sub) => sub.id === t.subject_id)?.name || t.title,
+        days_left: Math.max(0, Math.ceil((new Date(t.date).getTime() - Date.now()) / dayMs)),
+        date: t.date,
+      })),
+    revision_due: [],
+    completed_items: [],
+  };
+}
+
+function deriveWeeklyReview(cfg: AcademicSemesterConfig, subjects: SemesterSubject[]): WeeklyAcademicReview {
+  const end = new Date();
+  const start = new Date(end.getTime() - 6 * 24 * 3600 * 1000);
+  return {
+    week_number: cfg.current_week,
+    start_date: start.toISOString().split('T')[0],
+    end_date: end.toISOString().split('T')[0],
+    // No weekly history is recorded yet, so no deltas or hours are claimed.
+    subject_deltas: [],
+    strong_topics: subjects.filter((s) => s.progress_percent >= 70).map((s) => s.name),
+    needs_attention: subjects.filter((s) => s.units.some((u) => u.topics.length) && s.progress_percent < 30).map((s) => s.name),
+    next_week_priorities: [],
+    study_hours_completed: 0,
+    study_hours_target: Math.round((cfg.daily_study_hours_budget || 0) * 7 * 10) / 10,
+  };
+}
+
+function requireStudent(studentId?: string): string {
+  if (!studentId) throw Object.assign(new Error('Authentication required'), { statusCode: 401 });
+  return studentId;
+}
+
+export const semesterCommandCenterService = {
+  // 1. Complete semester overview for one student
+  getOverview: (studentIdArg?: string): SemesterOverviewDashboardData => {
+    const studentId = requireStudent(studentIdArg);
+    const st = stateFor(studentId);
+    const config = effectiveConfig(studentId);
+    const subjects = allSubjects(studentId);
+    const isDemo = DEMO_STUDENT_IDS.has(studentId);
+    const events = [...syllabusEvents(studentId, subjects), ...st.events].sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+
+    const activePhase = st.phases.find((ph) => ph.is_current) || st.phases[0];
+    const avgSyllabusProgress = Math.round(subjects.reduce((acc, sub) => acc + sub.progress_percent, 0) / Math.max(subjects.length, 1));
+    const allTopics = subjects.flatMap((sub) => (sub.units || []).flatMap((u) => u.topics || []));
     const revisedPct = allTopics.length
       ? Math.round((allTopics.filter((t) => (t.revision_count || 0) > 0).length / allTopics.length) * 100)
       : 0;
-    const labSubjects = activeSubjects.filter((sub) => sub.subject_type === 'LAB');
+    const labSubjects = subjects.filter((sub) => sub.subject_type === 'LAB');
     const labPct = labSubjects.length
       ? Math.round(labSubjects.reduce((acc, sub) => acc + sub.progress_percent, 0) / labSubjects.length)
       : 0;
@@ -735,163 +913,194 @@ export const semesterCommandCenterService = {
       assignment_progress_percent: 0,
       exam_prep_progress_percent: revisedPct,
       current_phase: activePhase,
-      all_phases: academicPhases,
-      subjects: activeSubjects,
-      upcoming_events: events,
-      today_guidance: semesterCommandCenterService.getTodayGuidance(),
-      active_recovery_plans: recoveryPlans.filter((r) => !r.is_resolved),
-      latest_weekly_review: semesterCommandCenterService.getLatestWeeklyReview(),
+      all_phases: st.phases,
+      subjects,
+      upcoming_events: events.filter((e) => e.status === 'UPCOMING'),
+      today_guidance: isDemo ? semesterCommandCenterService.getTodayGuidance() : deriveGuidance(studentId, subjects, st),
+      active_recovery_plans: st.recovery_plans.filter((r) => !r.is_resolved),
+      latest_weekly_review: isDemo ? semesterCommandCenterService.getLatestWeeklyReview() : deriveWeeklyReview(config, subjects),
     };
   },
 
-  // 2. Setup / Update Semester Config
-  updateConfig: (configUpdate: Partial<AcademicSemesterConfig>): AcademicSemesterConfig => {
-    currentSemesterConfig = {
-      ...currentSemesterConfig,
-      ...configUpdate,
-      updated_at: new Date().toISOString(),
-    };
-    return currentSemesterConfig;
-  },
-
-  // 3. Subject Management
-  getSubjects: (studentId?: string): SemesterSubject[] => {
-    if (studentId) {
-      try {
-        const overview = semesterCommandCenterService.getOverview(studentId);
-        if (overview.subjects && overview.subjects.length > 0) {
-          return overview.subjects;
-        }
-      } catch {}
+  // 2. Setup / Update semester config (only the caller's own config)
+  updateConfig: (studentIdArg: string | undefined, configUpdate: Partial<AcademicSemesterConfig>): AcademicSemesterConfig => {
+    const studentId = requireStudent(studentIdArg);
+    const st = stateFor(studentId);
+    const { id: _id, student_id: _sid, created_at: _c, ...allowed } = configUpdate as any;
+    if (allowed.target_gpa !== undefined && (typeof allowed.target_gpa !== 'number' || allowed.target_gpa < 0 || allowed.target_gpa > 10)) {
+      throw Object.assign(new Error('target_gpa must be a number between 0 and 10'), { statusCode: 400 });
     }
-    return semesterSubjects;
+    if (allowed.semester_number !== undefined && (!Number.isInteger(allowed.semester_number) || allowed.semester_number < 1 || allowed.semester_number > 10)) {
+      throw Object.assign(new Error('semester_number must be an integer between 1 and 10'), { statusCode: 400 });
+    }
+    // The first save starts from the profile-derived values so branch/semester are not reset.
+    const base = st.config_customized ? st.config : { ...effectiveConfig(studentId) };
+    st.config = { ...base, ...allowed, updated_at: new Date().toISOString() };
+    st.config_customized = true;
+    return effectiveConfig(studentId);
   },
 
-  getSubjectById: (subjectId: string): SemesterSubject | undefined => {
-    return semesterSubjects.find((s) => s.id === subjectId);
-  },
+  // 3. Subject management
+  getSubjects: (studentIdArg?: string): SemesterSubject[] => allSubjects(requireStudent(studentIdArg)),
 
-  addSubject: (subject: Omit<SemesterSubject, 'id' | 'semester_id' | 'progress_percent' | 'syllabus_remaining_percent'>): SemesterSubject => {
-    const newSubject: SemesterSubject = {
+  getSubjectById: (studentIdArg: string | undefined, subjectId: string): SemesterSubject | undefined =>
+    allSubjects(requireStudent(studentIdArg)).find((sub) => sub.id === subjectId),
+
+  addSubject: (
+    studentIdArg: string | undefined,
+    subject: Omit<SemesterSubject, 'id' | 'semester_id' | 'progress_percent' | 'syllabus_remaining_percent'>
+  ): SemesterSubject => {
+    const studentId = requireStudent(studentIdArg);
+    if (!subject?.name || !String(subject.name).trim()) {
+      throw Object.assign(new Error('Subject name is required'), { statusCode: 400 });
+    }
+    const st = stateFor(studentId);
+    const stamp = Date.now();
+    const newSubject: SemesterSubject = recalcProgress({
       ...subject,
-      id: `sub_${Date.now()}`,
-      semester_id: currentSemesterConfig.id,
+      name: String(subject.name).trim(),
+      id: `sub_${stamp}`,
+      semester_id: st.config.id,
       progress_percent: 0,
       syllabus_remaining_percent: 100,
-      units: subject.units || [
-        { id: `u_${Date.now()}_1`, unit_number: 1, name: 'Unit 1: Fundamentals', topics: [], status: 'NOT_STARTED' },
-        { id: `u_${Date.now()}_2`, unit_number: 2, name: 'Unit 2: Core Concepts', topics: [], status: 'NOT_STARTED' },
-        { id: `u_${Date.now()}_3`, unit_number: 3, name: 'Unit 3: Advanced Applications', topics: [], status: 'NOT_STARTED' },
-        { id: `u_${Date.now()}_4`, unit_number: 4, name: 'Unit 4: Specialized Architectures', topics: [], status: 'NOT_STARTED' },
-        { id: `u_${Date.now()}_5`, unit_number: 5, name: 'Unit 5: Modern Trends', topics: [], status: 'NOT_STARTED' },
-      ],
-    };
-    semesterSubjects.push(newSubject);
+      units: subject.units || [],
+    });
+    st.custom_subjects.push(newSubject);
     return newSubject;
   },
 
-  updateSubjectUnits: (subjectId: string, units: SemesterUnit[]): SemesterSubject => {
-    const sub = semesterSubjects.find((s) => s.id === subjectId);
-    if (!sub) throw new Error('Subject not found');
-    sub.units = units;
-
-    // Recalculate progress
-    const totalTopics = units.reduce((acc, u) => acc + u.topics.length, 0);
-    const completedTopics = units.reduce((acc, u) => acc + u.topics.filter((t) => t.completed).length, 0);
-    sub.progress_percent = totalTopics > 0 ? Math.round((completedTopics / totalTopics) * 100) : 0;
-    sub.syllabus_remaining_percent = 100 - sub.progress_percent;
-    return sub;
+  updateSubjectUnits: (studentIdArg: string | undefined, subjectId: string, units: SemesterUnit[]): SemesterSubject => {
+    const studentId = requireStudent(studentIdArg);
+    if (!Array.isArray(units)) throw Object.assign(new Error('units must be an array'), { statusCode: 400 });
+    const st = stateFor(studentId);
+    const own = [...st.custom_subjects, ...st.seed_subjects].find((sub) => sub.id === subjectId);
+    if (own) {
+      own.units = units;
+      return recalcProgress(own);
+    }
+    const fromSyllabus = syllabusSubjects(studentId, st).find((sub) => sub.id === subjectId);
+    if (!fromSyllabus) throw Object.assign(new Error('Subject not found'), { statusCode: 404 });
+    // Syllabus structure comes from onboarding; only topic progress is stored here.
+    const known = new Set(fromSyllabus.units.flatMap((u) => u.topics.map((t) => t.id)));
+    for (const u of units) {
+      for (const t of u.topics || []) {
+        if (known.has(t.id)) st.topic_progress[t.id] = { completed: !!t.completed, revision_count: t.revision_count || 0 };
+      }
+    }
+    return syllabusSubjects(studentId, st).find((sub) => sub.id === subjectId)!;
   },
 
-  // 4. Academic Event Engine
-  getEvents: (): AcademicEvent[] => academicEvents,
+  // 4. Academic events
+  getEvents: (studentIdArg?: string): AcademicEvent[] => {
+    const studentId = requireStudent(studentIdArg);
+    const st = stateFor(studentId);
+    return [...syllabusEvents(studentId, allSubjects(studentId)), ...st.events].sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+  },
 
-  addEvent: (eventData: Omit<AcademicEvent, 'id' | 'student_id'>): AcademicEvent => {
+  addEvent: (studentIdArg: string | undefined, eventData: Omit<AcademicEvent, 'id' | 'student_id'>): AcademicEvent => {
+    const studentId = requireStudent(studentIdArg);
+    if (!eventData?.title || !String(eventData.title).trim()) {
+      throw Object.assign(new Error('Event title is required'), { statusCode: 400 });
+    }
+    if (!eventData.date || !/^\d{4}-\d{2}-\d{2}/.test(eventData.date) || Number.isNaN(new Date(eventData.date).getTime())) {
+      throw Object.assign(new Error('Event date must be a valid YYYY-MM-DD date'), { statusCode: 400 });
+    }
+    const st = stateFor(studentId);
     const newEvent: AcademicEvent = {
       ...eventData,
+      title: String(eventData.title).trim(),
       id: `ev_${Date.now()}`,
-      student_id: currentSemesterConfig.student_id,
+      student_id: studentId,
       status: eventData.status || 'UPCOMING',
     };
-    academicEvents.push(newEvent);
-    // Sort chronologically
-    academicEvents.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    st.events.push(newEvent);
+    st.events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     return newEvent;
   },
 
-  // 5. Semester Study Stream
-  getStudyStream: (subjectId?: string): SemesterStudyStreamNode[] => {
-    if (subjectId) {
-      return studyStreamNodes.filter((n) => n.subject_id === subjectId);
-    }
-    return studyStreamNodes;
+  // 5. Study stream
+  getStudyStream: (studentIdArg: string | undefined, subjectId?: string): SemesterStudyStreamNode[] => {
+    const st = stateFor(requireStudent(studentIdArg));
+    return subjectId ? st.stream_nodes.filter((n) => n.subject_id === subjectId) : st.stream_nodes;
   },
 
-  updateStreamNodeStatus: (nodeId: string, status: SemesterStudyStreamNode['status']): SemesterStudyStreamNode => {
-    const node = studyStreamNodes.find((n) => n.id === nodeId);
-    if (!node) throw new Error('Stream node not found');
+  updateStreamNodeStatus: (
+    studentIdArg: string | undefined,
+    nodeId: string,
+    status: SemesterStudyStreamNode['status']
+  ): SemesterStudyStreamNode => {
+    const st = stateFor(requireStudent(studentIdArg));
+    const node = st.stream_nodes.find((n) => n.id === nodeId);
+    if (!node) throw Object.assign(new Error('Stream node not found'), { statusCode: 404 });
     node.status = status;
-    if (status === 'COMPLETED') {
-      node.actual_time_minutes = node.estimated_time_minutes;
-    }
+    if (status === 'COMPLETED') node.actual_time_minutes = node.estimated_time_minutes;
     return node;
   },
 
-  // 6. Slip Tests
-  getSlipTests: (): SlipTest[] => slipTests,
+  // 6. Slip tests
+  getSlipTests: (studentIdArg?: string): SlipTest[] => stateFor(requireStudent(studentIdArg)).slip_tests,
 
-  addSlipTest: (testData: Omit<SlipTest, 'id'>): SlipTest => {
-    const newTest: SlipTest = {
-      ...testData,
-      id: `st_${Date.now()}`,
-      status: testData.status || 'SCHEDULED',
-    };
-    slipTests.push(newTest);
+  addSlipTest: (studentIdArg: string | undefined, testData: Omit<SlipTest, 'id'>): SlipTest => {
+    const st = stateFor(requireStudent(studentIdArg));
+    if (!testData?.title || !testData.date) throw Object.assign(new Error('title and date are required'), { statusCode: 400 });
+    const newTest: SlipTest = { ...testData, id: `st_${Date.now()}`, status: testData.status || 'SCHEDULED' };
+    st.slip_tests.push(newTest);
     return newTest;
   },
 
-  recordSlipTestScore: (testId: string, score: number, weakTopics: string[]): SlipTest => {
-    const test = slipTests.find((t) => t.id === testId);
-    if (!test) throw new Error('Slip test not found');
+  recordSlipTestScore: (studentIdArg: string | undefined, testId: string, score: number, weakTopics: string[]): SlipTest => {
+    const st = stateFor(requireStudent(studentIdArg));
+    const test = st.slip_tests.find((t) => t.id === testId);
+    if (!test) throw Object.assign(new Error('Slip test not found'), { statusCode: 404 });
+    if (typeof score !== 'number' || score < 0 || score > test.marks) {
+      throw Object.assign(new Error(`score must be between 0 and ${test.marks}`), { statusCode: 400 });
+    }
+    const weak = Array.isArray(weakTopics) ? weakTopics : [];
     test.status = 'COMPLETED';
     test.score = score;
-    test.weak_topics = weakTopics;
-
-    // Trigger automatic recovery plan if score is below 60%
-    if (score < (test.marks * 0.6)) {
-      recoveryPlans.unshift({
+    test.weak_topics = weak;
+    if (score < test.marks * 0.6) {
+      st.recovery_plans.unshift({
         id: `rec_st_${Date.now()}`,
-        missed_item_title: `Low Score in ${test.title} (${score}/${test.marks})`,
+        missed_item_title: `Low score in ${test.title} (${score}/${test.marks})`,
         missed_item_type: 'SLIP_TEST_RECOVERY',
         missed_date: test.date,
         urgency: 'HIGH',
         is_resolved: false,
-        recommendations: [
-          `Detected weaknesses in: ${weakTopics.join(', ')}.`,
-          'Automated revision block added before Minor 2.',
-        ],
-        schedule_adjustments: [
-          { day: 'Day 1', duration_minutes: 35, task: `Revisit core concepts for ${weakTopics[0] || 'core units'}`, type: 'STUDY' },
-          { day: 'Day 2', duration_minutes: 25, task: 'Practice 5 previous test numericals', type: 'PRACTICE' },
-        ],
+        recommendations: weak.length ? [`Weak topics you reported: ${weak.join(', ')}.`] : ['Review the topics this test covered.'],
+        schedule_adjustments: weak.slice(0, 3).map((t, i) => ({
+          day: `Day ${i + 1}`,
+          duration_minutes: 30,
+          task: `Revise ${t}`,
+          type: 'STUDY' as const,
+        })),
       });
     }
-
     return test;
   },
 
-  // 7. Minor Exams
-  getMinorExams: (): MinorExam[] => minorExams,
+  // 7-9. Minor exams, end-sem readiness, recovery plans
+  getMinorExams: (studentIdArg?: string): MinorExam[] => stateFor(requireStudent(studentIdArg)).minor_exams,
+  getEndSemReadiness: (studentIdArg?: string): EndSemReadiness[] => stateFor(requireStudent(studentIdArg)).end_sem,
+  getRecoveryPlans: (studentIdArg?: string): AcademicRecoveryPlan[] => stateFor(requireStudent(studentIdArg)).recovery_plans,
+  resolveRecoveryPlan: (studentIdArg: string | undefined, planId: string): void => {
+    const plan = stateFor(requireStudent(studentIdArg)).recovery_plans.find((p) => p.id === planId);
+    if (!plan) throw Object.assign(new Error('Recovery plan not found'), { statusCode: 404 });
+    plan.is_resolved = true;
+  },
 
-  // 8. End-Sem Readiness Engine
-  getEndSemReadiness: (): EndSemReadiness[] => endSemReadinessList,
-
-  // 9. Academic Recovery Engine
-  getRecoveryPlans: (): AcademicRecoveryPlan[] => recoveryPlans,
-
-  resolveRecoveryPlan: (planId: string): void => {
-    const plan = recoveryPlans.find((p) => p.id === planId);
-    if (plan) plan.is_resolved = true;
+  // 10. Today's guidance: the demo seed for demo accounts, derived from subjects for everyone else.
+  getGuidanceFor: (studentIdArg?: string): DailyAcademicGuidance => {
+    const studentId = requireStudent(studentIdArg);
+    if (DEMO_STUDENT_IDS.has(studentId)) return semesterCommandCenterService.getTodayGuidance();
+    return deriveGuidance(studentId, allSubjects(studentId), stateFor(studentId));
+  },
+  getWeeklyReviewFor: (studentIdArg?: string): WeeklyAcademicReview => {
+    const studentId = requireStudent(studentIdArg);
+    if (DEMO_STUDENT_IDS.has(studentId)) return semesterCommandCenterService.getLatestWeeklyReview();
+    return deriveWeeklyReview(effectiveConfig(studentId), allSubjects(studentId));
   },
 
   // 10. Today's Academic Guidance (Section 19)

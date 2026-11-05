@@ -59,7 +59,7 @@ export function LessonWorkspaceView({
       setIsCompleting(true);
       await languageApi.completeLesson(language.code, lesson.id, studentNotes);
       setIsCompleted(true);
-      toast.success(`Lesson completed! Streak updated.`);
+      toast.success('Lesson completed.');
       onCompleted();
     } catch (err: any) {
       toast.error(err.message || 'Failed to save lesson progress.');
@@ -100,7 +100,7 @@ export function LessonWorkspaceView({
           <span className="text-xl">{language.flag_emoji}</span>
           <span className="text-xs font-medium text-indigo-400 uppercase tracking-wider">{language.name} Foundation</span>
         </div>
-        <h1 className="text-2xl font-bold text-white tracking-tight">{lesson.title}</h1>
+        <h2 className="text-2xl font-bold text-white tracking-tight">{lesson.title}</h2>
       </div>
 
       {/* Learning Objectives Checklist */}

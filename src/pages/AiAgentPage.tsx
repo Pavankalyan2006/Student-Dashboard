@@ -93,6 +93,7 @@ export function AiAgentPage({ onNavigate }: { onNavigate?: (path: string) => voi
 
   return (
     <div className="h-[calc(100vh-4.5rem)] flex rounded-2xl border border-[#E4E7EC] bg-white overflow-hidden shadow-xs relative">
+      <h1 className="sr-only">AI Tutor</h1>
       {/* Desktop Left Sidebar: Conversation History (260px - 280px) */}
       <div className="hidden md:block w-64 lg:w-72 shrink-0 h-full">
         <ConversationSidebar

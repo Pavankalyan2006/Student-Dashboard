@@ -98,7 +98,7 @@ export function CourseHero({
                 </DropdownMenuItem>
               )}
 
-              {onArchiveCourse && (
+              {onArchiveCourse && (course.enrollment || course.is_archived) && (
                 <DropdownMenuItem onClick={() => onArchiveCourse(!course.is_archived)}>
                   {course.is_archived ? (
                     <>

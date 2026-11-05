@@ -90,9 +90,9 @@ export function WritingPracticeView({ language, onBack }: WritingPracticeViewPro
       setSubmissions((prev) => [sub, ...prev]);
       setActiveSubmission(sub);
       setStudentText('');
-      toast.success('Writing evaluated by AI Coach!');
+      toast.success('Writing evaluated.');
     } catch (err: any) {
-      toast.error('Failed to submit writing for feedback.');
+      toast.error(err?.message || 'Failed to submit writing for feedback.');
     } finally {
       setIsSubmitting(false);
     }
