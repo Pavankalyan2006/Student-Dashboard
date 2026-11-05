@@ -1,0 +1,3 @@
+plan created from UI: true | tasks: 10 | first task: Revise Scheduling 2026-11-05
+study planner page shows plan: true
+page errors []

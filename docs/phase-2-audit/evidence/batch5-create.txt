@@ -1,0 +1,46 @@
+PASS  J5 open challenge creates a project  -- 201
+PASS  J5 save architecture  -- 200
+PASS  J5 reload returns the saved diagram
+PASS  J5 continue editing after reload
+PASS  J5 student B cannot open the project
+PASS  J5 start interview  -- 201
+PASS  J5 interview completed with checklist score (no hire verdict)  -- score=85
+PASS  J5 student B cannot read the interview
+PASS  J5 AI tutor without a model answers 503 (no canned text)  -- 503
+PASS  J6 create lab and experiment
+PASS  J6 run code in the sandbox  -- 17.0
+PASS  J6 enter observations  -- 200
+PASS  J6 report uses the real program output and observations  -- "17.0\n"
+PASS  J6 reopen the saved report  -- 200
+PASS  J6 student B cannot open the lab
+PASS  J7 viva feedback is a labelled keyword check (no model configured)  -- 9
+PASS  J7 AI viva question generation without a model answers 503  -- 503
+PASS  J7 viva history: answer and feedback stored on the experiment
+PASS  J8 questions delivered without answers
+PASS  J8 review refused before submit
+PASS  J8 server-side score ignores client score  -- 1/2 = 50%
+PASS  J8 notification states correct answers and links to the quiz  -- You answered 1 of 2 correctly (50%). Review the explanations for the questions you missed. | /quiz/quiz_1793900303025_makzt/result
+PASS  J9 create exam (0% readiness, all topics WEAK)  -- 0
+PASS  J9 readiness follows confidence  -- 25
+PASS  J9 sync revision tasks to the Study Planner  -- 201
+PASS  J9 planner lists the synced plan
+PASS  J10 select paper (profile saved, no invented goals)  -- 200
+PASS  J10 select topic filters the question bank  -- 1
+PASS  J10 question bank hides answer keys
+PASS  J10 practice attempt scored with key revealed after answering  -- correct=false
+PASS  J10 mock test gives raw marks, no estimated GATE score  -- marks=0
+PASS  J10 dashboard counts the real practice attempt  -- 1
+PASS  INT DSA accepted  -- ACCEPTED
+PASS  INT DSA notification has no invented points and a working link  -- All tests passed for this easy problem. | /dsa/problem/dsa_top150_001
+PASS  INT dashboard lab widget data: experiments embedded with counts
+PASS  INT student B sees none of A's notifications
+PASS  SEC every page API needs sign-in (401 without a token)  -- 401,401,401,401,401,401,401,401,401
+PASS  SEC forged unsigned token rejected  -- 401
+PASS  SEC student_id in the body is ignored
+PASS  SEC SQL Lab blocks ATTACH  -- ATTACH statements are disabled in the SQL Lab sandbox.
+PASS  SEC lab manual over 10 MB refused  -- The lab manual is larger than 10 MB. Upload a smaller file or paste the text instead.
+PASS  SEC lab manual with unsupported type refused  -- Upload a PDF, DOCX, TXT or MD lab manual.
+PASS  SEC request body over 25 MB refused  -- 413
+PASS  SEC path-like ids are just unknown ids  -- 404
+
+44/44 PASS

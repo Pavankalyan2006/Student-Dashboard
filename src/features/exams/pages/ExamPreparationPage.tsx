@@ -121,11 +121,43 @@ export function ExamPreparationPage({ onNavigate }: ExamPreparationPageProps) {
       const date = new Date(Date.now() + i * 86400000);
       return {
         time: date.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' }),
+        date: date.toISOString().slice(0, 10),
+        topic: topic.name,
+        minutes: Math.round(hoursPerDay * 60),
         task: `${i >= list.length ? 'Second pass: ' : ''}${topic.name} (${topic.confidence.toLowerCase()} confidence)`,
         dur: `${hoursPerDay} h`,
       };
     });
   }, [selectedExam, orderedTopics]);
+
+  const [syncing, setSyncing] = React.useState(false);
+  // Sends the revision plan to the Study Planner as an EXAM plan, one task per day.
+  const handleSyncToPlanner = async () => {
+    if (!selectedExam || revisionPlan.length === 0) return;
+    try {
+      setSyncing(true);
+      const plan = await learningModulesApi.studyPlanner.createPlan({
+        title: `Revision: ${selectedExam.title}`,
+        type: 'EXAM',
+        description: `Revision plan for ${selectedExam.subject}, built from your topic confidence.`,
+        target_date: selectedExam.exam_date,
+        total_hours_target: Math.round(revisionPlan.reduce((a, r) => a + r.minutes, 0) / 60),
+        tasks: revisionPlan.map((r) => ({
+          title: `Revise ${r.topic}`,
+          subject: selectedExam.subject,
+          topic: r.topic,
+          date: r.date,
+          duration_minutes: r.minutes,
+          priority: 'HIGH',
+        })) as any,
+      });
+      toast.success(`Added ${plan.tasks?.length ?? revisionPlan.length} tasks to the Study Planner`);
+    } catch (err: any) {
+      toast.error('Could not add the plan to the Study Planner: ' + err.message);
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const handleTopicUpdate = async (topicId: string, updates: { confidence?: string; status?: string }) => {
     if (!selectedExam) return;
@@ -434,6 +466,11 @@ export function ExamPreparationPage({ onNavigate }: ExamPreparationPageProps) {
 
           <div className="space-y-3">
             {revisionPlan.length === 0 && <p className="text-xs text-gray-500">Add syllabus topics to build a plan.</p>}
+            {revisionPlan.length > 0 && (
+              <Button size="sm" onClick={handleSyncToPlanner} disabled={syncing} className="text-xs bg-blue-600 hover:bg-blue-700 text-white">
+                {syncing ? 'Adding...' : 'Add to Study Planner'}
+              </Button>
+            )}
             {revisionPlan.map((step, idx) => (
               <div key={idx} className="p-3 border rounded-lg bg-gray-50/60 flex items-center justify-between">
                 <div>

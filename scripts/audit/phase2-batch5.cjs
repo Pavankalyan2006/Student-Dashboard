@@ -1,4 +1,4 @@
-// Phase 2 batch 5 HTTP probe: journeys J5-J10 and cross-cutting security checks.
+// Phase 2 batch 5 HTTP probe: journeys J5-J10, cross-module integration and cross-cutting security checks.
 // J1-J3 are in phase2-batch1.cjs, J4 in phase2-batch2.cjs.
 // Usage: BASE=http://localhost:3300 node scripts/audit/phase2-batch5.cjs create|verify   (state in /tmp/p2/batch5.json)
 // Synthetic students only. No AI model is assumed; AI endpoints are expected to answer 503.
@@ -18,14 +18,28 @@ async function create() {
   const A = await reg('A'); const B = await reg('B');
   const st = { A, B };
 
-  // J5 System Design: interview practice in order, checklist score, private session, AI tutor honest.
+  // J5 System Design: open challenge -> build architecture -> save -> reload -> continue; interview practice; AI honest.
+  const proj = await api('POST', '/system-design/challenges/sd_chal_01/start', A.t, {});
+  check('J5 open challenge creates a project', proj.s === 201 && proj.d.challenge_id === 'sd_chal_01' && proj.d.components.length > 0, proj.s);
+  const comps = [
+    { id: 'c1', name: 'API Gateway', category: 'NETWORKING', type: 'API_GATEWAY', tech: 'nginx', x: 100, y: 100 },
+    { id: 'c2', name: 'URL Service', category: 'COMPUTE', type: 'APP_SERVER', tech: 'node', x: 300, y: 100 },
+  ];
+  const saved = await api('PATCH', `/system-design/projects/${proj.d.id}`, A.t, { components: comps, connections: [{ id: 'e1', source_id: 'c1', target_id: 'c2', label: 'HTTP' }] });
+  check('J5 save architecture', saved.s === 200 && saved.d.components.length === 2, saved.s);
+  const reload = await api('GET', `/system-design/projects/${proj.d.id}`, A.t);
+  check('J5 reload returns the saved diagram', reload.s === 200 && reload.d.components.length === 2 && reload.d.connections.length === 1);
+  const cont = await api('PATCH', `/system-design/projects/${proj.d.id}`, A.t, { components: [...reload.d.components, { id: 'c3', name: 'Cache', category: 'STORAGE', type: 'CACHE', tech: 'redis', x: 500, y: 100 }] });
+  check('J5 continue editing after reload', cont.s === 200 && cont.d.components.length === 3);
+  check('J5 student B cannot open the project', (await api('GET', `/system-design/projects/${proj.d.id}`, B.t)).s === 404);
+  st.project = proj.d.id;
   const iv = await api('POST', '/system-design/interviews', A.t, { challenge_id: 'sd_url_shortener' });
   check('J5 start interview', iv.s === 201, iv.s);
   const steps = ['REQUIREMENTS_CLARIFICATION', 'SCALE_ESTIMATION', 'API_DESIGN', 'DATA_MODEL', 'HIGH_LEVEL_DESIGN', 'DETAILED_DESIGN', 'BOTTLENECK_ANALYSIS', 'RELIABILITY_SECURITY', 'TRADEOFFS_REVIEW', 'FINAL_SUMMARY'];
   let last;
   for (const s of steps) last = await api('POST', `/system-design/interviews/${iv.d.id}/responses`, A.t, { step: s, notes: `For ${s}: users can shorten links; 1,200 RPS at peak; 2 TB storage; POST /api/urls; a load balancer, service and cache; replica failover with TLS; trade-off of consistency versus latency because cost matters. In summary, next we would monitor it.` });
   check('J5 interview completed with checklist score (no hire verdict)', last.d.status === 'COMPLETED' && typeof last.d.overall_score === 'number' && !/HIRE/.test(last.d.debrief_feedback?.overall_verdict || ''), `score=${last.d.overall_score}`);
-  check('J5 student B cannot read the session', (await api('GET', `/system-design/interviews/${iv.d.id}`, B.t)).s === 404);
+  check('J5 student B cannot read the interview', (await api('GET', `/system-design/interviews/${iv.d.id}`, B.t)).s === 404);
   const tutor = await api('POST', '/system-design/ai-tutor', A.t, { prompt: 'Explain sharding', mode: 'CONCEPT' });
   check('J5 AI tutor without a model answers 503 (no canned text)', tutor.s === 503, tutor.s);
   st.interview = iv.d.id;
@@ -36,61 +50,80 @@ async function create() {
   check('J6 create lab and experiment', lab.s === 201 && exp.s === 201);
   const run = await api('POST', `/labs/${lab.d.id}/experiments/${exp.d.id}/code/run`, A.t, { code: 'print(sum([0,24,27])/3)', language: 'python' });
   check('J6 run code in the sandbox', run.s === 200 && /17/.test(run.d.stdout || ''), (run.d.stdout || run.j.message || '').trim());
-  const viva = await api('POST', `/labs/${lab.d.id}/experiments/${exp.d.id}/viva/vq1/evaluate`, A.t, { student_answer: 'Short processes wait behind a long process.' });
-  check('J6 viva feedback is a labelled keyword check', viva.d.ai_evaluation?.method === 'KEYWORD_MATCH', viva.d.ai_evaluation?.score);
+  const obs = await api('POST', `/labs/${lab.d.id}/experiments/${exp.d.id}/observations`, A.t, { observation_table: { headers: ['Process', 'Burst', 'Waiting'], rows: [['P1', '24', '0'], ['P2', '3', '24'], ['P3', '3', '27']], notes: 'P2 and P3 waited behind P1' } });
+  check('J6 enter observations', obs.s === 200 && obs.d.observation_table?.rows?.length === 3, obs.s);
   const rep = await api('POST', `/labs/${lab.d.id}/experiments/${exp.d.id}/report`, A.t, {});
-  check('J6 report uses the real program output', rep.s === 200 && /17/.test(rep.d.actual_output) && rep.d.expected_output === 'avg 17', JSON.stringify(rep.d.actual_output));
+  check('J6 report uses the real program output and observations', rep.s === 200 && /17/.test(rep.d.actual_output) && rep.d.expected_output === 'avg 17' && rep.d.observation_table?.rows?.length === 3, JSON.stringify(rep.d.actual_output));
+  const reopen = await api('GET', `/labs/${lab.d.id}/experiments/${exp.d.id}/report`, A.t);
+  check('J6 reopen the saved report', reopen.s === 200 && reopen.d.id === rep.d.id, reopen.s);
   check('J6 student B cannot open the lab', (await api('GET', `/labs/${lab.d.id}`, B.t)).s === 404);
-  st.lab = lab.d.id; st.exp = exp.d.id;
+  st.lab = lab.d.id; st.exp = exp.d.id; st.report = rep.d.id;
 
-  // J7 Quiz: create, attempt, answers hidden until submit, server score, review, notification.
+  // J7 Viva: select topic (experiment) -> answer -> submit -> feedback -> history.
+  const viva = await api('POST', `/labs/${lab.d.id}/experiments/${exp.d.id}/viva/vq1/evaluate`, A.t, { student_answer: 'Short processes wait behind a long process.' });
+  check('J7 viva feedback is a labelled keyword check (no model configured)', viva.s === 200 && viva.d.ai_evaluation?.method === 'KEYWORD_MATCH', viva.d.ai_evaluation?.score);
+  const gen = await api('POST', `/labs/${lab.d.id}/experiments/${exp.d.id}/viva/generate`, A.t, {});
+  check('J7 AI viva question generation without a model answers 503', gen.s === 503, gen.s);
+  const hist = await api('GET', `/labs/${lab.d.id}/experiments/${exp.d.id}`, A.t);
+  check('J7 viva history: answer and feedback stored on the experiment', hist.d.viva_questions?.[0]?.student_answer && hist.d.viva_questions[0].ai_evaluation?.method === 'KEYWORD_MATCH');
+
+  // J8 Quiz: create, attempt, answers hidden until submit, server score, review, notification.
   const quiz = await api('POST', '/quiz', A.t, { title: 'Networks', source_type: 'TOPIC', questions: [
     { question_text: '2+2?', question_type: 'MCQ', options: ['3', '4', '5', '6'], correct_answer: '4' },
     { question_text: 'TCP is connection-oriented', question_type: 'TRUE_FALSE', options: ['True', 'False'], correct_answer: 'True' }] });
   const start = await api('POST', `/quiz/${quiz.d.id}/start`, A.t, {});
   const qs = (await api('GET', `/quiz/${quiz.d.id}/questions`, A.t)).d;
-  check('J7 questions delivered without answers', !JSON.stringify(qs).includes('correct_answer'));
-  check('J7 review refused before submit', (await api('GET', `/quiz/attempts/${start.d.attempt.id}/review`, A.t)).s === 400);
+  check('J8 questions delivered without answers', !JSON.stringify(qs).includes('correct_answer'));
+  check('J8 review refused before submit', (await api('GET', `/quiz/attempts/${start.d.attempt.id}/review`, A.t)).s === 400);
   const sub = await api('POST', `/quiz/attempts/${start.d.attempt.id}/submit`, A.t, { answers: { [qs[0].id]: '4', [qs[1].id]: 'False' }, score: 100 });
-  check('J7 server-side score ignores client score', sub.d.correct_count === 1 && sub.d.percentage === 50, `${sub.d.correct_count}/2 = ${sub.d.percentage}%`);
+  check('J8 server-side score ignores client score', sub.d.correct_count === 1 && sub.d.percentage === 50, `${sub.d.correct_count}/2 = ${sub.d.percentage}%`);
   await new Promise((r) => setTimeout(r, 300));
   const notes = await api('GET', '/notifications', A.t);
   const qn = (notes.d.items || notes.d || []).find?.((n) => /Quiz Result/.test(n.title));
-  check('J7 notification states correct answers and links to the quiz', qn && /answered 1 of 2 correctly \(50%\)/.test(qn.message) && qn.link === `/quiz/${quiz.d.id}/result`, qn ? `${qn.message} | ${qn.link}` : `notifications status ${notes.s}`);
+  check('J8 notification states correct answers and links to the quiz', qn && /answered 1 of 2 correctly \(50%\)/.test(qn.message) && qn.link === `/quiz/${quiz.d.id}/result`, qn ? `${qn.message} | ${qn.link}` : `notifications status ${notes.s}`);
   st.quiz = quiz.d.id; st.attempt = start.d.attempt.id;
 
-  // J8 Exam Preparation: create with real date and syllabus, update confidence, readiness follows.
+  // J9 Exam Preparation: select exam -> review topics -> generate tasks -> sync with Study Planner.
   const date = new Date(Date.now() + 20 * 86400000).toISOString().slice(0, 10);
   const ex = await api('POST', '/exams', A.t, { title: 'OS End Sem', subject: 'Operating Systems', exam_date: date, available_prep_hours: 20, syllabus: 'Scheduling, Deadlocks, Paging, File Systems' });
-  check('J8 create exam (0% readiness, all topics WEAK)', ex.s === 201 && ex.d.readiness_score === 0, ex.d.readiness_score);
+  check('J9 create exam (0% readiness, all topics WEAK)', ex.s === 201 && ex.d.readiness_score === 0, ex.d.readiness_score);
   const up = await api('PATCH', `/exams/${ex.d.id}/topics/${ex.d.topics[0].id}`, A.t, { confidence: 'STRONG' });
-  check('J8 readiness follows confidence', up.d.readiness_score === 25, up.d.readiness_score);
-  st.exam = ex.d.id;
+  check('J9 readiness follows confidence', up.d.readiness_score === 25, up.d.readiness_score);
+  const tasks = ex.d.topics.slice(0, 3).map((t, i) => ({ title: `Revise ${t.name}`, subject: 'Operating Systems', topic: t.name, date: new Date(Date.now() + (i + 1) * 86400000).toISOString().slice(0, 10), duration_minutes: 60, priority: 'HIGH' }));
+  const plan = await api('POST', '/study-planner/plans', A.t, { title: 'Revision: OS End Sem', type: 'EXAM', target_date: date, total_hours_target: 3, tasks });
+  check('J9 sync revision tasks to the Study Planner', plan.s === 201 && plan.d.tasks.length === 3 && plan.d.tasks[0].status === 'PENDING', plan.s);
+  const plans = (await api('GET', '/study-planner/plans', A.t)).d;
+  check('J9 planner lists the synced plan', plans.some((p) => p.id === plan.d.id));
+  st.exam = ex.d.id; st.plan = plan.d.id;
 
-  // J9 GATE: practice question, mock test with raw marks, dashboard from real attempts.
+  // J10 GATE: select paper -> select topic -> attempt -> submit -> evaluation -> progress.
+  const prof = await api('POST', '/gate/profile', A.t, { paper_code: 'CS' });
+  check('J10 select paper (profile saved, no invented goals)', prof.s === 200 && prof.d.paper_code === 'CS' && !prof.d.air_goal, prof.s);
+  const topicQs = await api('GET', '/gate/questions?paper_code=CS&topic_id=cs_top_31', A.t);
+  check('J10 select topic filters the question bank', topicQs.s === 200 && topicQs.d.length >= 1 && topicQs.d.every((q) => q.topic_id === 'cs_top_31'), topicQs.d.length);
   const qlist = (await api('GET', '/gate/questions?paper_code=CS', A.t)).d;
-  check('J9 question bank hides answer keys', !JSON.stringify(qlist).includes('correct_answer'));
+  check('J10 question bank hides answer keys', !JSON.stringify(qlist).includes('correct_answer'));
   const mcq = qlist.find((q) => q.question_type === 'MCQ');
   const att = await api('POST', `/gate/questions/${mcq.id}/attempt`, A.t, { selected_answer: mcq.options[0].id });
-  check('J9 practice attempt scored with key revealed after answering', att.s === 200 && att.d.correct_answer !== undefined, `correct=${att.d.is_correct}`);
+  check('J10 practice attempt scored with key revealed after answering', att.s === 200 && att.d.correct_answer !== undefined, `correct=${att.d.is_correct}`);
   const ms = await api('POST', '/gate/tests/gate_test_cs_os_speed/start', A.t, {});
   const res = await api('POST', `/gate/sessions/${ms.d.id}/submit`, A.t, {});
-  check('J9 mock test gives raw marks, no estimated GATE score', res.s === 200 && res.d.estimated_gate_score === undefined, `marks=${res.d.total_marks_obtained}`);
+  check('J10 mock test gives raw marks, no estimated GATE score', res.s === 200 && res.d.estimated_gate_score === undefined, `marks=${res.d.total_marks_obtained}`);
   const dash = (await api('GET', '/gate/dashboard', A.t)).d;
-  check('J9 dashboard counts the real practice attempt', dash.metrics.total_questions_practiced >= 1 && dash.metrics.estimated_gate_score === undefined, dash.metrics.total_questions_practiced);
+  check('J10 dashboard counts the real practice attempt', dash.metrics.total_questions_practiced >= 1 && dash.metrics.estimated_gate_score === undefined, dash.metrics.total_questions_practiced);
 
-  // J10 Integration: one student's activity shows up across modules and nowhere for student B.
+  // INT Integration: one student's activity shows up across modules and nowhere for student B.
   const sol = 'import sys\nd=sys.stdin.read().split("\\n")\nnums=list(map(int,d[0].split()))\nt=int(d[1])\nseen={}\nfor i,x in enumerate(nums):\n  if t-x in seen:\n    print(seen[t-x],i);break\n  seen[x]=i';
   const dsa = await api('POST', '/dsa/problems/dsa_top150_001/submit', A.t, { language: 'python', source_code: sol });
-  check('J10 DSA accepted', dsa.d.status === 'ACCEPTED', dsa.d.status);
+  check('INT DSA accepted', dsa.d.status === 'ACCEPTED', dsa.d.status);
   await new Promise((r) => setTimeout(r, 300));
   const n2 = await api('GET', '/notifications', A.t);
   const dn = (n2.d.items || n2.d || []).find?.((n) => /DSA Problem Solved/.test(n.title));
-  check('J10 DSA notification has no invented points and a working link', dn && !/points/.test(dn.message) && dn.link === '/dsa/problem/dsa_top150_001', dn ? `${dn.message} | ${dn.link}` : 'missing');
+  check('INT DSA notification has no invented points and a working link', dn && !/points/.test(dn.message) && dn.link === '/dsa/problem/dsa_top150_001', dn ? `${dn.message} | ${dn.link}` : 'missing');
   const labs = (await api('GET', '/labs', A.t)).d;
-  check('J10 dashboard lab widget data: experiments embedded with counts', labs[0]?.experiments?.length === 1 && labs[0].experiments_count === 1);
+  check('INT dashboard lab widget data: experiments embedded with counts', labs[0]?.experiments?.length === 1 && labs[0].experiments_count === 1);
   const nB = await api('GET', '/notifications', B.t);
-  check('J10 student B sees none of A\'s notifications', !JSON.stringify(nB.d).includes('Quiz Result') && !JSON.stringify(nB.d).includes('DSA Problem Solved'));
+  check('INT student B sees none of A\'s notifications', !JSON.stringify(nB.d).includes('Quiz Result') && !JSON.stringify(nB.d).includes('DSA Problem Solved'));
 
   // Security (cross-cutting).
   const unauth = ['/coding/sessions', '/dsa/progress', '/sql-lab/workspaces', '/ml-lab/experiments', '/system-design/projects', '/labs', '/quiz/attempts', '/exams', '/gate/dashboard'];
@@ -118,19 +151,24 @@ async function create() {
 async function verify() {
   const st = JSON.parse(fs.readFileSync(STATE, 'utf8'));
   const { A, B } = st;
+  const pj = await api('GET', `/system-design/projects/${st.project}`, A.t);
+  check('J5 system design project survives restart (3 components)', pj.s === 200 && pj.d.components.length === 3);
   const iv = await api('GET', `/system-design/interviews/${st.interview}`, A.t);
   check('J5 interview and score survive restart', iv.s === 200 && iv.d.status === 'COMPLETED');
   const exp = await api('GET', `/labs/${st.lab}/experiments/${st.exp}`, A.t);
-  check('J6 experiment output and viva answer survive restart', exp.s === 200 && /17/.test(exp.d.actual_output || '') && !!exp.d.viva_questions[0].student_answer);
+  check('J6 experiment output and observations survive restart', exp.s === 200 && /17/.test(exp.d.actual_output || '') && exp.d.observation_table?.rows?.length === 3);
+  const rp = await api('GET', `/labs/${st.lab}/experiments/${st.exp}/report`, A.t);
+  check('J6 report reopens after restart', rp.s === 200 && rp.d.id === st.report);
+  check('J7 viva history survives restart', !!exp.d.viva_questions[0].student_answer && exp.d.viva_questions[0].ai_evaluation?.method === 'KEYWORD_MATCH');
   const rv = await api('GET', `/quiz/attempts/${st.attempt}/review`, A.t);
-  check('J7 quiz review survives restart', rv.s === 200 && rv.d.correct_count === 1);
+  check('J8 quiz review survives restart', rv.s === 200 && rv.d.correct_count === 1);
   const ex = await api('GET', `/exams/${st.exam}`, A.t);
-  check('J8 exam readiness survives restart', ex.s === 200 && ex.d.readiness_score === 25);
+  check('J9 exam readiness survives restart', ex.s === 200 && ex.d.readiness_score === 25);
   const dash = (await api('GET', '/gate/dashboard', A.t)).d;
-  check('J9 GATE attempts survive restart', dash.metrics.total_questions_practiced >= 1);
+  check('J10 GATE attempts survive restart', dash.metrics.total_questions_practiced >= 1);
   const prog = (await api('GET', '/dsa/progress', A.t)).d;
-  check('J10 DSA solved status survives restart', (prog.problems_solved || []).includes('dsa_top150_001'));
-  check('J10 student B still isolated after restart', (await api('GET', '/labs', B.t)).d.length === 0 && (await api('GET', '/exams', B.t)).d.length === 1);
+  check('INT DSA solved status survives restart', (prog.problems_solved || []).includes('dsa_top150_001'));
+  check('INT student B still isolated after restart', (await api('GET', '/labs', B.t)).d.length === 0 && (await api('GET', '/exams', B.t)).d.length === 1);
 }
 
 (async () => {
