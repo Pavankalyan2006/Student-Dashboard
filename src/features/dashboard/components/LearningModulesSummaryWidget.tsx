@@ -29,25 +29,25 @@ export function LearningModulesSummaryWidget({ onNavigate }: LearningModulesSumm
   const [data, setData] = React.useState<{
     todayTasksCount: number;
     upcomingExamTitle: string;
-    examDaysLeft: number;
+    examDaysLeft: number | null;
     openDoubtsCount: number;
     dueFlashcardsCount: number;
     pendingLabCount: number;
     activeMLExpCount: number;
     applicationsCount: number;
     nextDeadlineCompany: string;
-    nextDeadlineDays: number;
+    nextDeadlineDays: number | null;
   }>({
     todayTasksCount: 0,
-    upcomingExamTitle: 'DBMS Midterm',
-    examDaysLeft: 14,
-    openDoubtsCount: 1,
-    dueFlashcardsCount: 4,
-    pendingLabCount: 1,
-    activeMLExpCount: 1,
-    applicationsCount: 2,
-    nextDeadlineCompany: 'Razorpay',
-    nextDeadlineDays: 8,
+    upcomingExamTitle: '',
+    examDaysLeft: null,
+    openDoubtsCount: 0,
+    dueFlashcardsCount: 0,
+    pendingLabCount: 0,
+    activeMLExpCount: 0,
+    applicationsCount: 0,
+    nextDeadlineCompany: '',
+    nextDeadlineDays: null,
   });
 
   React.useEffect(() => {
@@ -80,10 +80,10 @@ export function LearningModulesSummaryWidget({ onNavigate }: LearningModulesSumm
 
         setData({
           todayTasksCount: fetchedTasks.filter((t) => t.status === 'PENDING').length,
-          upcomingExamTitle: nextExam?.title || 'DBMS Midterm',
+          upcomingExamTitle: nextExam?.title || '',
           examDaysLeft: nextExam
             ? Math.max(0, Math.ceil((new Date(nextExam.exam_date).getTime() - Date.now()) / (1000 * 3600 * 24)))
-            : 14,
+            : null,
           openDoubtsCount: fetchedDoubts.filter((d) => d.status === 'OPEN').length,
           dueFlashcardsCount: fetchedDecks.reduce((sum, d) => sum + (d.due_count || 0), 0),
           pendingLabCount: fetchedLabs.reduce(
@@ -92,10 +92,10 @@ export function LearningModulesSummaryWidget({ onNavigate }: LearningModulesSumm
           ),
           activeMLExpCount: fetchedExps.length,
           applicationsCount: fetchedApps.length,
-          nextDeadlineCompany: nextApp?.company_name || 'Razorpay',
+          nextDeadlineCompany: nextApp?.company_name || '',
           nextDeadlineDays: nextApp?.deadline
             ? Math.max(0, Math.ceil((new Date(nextApp.deadline).getTime() - Date.now()) / (1000 * 3600 * 24)))
-            : 8,
+            : null,
         });
       } catch (e) {
         // Fallback gracefully to default metrics
@@ -151,10 +151,10 @@ export function LearningModulesSummaryWidget({ onNavigate }: LearningModulesSumm
               <GraduationCap className="w-4 h-4" />
             </span>
             <span className="text-xs font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded">
-              {data.examDaysLeft}d left
+              {data.examDaysLeft !== null ? `${data.examDaysLeft}d left` : 'None'}
             </span>
           </div>
-          <h4 className="text-xs font-bold text-[#101828] truncate">{data.upcomingExamTitle}</h4>
+          <h4 className="text-xs font-bold text-[#101828] truncate">{data.upcomingExamTitle || 'No upcoming exam'}</h4>
           <p className="text-[11px] text-[#475467]">Curriculum readiness</p>
         </div>
 
@@ -292,7 +292,7 @@ export function LearningModulesSummaryWidget({ onNavigate }: LearningModulesSumm
           </div>
           <h4 className="text-xs font-bold text-[#101828]">Internships / Apps</h4>
           <p className="text-[11px] text-[#475467]">
-            {data.nextDeadlineCompany} ({data.nextDeadlineDays}d)
+            {data.nextDeadlineCompany ? `${data.nextDeadlineCompany}${data.nextDeadlineDays !== null ? ` (${data.nextDeadlineDays}d)` : ''}` : 'No applications yet'}
           </p>
         </div>
       </div>

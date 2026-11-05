@@ -59,7 +59,7 @@ describe('Complete 9 Learning Modules & Multi-Intelligence Agent System E2E Suit
   // -------------------------------------------------------------
   describe('2. Semester Command Center Module', () => {
     it('provides semester overview, current week, and credit metrics', () => {
-      const overview = semesterCommandCenterService.getOverview();
+      const overview = semesterCommandCenterService.getOverview('std_demo_1');
       expect(overview).toBeDefined();
       expect(overview.config.semester_number).toBeGreaterThanOrEqual(1);
       expect(overview.config.total_teaching_weeks).toBeGreaterThanOrEqual(12);
@@ -68,23 +68,23 @@ describe('Complete 9 Learning Modules & Multi-Intelligence Agent System E2E Suit
     });
 
     it('manages subjects, syllabus units, and study stream timeline nodes', () => {
-      const subjects = semesterCommandCenterService.getSubjects();
+      const subjects = semesterCommandCenterService.getSubjects('std_demo_1');
       expect(subjects.length).toBeGreaterThanOrEqual(1);
 
       const firstSubject = subjects[0];
       expect(firstSubject.units.length).toBeGreaterThanOrEqual(1);
 
-      const studyStream = semesterCommandCenterService.getStudyStream(firstSubject.id);
+      const studyStream = semesterCommandCenterService.getStudyStream('std_demo_1', firstSubject.id);
       expect(studyStream.length).toBeGreaterThanOrEqual(1);
       expect(studyStream[0]).toHaveProperty('title');
       expect(studyStream[0]).toHaveProperty('status');
     });
 
     it('tracks slip tests, minor examinations, and daily recovery plans', () => {
-      const slipTests = semesterCommandCenterService.getSlipTests();
+      const slipTests = semesterCommandCenterService.getSlipTests('std_demo_1');
       expect(slipTests.length).toBeGreaterThanOrEqual(1);
 
-      const recoveryPlans = semesterCommandCenterService.getRecoveryPlans();
+      const recoveryPlans = semesterCommandCenterService.getRecoveryPlans('std_demo_1');
       expect(recoveryPlans.length).toBeGreaterThanOrEqual(1);
 
       const todayGuidance = semesterCommandCenterService.getTodayGuidance();

@@ -42,6 +42,22 @@ const studentMemories = new Map<string, StudentMemoryEntry[]>();
 const studentRecommendations = new Map<string, StudentRecommendation[]>();
 const studentAIPersonas = new Map<string, StudentAIPersona>();
 
+/** Exposed so the snapshot persistence can save and restore onboarding data across restarts. */
+export const onboardingStores = {
+  onboardingStatuses,
+  educationProfiles,
+  semesterSyllabusData,
+  learningPreferences,
+  skillsAssessments,
+  academicHistories,
+  careerGoals,
+  portfolioProjects,
+  studyConstraints,
+  studentMemories,
+  studentRecommendations,
+  studentAIPersonas,
+};
+
 export const ONBOARDING_STEPS: { id: OnboardingStepId; label: string }[] = [
   { id: 'ACCOUNT_IDENTITY', label: '1. Account Registration and Identity' },
   { id: 'PERSONAL_PROFILE', label: '2. Personal and General Profile' },

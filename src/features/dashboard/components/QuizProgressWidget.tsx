@@ -20,13 +20,13 @@ export const QuizProgressWidget: React.FC<{ onNavigate: (path: string) => void }
     ? typeof rawWeakTopic === 'object'
       ? {
           topic_name: rawWeakTopic.topic_name,
-          accuracy_rate: Math.round(rawWeakTopic.accuracy ?? (rawWeakTopic as any).accuracy_rate ?? 0),
+          accuracy_rate: Math.round(rawWeakTopic.accuracy ?? (rawWeakTopic as any).accuracy_rate ?? 0) as number | null,
           total_questions: rawWeakTopic.total_questions ?? rawWeakTopic.questions_answered ?? 0,
         }
       : {
           topic_name: String(rawWeakTopic),
-          accuracy_rate: 45,
-          total_questions: 5,
+          accuracy_rate: null as number | null,
+          total_questions: 0,
         }
     : null;
 
@@ -86,7 +86,7 @@ export const QuizProgressWidget: React.FC<{ onNavigate: (path: string) => void }
               {weakTopic.topic_name}
             </h4>
             <p className="text-[10px] text-slate-500">
-              {weakTopic.accuracy_rate}% accuracy across {weakTopic.total_questions} questions
+              {weakTopic.accuracy_rate !== null ? `${weakTopic.accuracy_rate}% accuracy across ${weakTopic.total_questions} questions` : 'Flagged as a weak topic from your attempts'}
             </p>
           </div>
           <button

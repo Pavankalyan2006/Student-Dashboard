@@ -48,7 +48,7 @@ export const RecentCodingWidget: React.FC<{ onNavigate: (path: string) => void }
         <div className="p-2 bg-slate-50 dark:bg-slate-800/60 rounded-xl">
           <span className="text-[10px] text-slate-500 block">Languages</span>
           <span className="font-extrabold text-sm text-purple-600 dark:text-purple-400">
-            {progress?.languages_used?.length ?? 2}
+            {progress?.languages_used?.length ?? 0}
           </span>
         </div>
       </div>

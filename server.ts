@@ -12,6 +12,11 @@ import { errorHandler } from './server/middleware/errorHandler';
 import { globalRateLimiter } from './server/middleware/rateLimiter';
 import { maintenanceMiddleware } from './server/middleware/maintenance';
 import { apiV1Router } from './server/api/router';
+import { onboardingStores } from './server/services/onboardingService';
+import { CareerService } from './server/services/careerService';
+import { MlLabService } from './server/services/mlLabService';
+import { SqlLabSandboxService } from './server/services/sqlLabSandboxService';
+import { semesterStateStore } from './server/services/semesterCommandCenterService';
 import { healthRouter } from './server/api/routes/health';
 import { logger } from './server/core/logging';
 import { db } from './server/db/database';
@@ -57,6 +62,11 @@ async function setupPersistence() {
     'profiles',
     'jobs',
   ]);
+  registerPersistentSource('onboarding', onboardingStores as unknown as Record<string, any>);
+  registerPersistentSource('career', CareerService as unknown as Record<string, any>, ['careerProfiles']);
+  registerPersistentSource('mlLab', MlLabService as unknown as Record<string, any>, ['workspaces', 'customDatasets', 'experiments', 'fittedModels']);
+  registerPersistentSource('sqlLab', SqlLabSandboxService as unknown as Record<string, any>, ['studentDatabases', 'queryHistories']);
+  registerPersistentSource('semesterCommandCenter', semesterStateStore as unknown as Record<string, any>, ['states']);
   restoreSnapshot();
   const file = getSnapshotPath();
   logger.info(file ? `Data persistence enabled: ${file}` : 'Data persistence disabled (DATA_PERSISTENCE=off)');

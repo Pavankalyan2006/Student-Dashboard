@@ -1,0 +1,91 @@
+// Phase 1 (Learning Workspace) regression tests.
+// Each test uses fresh synthetic student ids so no seeded or real student data is touched.
+import { describe, it, expect, beforeAll } from 'vitest';
+import { db } from '../../server/db/database';
+import { semesterCommandCenterService as scc } from '../../server/services/semesterCommandCenterService';
+import { OnboardingService } from '../../server/services/onboardingService';
+
+const uid = (p: string) => `${p}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+
+describe('Phase 1 › Semester Command Center is per student', () => {
+  beforeAll(async () => {
+    await db.initialize();
+  });
+
+  it('a new student starts empty instead of seeing the demo semester', () => {
+    const a = uid('std_p1_new');
+    const o = scc.getOverview(a);
+    expect(o.subjects).toEqual([]);
+    expect(o.upcoming_events).toEqual([]);
+    expect(o.active_recovery_plans).toEqual([]);
+    expect(o.config.student_id).toBe(a);
+    expect(o.config.target_gpa).toBeUndefined();
+    expect(o.config.academic_goals).toEqual([]);
+    expect(o.today_guidance.primary_focus.subject_name).toBe('');
+    expect(o.latest_weekly_review.subject_deltas).toEqual([]);
+    expect(o.latest_weekly_review.study_hours_completed).toBe(0);
+    expect(scc.getSlipTests(a)).toEqual([]);
+    expect(scc.getStudyStream(a)).toEqual([]);
+  });
+
+  it("one student's subjects, events, config and slip tests are invisible to another", () => {
+    const a = uid('std_p1_a');
+    const b = uid('std_p1_b');
+    const sub = scc.addSubject(a, { name: 'Compiler Design', code: 'CS701', credits: 3, subject_type: 'CORE', difficulty: 'HARD', priority: 'HIGH', units: [] } as any);
+    scc.addEvent(a, { title: 'CD assignment', date: '2030-01-10', event_type: 'ASSIGNMENT', priority: 'MEDIUM', status: 'UPCOMING' } as any);
+    scc.updateConfig(a, { target_gpa: 8.4 });
+    scc.addSlipTest(a, { title: 'CD slip test', date: '2030-01-05', marks: 20, subject_id: sub.id } as any);
+
+    expect(scc.getSubjects(a).map((s) => s.id)).toContain(sub.id);
+    expect(scc.getSubjects(b)).toEqual([]);
+    expect(scc.getEvents(b)).toEqual([]);
+    expect(scc.getSlipTests(b)).toEqual([]);
+    expect(scc.getOverview(b).config.target_gpa).toBeUndefined();
+    expect(scc.getOverview(a).config.target_gpa).toBe(8.4);
+    // B cannot change A's subject by id.
+    expect(() => scc.updateSubjectUnits(b, sub.id, [])).toThrow(/not found/i);
+    expect(scc.getSubjectById(b, sub.id)).toBeUndefined();
+  });
+
+  it('marking syllabus topics complete is saved for that student and drives progress', async () => {
+    const a = uid('std_p1_syl');
+    const b = uid('std_p1_syl_b');
+    for (const id of [a, b]) {
+      await OnboardingService.saveSemesterSyllabus(id, {
+        subjects: [
+          { id: 'sub_os', name: 'Operating Systems', code: 'CS501', credits: 4, subject_type: 'THEORY', syllabus_units: [{ unit_number: 1, title: 'Processes', topics: ['PCB', 'Scheduling'] }] },
+        ],
+      } as any);
+    }
+    const subject = scc.getSubjects(a).find((s) => s.id === 'sub_os')!;
+    expect(subject.progress_percent).toBe(0);
+    const units = subject.units.map((u) => ({ ...u, topics: u.topics.map((t, i) => ({ ...t, completed: i === 0 })) }));
+    const updated = scc.updateSubjectUnits(a, 'sub_os', units);
+    expect(updated.progress_percent).toBe(50);
+    expect(updated.units[0].status).toBe('IN_PROGRESS');
+    // Re-reading gives the saved value; another student with the same syllabus is unaffected.
+    expect(scc.getSubjects(a).find((s) => s.id === 'sub_os')!.progress_percent).toBe(50);
+    expect(scc.getSubjects(b).find((s) => s.id === 'sub_os')!.progress_percent).toBe(0);
+    expect(scc.getOverview(a).today_guidance.primary_focus.target_topics).toEqual(['Scheduling']);
+  });
+
+  it('rejects invalid input', () => {
+    const a = uid('std_p1_val');
+    expect(() => scc.addSubject(a, { name: '  ' } as any)).toThrow(/name is required/);
+    expect(() => scc.addEvent(a, { title: 'x', date: 'not-a-date' } as any)).toThrow(/valid/);
+    expect(() => scc.updateConfig(a, { target_gpa: 12 })).toThrow(/between 0 and 10/);
+    const t = scc.addSlipTest(a, { title: 'T', date: '2030-02-01', marks: 20 } as any);
+    expect(() => scc.recordSlipTestScore(a, t.id, 25, [])).toThrow(/between 0 and 20/);
+    expect(() => scc.getOverview(undefined)).toThrow(/Authentication required/);
+  });
+
+  it('a low slip-test score creates a recovery plan only for that student', () => {
+    const a = uid('std_p1_rec');
+    const b = uid('std_p1_rec_b');
+    const t = scc.addSlipTest(a, { title: 'DBMS ST', date: '2030-02-01', marks: 20 } as any);
+    scc.recordSlipTestScore(a, t.id, 8, ['BCNF']);
+    expect(scc.getRecoveryPlans(a)).toHaveLength(1);
+    expect(scc.getRecoveryPlans(a)[0].recommendations[0]).toContain('BCNF');
+    expect(scc.getRecoveryPlans(b)).toEqual([]);
+  });
+});

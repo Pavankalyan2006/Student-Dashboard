@@ -58,7 +58,7 @@ export function SemesterCommandCenterLayout({
               <div className="flex items-center gap-2">
                 <h1 className="text-xl font-bold text-white tracking-tight">Academic Semester Command Center</h1>
                 <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-semibold">
-                  Semester {config?.semester_number || 6} • {config?.branch || 'CSE'}
+                  {config ? `Semester ${config.semester_number} • ${config.branch}` : 'Semester not set up'}
                 </span>
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
@@ -72,14 +72,14 @@ export function SemesterCommandCenterLayout({
               <Clock className="w-3.5 h-3.5 text-indigo-400" />
               <span className="text-slate-400">Week:</span>
               <span className="font-bold text-white">
-                {config?.current_week || 9} of {config?.total_teaching_weeks || 16}
+                {config ? `${config.current_week} of ${config.total_teaching_weeks}` : '—'}
               </span>
             </div>
 
             <div className="flex items-center gap-2 bg-slate-950/70 border border-slate-800 px-3 py-1.5 rounded-lg text-xs">
               <Target className="w-3.5 h-3.5 text-emerald-400" />
               <span className="text-slate-400">Target SGPA:</span>
-              <span className="font-bold text-emerald-400">{config?.target_gpa || 9.0}</span>
+              <span className="font-bold text-emerald-400">{config?.target_gpa ?? '—'}</span>
             </div>
 
             <Button

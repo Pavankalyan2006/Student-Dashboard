@@ -38,15 +38,35 @@ export function SemesterSetupWizardPage({ onNavigate }: SemesterSetupWizardPageP
 
   // Step 1: Academic Information
   const [academicInfo, setAcademicInfo] = React.useState({
-    semester_number: 6,
-    academic_year: '2025-2026',
+    semester_number: 1,
+    academic_year: '',
     branch: 'CSE' as BranchCode,
-    section: 'A',
-    start_date: '2026-01-05',
-    end_date: '2026-05-15',
-    target_gpa: 9.0,
-    daily_study_hours_budget: 3.5,
+    section: '',
+    start_date: '',
+    end_date: '',
+    target_gpa: undefined as number | undefined,
+    daily_study_hours_budget: 0,
   });
+
+  // Start from the student's saved semester settings, not sample values.
+  React.useEffect(() => {
+    semesterCommandCenterApi
+      .getConfig()
+      .then((cfg) =>
+        setAcademicInfo((prev) => ({
+          ...prev,
+          semester_number: cfg.semester_number || prev.semester_number,
+          academic_year: cfg.academic_year || '',
+          branch: (cfg.branch as BranchCode) || prev.branch,
+          section: cfg.section || '',
+          start_date: cfg.start_date || '',
+          end_date: cfg.end_date || '',
+          target_gpa: cfg.target_gpa,
+          daily_study_hours_budget: cfg.daily_study_hours_budget || 0,
+        }))
+      )
+      .catch((err: any) => toast.error('Could not load your semester settings: ' + err.message));
+  }, []);
 
   // Step 2: Subjects
   const [subjectsList, setSubjectsList] = React.useState<
@@ -58,12 +78,7 @@ export function SemesterSetupWizardPage({ onNavigate }: SemesterSetupWizardPageP
       difficulty: DifficultyLevel;
       priority: PriorityLevel;
     }[]
-  >([
-    { name: 'Database Management Systems', code: 'CS601PC', credits: 4, subject_type: 'CORE', difficulty: 'HARD', priority: 'CRITICAL' },
-    { name: 'Operating Systems & Concurrency', code: 'CS602PC', credits: 4, subject_type: 'CORE', difficulty: 'HARD', priority: 'HIGH' },
-    { name: 'Computer Networks', code: 'CS603PC', credits: 3, subject_type: 'CORE', difficulty: 'MEDIUM', priority: 'MEDIUM' },
-    { name: 'Machine Learning', code: 'CS604PE', credits: 3, subject_type: 'ELECTIVE', difficulty: 'HARD', priority: 'HIGH' },
-  ]);
+  >([]);
 
   const [newSub, setNewSub] = React.useState({
     name: '',
@@ -76,11 +91,11 @@ export function SemesterSetupWizardPage({ onNavigate }: SemesterSetupWizardPageP
 
   // Step 3: Calendar Milestones
   const [calendarMilestones, setCalendarMilestones] = React.useState({
-    slip_test_1: '2026-10-07',
-    minor_1_date: '2026-02-25',
-    minor_2_date: '2026-10-22',
-    lab_exam_date: '2026-10-15',
-    end_sem_date: '2026-11-20',
+    slip_test_1: '',
+    minor_1_date: '',
+    minor_2_date: '',
+    lab_exam_date: '',
+    end_sem_date: '',
   });
 
   const handleAddSubjectToWizard = () => {
@@ -97,7 +112,7 @@ export function SemesterSetupWizardPage({ onNavigate }: SemesterSetupWizardPageP
       difficulty: 'MEDIUM',
       priority: 'HIGH',
     });
-    toast.success('Subject added to semester list!');
+    toast.success('Subject added to the list. It is saved when you finish setup.');
   };
 
   const handleRemoveSubject = (index: number) => {
@@ -111,7 +126,22 @@ export function SemesterSetupWizardPage({ onNavigate }: SemesterSetupWizardPageP
         ...academicInfo,
         total_teaching_weeks: 16,
       });
-      toast.success('Academic Semester Strategy generated successfully! Redirecting to Overview...');
+      // Subjects entered in the wizard were previously kept only in page state; save them.
+      for (const sub of subjectsList) {
+        await semesterCommandCenterApi.addSubject(sub as any);
+      }
+      setSubjectsList([]);
+      const milestones: { date: string; title: string; event_type: any }[] = [
+        { date: calendarMilestones.slip_test_1, title: 'Slip Test 1', event_type: 'SLIP_TEST' },
+        { date: calendarMilestones.minor_1_date, title: 'Minor 1', event_type: 'MINOR_1' },
+        { date: calendarMilestones.minor_2_date, title: 'Minor 2', event_type: 'MINOR_2' },
+        { date: calendarMilestones.lab_exam_date, title: 'Lab Exam', event_type: 'LAB_EXAM' },
+        { date: calendarMilestones.end_sem_date, title: 'End-Semester Exams', event_type: 'END_SEMESTER' },
+      ];
+      for (const m of milestones.filter((x) => x.date)) {
+        await semesterCommandCenterApi.addEvent({ ...m, priority: 'HIGH', status: 'UPCOMING' } as any);
+      }
+      toast.success('Semester settings saved. Opening the overview...');
       if (onNavigate) {
         setTimeout(() => onNavigate('/semester-command-center'), 800);
       }
@@ -468,7 +498,7 @@ export function SemesterSetupWizardPage({ onNavigate }: SemesterSetupWizardPageP
                 <div className="flex items-center justify-between">
                   <span className="text-slate-400">Academic Target:</span>
                   <span className="text-white font-bold font-mono">
-                    Semester {academicInfo.semester_number} ({academicInfo.branch}) - GPA {academicInfo.target_gpa}
+                    Semester {academicInfo.semester_number} ({academicInfo.branch}) - GPA {academicInfo.target_gpa ?? 'not set'}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
