@@ -426,7 +426,7 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
             />
           </div>
 
-          <div className="flex items-center gap-2 w-full md:w-auto">
+          <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
             <div className="flex items-center gap-1.5 shrink-0">
               <Filter className="w-3.5 h-3.5 text-gray-400" />
               <select

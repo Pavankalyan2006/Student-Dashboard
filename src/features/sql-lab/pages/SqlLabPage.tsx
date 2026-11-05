@@ -519,7 +519,7 @@ export function SqlLabPage({ onNavigate }: SqlLabPageProps) {
       />
 
       {/* Main Tabs Navigation */}
-      <div className="flex items-center gap-1 border-b border-slate-200 mb-6 pb-2">
+      <div className="flex items-center gap-1 border-b border-slate-200 mb-6 pb-2 overflow-x-auto">
         <button
           onClick={() => setActiveTab('builder')}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -1046,7 +1046,7 @@ export function SqlLabPage({ onNavigate }: SqlLabPageProps) {
             ) : selectedTable ? (
               /* Selected Table Structure & Relationships View */
               <div className="flex-1 flex flex-col">
-                <div className="flex items-center justify-between pb-4 border-b border-slate-200 mb-4">
+                <div className="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-slate-200 mb-4">
                   <div>
                     <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
                       <Table className="w-5 h-5 text-blue-600" />
@@ -1054,7 +1054,7 @@ export function SqlLabPage({ onNavigate }: SqlLabPageProps) {
                     </h3>
                     <p className="text-xs text-slate-500">{selectedTable.description || 'Database entity'}</p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <Button
                       size="sm"
                       onClick={() => setActiveTab('data')}

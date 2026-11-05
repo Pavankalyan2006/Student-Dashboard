@@ -21,7 +21,7 @@ export interface PageHeaderProps {
 
 export function PageHeader({ title, description, badge, actions, className }: PageHeaderProps) {
   return (
-    <div className={cn('flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-[#E4E7EC]/80', className)}>
+    <div className={cn('flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-4 pb-2 border-b border-[#E4E7EC]/80', className)}>
       <div className="space-y-1">
         <div className="flex items-center gap-2.5">
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#101828] text-balance">
@@ -35,7 +35,7 @@ export function PageHeader({ title, description, badge, actions, className }: Pa
           </p>
         )}
       </div>
-      {actions && <div className="flex items-center gap-2.5 shrink-0">{actions}</div>}
+      {actions && <div className="flex flex-wrap items-center gap-2.5 min-w-0 [&>div]:flex-wrap">{actions}</div>}
     </div>
   );
 }

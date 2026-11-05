@@ -297,7 +297,7 @@ export const GateExamPreparationPage: React.FC<GateExamPreparationPageProps> = (
           </div>
 
           {/* Quick Actions */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2.5">
             <Button
               onClick={() => {
                 setAiTopicContext(undefined);

@@ -80,7 +80,23 @@ export function ExternalProfileHubPage({ onNavigate }: ExternalProfileHubPagePro
       setConnections(conns);
       setExternalProfilesCount(extProfiles.length);
       setSkills(skillList);
-      setConsistency(consistencyRep);
+      // The API returns overall_consistency_score / matched_items; map them to the fields this page renders.
+      const matched = consistencyRep?.matched_items ?? [];
+      setConsistency({
+        ...consistencyRep,
+        consistency_score: consistencyRep?.consistency_score ?? consistencyRep?.overall_consistency_score ?? 0,
+        verified_matches:
+          consistencyRep?.verified_matches ??
+          matched
+            .filter((m) => m.status === 'VERIFIED_MATCH')
+            .map((m) => ({ field: m.title, evidence_summary: m.details, sources: m.sources })),
+        items_to_review:
+          consistencyRep?.items_to_review ??
+          matched
+            .filter((m) => m.status !== 'VERIFIED_MATCH')
+            .map((m) => ({ claim: m.title, review_prompt: m.details, suggested_action: `Check ${m.sources.join(', ')}.` })),
+        discrepancies: consistencyRep?.discrepancies ?? matched.filter((m) => m.status === 'MINOR_DISCREPANCY'),
+      });
     } catch (err: any) {
       toast.error('Failed to load external profile data: ' + err.message);
     } finally {
@@ -163,7 +179,7 @@ export function ExternalProfileHubPage({ onNavigate }: ExternalProfileHubPagePro
       />
 
       {/* Tabs */}
-      <div className="flex border-b border-slate-800 mb-6 gap-6">
+      <div className="flex border-b border-slate-800 mb-6 gap-6 overflow-x-auto">
         <button
           onClick={() => setActiveTab('profiles')}
           className={`pb-3 text-sm font-medium transition-colors border-b-2 flex items-center gap-2 ${
@@ -184,7 +200,7 @@ export function ExternalProfileHubPage({ onNavigate }: ExternalProfileHubPagePro
           }`}
         >
           <ShieldCheck className="w-4 h-4" />
-          Career Consistency ({consistency?.consistency_score || 94}%)
+          Career Consistency ({consistency?.consistency_score ?? 0}%)
         </button>
         <button
           onClick={() => setActiveTab('skills')}
@@ -234,14 +250,14 @@ export function ExternalProfileHubPage({ onNavigate }: ExternalProfileHubPagePro
 
               <div className="flex items-center gap-4 bg-slate-950/80 p-4 rounded-xl border border-slate-800">
                 <div className="text-center">
-                  <div className="text-4xl font-extrabold text-emerald-400">{consistency?.consistency_score || 94}%</div>
+                  <div className="text-4xl font-extrabold text-emerald-400">{consistency?.consistency_score ?? 0}%</div>
                   <div className="text-xs text-slate-400 mt-0.5">Consistency Score</div>
                 </div>
                 <div className="h-10 w-px bg-slate-800" />
                 <div className="text-xs space-y-1">
-                  <div className="text-emerald-400 font-medium">✓ {consistency?.verified_matches?.length || 4} Verified Claims</div>
-                  <div className="text-amber-400 font-medium">⚠ {consistency?.items_to_review?.length || 1} Items for Review</div>
-                  <div className="text-slate-400 font-medium">ℹ {consistency?.discrepancies?.length || 1} Optional Polish</div>
+                  <div className="text-emerald-400 font-medium">✓ {consistency?.verified_matches?.length ?? 0} Verified Claims</div>
+                  <div className="text-amber-400 font-medium">⚠ {consistency?.items_to_review?.length ?? 0} Items for Review</div>
+                  <div className="text-slate-400 font-medium">ℹ {consistency?.discrepancies?.length ?? 0} Optional Polish</div>
                 </div>
               </div>
             </div>

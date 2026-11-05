@@ -235,7 +235,7 @@ export function CommunityDashboardPage({ onNavigate }: { onNavigate: (path: stri
                     {q.description}
                   </p>
 
-                  <div className="flex items-center justify-between text-[10px] text-[#667085] pt-1">
+                  <div className="flex flex-wrap items-center justify-between gap-1 text-[10px] text-[#667085] pt-1">
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-slate-700">{q.author_name}</span>
                       <span>·</span>
