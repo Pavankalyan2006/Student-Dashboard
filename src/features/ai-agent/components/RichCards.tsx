@@ -141,10 +141,13 @@ export function AgentPlanCard({ steps }: { steps: AgentPlanItem[] }) {
                     ? 'bg-emerald-600 text-white'
                     : st.status === 'in_progress'
                     ? 'bg-[#2563EB] text-white animate-pulse'
+                    : st.status === 'failed'
+                    ? 'bg-rose-100 text-rose-700'
                     : 'bg-slate-200 text-slate-600'
                 }`}
+                aria-label={st.status === 'failed' ? 'Not run' : st.status === 'completed' ? 'Done' : undefined}
               >
-                {st.status === 'completed' ? '✓' : st.step}
+                {st.status === 'completed' ? '✓' : st.status === 'failed' ? '✕' : st.step}
               </span>
               <div className="space-y-0.5">
                 <div className="flex items-center gap-1.5 flex-wrap">
@@ -156,6 +159,7 @@ export function AgentPlanCard({ steps }: { steps: AgentPlanItem[] }) {
                   <span className="font-semibold text-slate-900">{cleanTitle}</span>
                 </div>
                 <p className="text-slate-500">{st.description}</p>
+                {st.status === 'failed' && st.note && <p className="text-rose-700">{st.note}</p>}
               </div>
             </div>
           );

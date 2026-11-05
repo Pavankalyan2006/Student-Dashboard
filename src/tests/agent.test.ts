@@ -3,6 +3,10 @@ import { db } from '../../server/db/database';
 import { ToolRegistry } from '../../server/ai/tools';
 import { AgentService } from '../../server/ai/agent';
 
+import { useMockQuizModel } from './helpers/mockAIModel';
+
+useMockQuizModel();
+
 describe('Phase 3 AI Learning Agent & Tool Orchestration', () => {
   const studentId = 'std_01j8k9x2p4';
 

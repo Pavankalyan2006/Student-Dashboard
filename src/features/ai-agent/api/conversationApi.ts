@@ -8,6 +8,10 @@ import {
 } from '../types/ai';
 
 export const conversationApi = {
+  getAIStatus: async (): Promise<{ provider: string; configured: boolean; model: string | null }> => {
+    return apiClient.get('/ai/status');
+  },
+
   getConversations: async (): Promise<AIConversation[]> => {
     return apiClient.get<AIConversation[]>('/ai/conversations');
   },
@@ -70,6 +74,7 @@ export const conversationApi = {
     subject?: string;
     cards?: { front: string; back: string; topic?: string }[];
     course_id?: string;
+    source_text?: string;
   }) => {
     return apiClient.post('/ai/tutor/generate-flashcards', data);
   },

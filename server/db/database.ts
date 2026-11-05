@@ -12150,6 +12150,8 @@ print(power_mod(2, 10, 1000))  # Output: 24
   // =========================================================================
 
   public seedDefaultFlashcards(studentId: string): void {
+    // Sample decks with review history are demo content; real students start with no decks.
+    if (studentId !== 'std_demo_1' && studentId !== 'std_01j8k9x2p4') return;
     const existing = Array.from(this.flashcardDecksStore.values()).filter((d) => d.student_id === studentId);
     if (existing.length > 0) return;
 

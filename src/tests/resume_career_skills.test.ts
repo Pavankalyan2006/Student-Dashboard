@@ -10,6 +10,10 @@ import { SkillAssessmentService } from '../../server/services/skillAssessmentSer
 import { ProjectService } from '../../server/services/projectService';
 import { ToolRegistry } from '../../server/ai/tools';
 
+import { useMockQuizModel } from './helpers/mockAIModel';
+
+useMockQuizModel();
+
 describe('Phase 12: Resume Builder, Career Assistant & Skill Assessment System', () => {
   const studentA = 'std_01j8k9x2p4';
   const studentB = 'std_unauthorized_student_99';

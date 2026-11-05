@@ -22,6 +22,8 @@ import { AIComposer } from './AIComposer';
 import { AgentPlanCard, ToolExecutionCard } from './RichCards';
 import { MarkdownContent } from '../../../components/content/MarkdownContent';
 import { useAIContext } from '../hooks/useAIContext';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { conversationApi } from '../api/conversationApi';
 
 export function ChatWorkspace({
   conversationTitle = 'New Learning Session',
@@ -64,6 +66,8 @@ export function ChatWorkspace({
   onToggleContext?: () => void;
   onNavigate?: (path: string) => void;
 }) {
+  const queryClient = useQueryClient();
+  const { data: aiStatus } = useQuery({ queryKey: ['ai-status'], queryFn: conversationApi.getAIStatus, staleTime: 60_000 });
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
   const { data: studentContext } = useAIContext();
 
@@ -187,9 +191,15 @@ export function ChatWorkspace({
             {selectedContext.mode || 'Explain'} Mode
           </span>
 
-          <span className="hidden md:inline-flex items-center gap-1.5 text-[10px] font-mono text-slate-500 bg-slate-50 px-2 py-0.5 rounded border border-slate-200">
-            gemini-2.5-flash
-          </span>
+          {aiStatus && (
+            <span
+              className={`hidden md:inline-flex items-center gap-1.5 text-[10px] font-mono px-2 py-0.5 rounded border ${
+                aiStatus.configured ? 'text-slate-500 bg-slate-50 border-slate-200' : 'text-amber-800 bg-amber-50 border-amber-200'
+              }`}
+            >
+              {aiStatus.configured ? aiStatus.model : 'AI not configured'}
+            </span>
+          )}
 
           {onToggleContext && (
             <button
@@ -355,6 +365,10 @@ export function ChatWorkspace({
         onSend={(txt, mode) => onSend(txt || input, mode)}
         onStop={onStop}
         onSelectPrompt={(p) => onSelectPrompt(p, selectedContext.mode)}
+        onAttachDocument={(docId) => {
+          onContextChange({ ...selectedContext, documentIds: [...(selectedContext.documentIds || []), docId] });
+          queryClient.invalidateQueries({ queryKey: ['ai-tutor-context-options'] });
+        }}
       />
     </div>
   );

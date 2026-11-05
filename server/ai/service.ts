@@ -9,6 +9,16 @@ export class AIService {
   private static provider: AIProvider =
     config.aiProvider === 'gemini' ? new GeminiProvider() : new MockAIProvider();
 
+  /** What the UI may truthfully show about the AI provider: its name, model and whether a key is set. */
+  public static getStatus(): { provider: string; configured: boolean; model: string | null } {
+    const p: any = this.provider;
+    return {
+      provider: p.name,
+      configured: p.name === 'gemini' ? Boolean(p.configured) : false,
+      model: p.name === 'gemini' && p.configured ? p.primaryModel : null,
+    };
+  }
+
   public static setProvider(provider: AIProvider): void {
     this.provider = provider;
   }

@@ -51,6 +51,16 @@ export class GeminiProvider implements AIProvider {
     this.supportedModels = Array.from(new Set(pool.filter(Boolean)));
   }
 
+  /** True when an API key is set; says nothing about whether the last call succeeded. */
+  public get configured(): boolean {
+    return Boolean(this.apiKey);
+  }
+
+  /** The first model the provider will try. */
+  public get primaryModel(): string {
+    return this.supportedModels[0];
+  }
+
   /**
    * Performs direct REST invocation to Google Generative Language API
    */

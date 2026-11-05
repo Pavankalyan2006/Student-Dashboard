@@ -33,7 +33,7 @@ export class TaskPlanner {
           description: 'Identify high-weightage curriculum units, theorem definitions, and lesson boundaries',
           agent: 'CourseAgent',
           action: 'get_course_structure',
-          params: { courseCode: context.current_course?.code || 'CS401' },
+          params: { courseCode: context.current_course?.code },
           dependencies: [],
           status: 'pending',
         });

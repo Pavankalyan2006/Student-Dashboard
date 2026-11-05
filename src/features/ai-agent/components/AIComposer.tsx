@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Send, StopCircle, Paperclip, Sparkles } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import { toast } from 'sonner';
+import { documentsApi } from '../../documents/api/documentsApi';
 
 export function AIComposer({
   input,
@@ -12,6 +13,7 @@ export function AIComposer({
   onSend,
   onStop,
   onSelectPrompt,
+  onAttachDocument,
 }: {
   input: string;
   setInput: (val: string) => void;
@@ -21,7 +23,10 @@ export function AIComposer({
   onSend: (text?: string, mode?: string) => void;
   onStop: () => void;
   onSelectPrompt: (prompt: string) => void;
+  /** Called with the id of the uploaded document so it can be added to the tutor context. */
+  onAttachDocument?: (documentId: string, name: string) => void;
 }) {
+  const [isUploading, setIsUploading] = React.useState(false);
   const [selectedMode, setSelectedMode] = React.useState<string>(activeMode);
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -40,11 +45,33 @@ export function AIComposer({
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Uploads the file to Documents and adds it to the tutor's context; nothing is claimed as
+  // attached unless the upload succeeded.
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      toast.success(`Attached "${file.name}" (${(file.size / 1024).toFixed(1)} KB)`);
-      setInput(`${input ? input + ' ' : ''}[Attached document: ${file.name}]`);
+    e.target.value = '';
+    if (!file) return;
+    try {
+      setIsUploading(true);
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error('Could not read the file'));
+        reader.readAsDataURL(file);
+      });
+      const doc = await documentsApi.uploadDocument({
+        title: file.name,
+        originalName: file.name,
+        mimeType: file.type || 'application/octet-stream',
+        sizeBytes: file.size,
+        contentBase64: dataUrl,
+      });
+      onAttachDocument?.(doc.id, file.name);
+      toast.success(`Uploaded "${file.name}" to Documents and added it to this chat's context`);
+    } catch (err: any) {
+      toast.error(`Could not attach "${file.name}": ${err?.message || 'upload failed'}`);
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -93,9 +120,6 @@ export function AIComposer({
             </button>
           ))}
         </div>
-        <span className="hidden sm:inline-block text-[10px] text-slate-400 font-mono">
-          Gemini 2.5 Flash · Verified Grounding
-        </span>
       </div>
 
       {/* Quick suggestions if composer is empty */}
@@ -143,6 +167,8 @@ export function AIComposer({
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading}
+            aria-label={isUploading ? 'Uploading attachment' : 'Attach study material, PDF, or code file'}
             title="Attach study material, PDF, or code file"
             className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-200/60 cursor-pointer transition-colors"
           >

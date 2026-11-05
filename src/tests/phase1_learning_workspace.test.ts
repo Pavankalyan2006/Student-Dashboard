@@ -89,3 +89,78 @@ describe('Phase 1 › Semester Command Center is per student', () => {
     expect(scc.getRecoveryPlans(b)).toEqual([]);
   });
 });
+
+describe('Phase 1 › AI Tutor quiz generation does not invent questions', () => {
+  it('returns 503 AI_UNAVAILABLE and creates no quiz when the model is unavailable', async () => {
+    const { QuizGenerationService } = await import('../../server/services/quizGeneration');
+    await db.initialize();
+    const student = `std_p1_quiz_${Date.now()}`;
+    const before = (await db.getQuizzes(student)).filter((q) => q.student_id === student).length;
+    await expect(QuizGenerationService.generateQuiz(student, { topic: 'Paging', question_count: 3 } as any)).rejects.toMatchObject({
+      statusCode: 503,
+    });
+    const after = (await db.getQuizzes(student)).filter((q) => q.student_id === student).length;
+    expect(after).toBe(before);
+  });
+
+  it('drops a generated MCQ whose correct answer is not among its options', async () => {
+    const { AIService } = await import('../../server/ai/service');
+    const { QuizGenerationService } = await import('../../server/services/quizGeneration');
+    const { vi } = await import('vitest');
+    const spy = vi.spyOn(AIService, 'generate').mockResolvedValue({
+      text: JSON.stringify({
+        questions: [
+          { question_type: 'MCQ', question_text: 'Which unit holds a page table entry?', options: ['PTE', 'TLB', 'MMU'], correct_answer: 'PTE', explanation: 'A page table entry is stored per page.' },
+          { question_type: 'MCQ', question_text: 'Which policy replaces the oldest page?', options: ['LRU', 'Optimal', 'Clock'], correct_answer: 'FIFO', explanation: 'FIFO replaces the oldest page.' },
+        ],
+      }),
+    } as any);
+    try {
+      const { questions } = await QuizGenerationService.generateQuiz(`std_p1_quiz2_${Date.now()}`, { topic: 'Paging', question_count: 2 } as any);
+      expect(questions.map((q) => q.correct_answer)).toEqual(['PTE']);
+    } finally {
+      spy.mockRestore();
+    }
+  });
+});
+
+describe('Phase 1 › AI Agent reports only real tool results', () => {
+  it('does not append canned notes, cards or sources, and marks unrun steps as failed', async () => {
+    const { AgentService } = await import('../../server/ai/agent');
+    await db.initialize();
+    const created = await db.createStudent({
+      name: 'Phase One Agent',
+      email: `${uid('p1agent')}@example.test`,
+      password_hash: 'hashed',
+      branch: 'Computer Science',
+      semester: 5,
+      role: 'STUDENT',
+      is_active: true,
+    } as any);
+    const student = created.id;
+    const conv = await db.createConversation(student, 'Agent honesty');
+    let content = '';
+    let plan: any[] = [];
+    for await (const ev of AgentService.runAgentStream(student, conv.id, 'Generate 3 flashcards on deadlocks')) {
+      if (ev.type === 'message_delta') content += (ev.data as any).delta;
+      if (ev.type === 'agent_plan') plan = (ev.data as any).steps;
+    }
+    expect(content).not.toMatch(/High-Yield Formula Sheet|Banker’s Safety Check|Consolidated Academic Notes|Active Recall Flashcard Deck/);
+    expect(plan.length).toBeGreaterThan(0);
+    // No step claims completion for work that produced nothing.
+    expect(plan.filter((s) => s.status === 'completed' && /Notes|Flashcard/.test(s.title))).toEqual([]);
+  });
+
+  it('progress agent reports the student’s real counts, not sample numbers', async () => {
+    const { AgentHandlers } = await import('../../server/ai/orchestration/agentHandlers');
+    await db.initialize();
+    const res = await AgentHandlers.executeTask(
+      { id: 't', title: 'p', description: '', agent: 'ProgressAgent', action: 'x', params: {}, dependencies: [], status: 'pending' } as any,
+      { student_id: `std_p1_prog_${Date.now()}`, role: 'STUDENT' } as any,
+      new Map()
+    );
+    expect(res.data.solvedCount).toBe(0);
+    expect(res.data.weakTopics).toEqual([]);
+    expect(res.summary).not.toMatch(/140|Dynamic Programming/);
+  });
+});

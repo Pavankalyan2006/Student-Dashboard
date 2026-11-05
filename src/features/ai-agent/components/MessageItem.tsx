@@ -70,10 +70,10 @@ export function MessageItem({
       setIsGeneratingFlashcards(true);
       const firstLine = message.content.split('\n')[0].replace(/[#*`]/g, '').trim();
       const topic = firstLine.slice(0, 40) || 'Engineering Concept';
-      await conversationApi.generateFlashcards({ topic });
-      toast.success(`Active recall flashcards created for "${topic}"!`);
-    } catch {
-      toast.error('Failed to generate flashcards');
+      await conversationApi.generateFlashcards({ topic, source_text: message.content });
+      toast.success(`Flashcard deck created for "${topic}"`);
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to generate flashcards');
     } finally {
       setIsGeneratingFlashcards(false);
     }
@@ -86,8 +86,8 @@ export function MessageItem({
       const topic = firstLine.slice(0, 40) || 'Engineering Concept';
       await conversationApi.generateQuiz({ topic, question_count: 3 });
       toast.success(`Practice quiz generated for "${topic}"!`);
-    } catch {
-      toast.error('Failed to generate quiz');
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to generate quiz');
     } finally {
       setIsGeneratingQuiz(false);
     }
@@ -127,11 +127,6 @@ export function MessageItem({
             <span className="font-bold text-slate-900">
               {isAssistant ? 'AI Academic Tutor' : 'You'}
             </span>
-            {isAssistant && (
-              <span className="text-[10px] px-1.5 py-0.2 rounded bg-blue-100/80 text-[#2563EB] font-semibold">
-                Verified
-              </span>
-            )}
           </div>
           <span className="text-[11px] tabular-nums">
             {new Date(message.created_at).toLocaleTimeString([], {
