@@ -43,6 +43,15 @@ learningModulesRouter.post('/study-planner/plans', requireAuth, async (req: Requ
   }
 });
 
+learningModulesRouter.post('/study-planner/plans/:planId/tasks', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const task = await LearningModulesService.addStudyPlanTask(req.user!.userId, req.params.planId, req.body || {});
+    res.status(201).json({ success: true, data: task });
+  } catch (err: any) {
+    res.status(err.statusCode || err.status || 500).json({ success: false, message: err.message });
+  }
+});
+
 learningModulesRouter.patch('/study-planner/plans/:planId/tasks/:taskId', requireAuth, async (req: Request, res: Response) => {
   try {
     const studentId = req.user!.userId;

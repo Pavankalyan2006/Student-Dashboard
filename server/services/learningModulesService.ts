@@ -273,6 +273,12 @@ export class LearningModulesService {
     const semNumber = syllabus?.semester_number || edu?.current_semester || 6;
     const isDemo = studentId === 'std_demo_1' || studentId === 'std_01j8k9x2p4';
 
+    // A real student gets a starter plan only when they have saved a syllabus to build it from;
+    // otherwise the subjects above would be placeholders, so they start with no plan.
+    if (!isDemo && !(syllabus?.subjects?.length)) {
+      return;
+    }
+
     // 1. Study Plan
     const planId = 'plan_sem6_primary_' + studentId;
     const studyPlan: StudyPlan = {
@@ -300,7 +306,8 @@ export class LearningModulesService {
           status: 'PENDING',
           date: new Date().toISOString().split('T')[0],
           notes: `Focus on core principles, definitions, and university paper questions for ${primarySubject}.`,
-          ai_recommendation: `Recommended: Complete 3 practice problems from Unit 1 for ${primarySubject}.`,
+          // Not model output, so only the demo accounts carry this sample recommendation.
+          ai_recommendation: isDemo ? `Recommended: Complete 3 practice problems from Unit 1 for ${primarySubject}.` : undefined,
           created_at: new Date().toISOString(),
         },
         {
@@ -316,7 +323,7 @@ export class LearningModulesService {
           status: 'PENDING',
           date: new Date().toISOString().split('T')[0],
           notes: `Hands-on practice and algorithm implementation for ${secondSubject}.`,
-          ai_recommendation: `Practice standard coding and laboratory patterns for ${secondSubject}.`,
+          ai_recommendation: isDemo ? `Practice standard coding and laboratory patterns for ${secondSubject}.` : undefined,
           created_at: new Date().toISOString(),
         },
         {
@@ -845,15 +852,68 @@ export class LearningModulesService {
     taskId: string,
     status: 'COMPLETED' | 'SKIPPED' | 'RESCHEDULED' | 'IN_PROGRESS' | 'PENDING'
   ): Promise<StudyPlanTask> {
+    const allowed = ['COMPLETED', 'SKIPPED', 'RESCHEDULED', 'IN_PROGRESS', 'PENDING'];
+    if (!allowed.includes(status)) {
+      throw new ValidationError(`Status must be one of ${allowed.join(', ')}`);
+    }
     const plan = await this.getStudyPlanById(studentId, planId);
     const task = plan.tasks.find((t) => t.id === taskId);
     if (!task) throw new NotFoundError(`Task '${taskId}' not found`);
+    const wasCompleted = task.status === 'COMPLETED';
     task.status = status;
-    if (status === 'COMPLETED') {
+    // Count a task's hours once, and take them back if it is un-completed.
+    const hours = (task.duration_minutes || 0) / 60;
+    if (status === 'COMPLETED' && !wasCompleted) {
       task.completed_at = new Date().toISOString();
-      plan.completed_hours = Math.round((plan.completed_hours + task.duration_minutes / 60) * 10) / 10;
+      plan.completed_hours = Math.round((plan.completed_hours + hours) * 10) / 10;
+    } else if (status !== 'COMPLETED' && wasCompleted) {
+      task.completed_at = undefined;
+      plan.completed_hours = Math.max(0, Math.round((plan.completed_hours - hours) * 10) / 10);
     }
     plan.updated_at = new Date().toISOString();
+    this.studyPlans.set(plan.id, plan);
+    return task;
+  }
+
+  /** Adds a task the student wrote to one of their own plans. */
+  public static async addStudyPlanTask(
+    studentId: string,
+    planId: string,
+    data: { title?: string; subject?: string; topic?: string; date?: string; start_time?: string; duration_minutes?: number; priority?: string; notes?: string }
+  ): Promise<StudyPlanTask> {
+    const plan = await this.getStudyPlanById(studentId, planId);
+    const title = String(data.title || '').trim();
+    if (!title) throw new ValidationError('Task title is required');
+    const date = String(data.date || new Date().toISOString().split('T')[0]);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(Date.parse(date))) {
+      throw new ValidationError('Task date must be a valid date (YYYY-MM-DD)');
+    }
+    const duration = Number(data.duration_minutes ?? 60);
+    if (!Number.isInteger(duration) || duration < 5 || duration > 600) {
+      throw new ValidationError('Duration must be a whole number of minutes between 5 and 600');
+    }
+    const priority = String(data.priority || 'MEDIUM').toUpperCase();
+    if (!['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].includes(priority)) {
+      throw new ValidationError('Priority must be LOW, MEDIUM, HIGH or CRITICAL');
+    }
+    const task: StudyPlanTask = {
+      id: `task_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      plan_id: plan.id,
+      student_id: studentId,
+      title,
+      subject: String(data.subject || '').trim(),
+      topic: String(data.topic || '').trim(),
+      start_time: data.start_time,
+      duration_minutes: duration,
+      priority: priority as StudyPlanTask['priority'],
+      status: 'PENDING',
+      date,
+      notes: data.notes,
+      created_at: new Date().toISOString(),
+    } as StudyPlanTask;
+    plan.tasks.push(task);
+    plan.updated_at = new Date().toISOString();
+    this.studyPlans.set(plan.id, plan);
     return task;
   }
 
@@ -863,7 +923,8 @@ export class LearningModulesService {
     const tasks: StudyPlanTask[] = [];
     for (const p of plans) {
       for (const t of p.tasks) {
-        if (t.date === today || t.status === 'PENDING') {
+        // Today's tasks plus overdue ones still pending; future tasks wait for their day.
+        if (t.date === today || (t.status === 'PENDING' && (!t.date || t.date < today))) {
           tasks.push(t);
         }
       }
@@ -1710,6 +1771,9 @@ Output JSON format:
     durationMinutes: number = 20
   ): Promise<StudyPlanTask> {
     const deck = await this.getFlashcardDeckById(studentId, deckId);
+    if (scheduledDate !== undefined && (!/^\d{4}-\d{2}-\d{2}$/.test(scheduledDate) || Number.isNaN(Date.parse(scheduledDate)))) {
+      throw new ValidationError('Scheduled date must be a valid date (YYYY-MM-DD)');
+    }
     const plans = await this.getStudyPlans(studentId);
     let plan = plans[0];
     if (!plan) {

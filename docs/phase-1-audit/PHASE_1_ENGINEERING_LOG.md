@@ -52,3 +52,12 @@
 - Fixed P1-031 (due queue reviews never saved, found in the browser), P1-032 (invalid ratings counted as GOOD), P1-033 (template topic/course cards). Deck from a document already returns 503 since P1-029; deck from a note since P1-022.
 - Tests: `phase1_learning_workspace.test.ts` 14, `flashcards_master_production.test.ts` updated; full suite 814/814.
 - Next: batch 7 (Study Planner, Language Learning).
+
+## Batch 7 — Study Planner, Language Learning
+- Study Planner over HTTP and in the browser (390px): a new student starts with no plans; create plan, add tasks (invalid date/duration → 400), mark done/undone with hours updated once, Today lists today's and overdue pending tasks. Fixed P1-034..P1-038.
+- Language Learning over HTTP with A/B: catalog 150 unique codes; enrollment, conversations and writing are per student (B posting to A's conversation → 404). With AI off, writing, AI Partner replies and translation now return 503 and save nothing (P1-039..P1-041). Also fixed status codes (P1-042), fake lesson completion (P1-043), rating/quiz validation (P1-044), and misleading toasts (P1-045). Translate now requires sign-in.
+- Note: a new conversation opens with the language's catalog greeting phrase (a fixed, real phrase, not presented as analysis); left as is.
+- Pronunciation scoring: the page uses the browser's speech APIs only; no score is computed or stored, so nothing is fabricated there. Real model output is BLOCKED (no key).
+- Tests: `phase1_learning_workspace.test.ts` 16, `languages_platform_master.test.ts` 20 (3 AI-off cases + stubbed model), `flashcards_master_production.test.ts` schedule test; full suite 818/818, `tsc` 0 errors.
+- Files: `server/services/{learningModulesService,languageLearningService}.ts`, `server/api/routes/{learningModules,languages}.ts`, `src/api/learningModulesApi.ts`, `src/features/study-planner/pages/StudyPlannerPage.tsx`, `src/features/languages/components/{ConversationPartnerView,WritingPracticeView,ContextualTranslatorView,LessonWorkspaceView}.tsx`.
+- Next: batch 8 (shared components, accessibility, security, responsive sweep, regression, final reports).

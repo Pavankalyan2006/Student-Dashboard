@@ -59,7 +59,7 @@ export function LessonWorkspaceView({
       setIsCompleting(true);
       await languageApi.completeLesson(language.code, lesson.id, studentNotes);
       setIsCompleted(true);
-      toast.success(`Lesson completed! Streak updated.`);
+      toast.success('Lesson completed.');
       onCompleted();
     } catch (err: any) {
       toast.error(err.message || 'Failed to save lesson progress.');

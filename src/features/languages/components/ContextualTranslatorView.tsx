@@ -53,7 +53,7 @@ export function ContextualTranslatorView({
       const res = await languageApi.translate(sourceCode, targetCode, inputText.trim());
       setResult(res);
     } catch (err: any) {
-      toast.error('Translation failed. Please try again.');
+      toast.error(err?.message || 'Translation failed. Please try again.');
     } finally {
       setIsTranslating(false);
     }

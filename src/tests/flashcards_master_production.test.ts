@@ -498,10 +498,16 @@ describe('AI Flashcards Production & Spaced Repetition Master Test Suite', () =>
       const decks = await LearningModulesService.getFlashcardDecks(primaryStudentId);
       const deck = decks[0];
 
+      // A free-text date cannot be placed on the planner's calendar, so it is rejected.
+      await expect(
+        LearningModulesService.scheduleReviewTask(primaryStudentId, deck.id, 'Tomorrow at 7:00 PM', 30)
+      ).rejects.toThrow(/valid date/);
+
+      const today = new Date().toISOString().split('T')[0];
       const scheduledTask = await LearningModulesService.scheduleReviewTask(
         primaryStudentId,
         deck.id,
-        'Tomorrow at 7:00 PM',
+        today,
         30
       );
 

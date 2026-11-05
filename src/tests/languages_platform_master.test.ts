@@ -1,7 +1,8 @@
 // src/tests/languages_platform_master.test.ts
 // Comprehensive unit & integration tests for the Language Learning Platform (150+ Languages)
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { AIService } from '../../server/ai/service';
 import { LanguageLearningService } from '../../server/services/languageLearningService';
 import { MASTER_LANGUAGE_CATALOG } from '../../server/db/languageCatalog';
 import { db } from '../../server/db/database';
@@ -199,8 +200,24 @@ describe('Language Learning Platform Master Test Suite', () => {
     });
   });
 
+  // No AI provider is configured in tests. Writing feedback, translation and conversation
+  // replies come only from the model, so these tests stub AIService.generate with well-formed
+  // JSON, and separate tests check that nothing is saved when the model is unavailable.
+  const stubModel = (payload: object) =>
+    vi.spyOn(AIService, 'generate').mockResolvedValue({ text: JSON.stringify(payload), provider: 'test-stub', model: 'test-stub' } as any);
+  const stubUnavailable = () =>
+    vi.spyOn(AIService, 'generate').mockResolvedValue({ text: '**AI unavailable.** No AI provider is configured.', provider: 'none', model: 'none' } as any);
+  afterEach(() => vi.restoreAllMocks());
+
   describe('5. AI Writing Practice & Contextual Translation', () => {
     it('evaluates student writing submissions with grammar scores and side-by-side feedback', async () => {
+      stubModel({
+        corrected_text: 'Hola, me llamo Pavan y estudio ciencias de la computación.',
+        grammar_score: 80, vocabulary_score: 82, clarity_score: 85, overall_score: 82,
+        spelling_corrections: [{ original: 'computacion', corrected: 'computación', explanation: 'accent' }],
+        grammar_points: ['The subject pronoun yo is usually dropped.'],
+        tone_analysis: 'Natural', positive_reinforcement: 'Clear introduction.',
+      });
       const sub = await LanguageLearningService.submitWritingPractice(testStudentId, 'es', {
         prompt_type: 'SELF_INTRODUCTION',
         prompt_text: 'Introduce yourself and your study interests in Spanish.',
@@ -215,6 +232,10 @@ describe('Language Learning Platform Master Test Suite', () => {
     });
 
     it('translates phrases with rich morphological breakdowns and register variants', async () => {
+      stubModel({
+        primary_translation: 'Buenos días, quisiera pedir un café, por favor.',
+        word_breakdown: [{ word: 'café', meaning: 'coffee', pos: 'Noun' }],
+      });
       const result = await LanguageLearningService.contextualTranslate(
         'en',
         'es',
@@ -243,6 +264,7 @@ describe('Language Learning Platform Master Test Suite', () => {
       expect(session.messages[0].sender).toBe('ai');
 
       // Send student message
+      stubModel({ reply_in_target_language: '¡Claro! Pasen por aquí.', english_translation: 'Of course! Come this way.' });
       const updated = await LanguageLearningService.sendConversationMessage(
         testStudentId,
         session.id,
@@ -252,6 +274,35 @@ describe('Language Learning Platform Master Test Suite', () => {
       expect(updated.messages.length).toBe(3);
       expect(updated.messages[1].sender).toBe('student');
       expect(updated.messages[2].sender).toBe('ai');
+    });
+  });
+
+  describe('6b. AI unavailable', () => {
+    it('saves no writing submission and invents no scores when the model is unavailable', async () => {
+      stubUnavailable();
+      const before = await LanguageLearningService.getWritingSubmissions(testStudentId, 'es');
+      await expect(
+        LanguageLearningService.submitWritingPractice(testStudentId, 'es', {
+          prompt_type: 'SELF_INTRODUCTION',
+          prompt_text: 'Introduce yourself.',
+          student_text: 'Hola, me llamo Ana.',
+        })
+      ).rejects.toMatchObject({ statusCode: 503 });
+      const after = await LanguageLearningService.getWritingSubmissions(testStudentId, 'es');
+      expect(after.length).toBe(before.length);
+    });
+
+    it('returns 503 for translation instead of a catalog sample phrase', async () => {
+      stubUnavailable();
+      await expect(LanguageLearningService.contextualTranslate('en', 'es', 'Where is the library?')).rejects.toMatchObject({ statusCode: 503 });
+    });
+
+    it('leaves the conversation unchanged when no model reply is available', async () => {
+      const session = await LanguageLearningService.startConversation(testStudentId, 'es', 'At the station', 'PRACTICE');
+      stubUnavailable();
+      await expect(LanguageLearningService.sendConversationMessage(testStudentId, session.id, 'Hola, un billete por favor.')).rejects.toMatchObject({ statusCode: 503 });
+      const sessions = await LanguageLearningService.getConversationSessions(testStudentId, 'es');
+      expect(sessions.find((s) => s.id === session.id)?.messages.length).toBe(1);
     });
   });
 

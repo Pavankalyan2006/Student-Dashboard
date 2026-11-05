@@ -43,6 +43,37 @@ export function StudyPlannerPage({ onNavigate }: StudyPlannerPageProps) {
   const [newPlanDescription, setNewPlanDescription] = React.useState('');
   const [newPlanTargetDate, setNewPlanTargetDate] = React.useState('');
   const [newPlanTargetHours, setNewPlanTargetHours] = React.useState(20);
+  const [expandedPlanId, setExpandedPlanId] = React.useState<string | null>(null);
+  const [taskTitle, setTaskTitle] = React.useState('');
+  const [taskSubject, setTaskSubject] = React.useState('');
+  const [taskDate, setTaskDate] = React.useState(() => new Date().toISOString().split('T')[0]);
+  const [taskMinutes, setTaskMinutes] = React.useState(60);
+  const [isAddingTask, setIsAddingTask] = React.useState(false);
+
+  const handleAddTask = async (e: React.FormEvent, planId: string) => {
+    e.preventDefault();
+    if (!taskTitle.trim()) {
+      toast.error('Please enter a task title');
+      return;
+    }
+    try {
+      setIsAddingTask(true);
+      await learningModulesApi.studyPlanner.addTask(planId, {
+        title: taskTitle.trim(),
+        subject: taskSubject.trim() || undefined,
+        date: taskDate,
+        duration_minutes: Number(taskMinutes),
+      });
+      toast.success('Task added');
+      setTaskTitle('');
+      setTaskSubject('');
+      loadData();
+    } catch (err: any) {
+      toast.error('Failed to add task: ' + err.message);
+    } finally {
+      setIsAddingTask(false);
+    }
+  };
 
   const loadData = React.useCallback(async () => {
     try {
@@ -88,27 +119,11 @@ export function StudyPlannerPage({ onNavigate }: StudyPlannerPageProps) {
         description: newPlanDescription,
         target_date: newPlanTargetDate || new Date(Date.now() + 30 * 24 * 3600000).toISOString().split('T')[0],
         total_hours_target: Number(newPlanTargetHours) || 20,
-        tasks: [
-          {
-            id: `task_${Date.now()}_1`,
-            plan_id: '',
-            student_id: '',
-            title: `Kickoff: Core Review for ${newPlanTitle}`,
-            subject: 'Engineering Core',
-            topic: 'Foundations',
-            start_time: '09:00 AM',
-            duration_minutes: 60,
-            priority: 'HIGH',
-            status: 'PENDING',
-            date: new Date().toISOString().split('T')[0],
-            created_at: new Date().toISOString(),
-          },
-        ],
       });
-      toast.success('AI Study Plan generated successfully!');
+      toast.success('Study plan created. Add your tasks to it under All Plans.');
       setNewPlanTitle('');
       setNewPlanDescription('');
-      setActiveTab('today');
+      setActiveTab('all');
       loadData();
     } catch (err: any) {
       toast.error('Failed to create plan: ' + err.message);
@@ -478,7 +493,8 @@ export function StudyPlannerPage({ onNavigate }: StudyPlannerPageProps) {
       {activeTab === 'all' && (
         <div className="space-y-3">
           {plans.map((p) => (
-            <div key={p.id} className="p-4 rounded-xl border border-[#E4E7EC] bg-white shadow-sm flex items-center justify-between">
+            <div key={p.id} className="p-4 rounded-xl border border-[#E4E7EC] bg-white shadow-sm">
+              <div className="flex items-center justify-between gap-3">
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded">
@@ -491,9 +507,72 @@ export function StudyPlannerPage({ onNavigate }: StudyPlannerPageProps) {
                   Target: {p.target_date} • {p.completed_hours}h completed of {p.total_hours_target}h target
                 </p>
               </div>
-              <Button size="sm" variant="outline" onClick={() => onNavigate?.(`/study-planner/plan/${p.id}`)}>
-                View Tasks
+              <Button
+                size="sm"
+                variant="outline"
+                aria-expanded={expandedPlanId === p.id}
+                onClick={() => setExpandedPlanId(expandedPlanId === p.id ? null : p.id)}
+              >
+                {expandedPlanId === p.id ? 'Hide Tasks' : `View Tasks (${p.tasks.length})`}
               </Button>
+              </div>
+              {expandedPlanId === p.id && (
+                <div className="mt-3 border-t border-gray-100 pt-3 space-y-2">
+                  {p.tasks.length === 0 && <p className="text-xs text-[#475467]">No tasks yet. Add the first one below.</p>}
+                  {p.tasks.map((t) => (
+                    <div key={t.id} className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                      <span className={t.status === 'COMPLETED' ? 'line-through text-[#98A2B3]' : 'text-[#101828]'}>
+                        {t.date} · {t.title}
+                        {t.subject ? ` · ${t.subject}` : ''} · {t.duration_minutes} min
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleUpdateTask(p.id, t.id, t.status === 'COMPLETED' ? ('PENDING' as any) : 'COMPLETED')}
+                      >
+                        {t.status === 'COMPLETED' ? 'Mark not done' : 'Mark done'}
+                      </Button>
+                    </div>
+                  ))}
+                  <form onSubmit={(e) => handleAddTask(e, p.id)} className="grid grid-cols-1 sm:grid-cols-5 gap-2 pt-2">
+                    <input
+                      aria-label="Task title"
+                      className="sm:col-span-2 border border-[#D0D5DD] rounded-md px-2 py-1.5 text-xs"
+                      placeholder="Task title"
+                      value={taskTitle}
+                      onChange={(e) => setTaskTitle(e.target.value)}
+                    />
+                    <input
+                      aria-label="Subject"
+                      className="border border-[#D0D5DD] rounded-md px-2 py-1.5 text-xs"
+                      placeholder="Subject (optional)"
+                      value={taskSubject}
+                      onChange={(e) => setTaskSubject(e.target.value)}
+                    />
+                    <input
+                      aria-label="Date"
+                      type="date"
+                      className="border border-[#D0D5DD] rounded-md px-2 py-1.5 text-xs"
+                      value={taskDate}
+                      onChange={(e) => setTaskDate(e.target.value)}
+                    />
+                    <div className="flex gap-2">
+                      <input
+                        aria-label="Minutes"
+                        type="number"
+                        min={5}
+                        max={600}
+                        className="w-20 border border-[#D0D5DD] rounded-md px-2 py-1.5 text-xs"
+                        value={taskMinutes}
+                        onChange={(e) => setTaskMinutes(Number(e.target.value))}
+                      />
+                      <Button type="submit" size="sm" disabled={isAddingTask}>
+                        Add
+                      </Button>
+                    </div>
+                  </form>
+                </div>
+              )}
             </div>
           ))}
         </div>

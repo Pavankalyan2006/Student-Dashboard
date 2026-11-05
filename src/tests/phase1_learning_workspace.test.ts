@@ -246,3 +246,25 @@ describe('Phase 1 › Flashcard reviews', () => {
     await expect(LearningModulesService.reviewFlashcard(uid('std_p1_fc_b'), deck.id, card.id, 'GOOD')).rejects.toThrow(/not found/i);
   });
 });
+
+describe('Phase 1 › Study Planner tasks', () => {
+  it('adds a validated task, counts its hours once, and keeps future tasks out of Today', async () => {
+    const { LearningModulesService } = await import('../../server/services/learningModulesService');
+    const s = uid('std_p1_plan');
+    const plan = await LearningModulesService.createStudyPlan(s, { title: 'OS prep', type: 'EXAM' } as any);
+    expect(plan.tasks).toEqual([]);
+    await expect(LearningModulesService.addStudyPlanTask(s, plan.id, { title: ' ' })).rejects.toThrow(/title is required/);
+    await expect(LearningModulesService.addStudyPlanTask(s, plan.id, { title: 'x', date: 'nope' })).rejects.toThrow(/valid date/);
+    const t = await LearningModulesService.addStudyPlanTask(s, plan.id, { title: 'Revise paging', duration_minutes: 90 });
+    await LearningModulesService.addStudyPlanTask(s, plan.id, { title: 'Later', date: '2030-01-01' });
+    await LearningModulesService.updateTaskStatus(s, plan.id, t.id, 'COMPLETED');
+    await LearningModulesService.updateTaskStatus(s, plan.id, t.id, 'COMPLETED');
+    expect((await LearningModulesService.getStudyPlanById(s, plan.id)).completed_hours).toBe(1.5);
+    await LearningModulesService.updateTaskStatus(s, plan.id, t.id, 'PENDING');
+    expect((await LearningModulesService.getStudyPlanById(s, plan.id)).completed_hours).toBe(0);
+    await expect(LearningModulesService.updateTaskStatus(s, plan.id, t.id, 'BOGUS' as any)).rejects.toThrow(/Status must be/);
+    const today = await LearningModulesService.getTodayTasks(s);
+    expect(today.map((x) => x.title)).toEqual(['Revise paging']);
+    await expect(LearningModulesService.addStudyPlanTask(uid('std_p1_plan_b'), plan.id, { title: 'x' })).rejects.toThrow(/not found/i);
+  });
+});

@@ -70,7 +70,7 @@ export function ConversationPartnerView({ language, onBack }: ConversationPartne
       setActiveSession(session);
       toast.success('New conversation started!');
     } catch (err: any) {
-      toast.error('Failed to start conversation.');
+      toast.error(err?.message || 'Failed to start conversation.');
     } finally {
       setIsSending(false);
     }
@@ -89,7 +89,9 @@ export function ConversationPartnerView({ language, onBack }: ConversationPartne
       setActiveSession(updated);
       setSessions((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
     } catch (err: any) {
-      toast.error('Failed to send message.');
+      // Keep the student's text so it is not lost when the partner cannot reply.
+      setInputText(text);
+      toast.error(err?.message || 'Failed to send message.');
     } finally {
       setIsSending(false);
     }
