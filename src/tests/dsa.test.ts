@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { DSAStepGenerators } from '../../server/services/dsaStepGenerators';
 import { DSAService } from '../../server/services/dsa';
 import { ToolRegistry } from '../../server/ai/tools';
@@ -313,30 +313,32 @@ describe('Phase 8 DSA Lab & Algorithm Visualization Engine', () => {
   });
 
   describe('AI DSA Tutor Service', () => {
-    it('generates problem-aware pedagogical tutoring responses with Big-O complexity', async () => {
+    afterEach(() => vi.restoreAllMocks());
+
+    it('answers with the model output and problem-aware Big-O metadata when a model is configured', async () => {
       const { DSATutorService } = await import('../../server/services/dsaTutorService');
+      const { AIService } = await import('../../server/ai/service');
+      const spy = vi.spyOn(AIService, 'generate').mockResolvedValue({ text: 'Use two pointers from the end of both arrays.' } as any);
       const response = await DSATutorService.chatWithTutor({
         problem_id: 'dsa_top150_merge_sorted_array',
         question: 'Explain the Big-O time and space complexity derivation',
       });
 
-      expect(response).toBeDefined();
-      expect(response.message).toBeDefined();
+      expect(spy).toHaveBeenCalledOnce();
+      expect(response.message).toBe('Use two pointers from the end of both arrays.');
       expect(response.problem_title).toBe('Merge Sorted Array');
       expect(response.suggestions.length).toBeGreaterThan(0);
       expect(response.optimal_complexity?.time).toBe('O(N)');
       expect(response.optimal_complexity?.space).toBe('O(1)');
     });
 
-    it('provides progressive hints without exposing complete code solutions', async () => {
+    it('returns 503 AI_UNAVAILABLE instead of a template answer when no model is configured', async () => {
       const { DSATutorService } = await import('../../server/services/dsaTutorService');
-      const response = await DSATutorService.chatWithTutor({
-        problem_id: 'dsa_top150_trapping_rain_water',
-        question: 'Give me a hint for solving this problem',
-      });
-
-      expect(response.message).toBeDefined();
-      expect(response.suggestions.length).toBeGreaterThan(0);
+      const { AIService } = await import('../../server/ai/service');
+      vi.spyOn(AIService, 'generate').mockResolvedValue({ text: '**AI unavailable.** No model configured.' } as any);
+      await expect(
+        DSATutorService.chatWithTutor({ problem_id: 'dsa_top150_trapping_rain_water', question: 'Give me a hint for solving this problem' })
+      ).rejects.toMatchObject({ statusCode: 503, code: 'AI_UNAVAILABLE' });
     });
   });
 });

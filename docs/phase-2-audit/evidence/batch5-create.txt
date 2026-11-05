@@ -19,7 +19,7 @@ PASS  J7 viva history: answer and feedback stored on the experiment
 PASS  J8 questions delivered without answers
 PASS  J8 review refused before submit
 PASS  J8 server-side score ignores client score  -- 1/2 = 50%
-PASS  J8 notification states correct answers and links to the quiz  -- You answered 1 of 2 correctly (50%). Review the explanations for the questions you missed. | /quiz/quiz_1793900303025_makzt/result
+PASS  J8 notification states correct answers and links to the quiz  -- You answered 1 of 2 correctly (50%). Review the explanations for the questions you missed. | /quiz/quiz_1793901356325_gabzk/result
 PASS  J9 create exam (0% readiness, all topics WEAK)  -- 0
 PASS  J9 readiness follows confidence  -- 25
 PASS  J9 sync revision tasks to the Study Planner  -- 201

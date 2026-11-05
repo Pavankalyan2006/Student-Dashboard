@@ -5,8 +5,9 @@ PASS  J6 report reopens after restart
 PASS  J7 viva history survives restart
 PASS  J8 quiz review survives restart
 PASS  J9 exam readiness survives restart
+PASS  J9 synced study plan survives restart
 PASS  J10 GATE attempts survive restart
 PASS  INT DSA solved status survives restart
 PASS  INT student B still isolated after restart
 
-10/10 PASS
+11/11 PASS

@@ -178,7 +178,8 @@ gateRouter.get('/gate/bookmarks', async (req: Request, res: Response) => {
   try {
     const studentId = resolveStudentId(req);
     const bookmarks = await GateService.getBookmarks(studentId);
-    res.json({ success: true, data: bookmarks });
+    // A bookmark can be made before answering, so the key is stripped here too.
+    res.json({ success: true, data: bookmarks.map((b: any) => ({ ...b, question: deliverQuestion(b.question) })) });
   } catch (err: any) {
     logger.error('Error fetching GATE bookmarks', err);
     res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });

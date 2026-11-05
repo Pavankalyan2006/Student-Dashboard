@@ -78,3 +78,12 @@ See the last entry. Probe scripts live in `scripts/audit/phase2-*.cjs` and need 
   accessible names. Evidence: `scripts/audit/phase2-batch5.cjs create` 31/31, `verify` 7/7 after restart;
   batch 1 and 2 probes re-run (12/12 + 6/6 verify, 19/19 + 6/6); `scripts/audit/phase2-responsive.cjs` 66 page-widths,
   0 overflow, 0 page errors, 0 unlabeled buttons/inputs; tsc 0; vitest 853/853.
+- 2026-11-05 18:00 Wrap-up. Exam Prep "Add to Study Planner" (J9 sync) added. Batch 5 probe aligned with the spec journeys:
+  J5 challenge → save → reload → continue, J6 observations and report reopen, J7 viva history, J8 quiz, J9 exam + planner,
+  J10 GATE paper/topic selection. While documenting, four more answer or template leaks were found and fixed:
+  DSA tutor template replies (P2-056), `/quiz/explain-answer` mid-attempt and cross-student (P2-057), GATE bookmarks
+  with keys (P2-058), SQL challenge reference queries (P2-059); expired quiz attempts can be reviewed again (P2-060).
+  A stray probe state file at the repo root was removed; batch 1 state now defaults to `/tmp/p2/batch1.json`.
+  Final evidence, all from a fresh snapshot with a restart: batch1 12/12 + 8/8, batch2 19/19 + 6/6, batch5 44/44 + 11/11,
+  sandbox 27 cases at namespace isolation, responsive 66 loads clean, browser sync run; tsc 0; vitest 854/854.
+  The 10 PHASE_2_*.md reports were written.

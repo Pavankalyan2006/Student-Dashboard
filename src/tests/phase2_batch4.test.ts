@@ -42,6 +42,12 @@ describe('Phase 2 › Batch 4 › Quiz', () => {
     expect(early.status).toBe(400);
     expect(JSON.stringify(early.body)).not.toContain('correct_answer');
 
+    // The explanation endpoint also contains the answer: refused mid-attempt and for other students.
+    const explainEarly = await api.call('POST', '/quiz/explain-answer', A.token, { question_id: qs[0].id, student_answer: '3' });
+    expect(explainEarly.status).toBe(400);
+    expect(JSON.stringify(explainEarly.body)).not.toContain('"4"');
+    expect((await api.call('POST', '/quiz/explain-answer', B.token, { question_id: qs[0].id })).status).toBe(404);
+
     // The client cannot set its own score.
     const submit = await api.call('POST', `/quiz/attempts/${attemptId}/submit`, A.token, {
       answers: { [qs[0].id]: '4', [qs[1].id]: 'False' },
@@ -55,6 +61,10 @@ describe('Phase 2 › Batch 4 › Quiz', () => {
     const review = await api.call('GET', `/quiz/attempts/${attemptId}/review`, A.token);
     expect(review.status).toBe(200);
     expect(JSON.stringify(review.body)).toContain('correct_answer');
+    const explain = await api.call('POST', '/quiz/explain-answer', A.token, { question_id: qs[0].id, student_answer: '3' });
+    expect(explain.status).toBe(200);
+    expect(explain.body.data.why_correct).toContain('4');
+    expect((await api.call('POST', '/quiz/explain-answer', B.token, { question_id: qs[0].id })).status).toBe(404);
   });
 
   it('AI quiz generation returns 503 without a model and never sends answers with the new quiz', async () => {
@@ -89,6 +99,13 @@ describe('Phase 2 › Batch 4 › GATE', () => {
     expect(wrong.body.data).toMatchObject({ is_correct: false, negative_deducted: mcq.negative_marks });
     expect(wrong.body.data.correct_answer).toBe(mcq.correct_answer); // revealed only after answering
     expect((await api.call('POST', '/gate/questions/nope/attempt', A.token, { selected_answer: 'A' })).status).toBe(404);
+
+    // Bookmarking before answering must not reveal the key either.
+    const other = (await db.getGateQuestions({ paper_code: 'CS' })).find((q: any) => q.id !== mcq.id)!;
+    await api.call('POST', `/gate/questions/${other.id}/bookmark`, A.token, {});
+    const bm = await api.call('GET', '/gate/bookmarks', A.token);
+    expect(bm.body.data.some((b: any) => b.question_id === other.id)).toBe(true);
+    expect(JSON.stringify(bm.body.data)).not.toMatch(/correct_answer|"explanation"/);
   });
 
   it('mock tests report raw marks without an invented GATE score, and sessions are private', async () => {

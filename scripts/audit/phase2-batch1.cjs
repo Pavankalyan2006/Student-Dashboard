@@ -2,7 +2,7 @@
 // 1. PORT=3300 DATA_SNAPSHOT_PATH=/tmp/x/snap.json npx tsx server.ts
 // 2. BASE=http://localhost:3300 STATE=/tmp/x/b1.json node scripts/audit/phase2-batch1.cjs create
 // 3. Restart the server with the same DATA_SNAPSHOT_PATH, then run with 'verify'.
-const fs=require('fs'); const BASE=(process.env.BASE||'http://localhost:3300')+'/api/v1'; const st=process.env.STATE||'phase2-b1-state.json';
+const fs=require('fs'); const BASE=(process.env.BASE||'http://localhost:3300')+'/api/v1'; const st=process.env.STATE||'/tmp/p2/batch1.json';
 const api=async(m,p,t,b)=>{const r=await fetch(BASE+p,{method:m,headers:{'Content-Type':'application/json',...(t?{Authorization:'Bearer '+t}:{})},body:b?JSON.stringify(b):undefined});let j;try{j=await r.json()}catch{j={}}return {s:r.status,j};};
 const log=(k,ok,info='')=>console.log(`${ok?'PASS':'FAIL'}  ${k.padEnd(40)} ${info}`);
 (async()=>{

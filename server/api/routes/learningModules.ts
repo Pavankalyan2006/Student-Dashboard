@@ -567,7 +567,8 @@ learningModulesRouter.delete('/sql-lab/saved-queries/:id', requireAuth, (req: Re
 learningModulesRouter.get('/sql-lab/challenges', async (_req: Request, res: Response) => {
   try {
     const challenges = await LearningModulesService.getSqlChallenges();
-    res.json({ success: true, data: challenges });
+    // The reference query is the answer; it is not sent to students.
+    res.json({ success: true, data: challenges.map(({ expected_query, ...c }: any) => c) });
   } catch (err: any) {
     res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }

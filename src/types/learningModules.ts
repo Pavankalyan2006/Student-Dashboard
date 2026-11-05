@@ -324,7 +324,7 @@ export interface SQLChallenge {
   category: string;
   description: string;
   schema_name: string;
-  expected_query: string;
+  expected_query?: string; // never sent by the API
   starter_query: string;
   hints: string[];
 }

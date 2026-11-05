@@ -1,0 +1,8 @@
+PASS  Uploaded dataset survives restart
+PASS  Experiment survives restart
+PASS  Trained model still predicts after restart  -- pass
+PASS  Prediction history survives restart  -- count=3
+PASS  Student B cannot delete student A dataset  -- status 404
+PASS  Built-in dataset cannot be deleted  -- status 400
+
+6/6 PASS

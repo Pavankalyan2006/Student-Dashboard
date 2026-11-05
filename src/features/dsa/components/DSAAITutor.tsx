@@ -103,17 +103,14 @@ export const DSAAITutor: React.FC<DSAAITutorProps> = ({
           setSuggestions(res.suggestions);
         }
       }
-    } catch {
-      // Fallback deterministic tutor response if network error
+    } catch (err: any) {
+      // Show the real failure (for example 503 when no AI model is configured) instead of a canned answer.
+      const reason = err?.response?.data?.message || err?.message || 'The AI tutor is not available right now.';
       setMessages((prev) => [
         ...prev,
         {
           role: 'assistant',
-          content: `In **${targetTitle}**: The optimal strategy focuses on enforcing the core invariant. Target complexity is **${
-            problem?.optimal_complexity?.time || algorithm?.time_complexity || 'O(N)'
-          }** time and **${
-            problem?.optimal_complexity?.space || algorithm?.space_complexity || 'O(1)'
-          }** space. Check whether you can eliminate redundant nested scans using two pointers, a hash map, or a monotonic stack.`,
+          content: `**The AI tutor could not answer.** ${reason}`
         },
       ]);
     } finally {

@@ -21,10 +21,8 @@
     "iw": 360,
     "h1": 1,
     "unlabeledButtons": 0,
-    "unlabeledInputs": 1,
-    "unlabeledInputPlaceholders": [
-      "Search 150 questions by title, subtopic, or company..."
-    ],
+    "unlabeledInputs": 0,
+    "unlabeledInputPlaceholders": [],
     "imgsNoAlt": 0,
     "offenders": [],
     "pageErrors": []
@@ -177,10 +175,8 @@
     "iw": 390,
     "h1": 1,
     "unlabeledButtons": 0,
-    "unlabeledInputs": 1,
-    "unlabeledInputPlaceholders": [
-      "Search 150 questions by title, subtopic, or company..."
-    ],
+    "unlabeledInputs": 0,
+    "unlabeledInputPlaceholders": [],
     "imgsNoAlt": 0,
     "offenders": [],
     "pageErrors": []
@@ -333,10 +329,8 @@
     "iw": 768,
     "h1": 1,
     "unlabeledButtons": 0,
-    "unlabeledInputs": 1,
-    "unlabeledInputPlaceholders": [
-      "Search 150 questions by title, subtopic, or company..."
-    ],
+    "unlabeledInputs": 0,
+    "unlabeledInputPlaceholders": [],
     "imgsNoAlt": 0,
     "offenders": [],
     "pageErrors": []
@@ -489,10 +483,8 @@
     "iw": 1024,
     "h1": 1,
     "unlabeledButtons": 0,
-    "unlabeledInputs": 1,
-    "unlabeledInputPlaceholders": [
-      "Search 150 questions by title, subtopic, or company..."
-    ],
+    "unlabeledInputs": 0,
+    "unlabeledInputPlaceholders": [],
     "imgsNoAlt": 0,
     "offenders": [],
     "pageErrors": []
@@ -645,10 +637,8 @@
     "iw": 1366,
     "h1": 1,
     "unlabeledButtons": 0,
-    "unlabeledInputs": 1,
-    "unlabeledInputPlaceholders": [
-      "Search 150 questions by title, subtopic, or company..."
-    ],
+    "unlabeledInputs": 0,
+    "unlabeledInputPlaceholders": [],
     "imgsNoAlt": 0,
     "offenders": [],
     "pageErrors": []
@@ -801,10 +791,8 @@
     "iw": 1440,
     "h1": 1,
     "unlabeledButtons": 0,
-    "unlabeledInputs": 1,
-    "unlabeledInputPlaceholders": [
-      "Search 150 questions by title, subtopic, or company..."
-    ],
+    "unlabeledInputs": 0,
+    "unlabeledInputPlaceholders": [],
     "imgsNoAlt": 0,
     "offenders": [],
     "pageErrors": []

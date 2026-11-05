@@ -133,4 +133,11 @@ describe('Phase 2 › Batch 1 › SQL Lab over HTTP', () => {
     expect(bq.body.data.success).toBe(false);
     expect((await api.call('DELETE', `/sql-lab/saved-queries/${sq.body.data.id}`, b.token)).status).toBe(404);
   });
+
+  it('SQL challenges are listed without their reference answer query', async () => {
+    const res = await api.call('GET', '/sql-lab/challenges');
+    expect(res.status).toBe(200);
+    expect(res.body.data.length).toBeGreaterThan(0);
+    expect(JSON.stringify(res.body.data)).not.toContain('expected_query');
+  });
 });

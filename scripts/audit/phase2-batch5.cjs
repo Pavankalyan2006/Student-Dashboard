@@ -164,6 +164,8 @@ async function verify() {
   check('J8 quiz review survives restart', rv.s === 200 && rv.d.correct_count === 1);
   const ex = await api('GET', `/exams/${st.exam}`, A.t);
   check('J9 exam readiness survives restart', ex.s === 200 && ex.d.readiness_score === 25);
+  const plans = (await api('GET', '/study-planner/plans', A.t)).d;
+  check('J9 synced study plan survives restart', plans.some((p) => p.id === st.plan && p.tasks.length === 3));
   const dash = (await api('GET', '/gate/dashboard', A.t)).d;
   check('J10 GATE attempts survive restart', dash.metrics.total_questions_practiced >= 1);
   const prog = (await api('GET', '/dsa/progress', A.t)).d;
