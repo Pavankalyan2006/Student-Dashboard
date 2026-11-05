@@ -290,7 +290,7 @@ Return a fresh structured JSON object matching the note schema (title, overview,
     try {
       return JSON.parse(this.extractJsonString(res.text));
     } catch {
-      throw new AppError(`The AI provider returned an unreadable response, so no ${what.toLowerCase()} was generated. Please try again.`, 502, 'AI_BAD_RESPONSE');
+      throw new AppError(`The AI provider returned an unreadable response, so nothing was generated. Please try again.`, 502, 'AI_BAD_RESPONSE');
     }
   }
 

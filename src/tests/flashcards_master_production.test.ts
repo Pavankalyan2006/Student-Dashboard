@@ -1,5 +1,6 @@
 // src/tests/flashcards_master_production.test.ts
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { AIService } from '../../server/ai/service';
 import { db } from '../../server/db/database';
 import { LearningModulesService } from '../../server/services/learningModulesService';
 import { EventBus } from '../../server/events/eventBus';
@@ -406,10 +407,11 @@ describe('AI Flashcards Production & Spaced Repetition Master Test Suite', () =>
       expect(notes.length).toBeGreaterThanOrEqual(1);
       const note = notes[0];
 
-      const noteRes = await LearningModulesService.generateFromNote(
-        primaryStudentId,
-        note.id
-      );
+      // No real model in tests; note flashcards are model-only, so stub a well-formed reply.
+      const spy = vi.spyOn(AIService, 'generate').mockResolvedValue({
+        text: JSON.stringify({ flashcards: [{ question: `Key idea of ${note.title}?`, answer: 'Stub answer for the test.', difficulty: 'easy' }] }),
+      } as any);
+      const noteRes = await LearningModulesService.generateFromNote(primaryStudentId, note.id).finally(() => spy.mockRestore());
 
       expect(noteRes.title).toBeDefined();
       expect(noteRes.source_id).toBe(note.id);
