@@ -69,3 +69,12 @@ See the last entry. Probe scripts live in `scripts/audit/phase2-*.cjs` and need 
   opens Quiz create with the subject.
   Evidence: `src/tests/phase2_batch4.test.ts` (7 HTTP tests); full suite 853/853; browser `/tmp/p2/ui-b4.cjs`.
   Limitation: the GATE seed bank is tiny (7 CS questions; "CS 2024 full" mock has 7 questions).
+- 2026-11-05 16:30 Batch 5 done (integration, security, responsive, regression).
+  Integration fixes: quiz notification said "You scored 50/3" (percentage passed as score), claimed a revision queue that
+  does not exist and linked to a non-existent attempt route; DSA notification claimed "+20 skill points" (no points system)
+  and linked to `/dsa`. GATE mock submit recorded unanswered questions as wrong practice attempts (inflated counts,
+  lowered accuracy). Security fixes: body over 25 MB returned 500 (now 413); lab manual upload had no type or size limit
+  (now PDF/DOCX/TXT/MD, 10 MB). Responsive: 1 px overflow on Lab Assistant at 360 px fixed; 49 form controls given
+  accessible names. Evidence: `scripts/audit/phase2-batch5.cjs create` 31/31, `verify` 7/7 after restart;
+  batch 1 and 2 probes re-run (12/12 + 6/6 verify, 19/19 + 6/6); `scripts/audit/phase2-responsive.cjs` 66 page-widths,
+  0 overflow, 0 page errors, 0 unlabeled buttons/inputs; tsc 0; vitest 853/853.

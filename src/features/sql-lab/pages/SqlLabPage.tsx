@@ -534,7 +534,7 @@ export function SqlLabPage({ onNavigate }: SqlLabPageProps) {
             {/* Database Selector */}
             <div className="flex items-center gap-1.5 bg-slate-100 border border-slate-300 rounded-lg px-2.5 py-1">
               <Database className="w-4 h-4 text-slate-500" />
-              <select
+              <select aria-label="Database"
                 value={selectedDb}
                 onChange={(e) => {
                   setSelectedDb(e.target.value);
@@ -826,7 +826,7 @@ export function SqlLabPage({ onNavigate }: SqlLabPageProps) {
                     <label className="block text-xs font-semibold text-slate-700 mb-1">
                       Table Name <span className="text-red-500">*</span>
                     </label>
-                    <input
+                    <input aria-label="Table name"
                       type="text"
                       placeholder="e.g. orders, instructors, submissions"
                       value={designerTableName}
@@ -838,7 +838,7 @@ export function SqlLabPage({ onNavigate }: SqlLabPageProps) {
                     <label className="block text-xs font-semibold text-slate-700 mb-1">
                       Description (Optional)
                     </label>
-                    <input
+                    <input aria-label="Table description"
                       type="text"
                       placeholder="e.g. Student lab submissions with timestamps"
                       value={designerDescription}
@@ -884,7 +884,7 @@ export function SqlLabPage({ onNavigate }: SqlLabPageProps) {
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-2">
                       <div>
                         <label className="block text-indigo-800 font-medium mb-1">Source Column</label>
-                        <select
+                        <select aria-label="Foreign key column"
                           value={fkSourceCol}
                           onChange={(e) => setFkSourceCol(e.target.value)}
                           className="w-full bg-white border border-indigo-200 rounded p-1 text-slate-700 font-mono"
@@ -899,7 +899,7 @@ export function SqlLabPage({ onNavigate }: SqlLabPageProps) {
                       </div>
                       <div>
                         <label className="block text-indigo-800 font-medium mb-1">Referenced Table</label>
-                        <select
+                        <select aria-label="Referenced table"
                           value={fkTargetTable}
                           onChange={(e) => {
                             setFkTargetTable(e.target.value);
@@ -917,7 +917,7 @@ export function SqlLabPage({ onNavigate }: SqlLabPageProps) {
                       </div>
                       <div>
                         <label className="block text-indigo-800 font-medium mb-1">Referenced Column</label>
-                        <select
+                        <select aria-label="Referenced column"
                           value={fkTargetCol}
                           onChange={(e) => setFkTargetCol(e.target.value)}
                           className="w-full bg-white border border-indigo-200 rounded p-1 text-slate-700 font-mono"
@@ -935,7 +935,7 @@ export function SqlLabPage({ onNavigate }: SqlLabPageProps) {
                       </div>
                       <div>
                         <label className="block text-indigo-800 font-medium mb-1">ON UPDATE</label>
-                        <select
+                        <select aria-label="On update action"
                           value={fkOnUpdate}
                           onChange={(e: any) => setFkOnUpdate(e.target.value)}
                           className="w-full bg-white border border-indigo-200 rounded p-1 text-slate-700 font-mono"
@@ -947,7 +947,7 @@ export function SqlLabPage({ onNavigate }: SqlLabPageProps) {
                       </div>
                       <div>
                         <label className="block text-indigo-800 font-medium mb-1">ON DELETE</label>
-                        <select
+                        <select aria-label="On delete action"
                           value={fkOnDelete}
                           onChange={(e: any) => setFkOnDelete(e.target.value)}
                           className="w-full bg-white border border-indigo-200 rounded p-1 text-slate-700 font-mono"
@@ -990,7 +990,7 @@ export function SqlLabPage({ onNavigate }: SqlLabPageProps) {
                       {designerColumns.map((col, idx) => (
                         <tr key={idx} className="hover:bg-slate-50/50">
                           <td className="py-1.5 px-3">
-                            <input
+                            <input aria-label="Column name"
                               type="text"
                               value={col.name}
                               onChange={(e) => handleColumnChange(idx, 'name', e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '_'))}
@@ -999,7 +999,7 @@ export function SqlLabPage({ onNavigate }: SqlLabPageProps) {
                             />
                           </td>
                           <td className="py-1.5 px-3">
-                            <select
+                            <select aria-label="Column type"
                               value={col.type}
                               onChange={(e) => handleColumnChange(idx, 'type', e.target.value)}
                               className="border border-slate-300 rounded px-2 py-1 text-xs bg-white font-mono"
@@ -1012,7 +1012,7 @@ export function SqlLabPage({ onNavigate }: SqlLabPageProps) {
                             </select>
                           </td>
                           <td className="py-1.5 px-2">
-                            <input
+                            <input aria-label="Length or precision"
                               type="text"
                               value={col.length_precision || ''}
                               onChange={(e) => handleColumnChange(idx, 'length_precision', e.target.value)}
@@ -1055,7 +1055,7 @@ export function SqlLabPage({ onNavigate }: SqlLabPageProps) {
                             />
                           </td>
                           <td className="py-1.5 px-3">
-                            <input
+                            <input aria-label="Default value"
                               type="text"
                               value={col.default_value || ''}
                               onChange={(e) => handleColumnChange(idx, 'default_value', e.target.value)}
@@ -1472,7 +1472,7 @@ export function SqlLabPage({ onNavigate }: SqlLabPageProps) {
           <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3 w-full md:w-auto">
               <span className="text-sm font-semibold text-slate-700">Select Table:</span>
-              <select
+              <select aria-label="Table"
                 value={selectedTable?.name || ''}
                 onChange={(e) => {
                   const tbl = currentTables.find((t) => t.name === e.target.value);
@@ -1490,7 +1490,7 @@ export function SqlLabPage({ onNavigate }: SqlLabPageProps) {
               {/* Search input */}
               <div className="relative">
                 <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
-                <input
+                <input aria-label="Filter records"
                   type="text"
                   placeholder="Filter records..."
                   value={dataSearch}
@@ -1812,7 +1812,7 @@ export function SqlLabPage({ onNavigate }: SqlLabPageProps) {
             <p className="text-xs text-slate-500 mb-4">
               Allocate a dedicated relational schema workspace inside your sandbox environment.
             </p>
-            <input
+            <input aria-label="Database name"
               type="text"
               placeholder="e.g. library_system, hospital_db"
               value={newDbName}

@@ -414,7 +414,7 @@ quizRouter.post('/quiz/attempts/:attempt_id/submit', requireAuth, async (req, re
         attempt_id: req.params.attempt_id,
         quiz_id: result.quiz_id,
         quiz_title: result.quiz_title,
-        score: result.score,
+        score: result.correct_count,
         total_questions: result.correct_count + result.incorrect_count + result.unanswered_count,
         percentage: result.percentage,
       },

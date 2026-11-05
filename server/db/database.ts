@@ -10641,7 +10641,8 @@ print(power_mod(2, 10, 1000))  # Output: 24
         subject: q.subject,
       });
 
-      // Record question attempt
+      // Record question attempt (only questions the student answered; unanswered ones are not practice attempts)
+      if (userAns === undefined || userAns === null || userAns === '' || (Array.isArray(userAns) && userAns.length === 0)) continue;
       const attempt: GateQuestionAttempt = {
         id: `att_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
         student_id: studentId,

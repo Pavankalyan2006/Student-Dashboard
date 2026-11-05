@@ -337,8 +337,17 @@ export class LabAssistantService {
       throw new NotFoundError(`Laboratory '${labId}' not found`);
     }
 
-    const ext = filename.split('.').pop() || '';
-    logger.info(`LabAssistantService: Parsing uploaded manual document ${filename} (${mimetype})`);
+    const ext = (String(filename).split('.').pop() || '').toLowerCase();
+    if (!['pdf', 'docx', 'txt', 'md'].includes(ext)) {
+      throw new ValidationError('Upload a PDF, DOCX, TXT or MD lab manual.');
+    }
+    // 10 MB limit on the decoded file (the JSON body limit alone would allow ~18 MB).
+    const b64 = typeof bufferOrBase64 === 'string' ? (bufferOrBase64.startsWith('data:') ? bufferOrBase64.split(',')[1] || '' : bufferOrBase64) : '';
+    const approxBytes = typeof bufferOrBase64 === 'string' ? Math.floor((b64.length * 3) / 4) : bufferOrBase64.length;
+    if (approxBytes > 10 * 1024 * 1024) {
+      throw new ValidationError('The lab manual is larger than 10 MB. Upload a smaller file or paste the text instead.');
+    }
+    logger.info(`LabAssistantService: Parsing uploaded manual document (${ext}, ${approxBytes} bytes)`);
 
     const rawContentStr = typeof bufferOrBase64 === 'string'
       ? (bufferOrBase64.startsWith('data:')

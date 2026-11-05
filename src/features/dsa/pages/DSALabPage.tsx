@@ -610,6 +610,7 @@ export const DSALabPage: React.FC<DSALabPageProps> = ({ onNavigate }) => {
                 <Input
                   type="text"
                   placeholder="Search 150 questions by title, subtopic, or company..."
+                aria-label="Search DSA questions"
                   value={problemSearch}
                   onChange={(e) => {
                     setProblemSearch(e.target.value);
@@ -620,7 +621,7 @@ export const DSALabPage: React.FC<DSALabPageProps> = ({ onNavigate }) => {
               </div>
 
               {/* Topic Dropdown */}
-              <select
+              <select aria-label="Filter by topic"
                 value={selectedTopic}
                 onChange={(e) => {
                   setSelectedTopic(e.target.value);
@@ -637,7 +638,7 @@ export const DSALabPage: React.FC<DSALabPageProps> = ({ onNavigate }) => {
               </select>
 
               {/* Difficulty Dropdown */}
-              <select
+              <select aria-label="Filter by difficulty"
                 value={selectedDifficulty}
                 onChange={(e) => {
                   setSelectedDifficulty(e.target.value);
@@ -652,7 +653,7 @@ export const DSALabPage: React.FC<DSALabPageProps> = ({ onNavigate }) => {
               </select>
 
               {/* Company Dropdown */}
-              <select
+              <select aria-label="Filter by company"
                 value={selectedCompany}
                 onChange={(e) => {
                   setSelectedCompany(e.target.value);
@@ -669,7 +670,7 @@ export const DSALabPage: React.FC<DSALabPageProps> = ({ onNavigate }) => {
               </select>
 
               {/* Status Dropdown */}
-              <select
+              <select aria-label="Filter by status"
                 value={selectedStatus}
                 onChange={(e) => {
                   setSelectedStatus(e.target.value);

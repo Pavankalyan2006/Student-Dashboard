@@ -166,15 +166,17 @@ export function LabDashboard({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search laboratories by name, subject, or course code..."
+            aria-label="Search laboratories"
             className="w-full pl-9 pr-4 py-2 text-xs border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
           />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 min-w-0">
           <select
+            aria-label="Filter by semester"
             value={selectedSemester}
             onChange={(e) => setSelectedSemester(e.target.value === 'ALL' ? 'ALL' : Number(e.target.value))}
-            className="px-3 py-2 text-xs font-semibold border border-gray-200 rounded-xl bg-gray-50 text-gray-700 focus:outline-none"
+            className="min-w-0 flex-1 sm:flex-none px-3 py-2 text-xs font-semibold border border-gray-200 rounded-xl bg-gray-50 text-gray-700 focus:outline-none"
           >
             <option value="ALL">All Semesters</option>
             {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
@@ -185,9 +187,10 @@ export function LabDashboard({
           </select>
 
           <select
+            aria-label="Filter by lab type"
             value={selectedLabType}
             onChange={(e) => setSelectedLabType(e.target.value as any)}
-            className="px-3 py-2 text-xs font-semibold border border-gray-200 rounded-xl bg-gray-50 text-gray-700 focus:outline-none"
+            className="min-w-0 flex-1 sm:flex-none px-3 py-2 text-xs font-semibold border border-gray-200 rounded-xl bg-gray-50 text-gray-700 focus:outline-none"
           >
             <option value="ALL">All Lab Types</option>
             <option value="PROGRAMMING">Programming</option>

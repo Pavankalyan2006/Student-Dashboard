@@ -419,7 +419,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
             {/* Workspace Selector */}
             <div className="flex items-center gap-1.5 min-w-0 max-w-full bg-slate-100 border border-slate-300 rounded-lg px-2.5 py-1">
               <Layers className="w-4 h-4 text-slate-500" />
-              <select
+              <select aria-label="Active ML project"
                 value={selectedWorkspace?.id || ''}
                 onChange={(e) => {
                   const ws = workspaces.find((w) => w.id === e.target.value);
@@ -619,7 +619,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
 
             {/* Code Textarea */}
             <div className="flex-1 p-4 overflow-hidden flex flex-col">
-              <textarea
+              <textarea aria-label="File content"
                 value={fileContent}
                 onChange={(e) => setFileContent(e.target.value)}
                 disabled={!selectedFile}
@@ -638,7 +638,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
           <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <span className="text-sm font-semibold text-slate-700">Active Dataset:</span>
-              <select
+              <select aria-label="Dataset"
                 value={selectedDataset?.id || ''}
                 onChange={(e) => {
                   const ds = datasets.find((d) => d.id === e.target.value);
@@ -818,7 +818,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Experiment Name</label>
-                <input
+                <input aria-label="Experiment name"
                   type="text"
                   value={expName}
                   onChange={(e) => {
@@ -831,7 +831,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Dataset</label>
-                <select
+                <select aria-label="Dataset"
                   value={selectedDataset?.id || ''}
                   onChange={(e) => {
                     const ds = datasets.find((d) => d.id === e.target.value);
@@ -852,7 +852,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Learning Task</label>
-                <select
+                <select aria-label="Task type"
                   value={taskType}
                   onChange={(e: any) => setTaskType(e.target.value)}
                   className="w-full border border-slate-300 rounded-lg p-2.5 text-sm font-semibold focus:ring-2 focus:ring-emerald-500"
@@ -864,7 +864,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Model Algorithm</label>
-                <select
+                <select aria-label="Model algorithm"
                   value={modelType}
                   onChange={(e) => setModelType(e.target.value)}
                   className="w-full border border-slate-300 rounded-lg p-2.5 text-sm font-semibold focus:ring-2 focus:ring-emerald-500"
@@ -898,7 +898,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
                   <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1">
                     Target Column (Label to Predict)
                   </label>
-                  <select
+                  <select aria-label="Target column"
                     value={targetColumn}
                     onChange={(e) => setTargetColumn(e.target.value)}
                     className="border border-slate-300 rounded-lg p-2 text-xs font-mono font-bold text-slate-800 bg-white"
@@ -959,7 +959,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Train / Test Split: <span className="text-emerald-600 font-bold">{Math.round(trainSplit * 100)}% / {Math.round((1 - trainSplit) * 100)}%</span>
                 </label>
-                <input
+                <input aria-label="Train split"
                   type="range"
                   min="0.5"
                   max="0.9"
@@ -972,7 +972,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Missing Value Imputation</label>
-                <select
+                <select aria-label="Missing value strategy"
                   value={imputationStrategy}
                   onChange={(e: any) => setImputationStrategy(e.target.value)}
                   className="w-full border border-slate-300 rounded-lg p-2 text-xs font-semibold"
@@ -985,7 +985,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Feature Scaling</label>
-                <select
+                <select aria-label="Feature scaling"
                   value={scalingStrategy}
                   onChange={(e: any) => setScalingStrategy(e.target.value)}
                   className="w-full border border-slate-300 rounded-lg p-2 text-xs font-semibold"
@@ -1006,7 +1006,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
                 {modelType.includes('Forest') && (
                   <div>
                     <label className="block text-xs text-slate-600 mb-1">Number of Estimators</label>
-                    <input
+                    <input aria-label="Number of estimators"
                       type="number"
                       min="1"
                       max="100"
@@ -1019,7 +1019,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
                 {(modelType.includes('Tree') || modelType.includes('Forest')) && (
                   <div>
                     <label className="block text-xs text-slate-600 mb-1">Max Tree Depth</label>
-                    <input
+                    <input aria-label="Max tree depth"
                       type="number"
                       min="1"
                       max="20"
@@ -1032,7 +1032,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
                 {modelType === 'Logistic Regression' && (
                   <div>
                     <label className="block text-xs text-slate-600 mb-1">Epochs</label>
-                    <input
+                    <input aria-label="Epochs"
                       type="number"
                       min="10"
                       max="2000"
@@ -1045,7 +1045,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
                 {modelType === 'KNN' && (
                   <div>
                     <label className="block text-xs text-slate-600 mb-1">Neighbours (k)</label>
-                    <input
+                    <input aria-label="Neighbours (k)"
                       type="number"
                       min="1"
                       max="50"
@@ -1061,7 +1061,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
                 {modelType === 'Logistic Regression' && (
                   <div>
                     <label className="block text-xs text-slate-600 mb-1">Learning Rate (α)</label>
-                    <input
+                    <input aria-label="Learning rate"
                       type="number"
                       step="0.01"
                       value={learningRate}
@@ -1073,7 +1073,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
                 {(modelType.includes('K-Means') || modelType.includes('KMEANS')) && (
                   <div>
                     <label className="block text-xs text-slate-600 mb-1">Number of Clusters (k)</label>
-                    <input
+                    <input aria-label="Number of clusters"
                       type="number"
                       min="2"
                       max="10"
@@ -1582,7 +1582,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
             <div className="space-y-3 mb-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Project Name</label>
-                <input
+                <input aria-label="Project name"
                   type="text"
                   placeholder="e.g. Credit Card Fraud Detection"
                   value={newWorkspaceName}
@@ -1592,7 +1592,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Learning Task</label>
-                <select
+                <select aria-label="Project task type"
                   value={newWorkspaceTask}
                   onChange={(e: any) => setNewWorkspaceTask(e.target.value)}
                   className="w-full border border-slate-300 rounded-lg p-2 text-xs focus:ring-1 focus:ring-emerald-500"
@@ -1604,7 +1604,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Description</label>
-                <textarea
+                <textarea aria-label="Project description"
                   rows={2}
                   placeholder="Project goals and technical specifications..."
                   value={newWorkspaceDesc}
@@ -1639,7 +1639,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
             <div className="space-y-3 mb-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">File Name</label>
-                <input
+                <input aria-label="File name"
                   type="text"
                   placeholder="e.g. evaluate.py, params.yaml"
                   value={newFileName}
@@ -1649,7 +1649,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Source Code Content</label>
-                <textarea
+                <textarea aria-label="File content"
                   rows={8}
                   placeholder="# Enter Python script content here..."
                   value={newFileContent}
@@ -1684,7 +1684,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
             <div className="space-y-3 mb-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Dataset Name</label>
-                <input
+                <input aria-label="Dataset name"
                   type="text"
                   placeholder="e.g. Student Exam Performance"
                   value={newDatasetName}
@@ -1702,7 +1702,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
                   className="block w-full text-xs mb-2"
                 />
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Or paste CSV text (with headers)</label>
-                <textarea
+                <textarea aria-label="CSV text"
                   rows={8}
                   placeholder={"study_hours,previous_score,attendance_pct,passed\n4.5,72,85,Yes\n6.0,88,95,Yes\n1.5,45,60,No"}
                   value={newDatasetCsv}
