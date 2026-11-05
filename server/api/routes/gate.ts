@@ -4,11 +4,16 @@
 import { Router, Request, Response } from 'express';
 import { GateService } from '../../services/gateService';
 import { logger } from '../../core/logging';
+import { requireAuth } from '../../middleware/auth';
 
 export const gateRouter = Router();
 
+// Every /gate endpoint reads or writes per-student data, so a signed-in student is required.
+// (Previously unauthenticated requests fell back to the demo student and could change their data.)
+gateRouter.use('/gate', requireAuth);
+
 const resolveStudentId = (req: Request): string => {
-  return req.user?.userId || 'std_01j8k9x2p4';
+  return req.user!.userId;
 };
 
 // =========================================================================

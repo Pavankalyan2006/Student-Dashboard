@@ -13,6 +13,15 @@ export class AIService {
     this.provider = provider;
   }
 
+  /**
+   * True when the provider answered with its "AI unavailable" notice instead of model output
+   * (no API key, or the provider request failed). Callers that persist AI output (notes,
+   * generated study material) must not save that notice as if it were generated content.
+   */
+  public static isUnavailableResult(result: AIGenerateResult): boolean {
+    return typeof result?.text === 'string' && result.text.startsWith('**AI unavailable.**');
+  }
+
   public static async generate(
     messages: AIMessage[],
     promptKey?: string,

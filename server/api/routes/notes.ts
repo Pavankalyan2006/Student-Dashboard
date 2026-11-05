@@ -73,7 +73,7 @@ notesRouter.post('/notes/generate', async (req, res, next) => {
 notesRouter.post('/notes', async (req, res, next) => {
   try {
     const studentId = req.user!.userId;
-    const { title, content, description, tags, note_type, level, length } = req.body;
+    const { title, content, description, tags, note_type, level, length, course_id } = req.body;
 
     if (!title) {
       throw new ValidationError('Title is required');
@@ -90,6 +90,7 @@ notesRouter.post('/notes', async (req, res, next) => {
       note_type,
       level,
       length,
+      course_id: course_id ? String(course_id) : undefined,
     });
 
     res.status(201).json({

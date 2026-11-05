@@ -127,7 +127,12 @@ export class CourseService {
     }
 
     const subjects = semesterCommandCenterService.getSubjects(studentId);
-    const allCourses = await db.getAllCourses();
+    // Only shared catalog courses and this student's own custom courses: another student's
+    // custom course (and its id) must never be matched or exposed here.
+    const allCourses = (await db.getAllCourses()).filter((c) => !c.is_custom || c.student_id === studentId);
+    const enrolledIds = new Set(
+      (await db.getCourses({ limit: 5000 }, studentId)).items.filter((c) => c.is_enrolled).map((c) => c.id)
+    );
 
     return subjects.map((sub) => {
       const existingCourse = allCourses.find(
@@ -145,7 +150,7 @@ export class CourseService {
         difficulty: sub.difficulty,
         units_count: sub.units?.length || 5,
         topics_count: totalTopics,
-        is_enrolled: !!existingCourse,
+        is_enrolled: !!existingCourse && enrolledIds.has(existingCourse.id),
         existing_course_id: existingCourse?.id,
       };
     });
@@ -156,7 +161,7 @@ export class CourseService {
       throw new AuthenticationError('Student authentication required');
     }
 
-    const allCourses = await db.getAllCourses();
+    const allCourses = (await db.getAllCourses()).filter((c) => !c.is_custom || c.student_id === studentId);
     const existing = allCourses.find((c) => c.linked_subject_id === subjectId);
     if (existing) {
       await db.enrollStudentInCourse(studentId, existing.id);

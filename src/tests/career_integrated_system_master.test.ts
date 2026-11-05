@@ -97,6 +97,15 @@ describe('Unified Career System E2E Master Suite (All 8 Pages & Cross-Module Int
     });
 
     it('calculates deterministic completeness breakdown across all resume sections', async () => {
+      // A new resume no longer gets a placeholder phone number, so the student enters one first.
+      const before = await ResumeService.getFullResume(createdResumeId, studentA);
+      expect(before.profile?.phone).toBe('');
+      await ResumeService.updateProfile(createdResumeId, studentA, { phone: '+91 90000 00001' } as any);
+      // Likewise the institution comes from the student, not a placeholder college name.
+      expect(before.education?.[0]?.institution ?? '').toBe('');
+      await ResumeService.updateEducations(createdResumeId, studentA, [
+        { ...(before.education?.[0] as any), institution: 'Synthetic Test Institute of Technology' },
+      ]);
       const full = await ResumeService.getFullResume(createdResumeId, studentA);
       expect(full.completeness_score).toBeGreaterThan(0);
       expect(full.completeness_breakdown).toBeDefined();
@@ -352,13 +361,22 @@ describe('Unified Career System E2E Master Suite (All 8 Pages & Cross-Module Int
         profile_url: 'https://leetcode.com/pavan_coder',
       });
 
+      // Linking alone imports nothing.
+      expect(conn.sync_status).toBe('IDLE');
+
+      // LeetCode has no live API client, so a sync must say so instead of inventing solved problems.
+      const before = (await ExternalIntegrationService.listActivities(studentA)).length;
       const synced = await ExternalIntegrationService.syncConnection(studentA, conn.id);
       expect(synced).toBeDefined();
-      expect(synced.last_synced_at).toBeDefined();
+      expect(synced.sync_status).toBe('ERROR');
+      expect(synced.error_status).toContain('not available');
+      const after = await ExternalIntegrationService.listActivities(studentA);
+      expect(after.length).toBe(before);
+      expect(after.some((a) => /Course Schedule/.test(a.title))).toBe(false);
 
-      // Check activity stream
-      const activities = await ExternalIntegrationService.listActivities(studentA);
-      expect(activities.length).toBeGreaterThanOrEqual(1);
+      // Syncing again is idempotent: still nothing imported.
+      await ExternalIntegrationService.syncConnection(studentA, conn.id);
+      expect((await ExternalIntegrationService.listActivities(studentA)).length).toBe(before);
     });
   });
 

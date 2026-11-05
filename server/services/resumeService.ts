@@ -103,9 +103,8 @@ export class ResumeService {
       template: data.template || 'TECHNICAL',
       target_role: data.target_role || 'Software Engineer',
       target_industry: data.target_industry || 'Software Engineering',
-      summary:
-        data.summary ||
-        `Motivated B.Tech student with strong foundations in software development, data structures, and computer science principles. Experienced in building full-stack applications and collaborative problem solving.`,
+      // Left empty for the student to write (or generate with AI); no claims are made for them.
+      summary: data.summary || '',
       status: 'DRAFT',
       section_order: ['profile', 'summary', 'education', 'skills', 'projects', 'experience', 'certifications', 'achievements'],
       created_at: now,
@@ -120,8 +119,8 @@ export class ResumeService {
       resume_id: resumeId,
       full_name: student.name,
       email: student.email,
-      phone: (student as any).phone || '+91 98765 43210',
-      location: (student as any).location || 'Hyderabad, India',
+      phone: (student as any).phone || '',
+      location: (student as any).location || '',
       website: '',
       linkedin_url: '',
       github_url: '',
@@ -130,17 +129,19 @@ export class ResumeService {
     };
     await db.saveResumeProfile(initialProfile);
 
-    // Initial Education based on student enrollment
+    // Initial Education from the student's own education profile; unknown fields stay blank.
+    const { OnboardingService } = await import('./onboardingService');
+    const edu: any = OnboardingService.getEducationProfileSync(studentId);
     const initialEducation: ResumeEducation = {
       id: `edu_${Date.now()}`,
       resume_id: resumeId,
-      institution: 'University College of Engineering',
-      degree: 'Bachelor of Technology (B.Tech)',
-      field_of_study: student.branch,
-      start_date: '2023-08',
-      end_date: '2027-05',
-      grade: 'Cumulative CGPA: 8.5/10',
-      description: 'Major coursework in Computer Science, Systems, and Software Development.',
+      institution: edu?.institution || '',
+      degree: edu?.degree === 'B.Tech' || !edu?.degree ? 'Bachelor of Technology (B.Tech)' : edu.degree,
+      field_of_study: edu?.branch || student.branch,
+      start_date: edu?.admission_year ? `${edu.admission_year}-08` : '',
+      end_date: edu?.expected_graduation_year ? `${edu.expected_graduation_year}-05` : '',
+      grade: edu?.current_cgpa ? `CGPA: ${edu.current_cgpa}/${edu.cgpa_scale || 10}` : '',
+      description: '',
       order_index: 0,
     };
     await db.saveResumeEducations(resumeId, [initialEducation]);
@@ -160,18 +161,22 @@ export class ResumeService {
 
     // Prepopulate initial projects from verified student projects if available
     const studentProjects = await db.getProjects(studentId);
-    const initialProjects: ResumeProject[] = studentProjects.slice(0, 2).map((p, idx) => ({
-      id: `rproj_${Date.now()}_${idx}`,
-      resume_id: resumeId,
-      title: p.title,
-      description_override: p.description || 'Engineered full-stack features with clean modular architecture.',
-      highlighted_features: ['Validated system reliability with automated unit and integration tests.'],
-      technologies: Array.isArray((p as any).tech_stack) && (p as any).tech_stack.length > 0
-        ? (p as any).tech_stack
-        : ['TypeScript', 'React', 'Node.js'],
-      project_id: p.id,
-      order_index: idx,
-    }));
+    // Only what the student recorded on each project: description, objectives and technologies.
+    const initialProjects: ResumeProject[] = await Promise.all(
+      studentProjects.slice(0, 2).map(async (p, idx) => {
+        const techs = await db.getProjectTechnologies(p.id).catch(() => []);
+        return {
+          id: `rproj_${Date.now()}_${idx}`,
+          resume_id: resumeId,
+          title: p.title,
+          description_override: p.description || '',
+          highlighted_features: (p.objectives || []).slice(0, 3),
+          technologies: techs.length > 0 ? techs.map((t) => t.technology) : (p.tags || []),
+          project_id: p.id,
+          order_index: idx,
+        };
+      })
+    );
     await db.saveResumeProjects(resumeId, initialProjects);
 
     await db.saveResumeExperiences(resumeId, []);
@@ -317,10 +322,15 @@ export class ResumeService {
     // Real verified project check
     const project = await ProjectService.getProject(projectId, studentId);
     const existing = await db.getResumeProjects(resumeId);
+    const already = existing.find((rp) => rp.project_id === projectId);
+    if (already) {
+      // Importing the same project twice must not create a duplicate entry.
+      return already;
+    }
 
     // Pull verified technologies from the project
     const projectTechs = await db.getProjectTechnologies(projectId);
-    const techNames = projectTechs.length > 0 ? projectTechs.map((t) => t.technology) : [project.domain];
+    const techNames = projectTechs.length > 0 ? projectTechs.map((t) => t.technology) : (project.tags || []);
 
     const newResumeProject: ResumeProject = {
       id: `rprj_${Date.now()}`,
@@ -328,10 +338,13 @@ export class ResumeService {
       project_id: projectId,
       title: project.title,
       description_override: project.description,
-      highlighted_features: [
-        `Architected ${project.project_type.toLowerCase()} system for ${project.domain} using ${techNames.slice(0, 3).join(', ')}.`,
-        `Engineered robust core modules adhering to clean code and defensive design principles.`,
-      ],
+      // Bullets come only from what the student recorded on the project (completed milestones,
+      // then stated objectives). Nothing is written that the project data does not support.
+      highlighted_features: await (async () => {
+        const milestones = await db.getProjectMilestones(projectId).catch(() => []);
+        const done = milestones.filter((m: any) => m.status === 'COMPLETED').map((m: any) => `Completed: ${m.title}`);
+        return [...done, ...(project.objectives || [])].filter(Boolean).slice(0, 4);
+      })(),
       technologies: techNames,
       order_index: existing.length,
     };

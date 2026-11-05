@@ -1,4 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
+import { useMockGitHubApi } from './helpers/mockGitHubApi';
+
+// GitHub is mocked: the service no longer invents profiles or repositories when offline.
+useMockGitHubApi();
 import { db } from '../../server/db/database';
 import { ResearchService } from '../../server/services/researchService';
 import { ResearchProviderService } from '../../server/services/researchProviderService';
@@ -372,14 +376,14 @@ describe('Phase 13: Research Assistant, GitHub Integration & Advanced AI Tools',
       const repos = await GitHubService.listRepositories(studentA);
       const repoId = repos[0].id;
 
-      const explanation = await GitHubAnalysisService.explainFile(repoId, 'server/server.ts', studentA);
-      expect(explanation.explanation).toContain('server.ts');
+      const explanation = await GitHubAnalysisService.explainFile(repoId, 'server/index.ts', studentA);
+      expect(explanation.explanation).toContain('index.ts');
 
-      const review = await GitHubAnalysisService.reviewCode(repoId, 'server/server.ts', studentA);
-      expect(review.review_summary).toContain('server/server.ts');
+      const review = await GitHubAnalysisService.reviewCode(repoId, 'server/index.ts', studentA);
+      expect(review.review_summary).toContain('server/index.ts');
       expect(review.strengths.length).toBeGreaterThan(0);
 
-      const tests = await GitHubAnalysisService.generateTests(repoId, 'server/server.ts', studentA);
+      const tests = await GitHubAnalysisService.generateTests(repoId, 'server/index.ts', studentA);
       expect(tests.test_code).toContain('describe');
     });
   });

@@ -264,8 +264,9 @@ export class ExternalIntegrationService {
       status: 'CONNECTED',
       scopes: connectionData.scopes || ['public_profile'],
       connected_at: new Date().toISOString(),
-      last_synced_at: new Date().toISOString(),
-      sync_status: 'SUCCESS',
+      // Linking an account does not import anything, so no sync is claimed yet.
+      last_synced_at: undefined,
+      sync_status: 'IDLE',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
@@ -295,11 +296,25 @@ export class ExternalIntegrationService {
 
     conn.sync_status = 'IN_PROGRESS';
     try {
-      const syncResult = await provider.syncData(studentId, conn);
+      // Only GitHub has a real data source in this platform (repositories the student imported).
+      // The other providers have no live API client, and their adapters return sample data, so
+      // syncing them must report that nothing was imported rather than invent solved problems.
+      if (conn.provider !== 'github' && conn.student_id !== 'std_demo_1') {
+        throw new Error(
+          `Live sync with ${provider.getInfo().name} is not available yet, so no data was imported. ` +
+            `Your profile link is saved.`
+        );
+      }
+
+      const syncResult =
+        conn.provider === 'github' && conn.student_id !== 'std_demo_1'
+          ? await this.syncGitHubFromImportedRepos(studentId, conn)
+          : await provider.syncData(studentId, conn);
 
       // Append new activities
       const existingActs = this.activities.get(studentId) || [];
       this.activities.set(studentId, [...syncResult.activities, ...existingActs].slice(0, 50));
+      conn.error_status = undefined;
 
       conn.sync_status = 'SUCCESS';
       conn.status = 'SYNCED';
@@ -313,6 +328,31 @@ export class ExternalIntegrationService {
     return conn;
   }
 
+  /** GitHub sync from the repositories the student actually imported; no invented commits or badges. */
+  private static async syncGitHubFromImportedRepos(
+    studentId: string,
+    conn: ExternalAccountConnection
+  ): Promise<{ activities: ExternalActivity[] }> {
+    const { GitHubService } = await import('./githubService');
+    const repos = await GitHubService.listRepositories(studentId, {});
+    const list: any[] = Array.isArray(repos) ? repos : (repos as any)?.items || [];
+    return {
+      activities: list.length
+        ? [
+            {
+              id: `act_gh_${Date.now()}`,
+              student_id: studentId,
+              provider: 'github',
+              activity_type: 'PROFILE_SYNC',
+              title: `Synchronized ${list.length} imported repositor${list.length === 1 ? 'y' : 'ies'}`,
+              description: list.slice(0, 3).map((r: any) => r.full_name || r.name).join(', '),
+              timestamp: new Date().toISOString(),
+            },
+          ]
+        : [],
+    };
+  }
+
   /**
    * Get recent aggregated activities across all connected platforms
    */
@@ -324,6 +364,11 @@ export class ExternalIntegrationService {
    * Aggregate unified skill evidence from internal and external sources
    */
   public static async getAggregatedSkillEvidence(studentId: string): Promise<ExternalSkillEvidence[]> {
+    // The evidence below is the demo account's sample data. Other students only get evidence
+    // backed by their own records, and no external provider imports evidence yet.
+    if (studentId !== 'std_demo_1') {
+      return [];
+    }
     const conns = await this.listConnections(studentId);
     const connectedProviders = new Set(conns.filter((c) => c.status === 'CONNECTED' || c.status === 'SYNCED').map((c) => c.provider));
 
@@ -396,6 +441,14 @@ export class ExternalIntegrationService {
    * Check Career Profile Consistency across Resume, GitHub, LinkedIn, and Projects
    */
   public static async checkProfileConsistency(studentId: string): Promise<CareerConsistencyReport> {
+    if (studentId !== 'std_demo_1') {
+      // No cross-source comparison engine exists yet, so no score or matches are claimed.
+      return {
+        overall_consistency_score: 0,
+        matched_items: [],
+        recommendations: ['Profile consistency checks are not available yet.'],
+      };
+    }
     return {
       overall_consistency_score: 91,
       matched_items: [

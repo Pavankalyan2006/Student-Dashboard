@@ -934,13 +934,9 @@ export class SqlLabSandboxService {
         // Extract FROM table
         const fromMatch = trimmed.match(/FROM\s+["`]?([a-zA-Z0-9_]+)["`]?/i);
         if (!fromMatch) {
-          return {
-            success: true,
-            columns: ['result'],
-            rows: [{ result: 'SQL Engine Active' }],
-            row_count: 1,
-            execution_time_ms: Date.now() - startTime + 2,
-          };
+          // The sandbox evaluates SELECTs against tables only; say so instead of returning a
+          // canned row that looks like a query result.
+          throw new Error('This SQL sandbox runs SELECT queries against a table. Add a FROM clause (for example: SELECT * FROM students).');
         }
 
         const primaryTableName = fromMatch[1].toLowerCase();
@@ -1095,24 +1091,19 @@ export class SqlLabSandboxService {
             'Ensure indexes on columns used in WHERE predicates and JOIN conditions.',
             'For high-cardinality aggregations, consider composite indexing on (group_col, metric_col).',
           ],
+          // No cost model exists in the sandbox, so no cost estimates are shown.
           query_plan: [
-            { operation: 'Index/Seq Scan', cost_estimate: '0.00..12.50', details: `Scanned ${primaryTableName}` },
-            { operation: 'Execution', cost_estimate: '12.50..18.00', details: explanationPlan },
+            { operation: 'Seq Scan', cost_estimate: 'n/a', details: `Scanned ${primaryTableName}` },
+            { operation: 'Execution', cost_estimate: 'n/a', details: explanationPlan },
           ],
         };
       }
 
-      // Default fallback execution
-      const duration = Date.now() - startTime + 2;
-      this.recordQueryHistory(studentId, dbName, query, true, duration, 0);
-      return {
-        success: true,
-        columns: ['status', 'message'],
-        rows: [{ status: 'SUCCESS', message: 'Command executed cleanly in student sandbox' }],
-        row_count: 1,
-        execution_time_ms: duration,
-        explanation: 'Command processed in isolated student sandbox.',
-      };
+      // Statements the sandbox does not implement must not report success without doing anything.
+      throw new Error(
+        'This SQL sandbox supports CREATE TABLE, DROP TABLE, INSERT INTO and SELECT. ' +
+          'Other statements (for example UPDATE or DELETE) are not supported here yet; use the table editor to change rows.'
+      );
     } catch (err: any) {
       const duration = Date.now() - startTime;
       this.recordQueryHistory(studentId, dbName, query, false, duration, 0, err.message);

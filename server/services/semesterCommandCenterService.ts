@@ -636,12 +636,11 @@ export const semesterCommandCenterService = {
             AUDIT: 'OTHER',
           };
           activeSubjects = syllabus.subjects.map((s, idx): SemesterSubject => {
-            const progress = Math.min(95, Math.max(30, (idx + 1) * 20));
             const units = (s.syllabus_units || []).map((u, ui) => ({
               id: `unit_${s.id}_${ui}`,
               unit_number: u.unit_number || ui + 1,
               name: u.title || `Unit ${ui + 1}`,
-              status: 'IN_PROGRESS' as const,
+              status: 'NOT_STARTED' as const,
               topics: (u.topics || []).map((t, ti) => ({
                 id: `topic_${s.id}_${ui}_${ti}`,
                 name: t || `Topic ${ti + 1}`,
@@ -661,8 +660,9 @@ export const semesterCommandCenterService = {
               subject_type: typeMap[s.subject_type] || 'OTHER',
               difficulty: 'MEDIUM',
               priority: idx < 2 ? 'HIGH' : 'MEDIUM',
-              progress_percent: progress,
-              syllabus_remaining_percent: Math.max(5, 100 - progress),
+              // No topic is marked complete yet for a syllabus the student just entered.
+              progress_percent: 0,
+              syllabus_remaining_percent: 100,
               target_grade: 'A',
               units:
                 units.length > 0
@@ -672,10 +672,10 @@ export const semesterCommandCenterService = {
                         id: `unit_${s.id}_1`,
                         unit_number: 1,
                         name: 'Core Theory & Mathematical Invariants',
-                        status: 'IN_PROGRESS',
+                        status: 'NOT_STARTED',
                         topics: [
-                          { id: `top_${s.id}_1`, name: 'Fundamental Concepts', estimated_hours: 3, conceptual_difficulty: 'EASY', practical_difficulty: 'EASY', completed: true, revision_count: 2 },
-                          { id: `top_${s.id}_2`, name: 'Analytical Formulations', estimated_hours: 4, conceptual_difficulty: 'MEDIUM', practical_difficulty: 'MEDIUM', completed: false, revision_count: 1 },
+                          { id: `top_${s.id}_1`, name: 'Fundamental Concepts', estimated_hours: 3, conceptual_difficulty: 'EASY', practical_difficulty: 'EASY', completed: false, revision_count: 0 },
+                          { id: `top_${s.id}_2`, name: 'Analytical Formulations', estimated_hours: 4, conceptual_difficulty: 'MEDIUM', practical_difficulty: 'MEDIUM', completed: false, revision_count: 0 },
                         ],
                       },
                     ],
@@ -713,16 +713,27 @@ export const semesterCommandCenterService = {
     const activePhase = academicPhases.find((p) => p.is_current) || academicPhases[5];
     const totalSyllabus = activeSubjects.reduce((acc, s) => acc + s.progress_percent, 0);
     const avgSyllabusProgress = Math.round(totalSyllabus / Math.max(activeSubjects.length, 1));
+    // Derived from the subjects' own topic records; areas with no tracking yet report 0.
+    const allTopics = activeSubjects.flatMap((sub) => (sub.units || []).flatMap((u) => u.topics || []));
+    const revisedPct = allTopics.length
+      ? Math.round((allTopics.filter((t) => (t.revision_count || 0) > 0).length / allTopics.length) * 100)
+      : 0;
+    const labSubjects = activeSubjects.filter((sub) => sub.subject_type === 'LAB');
+    const labPct = labSubjects.length
+      ? Math.round(labSubjects.reduce((acc, sub) => acc + sub.progress_percent, 0) / labSubjects.length)
+      : 0;
+    const pastEvents = events.filter((e) => new Date(e.date).getTime() < Date.now());
+    const assessmentPct = events.length ? Math.round((pastEvents.length / events.length) * 100) : 0;
 
     return {
       config,
-      overall_progress_percent: 71,
+      overall_progress_percent: avgSyllabusProgress,
       syllabus_progress_percent: avgSyllabusProgress,
-      revision_progress_percent: 54,
-      assessment_progress_percent: 78,
-      lab_progress_percent: 85,
-      assignment_progress_percent: 75,
-      exam_prep_progress_percent: 62,
+      revision_progress_percent: revisedPct,
+      assessment_progress_percent: assessmentPct,
+      lab_progress_percent: labPct,
+      assignment_progress_percent: 0,
+      exam_prep_progress_percent: revisedPct,
       current_phase: activePhase,
       all_phases: academicPhases,
       subjects: activeSubjects,

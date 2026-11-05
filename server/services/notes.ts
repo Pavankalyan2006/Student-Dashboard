@@ -14,7 +14,7 @@ import {
 } from '../models/types';
 import { AIService } from '../ai/service';
 import { AIMessage } from '../ai/provider';
-import { NotFoundError, AuthorizationError, ValidationError } from '../core/exceptions';
+import { AppError, NotFoundError, AuthorizationError, ValidationError } from '../core/exceptions';
 import { logger } from '../core/logging';
 
 export class NotesService {
@@ -178,6 +178,13 @@ CRITICAL INSTRUCTIONS:
     });
 
     const aiResult = await AIService.generate(messages, promptKey, 0.4);
+    if (AIService.isUnavailableResult(aiResult)) {
+      throw new AppError(
+        'AI note generation is unavailable right now (no AI provider is configured or the provider request failed). No note was saved.',
+        503,
+        'AI_UNAVAILABLE'
+      );
+    }
     const parsedData = this.parseAndValidateAIOutput(aiResult.text, resolvedTitle);
 
     // 4. Assemble complete, readable educational Markdown content
@@ -246,6 +253,13 @@ Return a fresh structured JSON object matching the note schema (title, overview,
 
     const messages: AIMessage[] = [{ role: 'user', content: userPrompt }];
     const aiResult = await AIService.generate(messages, 'study_notes_prompt', 0.4);
+    if (AIService.isUnavailableResult(aiResult)) {
+      throw new AppError(
+        'AI note generation is unavailable right now (no AI provider is configured or the provider request failed). The note was not changed.',
+        503,
+        'AI_UNAVAILABLE'
+      );
+    }
     const parsedData = this.parseAndValidateAIOutput(aiResult.text, existing.title);
     const assembledMarkdown = this.assembleMarkdownContent(parsedData);
 
@@ -492,6 +506,7 @@ Explain clearly using Markdown with KaTeX formulas ($...$) where helpful. Keep i
       note_type?: NoteType;
       level?: StudentLevel;
       length?: NoteLength;
+      course_id?: string;
     }
   ): Promise<Note> {
     if (!data.title || !data.title.trim()) {
@@ -501,11 +516,23 @@ Explain clearly using Markdown with KaTeX formulas ($...$) where helpful. Keep i
       throw new ValidationError('Note content is required');
     }
 
+    // Optional link to a course the student can access, so the note shows up under
+    // GET /notes?course_id=... (Courses -> Notes workflow).
+    let courseLink: { source_type: 'course'; source_id: string; source_title: string } | undefined;
+    if (data.course_id) {
+      const course = await db.getCourseById(data.course_id, studentId);
+      if (!course) {
+        throw new NotFoundError(`Course '${data.course_id}' not found`);
+      }
+      courseLink = { source_type: 'course', source_id: course.id, source_title: course.title };
+    }
+
     return db.createNote({
       student_id: studentId,
       title: data.title.trim(),
       description: data.description || data.content.slice(0, 150).replace(/[#*`$\n]/g, ' ').trim() + '...',
       source_type: 'topic',
+      ...(courseLink || {}),
       note_type: data.note_type || 'STUDY_NOTES',
       level: data.level || 'INTERMEDIATE',
       length: data.length || 'MEDIUM',

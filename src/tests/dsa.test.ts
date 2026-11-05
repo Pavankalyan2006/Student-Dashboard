@@ -269,8 +269,10 @@ describe('Phase 8 DSA Lab & Algorithm Visualization Engine', () => {
         { studentId, role: 'STUDENT' }
       );
 
-      expect(res.solvedCount).toBeGreaterThanOrEqual(100);
-      expect(res.topics.length).toBeGreaterThan(0);
+      // Real counts only: solvedCount matches the DSA module and topics list only topics with work.
+      expect(res.solvedCount).toBe(res.problems_solved.length);
+      expect(Array.isArray(res.topics)).toBe(true);
+      res.topics.forEach((t: any) => expect(t.attempted).toBeGreaterThan(0));
       expect(res.visualizations_completed).toBeDefined();
     });
   });

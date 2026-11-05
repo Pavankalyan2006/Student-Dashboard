@@ -415,9 +415,9 @@ learningModulesRouter.post('/sql-lab/workspaces', requireAuth, async (req: Reque
   }
 });
 
-learningModulesRouter.get('/sql-lab/schemas', async (req: Request, res: Response) => {
+learningModulesRouter.get('/sql-lab/schemas', requireAuth, async (req: Request, res: Response) => {
   try {
-    const studentId = (req as any).user?.userId || 'std_01j8k9x2p4';
+    const studentId = req.user!.userId;
     const schemas = SqlLabSandboxService.getSchemas(studentId);
     res.json({ success: true, data: schemas });
   } catch (err: any) {
@@ -625,9 +625,9 @@ learningModulesRouter.delete('/ml-lab/workspaces/:workspaceId/files/:fileId', re
   }
 });
 
-learningModulesRouter.get('/ml-lab/datasets', async (req: Request, res: Response) => {
+learningModulesRouter.get('/ml-lab/datasets', requireAuth, async (req: Request, res: Response) => {
   try {
-    const studentId = (req as any).user?.userId || 'std_01j8k9x2p4';
+    const studentId = req.user!.userId;
     const datasets = MlLabService.getDatasets(studentId);
     res.json({ success: true, data: datasets });
   } catch (err: any) {
@@ -635,9 +635,9 @@ learningModulesRouter.get('/ml-lab/datasets', async (req: Request, res: Response
   }
 });
 
-learningModulesRouter.get('/ml-lab/datasets/:datasetId', async (req: Request, res: Response) => {
+learningModulesRouter.get('/ml-lab/datasets/:datasetId', requireAuth, async (req: Request, res: Response) => {
   try {
-    const studentId = (req as any).user?.userId || 'std_01j8k9x2p4';
+    const studentId = req.user!.userId;
     const dataset = MlLabService.getDatasetById(studentId, req.params.datasetId);
     res.json({ success: true, data: dataset });
   } catch (err: any) {

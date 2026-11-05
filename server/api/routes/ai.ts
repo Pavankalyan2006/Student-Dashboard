@@ -398,7 +398,10 @@ aiRouter.post('/ai/tools/execute', requireAuth, async (req, res, next) => {
 aiRouter.get('/ai/tutor/context-options', requireAuth, async (req, res, next) => {
   try {
     const studentId = req.user!.userId;
-    const coursesResult = await db.getCourses({ limit: 120 });
+    // Pass the student id so the student's own (custom/enrolled) courses are included,
+    // and list enrolled courses first so the tutor context defaults to what they study.
+    const coursesResult = await db.getCourses({ limit: 120 }, studentId);
+    coursesResult.items.sort((a: any, b: any) => Number(!!b.is_enrolled) - Number(!!a.is_enrolled));
     const documents = await db.getDocuments(studentId).catch(() => []);
     const notes = await db.getNotes(studentId).catch(() => []);
 
@@ -444,6 +447,7 @@ aiRouter.get('/ai/tutor/context-options', requireAuth, async (req, res, next) =>
           category: c.category,
           difficulty: c.difficulty,
           units_count: c.total_chapters ?? 0,
+          is_enrolled: !!(c as any).is_enrolled,
         })),
         documents: documents.map((d: any) => ({
           id: d.id,
