@@ -35,10 +35,12 @@ export const GateDashboardView: React.FC<GateDashboardViewProps> = ({
   const { profile, paper_info, metrics, weak_topics, upcoming_tasks, recent_attempts } = data;
 
   // Calculate days remaining until target exam date
-  const targetDateObj = profile.target_date ? new Date(profile.target_date) : new Date('2026-02-07');
-  const now = new Date();
-  const diffTime = targetDateObj.getTime() - now.getTime();
-  const daysRemaining = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+  // Only the date the student entered is used; no official exam date is assumed.
+  const targetDateObj = profile.target_date ? new Date(profile.target_date) : null;
+  const daysRemaining =
+    targetDateObj && !isNaN(targetDateObj.getTime())
+      ? Math.max(0, Math.ceil((targetDateObj.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+      : null;
 
   return (
     <div className="space-y-6">
@@ -55,7 +57,7 @@ export const GateDashboardView: React.FC<GateDashboardViewProps> = ({
               </span>
               <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
                 <Calendar className="w-3.5 h-3.5" />
-                {profile.exam_cycle}
+                {profile.exam_cycle || 'Exam cycle not set'}
               </span>
               <button
                 onClick={onOpenPaperSelector}
@@ -66,12 +68,12 @@ export const GateDashboardView: React.FC<GateDashboardViewProps> = ({
             </div>
 
             <h2 className="text-2xl font-black text-white tracking-tight">
-              GATE {profile.exam_cycle.replace('GATE ', '')} Command Center
+              GATE {(profile.exam_cycle || '').replace('GATE ', '')} Command Center
             </h2>
             <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
-              Target Score: <strong className="text-emerald-400">{profile.target_score || 75}/100</strong> • All India
-              Rank Goal: <strong className="text-purple-400">{profile.air_goal || '< 500'}</strong> • Daily schedule calibrated to{' '}
-              {profile.weekly_study_hours || 20} hrs/week.
+              Your target marks: <strong className="text-emerald-400">{profile.target_score ? `${profile.target_score}/100` : 'not set'}</strong> • Your
+              rank goal: <strong className="text-purple-400">{profile.air_goal || 'not set'}</strong> (your own goal, not a prediction) • Planned{' '}
+              {profile.weekly_study_hours || 0} hrs/week.
             </p>
           </div>
 
@@ -79,14 +81,14 @@ export const GateDashboardView: React.FC<GateDashboardViewProps> = ({
           <div className="flex items-center gap-3">
             <div className="p-3 bg-slate-950/80 border border-indigo-500/30 rounded-xl text-center min-w-[110px]">
               <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Exam Countdown</span>
-              <span className="text-2xl font-black text-indigo-400">{daysRemaining}</span>
-              <span className="text-[10px] text-slate-500 block">Days Left</span>
+              <span className="text-2xl font-black text-indigo-400">{daysRemaining ?? '--'}</span>
+              <span className="text-[10px] text-slate-500 block">{daysRemaining === null ? 'Set your exam date' : 'Days Left'}</span>
             </div>
 
             <div className="p-3 bg-slate-950/80 border border-emerald-500/30 rounded-xl text-center min-w-[110px]">
-              <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Est. GATE Score</span>
-              <span className="text-2xl font-black text-emerald-400">{metrics.estimated_gate_score}</span>
-              <span className="text-[10px] text-slate-500 block">out of 1000</span>
+              <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Best Mock Marks</span>
+              <span className="text-2xl font-black text-emerald-400">{metrics.total_mock_tests_taken > 0 ? metrics.highest_mock_test_score : '--'}</span>
+              <span className="text-[10px] text-slate-500 block">{metrics.total_mock_tests_taken > 0 ? 'raw marks' : 'no mock test yet'}</span>
             </div>
           </div>
         </div>
@@ -232,7 +234,7 @@ export const GateDashboardView: React.FC<GateDashboardViewProps> = ({
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-white truncate max-w-[170px]">{wt.topic_name}</span>
                   <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-sm bg-rose-500/20 text-rose-300">
-                    {wt.accuracy}% Accuracy
+                    {wt.accuracy === null || wt.accuracy === undefined ? 'Flagged by you' : `${wt.accuracy}% Accuracy`}
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-400 mt-1.5 line-clamp-2">{wt.recommendation}</p>

@@ -1,0 +1,21 @@
+PASS  Unauthenticated dataset list is rejected  -- status 401
+PASS  Empty CSV rejected with 400  -- The CSV is empty.
+PASS  Row with wrong column count rejected  -- "Rows with the wrong number of columns (expected 2): line 2."
+PASS  Duplicate header rejected
+PASS  CSV over 5 MB rejected  -- status 400
+PASS  Valid CSV uploaded (quoted comma field kept intact)  -- samples=120 notes0="row 0, synthetic"
+PASS  Student B cannot see student A dataset
+PASS  Train Random Forest: real metrics from confusion matrix  -- algorithm=Random Forest (bagged CART trees) acc=0.9167 test_rows=24
+PASS  Train Decision Tree: real metrics from confusion matrix  -- algorithm=Decision Tree (CART, Gini) acc=0.9167 test_rows=24
+PASS  Train Logistic Regression: real metrics from confusion matrix  -- algorithm=Logistic Regression (softmax, gradient descent) acc=0.9583 test_rows=24
+PASS  Train KNN: real metrics from confusion matrix  -- algorithm=k-Nearest Neighbours acc=0.9167 test_rows=24
+PASS  Unsupported model refused instead of silently substituted  -- Model 'XGBoost' is not available for classification. Supported: Random Forest, Decision Tree, Logistic Regression, k-Nea
+PASS  Student B cannot read student A experiment  -- status 404
+PASS  Student B cannot predict with student A model  -- status 404
+PASS  Prediction for strong student is pass  -- pass conf=0.96
+PASS  Prediction for weak student is fail (logistic)  -- fail conf=1
+PASS  Invalid prediction input rejected  -- Invalid prediction input: hours_studied must be a number; section must be one of: A, B, C.
+PASS  Prediction history saved  -- count=1
+PASS  Student B prediction history is empty
+
+19/19 PASS

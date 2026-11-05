@@ -6,7 +6,8 @@
 // - No fake metrics: calculates true accuracy, precision, recall, F1, confusion matrix, MSE, R2, and loss curves
 // - Dynamic live prediction engine for trained models
 
-import { ValidationError } from '../core/exceptions';
+import { ValidationError, NotFoundError } from '../core/exceptions';
+import { seededRng, fitPreprocess, rowHasMissing, transformRow, collapseImportance, fitTree, treeLeaf, treeDepth, fitForest, forestPredict, fitLogistic, logisticProbs, PreprocessSpec, TreeNode, LogisticModel } from './mlAlgorithms';
 import {
   MLWorkspace,
   MLWorkspaceFile,
@@ -30,8 +31,12 @@ interface FittedModelArtifact {
   mins?: Record<string, number>;
   maxs?: Record<string, number>;
   categorical_maps?: Record<string, Record<string, number>>;
-  tree?: any;
-  forest?: any[];
+  tree?: TreeNode;
+  forest?: TreeNode[];
+  algo?: string;
+  preprocess?: PreprocessSpec;
+  knn?: { k: number; vectors: number[][]; labels: string[] };
+  logistic?: LogisticModel;
   weights?: number[];
   bias?: number;
   centroids?: number[][];
@@ -377,6 +382,45 @@ seed: 42
   // -------------------------------------------------------------
   // Dataset Management (Upload, Profiling, Schema Extraction)
   // -------------------------------------------------------------
+  static MAX_CSV_BYTES = 5 * 1024 * 1024;
+  static MAX_ROWS = 20000;
+
+  /** RFC 4180 CSV parsing: quoted fields, escaped quotes, commas and newlines inside quotes. */
+  static parseCsv(text: string): string[][] {
+    const rows: string[][] = [];
+    let row: string[] = [];
+    let field = '';
+    let inQuotes = false;
+    const src = text.replace(/^\uFEFF/, '');
+    for (let i = 0; i < src.length; i++) {
+      const c = src[i];
+      if (inQuotes) {
+        if (c === '"') {
+          if (src[i + 1] === '"') { field += '"'; i++; } else inQuotes = false;
+        } else field += c;
+      } else if (c === '"') inQuotes = true;
+      else if (c === ',') { row.push(field); field = ''; }
+      else if (c === '\n' || c === '\r') {
+        if (c === '\r' && src[i + 1] === '\n') i++;
+        row.push(field); rows.push(row); row = []; field = '';
+      } else field += c;
+    }
+    if (inQuotes) throw new ValidationError('The CSV has an unclosed quoted field.');
+    if (field !== '' || row.length) { row.push(field); rows.push(row); }
+    while (rows.length && rows[rows.length - 1].every((f) => f.trim() === '')) rows.pop();
+    return rows;
+  }
+
+  public static deleteDataset(studentId: string, datasetId: string): { success: boolean } {
+    const list = this.customDatasets.get(studentId) || [];
+    if (!list.some((d) => d.id === datasetId)) {
+      if (this.builtInDatasets.some((d) => d.id === datasetId)) throw new ValidationError('Built-in sample datasets cannot be removed.');
+      throw new NotFoundError('Dataset not found');
+    }
+    this.customDatasets.set(studentId, list.filter((d) => d.id !== datasetId));
+    return { success: true };
+  }
+
   public static getDatasets(studentId: string): MLDataset[] {
     const custom = this.customDatasets.get(studentId) || [];
     return [...this.builtInDatasets, ...custom];
@@ -385,7 +429,7 @@ seed: 42
   public static getDatasetById(studentId: string, datasetId: string): MLDataset {
     const all = this.getDatasets(studentId);
     const found = all.find((d) => d.id === datasetId || d.name === datasetId);
-    if (!found) throw new Error(`Dataset '${datasetId}' not found`);
+    if (!found) throw new NotFoundError(`Dataset '${datasetId}' not found`);
     return found;
   }
 
@@ -393,28 +437,51 @@ seed: 42
     studentId: string,
     data: { name: string; csvContent: string; description?: string; target_column?: string }
   ): MLDataset {
-    const lines = data.csvContent.trim().split('\n').filter(Boolean);
-    if (lines.length < 2) {
-      throw new Error('CSV must contain a header line and at least one data row');
+    const csv = String(data?.csvContent ?? '');
+    if (!csv.trim()) throw new ValidationError('The CSV is empty.');
+    if (Buffer.byteLength(csv, 'utf8') > MlLabService.MAX_CSV_BYTES) {
+      throw new ValidationError(`The CSV is larger than ${MlLabService.MAX_CSV_BYTES / (1024 * 1024)} MB.`);
     }
-
-    const headers = lines[0].split(',').map((h) => h.trim().replace(/^["']|["']$/g, ''));
+    if (/\u0000/.test(csv)) throw new ValidationError('This does not look like a text CSV file.');
+    const table = MlLabService.parseCsv(csv);
+    if (table.length < 2) throw new ValidationError('CSV must contain a header line and at least one data row');
+    const headers = table[0].map((h) => h.trim());
+    if (headers.some((h) => !h)) throw new ValidationError('Every column needs a header name.');
+    const dupHeader = headers.find((h, i) => headers.indexOf(h) !== i);
+    if (dupHeader) throw new ValidationError(`Duplicate column header '${dupHeader}'.`);
+    if (headers.length > 100) throw new ValidationError('At most 100 columns are supported.');
+    if (table.length - 1 > MlLabService.MAX_ROWS) throw new ValidationError(`At most ${MlLabService.MAX_ROWS} data rows are supported.`);
     const rows: Record<string, any>[] = [];
-
-    for (let i = 1; i < lines.length; i++) {
-      const parts = lines[i].split(',').map((p) => p.trim().replace(/^["']|["']$/g, ''));
+    const badLines: number[] = [];
+    for (let i = 1; i < table.length; i++) {
+      const parts = table[i];
+      if (parts.length === 1 && parts[0].trim() === '') continue; // blank line
+      if (parts.length !== headers.length) {
+        badLines.push(i + 1);
+        continue;
+      }
       const row: Record<string, any> = {};
       headers.forEach((h, idx) => {
-        const val = parts[idx];
-        if (val === undefined || val === '') {
-          row[h] = null;
-        } else if (!isNaN(Number(val))) {
-          row[h] = Number(val);
-        } else {
-          row[h] = val;
-        }
+        const val = parts[idx].trim();
+        if (val === '' || /^(na|n\/a|null|nan)$/i.test(val)) row[h] = null;
+        else if (/^[-+]?(\d+\.?\d*|\.\d+)([eE][-+]?\d+)?$/.test(val)) row[h] = Number(val);
+        else row[h] = val;
       });
       rows.push(row);
+    }
+    if (badLines.length) {
+      throw new ValidationError(`Rows with the wrong number of columns (expected ${headers.length}): line ${badLines.slice(0, 5).join(', ')}${badLines.length > 5 ? ` and ${badLines.length - 5} more` : ''}.`);
+    }
+    if (rows.length === 0) throw new ValidationError('The CSV has a header but no data rows.');
+    if (data.target_column && !headers.includes(data.target_column)) {
+      throw new ValidationError(`Target column '${data.target_column}' is not in the CSV header.`);
+    }
+    const seen = new Set<string>();
+    let duplicateRows = 0;
+    for (const r of rows) {
+      const key = JSON.stringify(headers.map((h) => r[h]));
+      if (seen.has(key)) duplicateRows++;
+      else seen.add(key);
     }
 
     // Profiling columns
@@ -486,8 +553,9 @@ seed: 42
       preview: rows.slice(0, 10),
       raw_data: rows,
       task_type: taskType,
+      duplicate_rows: duplicateRows,
       created_at: new Date().toISOString(),
-    };
+    } as MLDataset;
 
     if (!this.customDatasets.has(studentId)) {
       this.customDatasets.set(studentId, []);
@@ -534,77 +602,78 @@ seed: 42
 
     log('PREPARING_DATA', `Features selected: [${featureNames.join(', ')}]. Target: '${isClustering ? 'None (Unsupervised)' : targetCol}'.`);
 
-    // 2. Preprocessing: Cleaning & Imputation
-    const cleanRows: Record<string, any>[] = [];
-    const numMeans: Record<string, number> = {};
-
-    // Calculate means for numerical imputation
+    // 2. Train / test split over rows that have a target (seeded, so a run is reproducible).
+    const isMissingVal = (v: any) => v === null || v === undefined || v === '';
+    const usable = isClustering ? [...rawRows] : rawRows.filter((r) => !isMissingVal(r[targetCol]));
+    if (!isClustering && usable.length < rawRows.length) {
+      log('PREPARING_DATA', `Dropped ${rawRows.length - usable.length} row(s) with no value in target '${targetCol}'.`, 'WARN');
+    }
     for (const f of featureNames) {
-      const vals = rawRows.map((r) => r[f]).filter((v) => typeof v === 'number');
-      numMeans[f] = vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
-    }
-
-    for (const r of rawRows) {
-      const rowCopy: Record<string, any> = {};
-      let hasMissingTarget = false;
-
-      if (!isClustering && (r[targetCol] === null || r[targetCol] === undefined || r[targetCol] === '')) {
-        hasMissingTarget = true;
+      if (!dataset.columns_metadata?.some((c) => c.name === f) && !(rawRows[0] && f in rawRows[0])) {
+        throw new ValidationError(`Feature column '${f}' does not exist in dataset '${dataset.name}'.`);
       }
-
-      if (hasMissingTarget) continue;
-
-      for (const f of featureNames) {
-        let v = r[f];
-        if (v === null || v === undefined || v === '') {
-          v = numMeans[f] || 0;
-        }
-        rowCopy[f] = v;
-      }
-      if (!isClustering) {
-        rowCopy[targetCol] = r[targetCol];
-      }
-      cleanRows.push(rowCopy);
     }
+    if (!isClustering && featureNames.includes(targetCol)) throw new ValidationError('The target column cannot also be a feature.');
+    if (featureNames.length === 0) throw new ValidationError('Select at least one feature column.');
 
-    log('PREPARING_DATA', `Cleaned dataset size: ${cleanRows.length} rows.`);
-
-    // 3. Normalization / Standardization parameters
-    const means: Record<string, number> = {};
-    const stds: Record<string, number> = {};
-    for (const f of featureNames) {
-      const vals = cleanRows.map((r) => Number(r[f]) || 0);
-      const mean = vals.reduce((a, b) => a + b, 0) / (vals.length || 1);
-      const variance = vals.reduce((acc, v) => acc + Math.pow(v - mean, 2), 0) / (vals.length || 1);
-      means[f] = mean;
-      stds[f] = Math.sqrt(variance) || 1;
-    }
-
-    // 4. Train / Test Split
     const splitRatio = Math.max(0.5, Math.min(0.9, Number(config.train_split) || 0.8));
-    // Shuffle deterministically
-    // Seeded Fisher-Yates shuffle so a run is reproducible for the same random_seed (default 42).
-    // The previous sort(() => 0.5 - Math.random()) was both biased and unrepeatable.
-    let seedState = (Number(config.random_seed ?? 42) >>> 0) || 42;
-    const rand = () => {
-      seedState = (seedState + 0x6d2b79f5) >>> 0;
-      let t = seedState;
-      t = Math.imul(t ^ (t >>> 15), t | 1);
-      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-    };
-    const shuffled = [...cleanRows];
+    const rand = seededRng(Number(config.random_seed ?? 42));
+    const shuffled = [...usable];
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(rand() * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
-    const trainCount = Math.floor(shuffled.length * splitRatio);
-    const trainRows = shuffled.slice(0, trainCount);
-    const testRows = shuffled.slice(trainCount);
+    const trainCount = isClustering ? shuffled.length : Math.floor(shuffled.length * splitRatio);
+    let trainRows = shuffled.slice(0, trainCount);
+    let testRows = isClustering ? [] : shuffled.slice(trainCount);
 
-    log('PREPARING_DATA', `Train/Test partition created: ${trainRows.length} train samples, ${testRows.length} test samples (${Math.round(splitRatio * 100)}/${Math.round((1 - splitRatio) * 100)} split).`);
+    // 3. Preprocessing, fitted on the training rows only (no test-set leakage).
+    const pre = config.preprocessing || ({} as any);
+    const kinds: Record<string, 'numeric' | 'categorical'> = {};
+    for (const c of dataset.columns_metadata || []) kinds[c.name] = c.data_type === 'CATEGORICAL' ? 'categorical' : 'numeric';
+    let spec = fitPreprocess(trainRows, featureNames, { missing: pre.missing_value_strategy, scaling: pre.scaling, kinds });
+    if (spec.missing === 'DROP') {
+      const before = trainRows.length + testRows.length;
+      trainRows = trainRows.filter((r) => !rowHasMissing(spec, r));
+      testRows = testRows.filter((r) => !rowHasMissing(spec, r));
+      log('PREPARING_DATA', `Dropped ${before - trainRows.length - testRows.length} row(s) with missing feature values.`);
+      spec = fitPreprocess(trainRows, featureNames, { missing: 'DROP', scaling: pre.scaling, kinds });
+    }
+    if (trainRows.length < 4 || (!isClustering && testRows.length < 1)) {
+      throw new ValidationError(`Not enough usable rows after preprocessing (${trainRows.length} train, ${testRows.length} test). Upload more data or change the split.`);
+    }
+    const catFeatures = spec.features.filter((f) => f.kind === 'categorical');
+    log('PREPARING_DATA', `Imputation: ${spec.missing}. Scaling: ${spec.scaling}. ` +
+      (catFeatures.length ? `One-hot encoded: ${catFeatures.map((f) => `${f.name} (${f.categories?.length} values)`).join(', ')}.` : 'All features numeric.'));
+    log('PREPARING_DATA', isClustering
+      ? `Clustering uses all ${trainRows.length} rows.`
+      : `Train/Test partition: ${trainRows.length} train, ${testRows.length} test (${Math.round(splitRatio * 100)}/${Math.round((1 - splitRatio) * 100)} split, seed ${Number(config.random_seed ?? 42)}).`);
 
-    log('TRAINING', `Initiating real training for model '${config.model_type}'...`);
+    const trainVecs = trainRows.map((r) => transformRow(spec, r));
+    const testVecs = testRows.map((r) => transformRow(spec, r));
+    const dims = spec.expanded.length;
+    const dist2 = (x: number[], y: number[]) => x.reduce((acc, v, d) => acc + (v - y[d]) * (v - y[d]), 0);
+
+    // 4. Pick the algorithm. Only models implemented below are accepted; nothing is substituted.
+    const mt = String(config.model_type || '').toLowerCase();
+    const algo: string | null = isClustering
+      ? 'kmeans'
+      : config.task_type === 'CLASSIFICATION'
+        ? /forest/.test(mt) ? 'rf' : /tree/.test(mt) ? 'dt' : /logistic/.test(mt) ? 'logreg' : /knn|neighbo/.test(mt) ? 'knn' : null
+        : /forest/.test(mt) ? 'rf' : /tree/.test(mt) ? 'dt' : /linear/.test(mt) ? 'linear' : null;
+    if (!algo) {
+      throw new ValidationError(
+        `Model '${config.model_type}' is not available for ${config.task_type.toLowerCase()}. Supported: ` +
+          (config.task_type === 'CLASSIFICATION' ? 'Random Forest, Decision Tree, Logistic Regression, k-Nearest Neighbours.' : 'Linear Regression, Decision Tree Regressor, Random Forest Regressor.')
+      );
+    }
+    const hp = config.hyperparameters || {};
+    const maxDepth = Math.max(1, Math.min(20, Number(hp.max_depth) || 6));
+    const minSplit = Math.max(2, Number(hp.min_samples_split) || 2);
+    const nEstimators = Math.max(1, Math.min(100, Number(hp.n_estimators) || 25));
+    const seed = Number(config.random_seed ?? 42);
+
+    log('TRAINING', `Training '${config.model_type}' on ${dims} encoded feature column(s)...`);
 
     let metrics: MLExperimentMetric = {};
     const lossCurve: Array<{ iteration: number; loss: number; val_loss?: number }> = [];
@@ -614,33 +683,18 @@ seed: 42
       task_type: config.task_type,
       feature_names: featureNames,
       target_column: targetCol,
-      means,
-      stds,
+      algo,
+      preprocess: spec,
     };
-
-    // All metrics below are computed from real predictions on the held-out rows. The sandbox
-    // implements three model families: k-means (clustering), k-nearest-neighbours (classification)
-    // and least-squares linear regression (regression). Other requested model types are trained
-    // with the matching family, and the log says so.
-    const toVec = (r: Record<string, any>) => featureNames.map((f) => ((Number(r[f]) || 0) - means[f]) / stds[f]);
-    const dist2 = (x: number[], y: number[]) => x.reduce((acc, v, d) => acc + (v - y[d]) * (v - y[d]), 0);
-    const trainVecs = trainRows.map(toVec);
-    const testVecs = testRows.map(toVec);
     let trainedFamily = '';
     let fitNote = '';
 
-    // -------------------------------------------------------------
-    // Branch A: CLUSTERING (K-Means)
-    // -------------------------------------------------------------
     if (isClustering) {
       trainedFamily = 'K-Means';
-      const k = Math.max(2, Math.min(Number(config.hyperparameters?.n_clusters) || 3, trainVecs.length));
+      const k = Math.max(2, Math.min(Number(hp.n_clusters) || 3, trainVecs.length));
       log('TRAINING', `K-Means clustering with k=${k} clusters.`);
-
-      // Deterministic initialisation: k evenly spaced rows of the shuffled training set
       let centroids = Array.from({ length: k }, (_, i) => trainVecs[Math.floor((i * trainVecs.length) / k)]);
       let assignments: number[] = [];
-
       for (let iter = 1; iter <= 20; iter++) {
         assignments = trainVecs.map((vec) => {
           let best = 0;
@@ -655,20 +709,17 @@ seed: 42
         centroids = centroids.map((c, ci) => {
           const members = trainVecs.filter((_, idx) => assignments[idx] === ci);
           if (members.length === 0) return c;
-          const meanVec = featureNames.map((_, d) => members.reduce((acc, m) => acc + m[d], 0) / members.length);
+          const meanVec = Array.from({ length: dims }, (_, d) => members.reduce((acc, m) => acc + m[d], 0) / members.length);
           members.forEach((m) => { inertia += dist2(m, meanVec); });
           return meanVec;
         });
         lossCurve.push({ iteration: iter, loss: parseFloat(inertia.toFixed(2)) });
       }
-
       const clusterDistribution: Record<string, number> = {};
       assignments.forEach((c) => {
         const label = `Cluster ${c + 1}`;
         clusterDistribution[label] = (clusterDistribution[label] || 0) + 1;
       });
-
-      // Real silhouette score on the training vectors
       let silSum = 0;
       trainVecs.forEach((v, i) => {
         const own = assignments[i];
@@ -680,74 +731,82 @@ seed: 42
         let bI = Infinity;
         for (let c = 0; c < k; c++) if (c !== own && clusterDistribution[`Cluster ${c + 1}`]) bI = Math.min(bI, meanDistTo(c));
         if (!isFinite(bI)) bI = 0;
-        const sI = Math.max(aI, bI) > 0 ? (bI - aI) / Math.max(aI, bI) : 0;
-        silSum += sI;
+        silSum += Math.max(aI, bI) > 0 ? (bI - aI) / Math.max(aI, bI) : 0;
       });
       const silhouette = parseFloat((silSum / (trainVecs.length || 1)).toFixed(3));
       const finalInertia = lossCurve[lossCurve.length - 1]?.loss ?? 0;
-
-      metrics = {
-        inertia: finalInertia,
-        silhouette_score: silhouette,
-        cluster_distribution: clusterDistribution,
-        cluster_centers: centroids,
-      };
-
-      // Spread of the centroids along each feature, normalised, as a simple real importance measure
-      const spread = featureNames.map((_, d) => {
+      metrics = { inertia: finalInertia, silhouette_score: silhouette, cluster_distribution: clusterDistribution, cluster_centers: centroids };
+      const spread = Array.from({ length: dims }, (_, d) => {
         const vals = centroids.map((c) => c[d]);
         return Math.max(...vals) - Math.min(...vals);
       });
-      const spreadTotal = spread.reduce((x, y) => x + y, 0) || 1;
-      featureImportances = featureNames
-        .map((f, d) => ({ feature: f, importance: parseFloat((spread[d] / spreadTotal).toFixed(3)) }))
-        .sort((x, y) => y.importance - x.importance);
-
+      featureImportances = collapseImportance(spec, spread);
       modelArtifact.centroids = centroids;
       fitNote = `Clustering: k=${k}, silhouette ${silhouette} (closer to 1 means better separated clusters).`;
       log('EVALUATING', `Clustering completed with Inertia: ${finalInertia}, Silhouette Score: ${silhouette}.`);
-    }
-
-    // -------------------------------------------------------------
-    // Branch B: CLASSIFICATION (k-nearest neighbours)
-    // -------------------------------------------------------------
-    else if (config.task_type === 'CLASSIFICATION') {
-      trainedFamily = 'k-Nearest Neighbours';
-      const distinctClasses = Array.from(new Set(cleanRows.map((r) => String(r[targetCol])))).sort();
-      modelArtifact.class_labels = distinctClasses;
-      const kNN = Math.max(1, Math.min(Number(config.hyperparameters?.n_neighbors) || 5, trainVecs.length));
+    } else if (config.task_type === 'CLASSIFICATION') {
       const trainLabels = trainRows.map((r) => String(r[targetCol]));
-      if (!/knn|neighbo/i.test(config.model_type)) {
-        log('TRAINING', `'${config.model_type}' is not implemented in this sandbox; training a k-nearest-neighbours classifier (k=${kNN}) instead.`, 'WARN');
-      }
+      const testLabels = testRows.map((r) => String(r[targetCol]));
+      const distinctClasses = Array.from(new Set([...trainLabels, ...testLabels])).sort();
+      if (distinctClasses.length > 50) throw new ValidationError(`Target '${targetCol}' has ${distinctClasses.length} distinct values; choose regression or a categorical target.`);
+      if (new Set(trainLabels).size < 2) throw new ValidationError(`The training rows contain only one class of '${targetCol}', so a classifier cannot be trained.`);
+      modelArtifact.class_labels = distinctClasses;
       log('TRAINING', `Detected target classes: [${distinctClasses.join(', ')}].`);
 
-      const predictVec = (vec: number[], excludeIdx = -1) => {
-        const nearest = trainVecs
-          .map((t, i) => ({ i, d: dist2(vec, t) }))
-          .filter((x) => x.i !== excludeIdx)
-          .sort((x, y) => x.d - y.d)
-          .slice(0, kNN);
-        const votes: Record<string, number> = {};
-        nearest.forEach((n) => { votes[trainLabels[n.i]] = (votes[trainLabels[n.i]] || 0) + 1; });
-        return Object.entries(votes).sort((x, y) => y[1] - x[1] || x[0].localeCompare(y[0]))[0]?.[0] ?? distinctClasses[0];
-      };
-
-      const accuracyOn = (vecs: number[][], labels: string[]) =>
-        vecs.length ? vecs.filter((v, i) => predictVec(v) === labels[i]).length / vecs.length : 0;
-      const testLabels = testRows.map((r) => String(r[targetCol]));
+      let predictVec: (v: number[], excludeIdx?: number) => { label: string; probs?: Record<string, number> };
+      const imp = Array(dims).fill(0);
+      if (algo === 'knn') {
+        trainedFamily = 'k-Nearest Neighbours';
+        const kNN = Math.max(1, Math.min(Number(hp.n_neighbors) || 5, trainVecs.length - 1 || 1));
+        predictVec = (vec, excludeIdx = -1) => {
+          const nearest = trainVecs.map((t, i) => ({ i, d: dist2(vec, t) })).filter((x) => x.i !== excludeIdx).sort((x, y) => x.d - y.d).slice(0, kNN);
+          const votes: Record<string, number> = {};
+          nearest.forEach((n) => { votes[trainLabels[n.i]] = (votes[trainLabels[n.i]] || 0) + 1; });
+          const label = Object.entries(votes).sort((x, y) => y[1] - x[1] || x[0].localeCompare(y[0]))[0]?.[0] ?? distinctClasses[0];
+          return { label };
+        };
+        modelArtifact.knn = { k: kNN, vectors: trainVecs, labels: trainLabels };
+      } else if (algo === 'dt') {
+        trainedFamily = 'Decision Tree (CART, Gini)';
+        const tree = fitTree(trainVecs, trainLabels, { task: 'classification', maxDepth, minSamplesSplit: minSplit }, imp);
+        predictVec = (vec) => ({ label: String(treeLeaf(tree, vec).value) });
+        modelArtifact.tree = tree;
+        log('TRAINING', `Grew a tree of depth ${treeDepth(tree)} (max_depth ${maxDepth}).`);
+      } else if (algo === 'rf') {
+        trainedFamily = 'Random Forest (bagged CART trees)';
+        const forest = fitForest(trainVecs, trainLabels, { task: 'classification', maxDepth, minSamplesSplit: minSplit, nEstimators, seed }, imp);
+        predictVec = (vec) => {
+          const p = forestPredict(forest, vec, 'classification');
+          return { label: String(p.value), probs: p.probs };
+        };
+        modelArtifact.forest = forest;
+        log('TRAINING', `Trained ${forest.length} trees on bootstrap samples (max_depth ${maxDepth}).`);
+      } else {
+        trainedFamily = 'Logistic Regression (softmax, gradient descent)';
+        const lr = Math.max(1e-4, Math.min(5, Number(hp.learning_rate) || 0.1));
+        const epochs = Math.max(10, Math.min(2000, Number(hp.epochs) || 300));
+        const { model, curve } = fitLogistic(trainVecs, trainLabels, distinctClasses, { learningRate: lr, epochs, valX: testVecs, valY: testLabels });
+        lossCurve.push(...curve);
+        predictVec = (vec) => {
+          const p = logisticProbs(model, vec);
+          const probs: Record<string, number> = {};
+          distinctClasses.forEach((c, k) => (probs[c] = parseFloat(p[k].toFixed(3))));
+          return { label: distinctClasses[p.indexOf(Math.max(...p))], probs };
+        };
+        model.W.forEach((w) => w.slice(0, dims).forEach((v, d) => (imp[d] += Math.abs(v))));
+        modelArtifact.logistic = model;
+        log('TRAINING', `Gradient descent: ${epochs} epochs, learning rate ${lr}; final training log-loss ${curve[curve.length - 1]?.loss}.`);
+      }
 
       const numClasses = distinctClasses.length;
       const confMatrix: number[][] = Array.from({ length: numClasses }, () => Array(numClasses).fill(0));
       testVecs.forEach((v, i) => {
-        const actualIdx = distinctClasses.indexOf(testLabels[i]);
-        const predIdx = distinctClasses.indexOf(predictVec(v));
-        if (actualIdx >= 0 && predIdx >= 0) confMatrix[actualIdx][predIdx]++;
+        const a = distinctClasses.indexOf(testLabels[i]);
+        const p = distinctClasses.indexOf(predictVec(v).label);
+        if (a >= 0 && p >= 0) confMatrix[a][p]++;
       });
       const correct = confMatrix.reduce((acc, row, i) => acc + row[i], 0);
-      const totalTest = testRows.length || 1;
-      const accuracy = parseFloat((correct / totalTest).toFixed(4));
-
+      const accuracy = parseFloat((correct / (testRows.length || 1)).toFixed(4));
       const classificationReport: Record<string, any> = {};
       let macroP = 0, macroR = 0, macroF = 0;
       distinctClasses.forEach((cls, idx) => {
@@ -758,33 +817,28 @@ seed: 42
         const recall = support ? tp / support : 0;
         const f1 = precision + recall ? (2 * precision * recall) / (precision + recall) : 0;
         macroP += precision; macroR += recall; macroF += f1;
-        classificationReport[cls] = {
-          precision: parseFloat(precision.toFixed(2)),
-          recall: parseFloat(recall.toFixed(2)),
-          f1: parseFloat(f1.toFixed(2)),
-          support,
-        };
+        classificationReport[cls] = { precision: parseFloat(precision.toFixed(2)), recall: parseFloat(recall.toFixed(2)), f1: parseFloat(f1.toFixed(2)), support };
       });
 
-      // Permutation importance: accuracy drop when one feature is shuffled in the test set
-      featureImportances = featureNames.map((f, d) => {
-        const permuted = testVecs.map((v, i) => {
-          const copy = [...v];
-          copy[d] = testVecs[(i + 1) % testVecs.length][d];
-          return copy;
+      if (algo === 'knn') {
+        // Permutation importance: accuracy drop when one encoded column is shifted across test rows.
+        const accOn = (vecs: number[][]) => (vecs.length ? vecs.filter((v, i) => predictVec(v).label === testLabels[i]).length / vecs.length : 0);
+        const drops = Array.from({ length: dims }, (_, d) => {
+          const permuted = testVecs.map((v, i) => {
+            const copy = [...v];
+            copy[d] = testVecs[(i + 1) % testVecs.length][d];
+            return copy;
+          });
+          return Math.max(0, accuracy - accOn(permuted));
         });
-        return { feature: f, drop: Math.max(0, accuracy - accuracyOn(permuted, testLabels)) };
-      }).map((x, _i, all) => {
-        const total = all.reduce((acc, y) => acc + y.drop, 0);
-        return { feature: x.feature, importance: parseFloat((total ? x.drop / total : 1 / all.length).toFixed(3)) };
-      }).sort((x, y) => y.importance - x.importance);
+        featureImportances = collapseImportance(spec, drops);
+      } else {
+        featureImportances = collapseImportance(spec, imp);
+      }
 
-      const trainAcc = trainVecs.length
-        ? trainVecs.filter((v, i) => predictVec(v, i) === trainLabels[i]).length / trainVecs.length
-        : 0;
-      fitNote = `Leave-one-out training accuracy ${Math.round(trainAcc * 100)}% vs held-out accuracy ${Math.round(accuracy * 100)}%` +
-        (trainAcc - accuracy > 0.1 ? ' — a large gap suggests overfitting.' : ' — no large generalisation gap.');
-
+      const trainAcc = trainVecs.length ? trainVecs.filter((v, i) => predictVec(v, algo === 'knn' ? i : -1).label === trainLabels[i]).length / trainVecs.length : 0;
+      fitNote = `${algo === 'knn' ? 'Leave-one-out training' : 'Training'} accuracy ${Math.round(trainAcc * 100)}% vs held-out accuracy ${Math.round(accuracy * 100)}%` +
+        (trainAcc - accuracy > 0.1 ? ' — a large gap suggests overfitting.' : trainAcc < 0.6 ? ' — low training accuracy suggests underfitting.' : ' — no large generalisation gap.');
       metrics = {
         accuracy,
         precision: parseFloat((macroP / (numClasses || 1)).toFixed(4)),
@@ -794,50 +848,54 @@ seed: 42
         class_labels: distinctClasses,
         classification_report: classificationReport,
       };
-      (modelArtifact as any).knn = { k: kNN, vectors: trainVecs, labels: trainLabels };
-
-      log('EVALUATING', `Evaluation on held-out test data: Accuracy=${Math.round(accuracy * 100)}%, macro F1=${metrics.f1_score}.`);
-    }
-
-    // -------------------------------------------------------------
-    // Branch C: REGRESSION (least-squares linear regression)
-    // -------------------------------------------------------------
-    else {
-      trainedFamily = 'Linear Regression (least squares)';
-      if (!/linear/i.test(config.model_type)) {
-        log('TRAINING', `'${config.model_type}' is not implemented in this sandbox; training a least-squares linear regression instead.`, 'WARN');
-      }
-      log('TRAINING', `Training regression model predicting '${targetCol}'...`);
-
-      // Solve (XᵀX + λI) w = Xᵀy on standardised features with an intercept column (tiny ridge for stability)
-      const X = trainVecs.map((v) => [1, ...v]);
-      const y = trainRows.map((r) => Number(r[targetCol]) || 0);
-      const p = featureNames.length + 1;
-      const A = Array.from({ length: p }, (_, i) => Array.from({ length: p }, (_, j) => X.reduce((acc, row) => acc + row[i] * row[j], 0) + (i === j && i > 0 ? 1e-6 : 0)));
-      const bVec = Array.from({ length: p }, (_, i) => X.reduce((acc, row, n) => acc + row[i] * y[n], 0));
-      // Gaussian elimination with partial pivoting
-      for (let col = 0; col < p; col++) {
-        let pivot = col;
-        for (let r = col + 1; r < p; r++) if (Math.abs(A[r][col]) > Math.abs(A[pivot][col])) pivot = r;
-        [A[col], A[pivot]] = [A[pivot], A[col]];
-        [bVec[col], bVec[pivot]] = [bVec[pivot], bVec[col]];
-        const div = A[col][col] || 1e-12;
-        for (let r = 0; r < p; r++) {
-          if (r === col) continue;
-          const factor = A[r][col] / div;
-          for (let c = col; c < p; c++) A[r][c] -= factor * A[col][c];
-          bVec[r] -= factor * bVec[col];
+      log('EVALUATING', `Held-out evaluation on ${testRows.length} rows: Accuracy=${Math.round(accuracy * 100)}%, macro F1=${metrics.f1_score}.`);
+    } else {
+      const y = trainRows.map((r) => Number(r[targetCol]));
+      if (y.some((v) => !Number.isFinite(v))) throw new ValidationError(`Target '${targetCol}' must be numeric for regression.`);
+      const imp = Array(dims).fill(0);
+      let predictRow: (vec: number[]) => number;
+      if (algo === 'linear') {
+        trainedFamily = 'Linear Regression (least squares)';
+        const X = trainVecs.map((v) => [1, ...v]);
+        const p = dims + 1;
+        const A = Array.from({ length: p }, (_, i) => Array.from({ length: p }, (_, j) => X.reduce((acc, row) => acc + row[i] * row[j], 0) + (i === j && i > 0 ? 1e-6 : 0)));
+        const bVec = Array.from({ length: p }, (_, i) => X.reduce((acc, row, n) => acc + row[i] * y[n], 0));
+        for (let col = 0; col < p; col++) {
+          let pivot = col;
+          for (let r = col + 1; r < p; r++) if (Math.abs(A[r][col]) > Math.abs(A[pivot][col])) pivot = r;
+          [A[col], A[pivot]] = [A[pivot], A[col]];
+          [bVec[col], bVec[pivot]] = [bVec[pivot], bVec[col]];
+          const div = A[col][col] || 1e-12;
+          for (let r = 0; r < p; r++) {
+            if (r === col) continue;
+            const factor = A[r][col] / div;
+            for (let c = col; c < p; c++) A[r][c] -= factor * A[col][c];
+            bVec[r] -= factor * bVec[col];
+          }
         }
+        const w = bVec.map((v, i) => v / (A[i][i] || 1e-12));
+        predictRow = (vec) => w[0] + vec.reduce((acc, v, d) => acc + v * w[d + 1], 0);
+        w.slice(1).forEach((v, d) => (imp[d] = Math.abs(v)));
+        modelArtifact.weights = w.slice(1);
+        modelArtifact.bias = w[0];
+      } else if (algo === 'dt') {
+        trainedFamily = 'Decision Tree Regressor (CART, variance)';
+        const tree = fitTree(trainVecs, y, { task: 'regression', maxDepth, minSamplesSplit: minSplit }, imp);
+        predictRow = (vec) => Number(treeLeaf(tree, vec).value);
+        modelArtifact.tree = tree;
+        log('TRAINING', `Grew a tree of depth ${treeDepth(tree)} (max_depth ${maxDepth}).`);
+      } else {
+        trainedFamily = 'Random Forest Regressor (bagged CART trees)';
+        const forest = fitForest(trainVecs, y, { task: 'regression', maxDepth, minSamplesSplit: minSplit, nEstimators, seed }, imp);
+        predictRow = (vec) => Number(forestPredict(forest, vec, 'regression').value);
+        modelArtifact.forest = forest;
+        log('TRAINING', `Trained ${forest.length} trees on bootstrap samples (max_depth ${maxDepth}).`);
       }
-      const w = bVec.map((v, i) => v / (A[i][i] || 1e-12));
-      const predictRow = (vec: number[]) => w[0] + vec.reduce((acc, v, d) => acc + v * w[d + 1], 0);
 
       const residuals: Array<{ actual: number; predicted: number; residual: number }> = [];
-      let totalAbsErr = 0;
-      let totalSqErr = 0;
+      let totalAbsErr = 0, totalSqErr = 0, totalVariance = 0;
       const actualValues = testRows.map((r) => Number(r[targetCol]) || 0);
       const actualMean = actualValues.reduce((x, z) => x + z, 0) / (actualValues.length || 1);
-      let totalVariance = 0;
       testVecs.forEach((v, i) => {
         const actual = actualValues[i];
         const predicted = parseFloat(predictRow(v).toFixed(2));
@@ -847,39 +905,28 @@ seed: 42
         totalSqErr += residual * residual;
         totalVariance += (actual - actualMean) * (actual - actualMean);
       });
-
       const n = testRows.length || 1;
       const mae = parseFloat((totalAbsErr / n).toFixed(2));
       const mse = parseFloat((totalSqErr / n).toFixed(2));
       const rmse = parseFloat(Math.sqrt(mse).toFixed(2));
       const r2 = parseFloat((totalVariance ? 1 - totalSqErr / totalVariance : 0).toFixed(4));
-
-      const absW = w.slice(1).map((v) => Math.abs(v));
-      const sumW = absW.reduce((x, z) => x + z, 0) || 1;
-      featureImportances = featureNames
-        .map((f, d) => ({ feature: f, importance: parseFloat((absW[d] / sumW).toFixed(3)) }))
-        .sort((x, z) => z.importance - x.importance);
-
-      const trainSqErr = trainVecs.reduce((acc, v, i) => acc + Math.pow(y[i] - predictRow(v), 2), 0);
-      const trainRmse = Math.sqrt(trainSqErr / (trainVecs.length || 1));
-      fitNote = `Training RMSE ${trainRmse.toFixed(2)} vs held-out RMSE ${rmse}` +
-        (rmse > trainRmse * 1.5 ? ' — the gap suggests overfitting.' : ' — no large generalisation gap.');
-
-      metrics = { mae, mse, rmse, r2_score: r2, residuals: residuals.slice(0, 15) };
-      modelArtifact.weights = w.slice(1);
-      modelArtifact.bias = w[0];
-
-      log('EVALUATING', `Evaluation on held-out test data: R² Score=${r2}, RMSE=${rmse}, MAE=${mae}.`);
+      featureImportances = collapseImportance(spec, imp);
+      const trainRmse = Math.sqrt(trainVecs.reduce((acc, v, i) => acc + Math.pow(y[i] - predictRow(v), 2), 0) / (trainVecs.length || 1));
+      fitNote = `Training RMSE ${trainRmse.toFixed(2)} vs held-out RMSE ${rmse}` + (rmse > trainRmse * 1.5 ? ' — the gap suggests overfitting.' : ' — no large generalisation gap.');
+      metrics = { mae, mse, rmse, r2_score: r2, residuals: residuals.slice(0, 50) };
+      log('EVALUATING', `Held-out evaluation on ${testRows.length} rows: R² Score=${r2}, RMSE=${rmse}, MAE=${mae}.`);
     }
 
-    // Dynamic feature schema for live predictions
-    const feature_schema = featureNames.map((f) => {
-      const meta = dataset.columns_metadata?.find((c) => c.name === f);
+    // Feature schema for the prediction form, from the fitted preprocessing (real categories and ranges).
+    const feature_schema = spec.features.map((f) => {
+      const meta = dataset.columns_metadata?.find((c) => c.name === f.name);
       return {
-        name: f,
-        type: (meta?.data_type || 'NUMERICAL') as 'NUMERICAL' | 'CATEGORICAL',
-        default_val: meta?.mean !== undefined ? meta.mean : meta?.sample_values?.[0] || 'Default',
-        options: meta?.sample_values,
+        name: f.name,
+        type: (f.kind === 'categorical' ? 'CATEGORICAL' : 'NUMERICAL') as 'NUMERICAL' | 'CATEGORICAL',
+        default_val: f.kind === 'categorical' ? f.fill ?? f.categories?.[0] ?? '' : meta?.mean ?? f.fill ?? 0,
+        options: f.kind === 'categorical' ? f.categories : undefined,
+        min: meta?.min,
+        max: meta?.max,
       };
     });
 
@@ -892,6 +939,8 @@ seed: 42
       target_column: targetCol,
       feature_columns: featureNames,
       model_type: config.model_type,
+      algorithm: trainedFamily,
+      preprocessing_applied: { missing_value_strategy: spec.missing, scaling: spec.scaling, categorical_encoding: 'ONE_HOT', encoded_columns: spec.expanded.length },
       hyperparameters: config.hyperparameters || {},
       train_split: splitRatio,
       status: 'COMPLETED',
@@ -903,7 +952,7 @@ seed: 42
         loss_curve: lossCurve,
         recommendations: [
           `Trained model family: ${trainedFamily}.`,
-          'Perform k-fold cross validation (k=5) to check stability against sampling bias.',
+          'Metrics come from a single held-out split; re-run with another random_seed to see how stable they are.',
         ],
       },
       feature_schema,
@@ -928,59 +977,112 @@ seed: 42
 
   public static getExperimentById(studentId: string, experimentId: string): MLExperimentEntity {
     const exp = this.experiments.get(experimentId);
-    if (!exp) throw new Error(`Experiment '${experimentId}' not found`);
+    // Another student's experiment is reported as not found, never returned.
+    if (!exp || exp.student_id !== studentId) throw new NotFoundError(`Experiment '${experimentId}' not found`);
     return exp;
   }
 
   // -------------------------------------------------------------
   // Test Model & Make Live Prediction
   // -------------------------------------------------------------
-  public static predict(
-    studentId: string,
-    experimentId: string,
-    inputs: Record<string, any>
-  ): MLPredictionResult {
+  /** studentId -> prediction history (newest first). Persisted. */
+  private static predictions: Map<string, Array<{ id: string; experiment_id: string; experiment_name: string; inputs: Record<string, any>; result: MLPredictionResult; created_at: string }>> = new Map();
+
+  public static getPredictions(studentId: string, experimentId?: string) {
+    const list = this.predictions.get(studentId) || [];
+    return experimentId ? list.filter((p) => p.experiment_id === experimentId) : list;
+  }
+
+  public static predict(studentId: string, experimentId: string, inputs: Record<string, any>): MLPredictionResult {
     const exp = this.getExperimentById(studentId, experimentId);
     const artifact = this.fittedModels.get(experimentId);
-
     if (!artifact) {
-      throw new ValidationError('This experiment has no fitted model in memory (it was trained before a restart). Re-run it to make predictions.');
+      throw new ValidationError('This experiment has no saved model. Re-run it to make predictions.');
     }
+    const result = artifact.preprocess ? this.predictWithSpec(exp, artifact, inputs || {}) : this.predictLegacy(exp, artifact, inputs || {});
+    const list = this.predictions.get(studentId) || [];
+    list.unshift({ id: `pred_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, experiment_id: exp.id, experiment_name: exp.name, inputs, result, created_at: new Date().toISOString() });
+    this.predictions.set(studentId, list.slice(0, 200));
+    return result;
+  }
+
+  private static predictWithSpec(exp: MLExperimentEntity, artifact: FittedModelArtifact, inputs: Record<string, any>): MLPredictionResult {
+    const spec = artifact.preprocess!;
+    // Validate every feature: numeric features need numbers, categorical ones a known category.
+    const problems: string[] = [];
+    for (const f of spec.features) {
+      const v = inputs[f.name];
+      if (v === undefined || v === null || v === '') problems.push(`${f.name} is required`);
+      else if (f.kind === 'numeric' && !Number.isFinite(Number(v))) problems.push(`${f.name} must be a number`);
+      else if (f.kind === 'categorical' && !(f.categories || []).includes(String(v))) problems.push(`${f.name} must be one of: ${(f.categories || []).join(', ')}`);
+    }
+    if (problems.length) throw new ValidationError(`Invalid prediction input: ${problems.join('; ')}.`);
+    const vec = transformRow(spec, inputs);
+    const dist2 = (x: number[], y: number[]) => x.reduce((acc, v, d) => acc + (v - y[d]) * (v - y[d]), 0);
+    const task = artifact.task_type;
+    if (task === 'CLUSTERING' && artifact.centroids?.length) {
+      const ds = artifact.centroids.map((c) => dist2(vec, c));
+      const best = ds.indexOf(Math.min(...ds));
+      return { predicted_value: `Cluster ${best + 1}`, predicted_label: `Cluster ${best + 1}`, explanation: `Nearest centroid is Cluster ${best + 1} (squared distance ${ds[best].toFixed(3)} in the scaled feature space).` } as MLPredictionResult;
+    }
+    if (task === 'CLASSIFICATION') {
+      let label = '';
+      let probs: Record<string, number> | undefined;
+      let explanation = '';
+      if (artifact.algo === 'knn' && artifact.knn) {
+        const nearest = artifact.knn.vectors.map((t, i) => ({ i, d: dist2(vec, t) })).sort((x, y) => x.d - y.d).slice(0, artifact.knn.k);
+        const votes: Record<string, number> = {};
+        nearest.forEach((n) => (votes[artifact.knn!.labels[n.i]] = (votes[artifact.knn!.labels[n.i]] || 0) + 1));
+        probs = {};
+        (artifact.class_labels || []).forEach((l) => (probs![l] = parseFloat(((votes[l] || 0) / nearest.length).toFixed(2))));
+        label = Object.entries(votes).sort((x, y) => y[1] - x[1] || x[0].localeCompare(y[0]))[0][0];
+        explanation = `${votes[label]} of the ${nearest.length} nearest training rows are '${label}'.`;
+      } else if (artifact.algo === 'dt' && artifact.tree) {
+        const leaf = treeLeaf(artifact.tree, vec);
+        label = String(leaf.value);
+        probs = {};
+        Object.entries(leaf.dist || {}).forEach(([k, n]) => (probs![k] = parseFloat((n / leaf.n).toFixed(2))));
+        explanation = `The tree leaf holds ${leaf.n} training rows; most are '${label}'.`;
+      } else if (artifact.algo === 'rf' && artifact.forest) {
+        const p = forestPredict(artifact.forest, vec, 'classification');
+        label = String(p.value);
+        probs = p.probs;
+        explanation = `${Math.round((p.probs?.[label] || 0) * artifact.forest.length)} of ${artifact.forest.length} trees voted '${label}'.`;
+      } else if (artifact.algo === 'logreg' && artifact.logistic) {
+        const p = logisticProbs(artifact.logistic, vec);
+        probs = {};
+        artifact.logistic.classes.forEach((c, k) => (probs![c] = parseFloat(p[k].toFixed(3))));
+        label = artifact.logistic.classes[p.indexOf(Math.max(...p))];
+        explanation = `Softmax probability of '${label}' is ${(probs[label] * 100).toFixed(1)}%.`;
+      } else {
+        throw new ValidationError('The saved model is incomplete. Re-run the experiment.');
+      }
+      return { predicted_value: label, predicted_label: label, class_probabilities: probs, confidence: probs?.[label], explanation };
+    }
+    let value: number;
+    if (artifact.algo === 'dt' && artifact.tree) value = Number(treeLeaf(artifact.tree, vec).value);
+    else if (artifact.algo === 'rf' && artifact.forest) value = Number(forestPredict(artifact.forest, vec, 'regression').value);
+    else value = (artifact.bias || 0) + vec.reduce((acc, v, d) => acc + v * (artifact.weights?.[d] || 0), 0);
+    return { predicted_value: parseFloat(value.toFixed(2)), explanation: `${exp.algorithm || exp.model_type} prediction. Held-out MAE for this model: ${exp.metrics.mae ?? 'n/a'}.` } as MLPredictionResult;
+  }
+
+  /** Models trained before preprocessing specs were stored (standardised numeric features only). */
+  private static predictLegacy(exp: MLExperimentEntity, artifact: FittedModelArtifact, inputs: Record<string, any>): MLPredictionResult {
     const vec = artifact.feature_names.map((f) => ((Number(inputs[f]) || 0) - (artifact.means?.[f] ?? 0)) / (artifact.stds?.[f] || 1));
     const dist2 = (x: number[], y: number[]) => x.reduce((acc, v, d) => acc + (v - y[d]) * (v - y[d]), 0);
-
     if (artifact.task_type === 'CLUSTERING' && artifact.centroids?.length) {
       const ds = artifact.centroids.map((c) => dist2(vec, c));
       const best = ds.indexOf(Math.min(...ds));
-      return {
-        predicted_value: `Cluster ${best + 1}`,
-        predicted_label: `Cluster ${best + 1}`,
-        explanation: `Nearest centroid in standardised feature space is Cluster ${best + 1} (squared distance ${ds[best].toFixed(3)}).`,
-      } as MLPredictionResult;
+      return { predicted_value: `Cluster ${best + 1}`, predicted_label: `Cluster ${best + 1}`, explanation: `Nearest centroid is Cluster ${best + 1}.` } as MLPredictionResult;
     }
-
-    const knn = (artifact as any).knn as { k: number; vectors: number[][]; labels: string[] } | undefined;
-    if (artifact.task_type === 'CLASSIFICATION' && knn) {
-      const nearest = knn.vectors.map((t, i) => ({ i, d: dist2(vec, t) })).sort((x, y) => x.d - y.d).slice(0, knn.k);
+    if (artifact.task_type === 'CLASSIFICATION' && artifact.knn) {
+      const nearest = artifact.knn.vectors.map((t, i) => ({ i, d: dist2(vec, t) })).sort((x, y) => x.d - y.d).slice(0, artifact.knn.k);
       const votes: Record<string, number> = {};
-      nearest.forEach((n) => { votes[knn.labels[n.i]] = (votes[knn.labels[n.i]] || 0) + 1; });
-      const probs: Record<string, number> = {};
-      (artifact.class_labels || Object.keys(votes)).forEach((l) => { probs[l] = parseFloat(((votes[l] || 0) / nearest.length).toFixed(2)); });
+      nearest.forEach((n) => (votes[artifact.knn!.labels[n.i]] = (votes[artifact.knn!.labels[n.i]] || 0) + 1));
       const chosen = Object.entries(votes).sort((x, y) => y[1] - x[1] || x[0].localeCompare(y[0]))[0][0];
-      return {
-        predicted_value: chosen,
-        predicted_label: chosen,
-        class_probabilities: probs,
-        confidence: probs[chosen],
-        explanation: `${votes[chosen]} of the ${nearest.length} nearest training rows are '${chosen}'.`,
-      };
+      return { predicted_value: chosen, predicted_label: chosen, explanation: `${votes[chosen]} of the ${nearest.length} nearest training rows are '${chosen}'.` };
     }
-
-    const weights = artifact.weights || [];
-    const predicted = (artifact.bias || 0) + vec.reduce((acc, v, d) => acc + v * (weights[d] || 0), 0);
-    return {
-      predicted_value: parseFloat(predicted.toFixed(2)),
-      explanation: `Linear model prediction. Held-out MAE for this model: ${exp.metrics.mae ?? 'n/a'}.`,
-    } as MLPredictionResult;
+    const predicted = (artifact.bias || 0) + vec.reduce((acc, v, d) => acc + v * (artifact.weights?.[d] || 0), 0);
+    return { predicted_value: parseFloat(predicted.toFixed(2)), explanation: `Linear model prediction. Held-out MAE: ${exp.metrics.mae ?? 'n/a'}.` } as MLPredictionResult;
   }
 }

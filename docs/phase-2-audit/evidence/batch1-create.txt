@@ -1,0 +1,12 @@
+PASS  J1 run program                           SUCCESS "144\n"
+PASS  J1 save program                          status 201 id saved_1793901354913_i7ki
+PASS  J1 execution history recorded            
+PASS  DSA hidden tests not exposed             hidden count 3
+PASS  J2 wrong solution rejected               WRONG_ANSWER 2/5
+PASS  J2 correct solution accepted             ACCEPTED 5/5
+PASS  J2 hidden test I/O not in submit response 
+PASS  J2 progress shows solved                 
+PASS  J3 create table                          201 
+PASS  J3 insert + select                       [{"lab_id":1,"title":"DBMS Lab"},{"lab_id":2,"title":"OS Lab"}]
+PASS  J3 save query                            
+PASS  SQL student B cannot see A table         no such table: labs_p2. Check the table name in the schema browser.

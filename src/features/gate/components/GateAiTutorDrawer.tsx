@@ -42,7 +42,7 @@ export const GateAiTutorDrawer: React.FC<GateAiTutorDrawerProps> = ({
     {
       id: 'welcome',
       sender: 'ai',
-      text: `Hello! I am **GateGuru**, your dedicated AI Professor for **GATE ${profile?.target_paper || 'CS'} (${profile?.exam_cycle || '2026'})**.
+      text: `Hello! I am **GateGuru**, your dedicated AI Professor for **GATE ${profile?.target_paper || 'CS'} ${profile?.exam_cycle ? `(${profile.exam_cycle})` : ''}**.
       
 I can assist you with:
 - **Step-by-Step Mathematical Solvers**: Deriving formulas, recurrence relations, and numerical solutions.

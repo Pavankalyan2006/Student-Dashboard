@@ -1,7 +1,7 @@
 // server/api/routes/labAssistant.ts
 // Express REST router for the complete Lab Assistant & Experiment Workspace module
 
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { requireAuth } from '../../middleware/auth';
 import { LabAssistantService } from '../../services/labAssistantService';
 import { logger } from '../../core/logging';
@@ -165,7 +165,7 @@ labAssistantRouter.post('/:labId/experiments', requireAuth, async (req: Request,
     if (!lab) return res.status(404).json({ success: false, message: 'Laboratory course not found' });
 
     const expData = req.body;
-    const expId = expData.id || `exp_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const expId = LabAssistantService.safeExperimentId(expData.id, studentId, req.params.labId, `exp_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`);
     const now = new Date().toISOString();
 
     const existingExps = await db.getLabExperiments(req.params.labId, studentId);
@@ -411,7 +411,9 @@ labAssistantRouter.post('/:labId/experiments/:expId/observations', requireAuth, 
 // ==========================================
 // 8. Viva Voce Practice (Supports both legacy and new routes)
 // ==========================================
-labAssistantRouter.post('/:labId/experiments/:expId/viva/:qId', requireAuth, async (req: Request, res: Response) => {
+labAssistantRouter.post('/:labId/experiments/:expId/viva/:qId', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
+  // '/viva/generate' is declared further down; without this it was swallowed here as a question id (404).
+  if (req.params.qId === 'generate') return next();
   try {
     const studentId = req.user!.userId;
     const { student_answer } = req.body;
@@ -522,7 +524,8 @@ labAssistantRouter.get('/:labId/experiments/:expId/report', requireAuth, async (
   try {
     const studentId = req.user!.userId;
     const reports = await db.getLabReports(studentId, req.params.labId);
-    const report = reports.find((r) => r.experiment_id === req.params.expId) || reports[0];
+    // Only this experiment's report (it used to fall back to another experiment's report).
+    const report = reports.find((r) => r.experiment_id === req.params.expId);
     if (!report) {
       // Auto generate fresh report from experiment
       const generated = await LabAssistantService.generateReport(studentId, req.params.expId);

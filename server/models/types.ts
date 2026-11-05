@@ -933,6 +933,13 @@ export interface LanguageConfig {
   memory_limit_mb: number;
   enabled: boolean;
   boilerplate: string;
+  /** First word of run/compile command that must exist on the host. */
+  run_binary?: string;
+  /** Alternative binary names tried in order when probing availability (e.g. python3, python). */
+  binary_candidates?: string[];
+  /** Filled in by LanguageRegistry.getAll(): whether the toolchain is installed on this server. */
+  available?: boolean;
+  availability_detail?: string;
 }
 
 export interface ExecutionResult {
@@ -944,6 +951,8 @@ export interface ExecutionResult {
   execution_time_ms: number;
   memory_kb?: number;
   error_message?: string;
+  /** How the program was isolated from the host: 'namespace', 'rlimit-only' or 'none'. */
+  isolation?: string;
 }
 
 export interface CodingSession {

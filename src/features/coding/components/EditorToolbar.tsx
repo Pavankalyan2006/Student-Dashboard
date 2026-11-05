@@ -14,6 +14,7 @@ import {
   Clock,
   Bookmark,
   Share2,
+  Copy,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -42,9 +43,18 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
 
   const handleFormat = () => {
-    if (typeof (window as any).__btech_format_code === 'function') {
-      (window as any).__btech_format_code();
-      toast.success('Code formatted');
+    const fmt = (window as any).__btech_format_code;
+    const ok = typeof fmt === 'function' ? fmt() : false;
+    if (ok) toast.success('Code formatted');
+    else toast.info('Automatic formatting is only available for JavaScript in this editor.');
+  };
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(useCodingEditorStore.getState().sourceCode);
+      toast.success('Code copied to clipboard');
+    } catch {
+      toast.error('Could not access the clipboard');
     }
   };
 
@@ -55,9 +65,18 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
     }
   };
 
-  const handleShare = () => {
-    navigator.clipboard.writeText(window.location.href);
-    toast.success('Workspace link copied to clipboard');
+  const handleShare = async () => {
+    // Only a saved session has a URL that reopens this code; an unsaved editor link would open a blank editor.
+    if (!/\/coding\/(session|problem)\//.test(window.location.pathname)) {
+      toast.info('Save the code first; only saved sessions and problems have a link that reopens them.');
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast.success('Workspace link copied to clipboard (only you can open it while signed in)');
+    } catch {
+      toast.error('Could not access the clipboard');
+    }
   };
 
   return (
@@ -109,7 +128,8 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
           <button
             onClick={() => useCodingEditorStore.getState().setIsExecuting(false)}
             className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 text-rose-600 dark:text-rose-400 rounded-lg text-xs font-medium"
-            title="Stop execution"
+            title="Stop waiting for this run (the server still enforces its time limit)"
+            aria-label="Stop waiting for this run"
           >
             <Square className="w-3 h-3 fill-current" />
             <span>Stop</span>
@@ -174,6 +194,14 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
           </button>
         )}
 
+        <button
+          onClick={handleCopy}
+          className="flex items-center gap-1 px-2 py-1.5 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 rounded-lg text-xs"
+          title="Copy code"
+          aria-label="Copy code"
+        >
+          <Copy className="w-3.5 h-3.5" />
+        </button>
         <button
           onClick={handleShare}
           className="p-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"

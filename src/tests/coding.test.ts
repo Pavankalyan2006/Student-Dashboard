@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { AIService } from '../../server/ai/service';
 import { db } from '../../server/db/database';
 import { SandboxService } from '../../server/execution/sandbox';
 import { LanguageRegistry } from '../../server/execution/languages';
@@ -369,6 +370,29 @@ if __name__ == '__main__':
   // 7. AI Code Intelligence & Tool Registry
   // =============================================================
   describe('AI Code Intelligence & Tool Registry', () => {
+    let prompts: string[] = [];
+    let stubOn = false;
+    const stubAnswers: Array<[RegExp, any]> = [
+      [/"overview"/, { overview: 'Computes n factorial recursively', step_by_step: ['Base case n<=1', 'Recursive multiply'], important_concepts: ['Recursion'], time_complexity: 'O(n)', space_complexity: 'O(n)', potential_issues: [], suggestions: [] }],
+      [/"corrected_code"/, { problem: 'TypeError', cause: 'str + int', location: 'line 1', explanation: 'Convert 5 to str', suggested_fix: 'str(5)', corrected_code: 'print("Hello" + str(5))', prevention_tip: 'Use f-strings' }],
+      [/"type": "normal"|test cases/i, [{ type: 'normal', input: '4', expected: 'True', explanation: 'even' }, { type: 'boundary', input: '0', expected: 'True', explanation: 'zero' }, { type: 'edge', input: '-1', expected: 'False', explanation: 'negative odd' }]],
+      [/"readability"/, { correctness: 'Correct for lists of numbers', readability: 'Clear', performance: 'O(n)', security: 'No issues', best_practices: 'Add type hints', complexity: 'O(n)', issues: [], improvements: [] }],
+    ];
+    beforeEach(() => {
+      prompts = [];
+      vi.spyOn(AIService, 'generate').mockImplementation(async (messages: any[]) => {
+        const prompt = messages.map((m: any) => m.content).join('\n');
+        prompts.push(prompt);
+        if (!stubOn) return { text: '**AI unavailable.** test', usage: {} } as any;
+        const hit = stubAnswers.find(([re]) => re.test(prompt));
+        return { text: JSON.stringify(hit ? hit[1] : {}), provider: 'test-stub' } as any;
+      });
+    });
+    afterEach(() => {
+      vi.restoreAllMocks();
+      stubOn = false;
+    });
+
     it('verifies all 12 AI Coding Tools are registered in ToolRegistry', () => {
       const expectedTools = [
         'analyze_code',
@@ -404,7 +428,17 @@ if __name__ == '__main__':
       expect(runTool?.confirmationRequired).toBe(true); // AI triggering execution requires student confirmation!
     });
 
+    // No model is configured in tests. Without one, every AI coding action must fail with 503
+    // instead of returning template text; with a stubbed model, the prompt must carry the
+    // student's actual code and language.
+    it('returns 503 AI_UNAVAILABLE instead of template output when no model is configured', async () => {
+      await expect(CodeAIService.explainCode({ language: 'python', source_code: 'print(1)' })).rejects.toMatchObject({ statusCode: 503 });
+      await expect(CodeAIService.reviewCode({ language: 'python', source_code: 'print(1)' })).rejects.toMatchObject({ statusCode: 503 });
+      await expect(CodeAIService.generateHint({ language: 'python', source_code: 'print(1)', problem_description: 'x', level: 1 } as any)).rejects.toMatchObject({ statusCode: 503 });
+    });
+
     it('explains code with step-by-step breakdown, complexity, and concepts', async () => {
+      stubOn = true;
       const explanation = await CodeAIService.explainCode({
         language: 'python',
         source_code: `def factorial(n):\n    return 1 if n <= 1 else n * factorial(n - 1)`,
@@ -414,9 +448,13 @@ if __name__ == '__main__':
       expect(explanation.step_by_step.length).toBeGreaterThan(0);
       expect(explanation.time_complexity).toBeDefined();
       expect(explanation.space_complexity).toBeDefined();
+      // The model saw the student's real code and language.
+      expect(prompts[0]).toContain('def factorial(n)');
+      expect(prompts[0]).toContain('python');
     });
 
     it('diagnoses code errors with root cause, explanation, and corrected code', async () => {
+      stubOn = true;
       const debugResult = await CodeAIService.debugCode({
         language: 'python',
         source_code: `print("Hello" + 5)`,
@@ -430,6 +468,7 @@ if __name__ == '__main__':
     });
 
     it('generates test cases with normal, boundary, edge, and invalid categories', async () => {
+      stubOn = true;
       const cases = await CodeAIService.generateTestCases({
         language: 'python',
         source_code: 'def is_even(n): return n % 2 == 0',
@@ -441,6 +480,7 @@ if __name__ == '__main__':
     });
 
     it('reviews code for correctness, readability, and security', async () => {
+      stubOn = true;
       const review = await CodeAIService.reviewCode({
         language: 'python',
         source_code: 'def sum_all(nums): return sum(nums)',

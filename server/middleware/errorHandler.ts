@@ -11,6 +11,15 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
     statusCode = err.statusCode;
     code = err.code;
     message = err.message;
+  } else if ((err as any)?.type === 'entity.too.large') {
+    // body-parser limit (express.json 25 MB)
+    statusCode = 413;
+    code = 'PAYLOAD_TOO_LARGE';
+    message = 'The request is too large.';
+  } else if ((err as any)?.type === 'entity.parse.failed') {
+    statusCode = 400;
+    code = 'INVALID_JSON';
+    message = 'The request body is not valid JSON.';
   } else if (err instanceof Error) {
     // Standard JS error
     message = err.message || 'Internal server error';

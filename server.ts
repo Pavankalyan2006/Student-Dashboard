@@ -64,8 +64,8 @@ async function setupPersistence() {
   ]);
   registerPersistentSource('onboarding', onboardingStores as unknown as Record<string, any>);
   registerPersistentSource('career', CareerService as unknown as Record<string, any>, ['careerProfiles']);
-  registerPersistentSource('mlLab', MlLabService as unknown as Record<string, any>, ['workspaces', 'customDatasets', 'experiments', 'fittedModels']);
-  registerPersistentSource('sqlLab', SqlLabSandboxService as unknown as Record<string, any>, ['studentDatabases', 'queryHistories']);
+  registerPersistentSource('mlLab', MlLabService as unknown as Record<string, any>, ['workspaces', 'customDatasets', 'experiments', 'fittedModels', 'predictions']);
+  registerPersistentSource('sqlLab', SqlLabSandboxService as unknown as Record<string, any>, ['studentDbImages', 'queryHistories', 'savedQueries']);
   registerPersistentSource('semesterCommandCenter', semesterStateStore as unknown as Record<string, any>, ['states']);
   restoreSnapshot();
   const file = getSnapshotPath();

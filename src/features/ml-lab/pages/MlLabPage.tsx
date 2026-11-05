@@ -91,6 +91,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
   // Model Training Form State
   const [expName, setExpName] = React.useState('Iris Random Forest v1');
   const [modelType, setModelType] = React.useState('Random Forest');
+  const [expNameEdited, setExpNameEdited] = React.useState(false);
   const [taskType, setTaskType] = React.useState<'CLASSIFICATION' | 'REGRESSION' | 'CLUSTERING'>('CLASSIFICATION');
   const [targetColumn, setTargetColumn] = React.useState('');
   const [selectedFeatures, setSelectedFeatures] = React.useState<string[]>([]);
@@ -98,16 +99,19 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
   const [imputationStrategy, setImputationStrategy] = React.useState<'MEAN' | 'MEDIAN' | 'DROP'>('MEAN');
   const [scalingStrategy, setScalingStrategy] = React.useState<'STANDARD' | 'MINMAX' | 'NONE'>('STANDARD');
   // Hyperparameters
-  const [nEstimators, setNEstimators] = React.useState(100);
+  const [nEstimators, setNEstimators] = React.useState(50);
   const [maxDepth, setMaxDepth] = React.useState(4);
   const [learningRate, setLearningRate] = React.useState(0.05);
   const [nClusters, setNClusters] = React.useState(3);
+  const [nNeighbors, setNNeighbors] = React.useState(5);
+  const [epochs, setEpochs] = React.useState(300);
   const [isTraining, setIsTraining] = React.useState(false);
 
   // Prediction Tester State
   const [predictionInputs, setPredictionInputs] = React.useState<Record<string, any>>({});
   const [predictionResult, setPredictionResult] = React.useState<MLPredictionResult | null>(null);
   const [isPredicting, setIsPredicting] = React.useState(false);
+  const [predictionHistory, setPredictionHistory] = React.useState<any[]>([]);
 
   // Load Initial Lab Data
   const loadInitialData = React.useCallback(async () => {
@@ -166,6 +170,11 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
     }
   }, [selectedDataset]);
 
+  // Keep the suggested experiment name in line with the chosen dataset and model until the student types their own.
+  React.useEffect(() => {
+    if (!expNameEdited && selectedDataset) setExpName(`${selectedDataset.name} - ${modelType}`);
+  }, [selectedDataset, modelType, expNameEdited]);
+
   // Synchronize Prediction Inputs when Experiment Changes
   React.useEffect(() => {
     if (selectedExperiment?.feature_schema) {
@@ -175,6 +184,9 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
       });
       setPredictionInputs(initialInputs);
       setPredictionResult(null);
+    }
+    if (selectedExperiment) {
+      learningModulesApi.mlLab.getPredictions(selectedExperiment.id).then(setPredictionHistory).catch(() => setPredictionHistory([]));
     }
   }, [selectedExperiment]);
 
@@ -263,6 +275,35 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
     }
   };
 
+  const handleDeleteDataset = async () => {
+    if (!selectedDataset || selectedDataset.source !== 'UPLOADED') return;
+    if (!window.confirm(`Remove the dataset '${selectedDataset.name}'? Experiments already trained on it are kept.`)) return;
+    try {
+      await learningModulesApi.mlLab.deleteDataset(selectedDataset.id);
+      const remaining = datasets.filter((d) => d.id !== selectedDataset.id);
+      setDatasets(remaining);
+      setSelectedDataset(remaining[0] || null);
+      toast.success('Dataset removed');
+    } catch (err: any) {
+      toast.error('Could not remove dataset: ' + err.message);
+    }
+  };
+
+  const handleCsvFile = (file: File | undefined) => {
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('CSV files must be 5 MB or smaller.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setNewDatasetCsv(String(reader.result || ''));
+      if (!newDatasetName.trim()) setNewDatasetName(file.name.replace(/\.csv$/i, ''));
+    };
+    reader.onerror = () => toast.error('Could not read that file.');
+    reader.readAsText(file);
+  };
+
   // Feature Toggle Checkbox
   const toggleFeature = (feat: string) => {
     if (selectedFeatures.includes(feat)) {
@@ -295,12 +336,15 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
     try {
       setIsTraining(true);
       const hyperparameters: Record<string, any> = {};
+      // Only the hyperparameters the chosen algorithm actually uses are sent.
+      if (modelType.includes('Forest')) hyperparameters.n_estimators = Number(nEstimators);
       if (modelType.includes('Forest') || modelType.includes('Tree')) {
-        hyperparameters.n_estimators = Number(nEstimators);
         hyperparameters.max_depth = Number(maxDepth);
-      } else if (modelType.includes('Regression')) {
+      } else if (modelType === 'Logistic Regression') {
         hyperparameters.learning_rate = Number(learningRate);
-        hyperparameters.epochs = 20;
+        hyperparameters.epochs = Number(epochs);
+      } else if (modelType === 'KNN') {
+        hyperparameters.n_neighbors = Number(nNeighbors);
       } else if (modelType.includes('K-Means') || modelType.includes('KMEANS')) {
         hyperparameters.n_clusters = Number(nClusters);
       }
@@ -341,7 +385,8 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
       setIsPredicting(true);
       const res = await learningModulesApi.mlLab.predict(selectedExperiment.id, predictionInputs);
       setPredictionResult(res);
-      toast.success('Inference calculated from fitted model!');
+      toast.success('Prediction calculated from the trained model');
+      learningModulesApi.mlLab.getPredictions(selectedExperiment.id).then(setPredictionHistory).catch(() => {});
     } catch (err: any) {
       toast.error('Prediction failed: ' + err.message);
     } finally {
@@ -374,7 +419,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
             {/* Workspace Selector */}
             <div className="flex items-center gap-1.5 min-w-0 max-w-full bg-slate-100 border border-slate-300 rounded-lg px-2.5 py-1">
               <Layers className="w-4 h-4 text-slate-500" />
-              <select
+              <select aria-label="Active ML project"
                 value={selectedWorkspace?.id || ''}
                 onChange={(e) => {
                   const ws = workspaces.find((w) => w.id === e.target.value);
@@ -574,7 +619,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
 
             {/* Code Textarea */}
             <div className="flex-1 p-4 overflow-hidden flex flex-col">
-              <textarea
+              <textarea aria-label="File content"
                 value={fileContent}
                 onChange={(e) => setFileContent(e.target.value)}
                 disabled={!selectedFile}
@@ -593,7 +638,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
           <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <span className="text-sm font-semibold text-slate-700">Active Dataset:</span>
-              <select
+              <select aria-label="Dataset"
                 value={selectedDataset?.id || ''}
                 onChange={(e) => {
                   const ds = datasets.find((d) => d.id === e.target.value);
@@ -609,15 +654,33 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
               </select>
             </div>
 
-            <Button
-              size="sm"
-              onClick={() => setShowUploadDatasetModal(true)}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs"
-            >
-              <Upload className="w-3.5 h-3.5 mr-1.5" />
-              Upload Custom CSV
-            </Button>
+            <div className="flex items-center gap-2">
+              {selectedDataset?.source === 'UPLOADED' && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleDeleteDataset}
+                  className="text-xs text-red-700 border-red-200 hover:bg-red-50"
+                >
+                  <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+                  Remove dataset
+                </Button>
+              )}
+              <Button
+                size="sm"
+                onClick={() => setShowUploadDatasetModal(true)}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs"
+              >
+                <Upload className="w-3.5 h-3.5 mr-1.5" />
+                Upload Custom CSV
+              </Button>
+            </div>
           </div>
+          {selectedDataset && ((selectedDataset as any).duplicate_rows || 0) > 0 && (
+            <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+              This dataset has {(selectedDataset as any).duplicate_rows} duplicate row(s). They are kept as uploaded; remove them from the CSV if they are not real repeated observations.
+            </p>
+          )}
 
           {selectedDataset && (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -755,17 +818,20 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Experiment Name</label>
-                <input
+                <input aria-label="Experiment name"
                   type="text"
                   value={expName}
-                  onChange={(e) => setExpName(e.target.value)}
+                  onChange={(e) => {
+                    setExpName(e.target.value);
+                    setExpNameEdited(true);
+                  }}
                   className="w-full border border-slate-300 rounded-lg p-2.5 text-sm font-semibold focus:ring-2 focus:ring-emerald-500"
                   placeholder="e.g. Iris Random Forest Depth-4"
                 />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Dataset</label>
-                <select
+                <select aria-label="Dataset"
                   value={selectedDataset?.id || ''}
                   onChange={(e) => {
                     const ds = datasets.find((d) => d.id === e.target.value);
@@ -786,7 +852,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Learning Task</label>
-                <select
+                <select aria-label="Task type"
                   value={taskType}
                   onChange={(e: any) => setTaskType(e.target.value)}
                   className="w-full border border-slate-300 rounded-lg p-2.5 text-sm font-semibold focus:ring-2 focus:ring-emerald-500"
@@ -798,7 +864,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Model Algorithm</label>
-                <select
+                <select aria-label="Model algorithm"
                   value={modelType}
                   onChange={(e) => setModelType(e.target.value)}
                   className="w-full border border-slate-300 rounded-lg p-2.5 text-sm font-semibold focus:ring-2 focus:ring-emerald-500"
@@ -808,6 +874,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
                       <option value="Random Forest">Random Forest Classifier</option>
                       <option value="Decision Tree">Decision Tree Classifier</option>
                       <option value="Logistic Regression">Logistic Regression (Gradient Descent)</option>
+                      <option value="KNN">k-Nearest Neighbours</option>
                     </>
                   )}
                   {taskType === 'REGRESSION' && (
@@ -831,7 +898,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
                   <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1">
                     Target Column (Label to Predict)
                   </label>
-                  <select
+                  <select aria-label="Target column"
                     value={targetColumn}
                     onChange={(e) => setTargetColumn(e.target.value)}
                     className="border border-slate-300 rounded-lg p-2 text-xs font-mono font-bold text-slate-800 bg-white"
@@ -892,7 +959,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Train / Test Split: <span className="text-emerald-600 font-bold">{Math.round(trainSplit * 100)}% / {Math.round((1 - trainSplit) * 100)}%</span>
                 </label>
-                <input
+                <input aria-label="Train split"
                   type="range"
                   min="0.5"
                   max="0.9"
@@ -905,7 +972,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Missing Value Imputation</label>
-                <select
+                <select aria-label="Missing value strategy"
                   value={imputationStrategy}
                   onChange={(e: any) => setImputationStrategy(e.target.value)}
                   className="w-full border border-slate-300 rounded-lg p-2 text-xs font-semibold"
@@ -918,7 +985,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Feature Scaling</label>
-                <select
+                <select aria-label="Feature scaling"
                   value={scalingStrategy}
                   onChange={(e: any) => setScalingStrategy(e.target.value)}
                   className="w-full border border-slate-300 rounded-lg p-2 text-xs font-semibold"
@@ -939,8 +1006,10 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
                 {modelType.includes('Forest') && (
                   <div>
                     <label className="block text-xs text-slate-600 mb-1">Number of Estimators</label>
-                    <input
+                    <input aria-label="Number of estimators"
                       type="number"
+                      min="1"
+                      max="100"
                       value={nEstimators}
                       onChange={(e) => setNEstimators(Number(e.target.value))}
                       className="w-full border border-slate-300 rounded p-1.5 text-xs font-mono"
@@ -950,18 +1019,49 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
                 {(modelType.includes('Tree') || modelType.includes('Forest')) && (
                   <div>
                     <label className="block text-xs text-slate-600 mb-1">Max Tree Depth</label>
-                    <input
+                    <input aria-label="Max tree depth"
                       type="number"
+                      min="1"
+                      max="20"
                       value={maxDepth}
                       onChange={(e) => setMaxDepth(Number(e.target.value))}
                       className="w-full border border-slate-300 rounded p-1.5 text-xs font-mono"
                     />
                   </div>
                 )}
-                {modelType.includes('Regression') && (
+                {modelType === 'Logistic Regression' && (
+                  <div>
+                    <label className="block text-xs text-slate-600 mb-1">Epochs</label>
+                    <input aria-label="Epochs"
+                      type="number"
+                      min="10"
+                      max="2000"
+                      value={epochs}
+                      onChange={(e) => setEpochs(Number(e.target.value))}
+                      className="w-full border border-slate-300 rounded p-1.5 text-xs font-mono"
+                    />
+                  </div>
+                )}
+                {modelType === 'KNN' && (
+                  <div>
+                    <label className="block text-xs text-slate-600 mb-1">Neighbours (k)</label>
+                    <input aria-label="Neighbours (k)"
+                      type="number"
+                      min="1"
+                      max="50"
+                      value={nNeighbors}
+                      onChange={(e) => setNNeighbors(Number(e.target.value))}
+                      className="w-full border border-slate-300 rounded p-1.5 text-xs font-mono"
+                    />
+                  </div>
+                )}
+                {modelType === 'Linear Regression' && (
+                  <p className="col-span-2 text-xs text-slate-500">Solved exactly by least squares, so there are no hyperparameters to tune.</p>
+                )}
+                {modelType === 'Logistic Regression' && (
                   <div>
                     <label className="block text-xs text-slate-600 mb-1">Learning Rate (α)</label>
-                    <input
+                    <input aria-label="Learning rate"
                       type="number"
                       step="0.01"
                       value={learningRate}
@@ -973,7 +1073,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
                 {(modelType.includes('K-Means') || modelType.includes('KMEANS')) && (
                   <div>
                     <label className="block text-xs text-slate-600 mb-1">Number of Clusters (k)</label>
-                    <input
+                    <input aria-label="Number of clusters"
                       type="number"
                       min="2"
                       max="10"
@@ -1005,6 +1105,20 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
         <div className="space-y-6">
           {selectedExperiment ? (
             <>
+              {/* What was actually trained, so the student can see the real algorithm and preprocessing. */}
+              <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm text-xs text-slate-600 flex flex-wrap gap-x-6 gap-y-1">
+                <span>
+                  Algorithm trained: <strong className="text-slate-900">{selectedExperiment.algorithm || selectedExperiment.model_type}</strong>
+                </span>
+                {selectedExperiment.preprocessing_applied && (
+                  <span>
+                    Preprocessing (fitted on training rows only): missing values{' '}
+                    <strong>{selectedExperiment.preprocessing_applied.missing_value_strategy}</strong>, scaling{' '}
+                    <strong>{selectedExperiment.preprocessing_applied.scaling}</strong>, categorical{' '}
+                    <strong>{selectedExperiment.preprocessing_applied.categorical_encoding}</strong> ({selectedExperiment.preprocessing_applied.encoded_columns} model inputs)
+                  </span>
+                )}
+              </div>
               {/* Top Metrics Cards */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {selectedExperiment.metrics.accuracy !== undefined ? (
@@ -1263,18 +1377,36 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
                       <label className="block text-xs font-semibold text-slate-700 mb-1 truncate font-mono">
                         {f.name}
                       </label>
-                      <input
-                        type={f.type === 'NUMERICAL' ? 'number' : 'text'}
-                        step="any"
-                        value={predictionInputs[f.name] !== undefined ? predictionInputs[f.name] : ''}
-                        onChange={(e) =>
-                          setPredictionInputs({
-                            ...predictionInputs,
-                            [f.name]: f.type === 'NUMERICAL' ? parseFloat(e.target.value) || 0 : e.target.value,
-                          })
-                        }
-                        className="w-full border border-slate-300 rounded-lg p-2 text-xs font-mono focus:ring-1 focus:ring-emerald-500"
-                      />
+                      {f.type === 'CATEGORICAL' && f.options && f.options.length > 0 ? (
+                        <select
+                          aria-label={f.name}
+                          value={predictionInputs[f.name] ?? ''}
+                          onChange={(e) => setPredictionInputs({ ...predictionInputs, [f.name]: e.target.value })}
+                          className="w-full border border-slate-300 rounded-lg p-2 text-xs font-mono focus:ring-1 focus:ring-emerald-500 bg-white"
+                        >
+                          {f.options.map((o) => (
+                            <option key={o} value={o}>{o}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          aria-label={f.name}
+                          type={f.type === 'NUMERICAL' ? 'number' : 'text'}
+                          step="any"
+                          value={predictionInputs[f.name] !== undefined ? predictionInputs[f.name] : ''}
+                          onChange={(e) =>
+                            setPredictionInputs({
+                              ...predictionInputs,
+                              // Keep exactly what was typed; the server rejects blanks and non-numbers instead of guessing 0.
+                              [f.name]: f.type === 'NUMERICAL' && e.target.value !== '' ? Number(e.target.value) : e.target.value,
+                            })
+                          }
+                          className="w-full border border-slate-300 rounded-lg p-2 text-xs font-mono focus:ring-1 focus:ring-emerald-500"
+                        />
+                      )}
+                      {f.type === 'NUMERICAL' && typeof f.min === 'number' && typeof f.max === 'number' && (
+                        <p className="text-[10px] text-slate-400 mt-0.5 font-mono">training range {f.min} to {f.max}</p>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -1328,6 +1460,42 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
                   <p className="text-xs text-slate-600 italic">{predictionResult.explanation}</p>
                 </div>
               )}
+
+              {/* Saved prediction history for this model */}
+              <div>
+                <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">
+                  Prediction history ({predictionHistory.length})
+                </h4>
+                {predictionHistory.length === 0 ? (
+                  <p className="text-xs text-slate-400">No predictions saved for this model yet.</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs border border-slate-200 rounded-lg">
+                      <thead className="bg-slate-50 text-slate-700">
+                        <tr>
+                          <th className="py-1.5 px-2">When</th>
+                          <th className="py-1.5 px-2">Inputs</th>
+                          <th className="py-1.5 px-2">Prediction</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 font-mono">
+                        {predictionHistory.slice(0, 20).map((p) => (
+                          <tr key={p.id}>
+                            <td className="py-1.5 px-2 whitespace-nowrap">{new Date(p.created_at).toLocaleString()}</td>
+                            <td className="py-1.5 px-2 break-all">
+                              {Object.entries(p.inputs || {}).map(([k, v]) => `${k}=${v}`).join(', ')}
+                            </td>
+                            <td className="py-1.5 px-2 font-bold">
+                              {p.result?.predicted_label ?? p.result?.predicted_value}
+                              {typeof p.result?.confidence === 'number' && ` (${Math.round(p.result.confidence * 100)}%)`}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
             </div>
           ) : (
             <p className="text-xs text-slate-400 p-8 text-center">
@@ -1414,7 +1582,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
             <div className="space-y-3 mb-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Project Name</label>
-                <input
+                <input aria-label="Project name"
                   type="text"
                   placeholder="e.g. Credit Card Fraud Detection"
                   value={newWorkspaceName}
@@ -1424,7 +1592,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Learning Task</label>
-                <select
+                <select aria-label="Project task type"
                   value={newWorkspaceTask}
                   onChange={(e: any) => setNewWorkspaceTask(e.target.value)}
                   className="w-full border border-slate-300 rounded-lg p-2 text-xs focus:ring-1 focus:ring-emerald-500"
@@ -1436,7 +1604,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Description</label>
-                <textarea
+                <textarea aria-label="Project description"
                   rows={2}
                   placeholder="Project goals and technical specifications..."
                   value={newWorkspaceDesc}
@@ -1471,7 +1639,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
             <div className="space-y-3 mb-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">File Name</label>
-                <input
+                <input aria-label="File name"
                   type="text"
                   placeholder="e.g. evaluate.py, params.yaml"
                   value={newFileName}
@@ -1481,7 +1649,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Source Code Content</label>
-                <textarea
+                <textarea aria-label="File content"
                   rows={8}
                   placeholder="# Enter Python script content here..."
                   value={newFileContent}
@@ -1516,7 +1684,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
             <div className="space-y-3 mb-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Dataset Name</label>
-                <input
+                <input aria-label="Dataset name"
                   type="text"
                   placeholder="e.g. Student Exam Performance"
                   value={newDatasetName}
@@ -1525,8 +1693,16 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Raw CSV Text (with headers)</label>
-                <textarea
+                <label className="block text-xs font-semibold text-slate-700 mb-1" htmlFor="ml-csv-file">CSV file (up to 5 MB, 20,000 rows, 100 columns)</label>
+                <input
+                  id="ml-csv-file"
+                  type="file"
+                  accept=".csv,text/csv"
+                  onChange={(e) => handleCsvFile(e.target.files?.[0])}
+                  className="block w-full text-xs mb-2"
+                />
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Or paste CSV text (with headers)</label>
+                <textarea aria-label="CSV text"
                   rows={8}
                   placeholder={"study_hours,previous_score,attendance_pct,passed\n4.5,72,85,Yes\n6.0,88,95,Yes\n1.5,45,60,No"}
                   value={newDatasetCsv}

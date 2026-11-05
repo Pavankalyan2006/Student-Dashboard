@@ -324,7 +324,7 @@ export interface SQLChallenge {
   category: string;
   description: string;
   schema_name: string;
-  expected_query: string;
+  expected_query?: string; // never sent by the API
   starter_query: string;
   hints: string[];
 }
@@ -480,7 +480,9 @@ export interface MLExperimentEntity {
     loss_curve?: { iteration: number; loss: number; val_loss?: number }[];
     recommendations: string[];
   };
-  feature_schema?: Array<{ name: string; type: 'NUMERICAL' | 'CATEGORICAL'; default_val: any; options?: string[] }>;
+  feature_schema?: Array<{ name: string; type: 'NUMERICAL' | 'CATEGORICAL'; default_val: any; options?: string[]; min?: number; max?: number }>;
+  algorithm?: string;
+  preprocessing_applied?: { missing_value_strategy: string; scaling: string; categorical_encoding: string; encoded_columns: number };
   duration_ms?: number;
   created_at: string;
 }

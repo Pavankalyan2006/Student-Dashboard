@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
-import { Editor } from '@monaco-editor/react';
+import { ResilientCodeEditor as Editor } from '../../../components/code/ResilientCodeEditor';
 import { dsaApi } from '../api/dsaApi';
 import { DSAProblem, DSATopic } from '../types/dsa';
 import { toast } from 'sonner';
@@ -176,17 +176,14 @@ export const DSAAiTutorPage: React.FC<DSAAiTutorPageProps> = ({ problemId, onNav
           setSuggestions(res.suggestions);
         }
       }
-    } catch {
-      // Deterministic fallback
+    } catch (err: any) {
+      // Show the real failure (for example 503 when no AI model is configured) instead of a canned answer.
+      const reason = err?.response?.data?.message || err?.message || 'The AI tutor is not available right now.';
       setMessages((prev) => [
         ...prev,
         {
           role: 'assistant',
-          content: `In **${selectedProblem.title}**: The optimal strategy focuses on enforcing the core invariant. Target complexity is **${
-            selectedProblem.optimal_complexity?.time || 'O(N)'
-          }** time and **${
-            selectedProblem.optimal_complexity?.space || 'O(1)'
-          }** space. Check whether you can eliminate redundant nested scans using two pointers, a hash map, or a monotonic stack.`,
+          content: `**The AI tutor could not answer.** ${reason} The problem's own hints are still available in the hints panel.`,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         },
       ]);

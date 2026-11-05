@@ -8,6 +8,13 @@ import { eventBus } from '../../events/eventBus';
 
 export const dsaRouter = Router();
 
+/** Problems leave the server without hidden test inputs/outputs; only the count is public. */
+const publicProblem = (p: any) => {
+  if (!p || typeof p !== 'object') return p;
+  const { hidden_test_cases, ...visible } = p;
+  return { ...visible, hidden_test_case_count: Array.isArray(hidden_test_cases) ? hidden_test_cases.length : 0 };
+};
+
 // ================= TOPICS =================
 dsaRouter.get('/dsa/topics', async (req, res, next) => {
   try {
@@ -32,7 +39,7 @@ dsaRouter.get('/dsa/topics/:topic_id', async (req, res, next) => {
       data: {
         ...topic,
         algorithms,
-        problems,
+        problems: problems.map(publicProblem),
       },
     });
   } catch (err) {
@@ -106,7 +113,7 @@ dsaRouter.post('/dsa/algorithms/compare', async (req, res, next) => {
 });
 
 // ================= AI DSA TUTOR =================
-dsaRouter.post('/dsa/tutor/chat', async (req, res, next) => {
+dsaRouter.post('/dsa/tutor/chat', requireAuth, async (req, res, next) => {
   try {
     const { problem_id, algorithm_id, question, code, language, step_number } = req.body;
     if (!question || !question.trim()) {
@@ -243,7 +250,7 @@ dsaRouter.get('/dsa/problems', async (req, res, next) => {
     });
     res.json({
       success: true,
-      data: problems,
+      data: Array.isArray(problems) ? problems.map(publicProblem) : problems,
     });
   } catch (err) {
     next(err);
@@ -253,9 +260,11 @@ dsaRouter.get('/dsa/problems', async (req, res, next) => {
 dsaRouter.get('/dsa/problems/:problem_id', async (req, res, next) => {
   try {
     const problem = await DSAService.getProblem(req.params.problem_id);
+    // Hidden tests decide a submission; only their count is public.
+    const { hidden_test_cases, ...visible } = problem as any;
     res.json({
       success: true,
-      data: problem,
+      data: { ...visible, hidden_test_case_count: (hidden_test_cases || []).length },
     });
   } catch (err) {
     next(err);
@@ -263,7 +272,7 @@ dsaRouter.get('/dsa/problems/:problem_id', async (req, res, next) => {
 });
 
 // Run Code: Real execution against sample/public test cases only (No problem solved mark)
-dsaRouter.post('/dsa/problems/:problem_id/run', async (req, res, next) => {
+dsaRouter.post('/dsa/problems/:problem_id/run', requireAuth, async (req, res, next) => {
   try {
     const { language, source_code } = req.body;
     if (!language) throw new ValidationError('Language is required.');

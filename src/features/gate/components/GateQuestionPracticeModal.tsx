@@ -224,7 +224,7 @@ export const GateQuestionPracticeModal: React.FC<GateQuestionPracticeModalProps>
                 {question.options.map((opt) => {
                   const isSelected = selectedAnswer === opt.id;
                   const isSubmitted = !!evaluationResult;
-                  const isCorrectAnswer = isSubmitted && question.correct_answer === opt.id;
+                  const isCorrectAnswer = isSubmitted && evaluationResult.correct_answer === opt.id;
                   const isWrongSelected = isSubmitted && isSelected && !evaluationResult.is_correct;
 
                   let borderClass = 'border-slate-800 bg-slate-950/60 hover:border-slate-700';
@@ -262,9 +262,10 @@ export const GateQuestionPracticeModal: React.FC<GateQuestionPracticeModalProps>
                 {question.options.map((opt) => {
                   const isChecked = Array.isArray(selectedAnswer) && selectedAnswer.includes(opt.id);
                   const isSubmitted = !!evaluationResult;
-                  const correctArr = Array.isArray(question.correct_answer)
-                    ? question.correct_answer
-                    : [question.correct_answer];
+                  // The answer key comes from the server only after the answer is checked.
+                  const correctArr = Array.isArray(evaluationResult?.correct_answer)
+                    ? evaluationResult!.correct_answer
+                    : [evaluationResult?.correct_answer];
                   const shouldBeChecked = isSubmitted && correctArr.includes(opt.id);
 
                   let borderClass = 'border-slate-800 bg-slate-950/60 hover:border-slate-700';

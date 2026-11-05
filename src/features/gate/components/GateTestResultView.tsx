@@ -79,9 +79,11 @@ export const GateTestResultView: React.FC<GateTestResultViewProps> = ({
             </div>
 
             <div className="p-4 bg-slate-950/80 border border-emerald-500/30 rounded-2xl text-center min-w-[130px]">
-              <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Est. GATE Score</span>
-              <span className="text-3xl font-black text-emerald-400">{result.estimated_gate_score || 520}</span>
-              <span className="text-[11px] text-slate-500 block">out of 1000</span>
+              <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Negative marks</span>
+              <span className="text-3xl font-black text-rose-400">-{result.negative_marks_lost ?? 0}</span>
+              <span className="text-[11px] text-slate-500 block max-w-[160px] mx-auto">
+                No GATE score is estimated: official scores are normalised across all candidates.
+              </span>
             </div>
           </div>
         </div>

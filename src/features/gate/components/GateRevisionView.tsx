@@ -61,7 +61,7 @@ export const GateRevisionView: React.FC<GateRevisionViewProps> = ({
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-white">{wt.topic_name}</span>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                  {wt.accuracy}% Accuracy
+                  {wt.accuracy === null || wt.accuracy === undefined ? 'Flagged by you' : `${wt.accuracy}% Accuracy`}
                 </span>
               </div>
 

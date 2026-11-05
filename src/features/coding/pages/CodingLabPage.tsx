@@ -208,7 +208,8 @@ export const CodingLabPage: React.FC<CodingLabPageProps> = ({ onNavigate }) => {
 
             <div className="flex items-center gap-1.5 flex-wrap">
               <span className="text-[11px] text-slate-500">Languages:</span>
-              {(progress?.languages_used?.length ? progress.languages_used : ['python', 'cpp']).map((l) => (
+              {!progress?.languages_used?.length && <span className="text-[11px] text-slate-400">none yet</span>}
+              {(progress?.languages_used || []).map((l) => (
                 <span
                   key={l}
                   className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono text-[10px] font-bold uppercase"
@@ -308,7 +309,7 @@ export const CodingLabPage: React.FC<CodingLabPageProps> = ({ onNavigate }) => {
           <div className="flex items-center gap-2 flex-wrap text-xs">
             <div className="relative">
               <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2" />
-              <input
+              <input aria-label="Search problems"
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -317,7 +318,7 @@ export const CodingLabPage: React.FC<CodingLabPageProps> = ({ onNavigate }) => {
               />
             </div>
 
-            <select
+            <select aria-label="Filter by difficulty"
               value={selectedDifficulty}
               onChange={(e) => setSelectedDifficulty(e.target.value)}
               className="px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 font-medium focus:outline-none"

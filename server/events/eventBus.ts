@@ -143,16 +143,17 @@ export class EventBus {
     this.subscribe('QUIZ_RESULT_UPDATED', async (event) => {
       if (!event.student_id) return;
       try {
-        const { score, total_questions, quiz_title, percentage } = event.payload || {};
+        const { score, total_questions, quiz_title, percentage, quiz_id } = event.payload || {};
         const isWeak = percentage !== undefined && percentage < 70;
 
         await db.createNotificationItem(event.student_id, {
           type: 'QUIZ_COMPLETED',
           title: `Quiz Result: ${quiz_title || 'Assessment'} Completed`,
-          message: `You scored ${score ?? 0}/${total_questions ?? 0} (${percentage ?? 0}%). ${
-            isWeak ? 'Added to spaced revision queue for concept mastery.' : 'Great job!'
+          // score is the number of correct answers; percentage is the share of all questions.
+          message: `You answered ${score ?? 0} of ${total_questions ?? 0} correctly (${percentage ?? 0}%). ${
+            isWeak ? 'Review the explanations for the questions you missed.' : 'Well done.'
           }`,
-          link: `/quiz/${event.resource_id || ''}/result`,
+          link: quiz_id ? `/quiz/${quiz_id}/result` : '/quiz/history',
           entity_type: 'QuizAttempt',
           entity_id: event.resource_id,
         });
@@ -201,12 +202,13 @@ export class EventBus {
     this.subscribe('DSA_PROBLEM_COMPLETED', async (event) => {
       if (!event.student_id) return;
       try {
-        const { problem_title, difficulty, points } = event.payload || {};
+        const { problem_title, difficulty } = event.payload || {};
         await db.createNotificationItem(event.student_id, {
           type: 'COURSE_COMPLETED',
           title: `DSA Problem Solved: ${problem_title || 'Challenge'}`,
-          message: `Solved ${difficulty || 'Standard'} difficulty challenge! Earned +${points || 20} skill points.`,
-          link: `/dsa`,
+          // There is no points system, so no points are claimed.
+          message: difficulty ? `All tests passed for this ${String(difficulty).toLowerCase()} problem.` : 'All tests passed for this problem.',
+          link: event.resource_id ? `/dsa/problem/${event.resource_id}` : '/dsa',
           entity_type: 'DSAProblem',
           entity_id: event.resource_id,
         });

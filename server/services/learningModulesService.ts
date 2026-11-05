@@ -947,23 +947,41 @@ export class LearningModulesService {
     return exam;
   }
 
+  /** Readiness from the student's own topic confidence, weighted by topic weightage (0-100). */
+  public static computeReadiness(topics: ExamTopic[]): number {
+    if (!topics.length) return 0;
+    const value = { STRONG: 1, DEVELOPING: 0.5, WEAK: 0 } as Record<string, number>;
+    const totalW = topics.reduce((a, t) => a + (t.weightage_percent || 0), 0) || topics.length;
+    const got = topics.reduce((a, t) => a + (value[t.confidence] ?? 0) * (totalW === topics.length ? 1 : t.weightage_percent || 0), 0);
+    return Math.round((got / totalW) * 100);
+  }
+
   public static async createExam(studentId: string, data: Partial<ExamEntity>): Promise<ExamEntity> {
     if (!data.title || !data.subject) throw new ValidationError('Exam title and subject are required');
-    const examId = `exam_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    // The exam date and syllabus come from the student; nothing is assumed for them.
+    const examDate = String(data.exam_date || '').trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(examDate) || isNaN(new Date(examDate).getTime())) {
+      throw new ValidationError('Enter the exam date (YYYY-MM-DD).');
+    }
     const syllabusTopics = (data.syllabus || '')
       .split(',')
-      .map((s, idx) => s.trim())
-      .filter(Boolean);
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .slice(0, 40);
+    if (!syllabusTopics.length) throw new ValidationError('List the syllabus topics, separated by commas.');
+    const examId = `exam_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
 
     const generatedTopics: ExamTopic[] = syllabusTopics.map((topicName, idx) => ({
       id: `top_${Date.now()}_${idx}`,
       exam_id: examId,
       name: topicName,
-      unit: `Unit ${idx + 1}`,
-      weightage_percent: Math.round(100 / Math.max(1, syllabusTopics.length)),
-      confidence: idx % 2 === 0 ? 'DEVELOPING' : 'WEAK',
+      unit: `Topic ${idx + 1}`,
+      // No official weightage was entered, so topics are weighted equally.
+      weightage_percent: Math.round(100 / syllabusTopics.length),
+      // Every topic starts as not yet confident; the student updates confidence as they revise.
+      confidence: 'WEAK',
       status: 'NOT_STARTED',
-      subtopics: [`Core ${topicName} fundamentals`, `Previous exam questions`, `Numerical analysis`],
+      subtopics: [],
     }));
 
     const exam: ExamEntity = {
@@ -972,12 +990,12 @@ export class LearningModulesService {
       title: data.title,
       subject: data.subject,
       category: data.category || 'SEMESTER',
-      exam_date: data.exam_date || new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0],
+      exam_date: examDate,
       difficulty: data.difficulty || 'MEDIUM',
-      available_prep_hours: data.available_prep_hours || 20,
+      available_prep_hours: Math.max(1, Math.min(500, Number(data.available_prep_hours) || 20)),
       syllabus: data.syllabus || '',
-      readiness_score: 50,
-      topics: generatedTopics.length > 0 ? generatedTopics : data.topics || [],
+      readiness_score: 0,
+      topics: generatedTopics,
       mock_tests_count: 0,
       status: 'UPCOMING',
       created_at: new Date().toISOString(),
@@ -985,6 +1003,35 @@ export class LearningModulesService {
     };
     this.exams.set(examId, exam);
     return exam;
+  }
+
+  public static async updateExamTopic(
+    studentId: string,
+    examId: string,
+    topicId: string,
+    updates: { confidence?: string; status?: string }
+  ): Promise<ExamEntity> {
+    const exam = await this.getExamById(studentId, examId);
+    const topic = exam.topics.find((t) => t.id === topicId);
+    if (!topic) throw new NotFoundError(`Topic '${topicId}' not found`);
+    if (updates.confidence !== undefined) {
+      if (!['WEAK', 'DEVELOPING', 'STRONG'].includes(updates.confidence)) throw new ValidationError('confidence must be WEAK, DEVELOPING or STRONG');
+      topic.confidence = updates.confidence as any;
+    }
+    if (updates.status !== undefined) {
+      if (!['NOT_STARTED', 'IN_PROGRESS', 'REVISED', 'MASTERED'].includes(updates.status)) throw new ValidationError('Unknown topic status');
+      topic.status = updates.status as any;
+    }
+    exam.readiness_score = this.computeReadiness(exam.topics);
+    exam.updated_at = new Date().toISOString();
+    this.exams.set(exam.id, exam);
+    return exam;
+  }
+
+  public static async deleteExam(studentId: string, examId: string): Promise<{ success: boolean }> {
+    await this.getExamById(studentId, examId);
+    this.exams.delete(examId);
+    return { success: true };
   }
 
   // ==========================================
@@ -1811,75 +1858,29 @@ Output JSON format:
   // ==========================================
   // 5. Lab Assistant + Viva Methods
   // ==========================================
+  // Lab data is owned by LabAssistantService and always scoped to the signed-in student.
+  // (These used to fall back to shared demo labs and to a length-based viva "score"; removed in Phase 2.)
   public static async getLabs(studentId: string): Promise<any[]> {
-    const dbLabs = await db.getLabCourses(studentId);
-    if (dbLabs.length > 0) {
-      const result = [];
-      for (const d of dbLabs) {
-        const exps = await db.getLabExperiments(d.id, studentId);
-        result.push({
-          ...d,
-          title: d.name,
-          experiments: exps.map((e) => ({
-            ...e,
-            objective: e.aim || e.objective || '',
-            procedure: e.procedure || e.procedure_steps?.map((s) => s.text) || [],
-          })),
-        });
-      }
-      return result;
-    }
-    return Array.from(this.labs.values());
+    const { LabAssistantService } = await import('./labAssistantService');
+    const labs = await LabAssistantService.getLabs(studentId);
+    return labs.map((l: any) => ({ ...l, title: l.title || l.name }));
   }
 
   public static async getLabById(studentId: string, labId: string): Promise<any> {
-    const dbLab = await db.getLabCourseById(labId, studentId);
-    if (dbLab) {
-      const exps = await db.getLabExperiments(labId, studentId);
-      return {
-        ...dbLab,
-        title: dbLab.name,
-        experiments: exps.map((e) => ({
-          ...e,
-          objective: e.aim || e.objective || '',
-          procedure: e.procedure || e.procedure_steps?.map((s) => s.text) || [],
-        })),
-      };
-    }
-    const lab = this.labs.get(labId);
-    if (!lab) throw new NotFoundError(`Lab '${labId}' not found`);
-    return lab;
+    const { LabAssistantService } = await import('./labAssistantService');
+    const lab: any = await LabAssistantService.getLabById(studentId, labId);
+    return { ...lab, title: lab.title || lab.name };
   }
 
   public static async evaluateVivaAnswer(
     studentId: string,
-    labId: string,
+    _labId: string,
     experimentId: string,
     questionId: string,
     studentAnswer: string
   ): Promise<any> {
-    const dbExp = await db.getLabExperimentById(experimentId, studentId);
-    if (dbExp) {
-      const { LabAssistantService } = await import('./labAssistantService');
-      return LabAssistantService.evaluateVivaAnswer(studentId, experimentId, questionId, studentAnswer);
-    }
-    const lab = await this.getLabById(studentId, labId);
-    const exp = lab.experiments.find((e: any) => e.id === experimentId);
-    if (!exp) throw new NotFoundError(`Experiment '${experimentId}' not found`);
-    const q = exp.viva_questions.find((item: any) => item.id === questionId);
-    if (!q) throw new NotFoundError(`Question '${questionId}' not found`);
-
-    q.student_answer = studentAnswer;
-    const lengthQuality = studentAnswer.trim().length > 30 ? 9 : 6;
-    q.ai_evaluation = {
-      score: lengthQuality,
-      correctness: 'Answer identifies core conceptual invariants and demonstrates fundamental understanding.',
-      missing_concepts: ['Consider mentioning standard IEEE/ISO specification references or performance edge cases.'],
-      clarity: 'Well-structured explanation with clear terminology.',
-      improvement: 'Mention practical real-world production tradeoffs when answering in an oral viva.',
-    };
-
-    return q;
+    const { LabAssistantService } = await import('./labAssistantService');
+    return LabAssistantService.evaluateVivaAnswer(studentId, experimentId, questionId, studentAnswer);
   }
 
   // ==========================================

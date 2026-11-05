@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { codingApi } from '../api/codingApi';
 import { CodingLanguage } from '../types/coding';
 import { useCodingEditorStore } from '../stores/codingEditorStore';
 import { Code2, ChevronDown } from 'lucide-react';
@@ -13,7 +14,7 @@ const LANGUAGES: LanguageOption[] = [
   { id: 'python', name: 'Python 3', badge: 'py' },
   { id: 'javascript', name: 'JavaScript (Node.js)', badge: 'js' },
   { id: 'cpp', name: 'C++ (G++ 17)', badge: 'cpp' },
-  { id: 'c', name: 'C (GCC 11)', badge: 'c' },
+  { id: 'c', name: 'C (GCC, C11)', badge: 'c' },
   { id: 'java', name: 'Java (OpenJDK)', badge: 'java' },
 ];
 
@@ -23,6 +24,23 @@ export const LanguageSelector: React.FC<{ disabled?: boolean; onChangeLanguage?:
 }) => {
   const language = useCodingEditorStore((s) => s.language);
   const setLanguage = useCodingEditorStore((s) => s.setLanguage);
+  // Which toolchains the server can actually run; unknown until loaded.
+  const [availability, setAvailability] = useState<Record<string, { available: boolean; detail?: string }>>({});
+  useEffect(() => {
+    let alive = true;
+    codingApi
+      .getLanguages()
+      .then((list: any[]) => {
+        if (!alive || !Array.isArray(list)) return;
+        const map: Record<string, { available: boolean; detail?: string }> = {};
+        for (const l of list) map[l.id] = { available: l.available !== false, detail: l.availability_detail };
+        setAvailability(map);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selected = e.target.value as CodingLanguage;
@@ -44,8 +62,14 @@ export const LanguageSelector: React.FC<{ disabled?: boolean; onChangeLanguage?:
           aria-label="Select Programming Language"
         >
           {LANGUAGES.map((l) => (
-            <option key={l.id} value={l.id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+            <option
+              key={l.id}
+              value={l.id}
+              disabled={availability[l.id]?.available === false}
+              className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+            >
               {l.name}
+              {availability[l.id]?.available === false ? ' (not installed on server)' : ''}
             </option>
           ))}
         </select>

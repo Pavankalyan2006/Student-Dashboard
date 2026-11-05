@@ -375,6 +375,13 @@ export class QuizAttemptService {
       throw new AuthorizationError('You are not authorized to review this attempt');
     }
 
+    // Correct answers and explanations are only revealed once the attempt is submitted;
+    // otherwise a student could read them in the middle of the quiz.
+    // EXPIRED attempts were submitted after the time limit; they are finished too.
+    if (attempt.status !== 'COMPLETED' && attempt.status !== 'EXPIRED') {
+      throw new ValidationError('Submit the quiz to see the answers and explanations.');
+    }
+
     const quiz = await db.getQuizById(attempt.quiz_id);
     if (!quiz) {
       throw new NotFoundError(`Associated quiz ${attempt.quiz_id} not found`);
@@ -553,6 +560,19 @@ export class QuizAttemptService {
 
     if (!question) {
       throw new NotFoundError(`Question ${questionId || 'specified'} not found`);
+    }
+
+    // The explanation contains the correct answer, so it follows the same rule as the review:
+    // only for the student's own quiz, and only after they have submitted an attempt at it.
+    if (question.quiz_id !== 'adhoc') {
+      const quiz = await db.getQuizById(question.quiz_id);
+      if (!quiz || (quiz.student_id && quiz.student_id !== studentId)) {
+        throw new NotFoundError(`Question ${questionId} not found`);
+      }
+      const attempts = await db.getQuizAttempts(studentId, question.quiz_id);
+      if (!attempts.some((a) => a.status === 'COMPLETED' || a.status === 'EXPIRED')) {
+        throw new ValidationError('Submit the quiz to see the answers and explanations.');
+      }
     }
 
     const isCorrect = QuestionEvaluationService.evaluateAnswer(question, studentAnswer).is_correct;

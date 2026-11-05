@@ -99,6 +99,17 @@ export const learningModulesApi = {
       });
       return unwrap<ExamEntity>(res);
     },
+    updateTopic: async (examId: string, topicId: string, updates: { confidence?: string; status?: string }): Promise<ExamEntity> => {
+      const res = await apiClient.request<any>(`/exams/${examId}/topics/${topicId}`, {
+        method: 'PATCH',
+        body: JSON.stringify(updates),
+      });
+      return unwrap<ExamEntity>(res);
+    },
+    deleteExam: async (examId: string): Promise<{ success: boolean }> => {
+      const res = await apiClient.request<any>(`/exams/${examId}`, { method: 'DELETE' });
+      return unwrap<any>(res);
+    },
   },
 
   // 3. Doubt Solver
@@ -452,6 +463,21 @@ export const learningModulesApi = {
       const res = await apiClient.request<any>(`/sql-lab/history${queryStr}`);
       return unwrap<SQLQueryHistoryItem[]>(res, []) || [];
     },
+    getSavedQueries: async (): Promise<Array<{ id: string; name: string; query: string; schema_name: string; created_at: string }>> => {
+      const res = await apiClient.request<any>('/sql-lab/saved-queries');
+      return unwrap<any[]>(res, []) || [];
+    },
+    saveQuery: async (name: string, query: string, schemaName: string) => {
+      const res = await apiClient.request<any>('/sql-lab/saved-queries', {
+        method: 'POST',
+        body: JSON.stringify({ name, query, schema_name: schemaName }),
+      });
+      return unwrap<any>(res);
+    },
+    deleteSavedQuery: async (id: string) => {
+      const res = await apiClient.request<any>(`/sql-lab/saved-queries/${encodeURIComponent(id)}`, { method: 'DELETE' });
+      return unwrap<any>(res);
+    },
     getChallenges: async (): Promise<SQLChallenge[]> => {
       const res = await apiClient.request<any>('/sql-lab/challenges');
       return unwrap<SQLChallenge[]>(res, []) || [];
@@ -545,6 +571,15 @@ export const learningModulesApi = {
         body: JSON.stringify({ inputs }),
       });
       return unwrap<MLPredictionResult>(res);
+    },
+    getPredictions: async (experimentId?: string): Promise<any[]> => {
+      const q = experimentId ? `?experiment_id=${encodeURIComponent(experimentId)}` : '';
+      const res = await apiClient.request<any>(`/ml-lab/predictions${q}`);
+      return unwrap<any[]>(res, []) || [];
+    },
+    deleteDataset: async (datasetId: string): Promise<{ success: boolean }> => {
+      const res = await apiClient.request<any>(`/ml-lab/datasets/${encodeURIComponent(datasetId)}`, { method: 'DELETE' });
+      return unwrap<any>(res);
     },
   },
 

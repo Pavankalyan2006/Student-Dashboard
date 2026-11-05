@@ -7,6 +7,7 @@ import { CodeAIService } from '../../server/services/codeAi';
 import { DSAService } from '../../server/services/dsa';
 import { DSAStepGenerators } from '../../server/services/dsaStepGenerators';
 import { LearningModulesService } from '../../server/services/learningModulesService';
+import { LabAssistantService } from '../../server/services/labAssistantService';
 import { AgentRegistry } from '../../server/ai/orchestration/registry';
 import { AgentRouter } from '../../server/ai/orchestration/router';
 import { AgentContext } from '../../server/ai/orchestration/types';
@@ -91,15 +92,18 @@ solve()
       expect(evalResult.passed_tests).toBe(evalResult.total_tests);
     });
 
-    it('provides Code AI diagnostics: explanation, complexity, and concepts', async () => {
-      const explanation = await CodeAIService.explainCode({
-        language: 'python',
-        source_code: 'def fib(n):\n    if n <= 1: return n\n    return fib(n-1) + fib(n-2)',
-      });
-      expect(explanation.overview).toBeDefined();
-      expect(explanation.time_complexity).toBeDefined();
-      expect(explanation.space_complexity).toBeDefined();
-      expect(explanation.step_by_step.length).toBeGreaterThanOrEqual(1);
+    it('Code AI diagnostics report 503 instead of template text when no model is configured', async () => {
+      // With a model this returns the model's explanation (covered with a stub in coding.test.ts).
+      const { AIService } = await import('../../server/ai/service');
+      const { vi } = await import('vitest');
+      const spy = vi.spyOn(AIService, 'generate').mockResolvedValue({ text: '**AI unavailable.** No AI provider is configured.' } as any);
+      await expect(
+        CodeAIService.explainCode({
+          language: 'python',
+          source_code: 'def fib(n):\n    if n <= 1: return n\n    return fib(n-1) + fib(n-2)',
+        })
+      ).rejects.toMatchObject({ statusCode: 503, code: 'AI_UNAVAILABLE' });
+      spy.mockRestore();
     });
   });
 
@@ -179,7 +183,7 @@ solve()
       const result = await LearningModulesService.executeSandboxedSql(studentId, maliciousQuery);
 
       expect(result.success).toBe(false);
-      expect(result.error).toContain('prohibited');
+      expect(result.error).toMatch(/not SQLite syntax|disabled/);
     });
   });
 
@@ -248,37 +252,31 @@ solve()
   // 6. Lab Assistant (Viva Voce) Module
   // -------------------------------------------------------------
   describe('6. Lab Assistant (Viva Voce) Module', () => {
-    it('provides academic laboratory curriculum, experiments, and expected outputs', async () => {
-      const labs = await LearningModulesService.getLabs(studentId);
-      expect(labs.length).toBeGreaterThanOrEqual(1);
-
-      const lab = labs[0];
-      expect(lab.title).toBeDefined();
-      expect(lab.experiments.length).toBeGreaterThanOrEqual(1);
-
-      const exp = lab.experiments[0];
-      expect(exp.objective).toBeDefined();
-      expect(exp.procedure.length).toBeGreaterThanOrEqual(2);
-      expect(exp.viva_questions.length).toBeGreaterThanOrEqual(1);
+    it('lists only the signed-in student\'s own labs (no shared demo labs)', async () => {
+      const fresh = `std_p2_nolabs_${Date.now()}`;
+      expect(await LearningModulesService.getLabs(fresh)).toEqual([]);
+      const lab = await LabAssistantService.createLab(fresh, { name: 'DBMS Lab', subject: 'DBMS', semester: 5 } as any);
+      const labs = await LearningModulesService.getLabs(fresh);
+      expect(labs.map((l: any) => l.id)).toEqual([lab.id]);
+      expect(labs[0].title).toBe('DBMS Lab');
+      expect(await LearningModulesService.getLabs(`std_p2_other_${Date.now()}`)).toEqual([]);
     });
 
-    it('conducts automated viva voce scoring against technical rubrics', async () => {
-      const labs = await LearningModulesService.getLabs(studentId);
-      const lab = labs[0];
-      const exp = lab.experiments[0];
-      const vivaQ = exp.viva_questions[0];
-
-      const evaluation = await LearningModulesService.evaluateVivaAnswer(
-        studentId,
-        lab.id,
-        exp.id,
-        vivaQ.id,
-        'TRUNCATE is a DDL command that deallocates extents and cannot be rolled back without savepoint in certain DBs, while DELETE is a DML logged operation with WHERE filter support.'
-      );
-
-      expect(evaluation).toBeDefined();
-      expect(evaluation.ai_evaluation?.score).toBeGreaterThanOrEqual(6);
-      expect(evaluation.ai_evaluation?.correctness).toBeDefined();
+    it('viva feedback without an AI model is a labelled keyword check', async () => {
+      const fresh = `std_p2_viva_${Date.now()}`;
+      const lab = await LabAssistantService.createLab(fresh, { name: 'DBMS Lab', subject: 'DBMS', semester: 5 } as any);
+      const exp = await db.saveLabExperiment({
+        id: `exp_p2_${fresh}`, lab_id: lab.id, student_id: fresh, experiment_number: 1, title: 'DDL vs DML',
+        aim: 'Compare TRUNCATE and DELETE', theory: '', requirements: [], procedure_steps: [], procedure: [],
+        viva_questions: [{ id: 'vq1', question: 'TRUNCATE vs DELETE?', expected_concept: 'TRUNCATE is DDL and cannot be rolled back; DELETE is DML, logged, supports WHERE.' }],
+        status: 'NOT_STARTED', created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+      } as any);
+      const evaluation: any = await LearningModulesService.evaluateVivaAnswer(fresh, lab.id, exp.id, 'vq1',
+        'TRUNCATE is a DDL command that deallocates extents, while DELETE is a DML logged operation with WHERE filter support.');
+      expect(evaluation.ai_evaluation.method).toBe('KEYWORD_MATCH');
+      expect(evaluation.ai_evaluation.correctness).toMatch(/Keyword check/);
+      // Another student cannot evaluate against this experiment.
+      await expect(LearningModulesService.evaluateVivaAnswer('std_p2_intruder', lab.id, exp.id, 'vq1', 'x')).rejects.toThrow(/not found/i);
     });
   });
 

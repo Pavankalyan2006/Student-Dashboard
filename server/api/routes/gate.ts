@@ -16,6 +16,14 @@ const resolveStudentId = (req: Request): string => {
   return req.user!.userId;
 };
 
+// Questions are delivered without the answer key; the answer and explanation are returned by the
+// attempt endpoint after the student answers, and in the mock test review after submission.
+const deliverQuestion = (q: any) => {
+  if (!q) return q;
+  const { correct_answer, explanation, tolerance_range, ...rest } = q;
+  return rest;
+};
+
 // =========================================================================
 // 1. Papers & Syllabus
 // =========================================================================
@@ -117,7 +125,7 @@ gateRouter.get('/gate/questions', async (req: Request, res: Response) => {
       search: req.query.search as string,
     };
     const questions = await GateService.getQuestions(filters);
-    res.json({ success: true, data: questions, count: questions.length });
+    res.json({ success: true, data: questions.map(deliverQuestion), count: questions.length });
   } catch (err: any) {
     logger.error('Error fetching GATE questions', err);
     res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
@@ -130,7 +138,7 @@ gateRouter.get('/gate/questions/:id', async (req: Request, res: Response) => {
     if (!question) {
       return res.status(404).json({ success: false, message: 'Question not found' });
     }
-    res.json({ success: true, data: question });
+    res.json({ success: true, data: deliverQuestion(question) });
   } catch (err: any) {
     logger.error('Error fetching GATE question', err);
     res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
@@ -170,7 +178,8 @@ gateRouter.get('/gate/bookmarks', async (req: Request, res: Response) => {
   try {
     const studentId = resolveStudentId(req);
     const bookmarks = await GateService.getBookmarks(studentId);
-    res.json({ success: true, data: bookmarks });
+    // A bookmark can be made before answering, so the key is stripped here too.
+    res.json({ success: true, data: bookmarks.map((b: any) => ({ ...b, question: deliverQuestion(b.question) })) });
   } catch (err: any) {
     logger.error('Error fetching GATE bookmarks', err);
     res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });

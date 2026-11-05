@@ -377,6 +377,9 @@ export interface SQLExecutionResult {
     cost_estimate: string;
     details: string;
   }[];
+  /** True when more rows matched than the sandbox returns. */
+  truncated?: boolean;
+  engine?: string;
 }
 
 export interface TableDataFilter {
@@ -505,6 +508,9 @@ export interface MLExperimentEntity {
   target_column?: string;
   feature_columns?: string[];
   model_type: string;
+  /** The model family that was actually fitted (e.g. "Random Forest (bagged CART trees)"). */
+  algorithm?: string;
+  preprocessing_applied?: { missing_value_strategy: string; scaling: string; categorical_encoding: string; encoded_columns: number };
   hyperparameters: Record<string, any>;
   train_split: number;
   status: 'DRAFT' | 'QUEUED' | 'PREPARING_DATA' | 'TRAINING' | 'EVALUATING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
@@ -516,7 +522,7 @@ export interface MLExperimentEntity {
     loss_curve?: { iteration: number; loss: number; val_loss?: number }[];
     recommendations: string[];
   };
-  feature_schema?: Array<{ name: string; type: 'NUMERICAL' | 'CATEGORICAL'; default_val: any; options?: string[] }>;
+  feature_schema?: Array<{ name: string; type: 'NUMERICAL' | 'CATEGORICAL'; default_val: any; options?: string[]; min?: number; max?: number }>;
   duration_ms?: number;
   created_at: string;
 }

@@ -153,7 +153,8 @@ quizRouter.post('/quiz/generate', requireAuth, async (req, res, next) => {
       success: true,
       data: {
         quiz: result.quiz,
-        questions: result.questions,
+        // Delivered without correct answers or explanations; they are revealed after submission.
+        questions: result.questions.map(toDeliveryQuestion),
       },
     });
   } catch (err) {
@@ -266,12 +267,19 @@ quizRouter.post('/quiz/attempts', requireAuth, async (req, res, next) => {
  * GET /quiz/:quiz_id
  * Get single quiz metadata
  */
+// A quiz belongs to the student who created it; quizzes without an owner are shared practice sets.
+// Another student's quiz answers 404, the same as a quiz that does not exist.
+async function getVisibleQuiz(quizId: string, studentId: string) {
+  const quiz = await db.getQuizById(quizId);
+  if (!quiz || (quiz.student_id && quiz.student_id !== studentId)) {
+    throw new NotFoundError(`Quiz ${quizId} not found`);
+  }
+  return quiz;
+}
+
 quizRouter.get('/quiz/:quiz_id', requireAuth, async (req, res, next) => {
   try {
-    const quiz = await db.getQuizById(req.params.quiz_id);
-    if (!quiz) {
-      throw new NotFoundError(`Quiz ${req.params.quiz_id} not found`);
-    }
+    const quiz = await getVisibleQuiz(req.params.quiz_id, req.user!.userId);
     res.json({
       success: true,
       data: quiz,
@@ -324,6 +332,7 @@ quizRouter.post('/quiz/:quiz_id/start', requireAuth, async (req, res, next) => {
  */
 quizRouter.get('/quiz/:quiz_id/questions', requireAuth, async (req, res, next) => {
   try {
+    await getVisibleQuiz(req.params.quiz_id, req.user!.userId);
     const questions = await db.getQuizQuestions(req.params.quiz_id);
     const delivery = questions.map(toDeliveryQuestion);
     res.json({
@@ -405,7 +414,7 @@ quizRouter.post('/quiz/attempts/:attempt_id/submit', requireAuth, async (req, re
         attempt_id: req.params.attempt_id,
         quiz_id: result.quiz_id,
         quiz_title: result.quiz_title,
-        score: result.score,
+        score: result.correct_count,
         total_questions: result.correct_count + result.incorrect_count + result.unanswered_count,
         percentage: result.percentage,
       },

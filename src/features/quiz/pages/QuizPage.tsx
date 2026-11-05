@@ -251,7 +251,7 @@ export const QuizPage: React.FC<QuizPageProps> = ({ onNavigate }) => {
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 sm:p-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 shadow-xs">
           <div className="relative flex-1 max-w-sm">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
+            <input aria-label="Search quizzes"
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -278,7 +278,7 @@ export const QuizPage: React.FC<QuizPageProps> = ({ onNavigate }) => {
               ))}
             </div>
 
-            <select
+            <select aria-label="Filter by difficulty"
               value={difficultyFilter}
               onChange={(e) => setDifficultyFilter(e.target.value)}
               className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-700 dark:text-slate-300 focus:outline-none"

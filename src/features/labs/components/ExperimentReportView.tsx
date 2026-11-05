@@ -188,15 +188,15 @@ export function ExperimentReportView({ report: initialReport, onBack }: Experime
               7A. Expected Output
             </h3>
             <pre className="p-3 rounded-lg bg-gray-50 border border-gray-200 text-xs font-mono text-gray-700 whitespace-pre-wrap min-h-[60px]">
-              {report.expected_output || 'Standard expected output'}
+              {report.expected_output || 'No expected output was recorded for this experiment.'}
             </pre>
           </div>
           <div className="space-y-1.5">
             <h3 className="text-xs font-black uppercase tracking-wider text-emerald-900 border-b border-emerald-200 pb-1">
-              7B. Actual Execution Output (Verified)
+              7B. Actual Execution Output
             </h3>
             <pre className="p-3 rounded-lg bg-emerald-50/50 border border-emerald-300 text-xs font-mono text-emerald-950 whitespace-pre-wrap min-h-[60px]">
-              {report.actual_output || report.expected_output || 'Verified test run completed.'}
+              {report.actual_output || 'Not recorded yet. Run your code or enter your observations in the experiment workspace.'}
             </pre>
           </div>
         </div>
@@ -273,7 +273,7 @@ export function ExperimentReportView({ report: initialReport, onBack }: Experime
             />
           ) : (
             <p className="text-xs text-gray-800 leading-relaxed font-medium">
-              {report.result_conclusion}
+              {report.result_conclusion || 'Not written yet. Click Edit to write your own result and conclusion.'}
             </p>
           )}
         </div>
