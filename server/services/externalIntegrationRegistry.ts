@@ -63,53 +63,19 @@ export class LinkedInProviderImpl implements ExternalProvider {
     return this.getInfo().capabilities;
   }
 
-  async initiateAuth(studentId: string, redirectUri?: string): Promise<{ auth_url: string; state: string }> {
-    const state = `li_state_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
-    const redirect = encodeURIComponent(redirectUri || '/integrations/callback/linkedin');
-    return {
-      auth_url: `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=btech_linkedin_app&redirect_uri=${redirect}&state=${state}&scope=r_liteprofile%20r_emailaddress`,
-      state,
-    };
+  async initiateAuth(_studentId: string, _redirectUri?: string): Promise<never> {
+    // No OAuth app is registered for this provider; the made-up authorization URL that used to be returned was removed.
+    throw new Error(`${this.getInfo().name} does not offer sign-in here.`);
   }
 
-  async connectAccount(studentId: string, payload: { code?: string; username?: string; profile_url?: string }): Promise<Partial<ExternalAccountConnection>> {
-    const username = payload.username || 'student_in';
-    const profileUrl = payload.profile_url || `https://www.linkedin.com/in/${username}`;
-    return {
-      provider: 'linkedin',
-      display_name: 'LinkedIn Profile',
-      username,
-      profile_url: profileUrl,
-      status: 'CONNECTED',
-      scopes: ['r_liteprofile', 'r_emailaddress'],
-      connected_at: new Date().toISOString(),
-      last_synced_at: new Date().toISOString(),
-      sync_status: 'SUCCESS',
-    };
+  async connectAccount(_studentId: string, _payload: { code?: string; username?: string; profile_url?: string }): Promise<never> {
+    // Linking goes through ExternalIntegrationService.connectPlatform, which never marks an unverified account CONNECTED.
+    throw new Error(`${this.getInfo().name} cannot be connected through the provider registry.`);
   }
 
-  async syncData(studentId: string, connection: ExternalAccountConnection) {
-    return {
-      activities: [
-        {
-          id: `act_li_${Date.now()}`,
-          student_id: studentId,
-          provider: 'linkedin' as const,
-          activity_type: 'PROFILE_SYNC' as const,
-          title: 'Professional Headline Synchronized',
-          description: 'B.Tech Computer Science & Engineering Undergraduate',
-          timestamp: new Date().toISOString(),
-        },
-      ],
-      profile: {
-        provider: 'linkedin' as const,
-        username: connection.username,
-        headline: 'B.Tech CSE Undergraduate | Full-Stack & ML Enthusiast',
-        profile_url: connection.profile_url,
-        achievements: [],
-        last_synced: new Date().toISOString(),
-      },
-    };
+  async syncData(_studentId: string, _connection: ExternalAccountConnection): Promise<never> {
+    // No live client exists for this provider; the hand-written sample activity that used to be returned here was removed.
+    throw new Error(`Live sync with ${this.getInfo().name} is not available, so no data was imported.`);
   }
 }
 
@@ -150,38 +116,19 @@ export class IndeedProviderImpl implements ExternalProvider {
     return this.getInfo().capabilities;
   }
 
-  async initiateAuth(): Promise<{ auth_url: string; state: string }> {
-    return { auth_url: '', state: 'public_job_feed' };
+  async initiateAuth(): Promise<never> {
+    // No OAuth app is registered for this provider; the made-up authorization URL that used to be returned was removed.
+    throw new Error(`${this.getInfo().name} does not offer sign-in here.`);
   }
 
-  async connectAccount(studentId: string, payload: { username?: string; profile_url?: string }): Promise<Partial<ExternalAccountConnection>> {
-    return {
-      provider: 'indeed',
-      display_name: 'Indeed Career Alerts',
-      username: payload.username || 'student_jobseeker',
-      profile_url: payload.profile_url || 'https://www.indeed.com',
-      status: 'CONNECTED',
-      scopes: ['job_search_read'],
-      connected_at: new Date().toISOString(),
-      last_synced_at: new Date().toISOString(),
-      sync_status: 'SUCCESS',
-    };
+  async connectAccount(_studentId: string, _payload: { username?: string; profile_url?: string }): Promise<never> {
+    // Linking goes through ExternalIntegrationService.connectPlatform, which never marks an unverified account CONNECTED.
+    throw new Error(`${this.getInfo().name} cannot be connected through the provider registry.`);
   }
 
-  async syncData(studentId: string) {
-    return {
-      activities: [
-        {
-          id: `act_ind_${Date.now()}`,
-          student_id: studentId,
-          provider: 'indeed' as const,
-          activity_type: 'JOB_SAVED' as const,
-          title: 'New SDE Internship Opportunities Retrieved',
-          description: 'Found 4 engineering internships matching student skill profile',
-          timestamp: new Date().toISOString(),
-        },
-      ],
-    };
+  async syncData(_studentId: string): Promise<never> {
+    // No live client exists for this provider; the hand-written sample activity that used to be returned here was removed.
+    throw new Error(`Live sync with ${this.getInfo().name} is not available, so no data was imported.`);
   }
 }
 
@@ -222,74 +169,19 @@ export class LeetCodeProviderImpl implements ExternalProvider {
     return this.getInfo().capabilities;
   }
 
-  async initiateAuth(): Promise<{ auth_url: string; state: string }> {
-    return { auth_url: '', state: 'public_profile' };
+  async initiateAuth(): Promise<never> {
+    // No OAuth app is registered for this provider; the made-up authorization URL that used to be returned was removed.
+    throw new Error(`${this.getInfo().name} does not offer sign-in here.`);
   }
 
-  async connectAccount(studentId: string, payload: { username?: string; profile_url?: string }): Promise<Partial<ExternalAccountConnection>> {
-    const username = payload.username || 'btech_coder';
-    const profileUrl = payload.profile_url || `https://leetcode.com/${username}`;
-    return {
-      provider: 'leetcode',
-      display_name: `LeetCode (${username})`,
-      username,
-      profile_url: profileUrl,
-      status: 'CONNECTED',
-      scopes: ['public_profile', 'user_stats'],
-      connected_at: new Date().toISOString(),
-      last_synced_at: new Date().toISOString(),
-      sync_status: 'SUCCESS',
-    };
+  async connectAccount(_studentId: string, _payload: { username?: string; profile_url?: string }): Promise<never> {
+    // Linking goes through ExternalIntegrationService.connectPlatform, which never marks an unverified account CONNECTED.
+    throw new Error(`${this.getInfo().name} cannot be connected through the provider registry.`);
   }
 
-  async syncData(studentId: string, connection: ExternalAccountConnection) {
-    return {
-      activities: [
-        {
-          id: `act_lc_${Date.now()}`,
-          student_id: studentId,
-          provider: 'leetcode' as const,
-          activity_type: 'PROBLEM_SOLVED' as const,
-          title: 'Solved #207 Course Schedule (Medium) & #76 Minimum Window Substring',
-          description: 'Graph cycle detection and sliding window problem solving logged',
-          timestamp: new Date().toISOString(),
-        },
-      ],
-      profile: {
-        provider: 'leetcode' as const,
-        username: connection.username,
-        profile_url: connection.profile_url,
-        coding_stats: {
-          problems_solved_total: 184,
-          easy_solved: 72,
-          medium_solved: 94,
-          hard_solved: 18,
-          ranking: 64210,
-          contest_rating: 1685,
-          badges_count: 5,
-          streak_days: 14,
-        },
-        achievements: [
-          {
-            id: 'ach_lc_1',
-            student_id: studentId,
-            provider: 'leetcode',
-            title: '100 Days Badge 2024',
-            category: 'STREAK',
-            unlocked_at: new Date(Date.now() - 30 * 86400000).toISOString(),
-          },
-          {
-            id: 'ach_lc_2',
-            student_id: studentId,
-            provider: 'leetcode',
-            title: 'Guardian Contest Rank Target',
-            rating: 1685,
-            category: 'CONTEST',
-          },
-        ],
-        last_synced: new Date().toISOString(),
-      },
-    };
+  async syncData(_studentId: string, _connection: ExternalAccountConnection): Promise<never> {
+    // No live client exists for this provider; the hand-written sample activity that used to be returned here was removed.
+    throw new Error(`Live sync with ${this.getInfo().name} is not available, so no data was imported.`);
   }
 }
 
@@ -330,58 +222,19 @@ export class GitHubProviderImpl implements ExternalProvider {
     return this.getInfo().capabilities;
   }
 
-  async initiateAuth(studentId: string, redirectUri?: string): Promise<{ auth_url: string; state: string }> {
-    const res = GitHubService.initiateOAuth(studentId, redirectUri);
-    return { auth_url: res.oauth_url, state: res.state };
+  async initiateAuth(_studentId: string, _redirectUri?: string): Promise<never> {
+    // No OAuth app is registered for this provider; the made-up authorization URL that used to be returned was removed.
+    throw new Error(`${this.getInfo().name} does not offer sign-in here.`);
   }
 
-  async connectAccount(studentId: string, payload: { username?: string }): Promise<Partial<ExternalAccountConnection>> {
-    const existing = await GitHubService.getConnectionStatus(studentId);
-    const username = payload.username || existing.connection?.username || 'github_user';
-    return {
-      provider: 'github',
-      display_name: `GitHub (@${username})`,
-      username,
-      profile_url: `https://github.com/${username}`,
-      status: existing.is_connected ? 'CONNECTED' : 'DISCONNECTED',
-      scopes: ['read:user', 'repo:status', 'public_repo'],
-      connected_at: existing.connection?.created_at || new Date().toISOString(),
-      last_synced_at: existing.connection?.updated_at || new Date().toISOString(),
-      sync_status: 'SUCCESS',
-    };
+  async connectAccount(_studentId: string, _payload: { username?: string }): Promise<never> {
+    // Linking goes through ExternalIntegrationService.connectPlatform, which never marks an unverified account CONNECTED.
+    throw new Error(`${this.getInfo().name} cannot be connected through the provider registry.`);
   }
 
-  async syncData(studentId: string, connection: ExternalAccountConnection) {
-    const repos = await GitHubService.listRepositories(studentId, {});
-    const totalCommits = 24;
-    return {
-      activities: [
-        {
-          id: `act_gh_${Date.now()}`,
-          student_id: studentId,
-          provider: 'github' as const,
-          activity_type: 'COMMIT' as const,
-          title: `Synchronized ${repos.length} Repositories & ${totalCommits} Recent Commits`,
-          description: 'Updated verified code evidence for React, TypeScript, and Go capstones',
-          timestamp: new Date().toISOString(),
-        },
-      ],
-      profile: {
-        provider: 'github' as const,
-        username: connection.username,
-        profile_url: connection.profile_url,
-        achievements: [
-          {
-            id: 'ach_gh_1',
-            student_id: studentId,
-            provider: 'github',
-            title: 'Arctic Code Vault Contributor',
-            category: 'CONTRIBUTION',
-          },
-        ],
-        last_synced: new Date().toISOString(),
-      },
-    };
+  async syncData(_studentId: string, _connection: ExternalAccountConnection): Promise<never> {
+    // No live client exists for this provider; the hand-written sample activity that used to be returned here was removed.
+    throw new Error(`Live sync with ${this.getInfo().name} is not available, so no data was imported.`);
   }
 }
 
@@ -419,62 +272,19 @@ export class HackerRankProviderImpl implements ExternalProvider {
     return this.getInfo().capabilities;
   }
 
-  async initiateAuth(): Promise<{ auth_url: string; state: string }> {
-    return { auth_url: '', state: 'public_profile' };
+  async initiateAuth(): Promise<never> {
+    // No OAuth app is registered for this provider; the made-up authorization URL that used to be returned was removed.
+    throw new Error(`${this.getInfo().name} does not offer sign-in here.`);
   }
 
-  async connectAccount(studentId: string, payload: { username?: string; profile_url?: string }): Promise<Partial<ExternalAccountConnection>> {
-    const username = payload.username || 'hackerrank_coder';
-    return {
-      provider: 'hackerrank',
-      display_name: `HackerRank (${username})`,
-      username,
-      profile_url: payload.profile_url || `https://www.hackerrank.com/${username}`,
-      status: 'CONNECTED',
-      scopes: ['public_badges'],
-      connected_at: new Date().toISOString(),
-      last_synced_at: new Date().toISOString(),
-      sync_status: 'SUCCESS',
-    };
+  async connectAccount(_studentId: string, _payload: { username?: string; profile_url?: string }): Promise<never> {
+    // Linking goes through ExternalIntegrationService.connectPlatform, which never marks an unverified account CONNECTED.
+    throw new Error(`${this.getInfo().name} cannot be connected through the provider registry.`);
   }
 
-  async syncData(studentId: string, connection: ExternalAccountConnection) {
-    return {
-      activities: [
-        {
-          id: `act_hr_${Date.now()}`,
-          student_id: studentId,
-          provider: 'hackerrank' as const,
-          activity_type: 'PROBLEM_SOLVED' as const,
-          title: 'Earned 5-Star Gold Badge in Problem Solving',
-          description: 'Completed 60+ algorithmic challenges in Data Structures & Graph Algorithms',
-          timestamp: new Date().toISOString(),
-        },
-      ],
-      profile: {
-        provider: 'hackerrank' as const,
-        username: connection.username,
-        profile_url: connection.profile_url,
-        achievements: [
-          {
-            id: 'ach_hr_1',
-            student_id: studentId,
-            provider: 'hackerrank',
-            title: '5 Stars - Problem Solving (Gold)',
-            category: 'BADGE',
-          },
-          {
-            id: 'ach_hr_2',
-            student_id: studentId,
-            provider: 'hackerrank',
-            title: 'Problem Solving (Basic) Skill Certification',
-            category: 'CERTIFICATE',
-            unlocked_at: new Date(Date.now() - 60 * 86400000).toISOString(),
-          },
-        ],
-        last_synced: new Date().toISOString(),
-      },
-    };
+  async syncData(_studentId: string, _connection: ExternalAccountConnection): Promise<never> {
+    // No live client exists for this provider; the hand-written sample activity that used to be returned here was removed.
+    throw new Error(`Live sync with ${this.getInfo().name} is not available, so no data was imported.`);
   }
 }
 
@@ -512,64 +322,19 @@ export class CodeChefProviderImpl implements ExternalProvider {
     return this.getInfo().capabilities;
   }
 
-  async initiateAuth(): Promise<{ auth_url: string; state: string }> {
-    return { auth_url: '', state: 'public_profile' };
+  async initiateAuth(): Promise<never> {
+    // No OAuth app is registered for this provider; the made-up authorization URL that used to be returned was removed.
+    throw new Error(`${this.getInfo().name} does not offer sign-in here.`);
   }
 
-  async connectAccount(studentId: string, payload: { username?: string; profile_url?: string }): Promise<Partial<ExternalAccountConnection>> {
-    const username = payload.username || 'chef_student';
-    return {
-      provider: 'codechef',
-      display_name: `CodeChef (${username})`,
-      username,
-      profile_url: payload.profile_url || `https://www.codechef.com/users/${username}`,
-      status: 'CONNECTED',
-      scopes: ['contest_rating'],
-      connected_at: new Date().toISOString(),
-      last_synced_at: new Date().toISOString(),
-      sync_status: 'SUCCESS',
-    };
+  async connectAccount(_studentId: string, _payload: { username?: string; profile_url?: string }): Promise<never> {
+    // Linking goes through ExternalIntegrationService.connectPlatform, which never marks an unverified account CONNECTED.
+    throw new Error(`${this.getInfo().name} cannot be connected through the provider registry.`);
   }
 
-  async syncData(studentId: string, connection: ExternalAccountConnection) {
-    return {
-      activities: [
-        {
-          id: `act_cc_${Date.now()}`,
-          student_id: studentId,
-          provider: 'codechef' as const,
-          activity_type: 'CONTEST' as const,
-          title: 'Starters 120 Division 2 Participation',
-          description: 'Achieved contest rank 412; +48 rating points gained',
-          timestamp: new Date().toISOString(),
-        },
-      ],
-      profile: {
-        provider: 'codechef' as const,
-        username: connection.username,
-        profile_url: connection.profile_url,
-        coding_stats: {
-          problems_solved_total: 92,
-          easy_solved: 48,
-          medium_solved: 38,
-          hard_solved: 6,
-          contest_rating: 1612,
-          badges_count: 3,
-          streak_days: 7,
-        },
-        achievements: [
-          {
-            id: 'ach_cc_1',
-            student_id: studentId,
-            provider: 'codechef',
-            title: '3-Star Coder (Rating: 1612, Div 2)',
-            rating: 1612,
-            category: 'RATING',
-          },
-        ],
-        last_synced: new Date().toISOString(),
-      },
-    };
+  async syncData(_studentId: string, _connection: ExternalAccountConnection): Promise<never> {
+    // No live client exists for this provider; the hand-written sample activity that used to be returned here was removed.
+    throw new Error(`Live sync with ${this.getInfo().name} is not available, so no data was imported.`);
   }
 }
 
@@ -607,63 +372,19 @@ export class GeeksforGeeksProviderImpl implements ExternalProvider {
     return this.getInfo().capabilities;
   }
 
-  async initiateAuth(): Promise<{ auth_url: string; state: string }> {
-    return { auth_url: '', state: 'public_profile' };
+  async initiateAuth(): Promise<never> {
+    // No OAuth app is registered for this provider; the made-up authorization URL that used to be returned was removed.
+    throw new Error(`${this.getInfo().name} does not offer sign-in here.`);
   }
 
-  async connectAccount(studentId: string, payload: { username?: string; profile_url?: string }): Promise<Partial<ExternalAccountConnection>> {
-    const username = payload.username || 'gfg_coder';
-    return {
-      provider: 'geeksforgeeks',
-      display_name: `GeeksforGeeks (${username})`,
-      username,
-      profile_url: payload.profile_url || `https://auth.geeksforgeeks.org/user/${username}`,
-      status: 'CONNECTED',
-      scopes: ['practice_score'],
-      connected_at: new Date().toISOString(),
-      last_synced_at: new Date().toISOString(),
-      sync_status: 'SUCCESS',
-    };
+  async connectAccount(_studentId: string, _payload: { username?: string; profile_url?: string }): Promise<never> {
+    // Linking goes through ExternalIntegrationService.connectPlatform, which never marks an unverified account CONNECTED.
+    throw new Error(`${this.getInfo().name} cannot be connected through the provider registry.`);
   }
 
-  async syncData(studentId: string, connection: ExternalAccountConnection) {
-    return {
-      activities: [
-        {
-          id: `act_gfg_${Date.now()}`,
-          student_id: studentId,
-          provider: 'geeksforgeeks' as const,
-          activity_type: 'PROBLEM_SOLVED' as const,
-          title: 'Problem of the Day: Inorder Traversal and BST Verification',
-          description: 'Earned POTD streak points on GeeksforGeeks',
-          timestamp: new Date().toISOString(),
-        },
-      ],
-      profile: {
-        provider: 'geeksforgeeks' as const,
-        username: connection.username,
-        profile_url: connection.profile_url,
-        coding_stats: {
-          problems_solved_total: 124,
-          easy_solved: 62,
-          medium_solved: 54,
-          hard_solved: 8,
-          ranking: 1840,
-          badges_count: 2,
-          streak_days: 21,
-        },
-        achievements: [
-          {
-            id: 'ach_gfg_1',
-            student_id: studentId,
-            provider: 'geeksforgeeks',
-            title: 'Campus Rank #4 in Problem Solving',
-            category: 'INSTITUTE_RANK',
-          },
-        ],
-        last_synced: new Date().toISOString(),
-      },
-    };
+  async syncData(_studentId: string, _connection: ExternalAccountConnection): Promise<never> {
+    // No live client exists for this provider; the hand-written sample activity that used to be returned here was removed.
+    throw new Error(`Live sync with ${this.getInfo().name} is not available, so no data was imported.`);
   }
 }
 
@@ -701,54 +422,19 @@ export class KaggleProviderImpl implements ExternalProvider {
     return this.getInfo().capabilities;
   }
 
-  async initiateAuth(): Promise<{ auth_url: string; state: string }> {
-    return { auth_url: '', state: 'public_profile' };
+  async initiateAuth(): Promise<never> {
+    // No OAuth app is registered for this provider; the made-up authorization URL that used to be returned was removed.
+    throw new Error(`${this.getInfo().name} does not offer sign-in here.`);
   }
 
-  async connectAccount(studentId: string, payload: { username?: string; profile_url?: string }): Promise<Partial<ExternalAccountConnection>> {
-    const username = payload.username || 'kaggle_expert';
-    return {
-      provider: 'kaggle',
-      display_name: `Kaggle (${username})`,
-      username,
-      profile_url: payload.profile_url || `https://www.kaggle.com/${username}`,
-      status: 'CONNECTED',
-      scopes: ['competitions', 'notebooks'],
-      connected_at: new Date().toISOString(),
-      last_synced_at: new Date().toISOString(),
-      sync_status: 'SUCCESS',
-    };
+  async connectAccount(_studentId: string, _payload: { username?: string; profile_url?: string }): Promise<never> {
+    // Linking goes through ExternalIntegrationService.connectPlatform, which never marks an unverified account CONNECTED.
+    throw new Error(`${this.getInfo().name} cannot be connected through the provider registry.`);
   }
 
-  async syncData(studentId: string, connection: ExternalAccountConnection) {
-    return {
-      activities: [
-        {
-          id: `act_kg_${Date.now()}`,
-          student_id: studentId,
-          provider: 'kaggle' as const,
-          activity_type: 'NOTEBOOK_RUN' as const,
-          title: 'Published Notebook: Multi-Class Iris Random Forest with 96.7% Accuracy',
-          description: 'Silver medal awarded in Notebooks category',
-          timestamp: new Date().toISOString(),
-        },
-      ],
-      profile: {
-        provider: 'kaggle' as const,
-        username: connection.username,
-        profile_url: connection.profile_url,
-        achievements: [
-          {
-            id: 'ach_kg_1',
-            student_id: studentId,
-            provider: 'kaggle',
-            title: 'Kaggle Notebooks Expert (Bronze & Silver Medals)',
-            category: 'TIER',
-          },
-        ],
-        last_synced: new Date().toISOString(),
-      },
-    };
+  async syncData(_studentId: string, _connection: ExternalAccountConnection): Promise<never> {
+    // No live client exists for this provider; the hand-written sample activity that used to be returned here was removed.
+    throw new Error(`Live sync with ${this.getInfo().name} is not available, so no data was imported.`);
   }
 }
 
@@ -793,12 +479,19 @@ export class ExternalIntegrationRegistry {
         oauth_supported: isGithub,
         api_supported: isGithub,
         capabilities: isGithub ? { ...none, profile: true, repositories: true } : none,
-      };
+        description: isGithub
+          ? 'Uses the GitHub module: repositories you imported there, verified by GitHub sign-in or an access token.'
+          : `Save a link to your ${info.name} profile. Nothing is imported from ${info.name}.`,
+        rate_limits: isGithub ? info.rate_limits : undefined,
+        privacy_requirements: isGithub
+          ? ['GitHub sign-in or a token you provide; the token stays on the server', 'Never asks for your GitHub password']
+          : ['Only the link you enter is stored', 'Never asks for your password'],
+      } as ExternalProviderInfo;
     });
   }
 
+  /** The honest capabilities from getAllProviders (the providers' own declarations overstate what exists). */
   public static getCapabilities(id: ExternalProviderId): ProviderCapabilities | undefined {
-    const provider = this.providers.get(id);
-    return provider ? provider.getCapabilities() : undefined;
+    return this.getAllProviders().find((p) => p.id === id)?.capabilities;
   }
 }

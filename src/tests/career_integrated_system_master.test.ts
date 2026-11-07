@@ -326,7 +326,10 @@ describe('Unified Career System E2E Master Suite (All 8 Pages & Cross-Module Int
       expect(leetcode).toBeDefined();
       expect(linkedin).toBeDefined();
       expect(github?.capabilities.repositories).toBe(true);
-      expect(leetcode?.capabilities.code_submissions).toBe(true);
+      // Phase 3: LeetCode has no data import here, so no capability is claimed for it.
+      expect(Object.values(leetcode!.capabilities).some(Boolean)).toBe(false);
+      expect(leetcode?.oauth_supported).toBe(false);
+      expect(linkedin?.oauth_supported).toBe(false);
     });
 
     it('saves a platform link as LINKED (not CONNECTED) when ownership is not verified', async () => {
@@ -399,11 +402,11 @@ describe('Unified Career System E2E Master Suite (All 8 Pages & Cross-Module Int
       }
     });
 
-    it('checks cross-platform career profile consistency (Resume vs GitHub vs LeetCode)', async () => {
+    it('profile consistency claims no score, because no comparison engine exists', async () => {
       const consistency = await ExternalIntegrationService.checkProfileConsistency(studentA);
       expect(consistency).toBeDefined();
-      expect(consistency.overall_consistency_score).toBeGreaterThanOrEqual(0);
-      expect(consistency.overall_consistency_score).toBeLessThanOrEqual(100);
+      expect(consistency.overall_consistency_score).toBeNull();
+      expect(consistency.matched_items).toEqual([]);
       expect(Array.isArray(consistency.matched_items)).toBe(true);
       expect(Array.isArray(consistency.recommendations)).toBe(true);
     });

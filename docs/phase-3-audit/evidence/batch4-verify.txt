@@ -1,0 +1,8 @@
+PASS  AP application and JD analysis survive a restart  -- 200
+PASS  PL assessment history survives a restart  -- 1
+PASS  CP profile survives a restart, still LINKED and owned by A  -- 200 LINKED
+PASS  CP B still cannot see A's profile after restart
+PASS  CP integration link survives a restart as LINKED
+PASS  CP imported job survives a restart
+
+6/6 PASS

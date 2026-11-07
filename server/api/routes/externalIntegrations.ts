@@ -136,6 +136,16 @@ externalIntegrationsRouter.get('/integrations/jobs', requireAuth, async (req: Re
   }
 });
 
+// 10b. Compare an imported job with the student's profile
+externalIntegrationsRouter.post('/integrations/jobs/:jobId/analyze', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const result = await ExternalIntegrationService.analyzeJob(req.user!.userId, req.params.jobId);
+    res.json({ success: true, data: result });
+  } catch (err: any) {
+    res.status(err.statusCode || err.status || 500).json({ success: false, message: err.message, code: err.code });
+  }
+});
+
 // 11. Import / paste job description
 externalIntegrationsRouter.post('/integrations/jobs/import', requireAuth, async (req: Request, res: Response) => {
   try {

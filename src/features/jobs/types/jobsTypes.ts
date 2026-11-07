@@ -93,10 +93,10 @@ export interface StudentJobAlert {
 export interface JobSourceConfig {
   id: string;
   name: string;
-  category: JobPrimaryCategory | 'HYBRID';
-  base_url: string;
+  category: JobPrimaryCategory | 'BOTH';
+  source_url: string;
   enabled: boolean;
-  health_status: 'HEALTHY' | 'DEGRADED' | 'FAILED' | 'UNKNOWN';
+  health_status: 'HEALTHY' | 'DEGRADED' | 'UNAVAILABLE' | 'NOT_CONFIGURED';
   last_successful_sync?: string;
   records_retrieved_last_run?: number;
   last_error?: string;
@@ -118,15 +118,16 @@ export interface JobSyncRun {
 export interface StudentJobMatchExplanation {
   job_id: string;
   student_id: string;
-  match_percentage: number;
-  is_eligible_qualification: boolean;
+  match_percentage: number | null;
+  match_basis: string;
+  is_eligible_qualification: boolean | null;
   matched_skills: string[];
   missing_skills: string[];
   qualification_match_details: string;
   experience_match_details: string;
   recommendation_reasons: string[];
   suggested_action: 'APPLY_NOW' | 'UPSKILL_FIRST' | 'PREPARE_RESUME' | 'EXPLORE';
-  ai_explanation: string;
+  ai_explanation?: string;
 }
 
 export interface JobsDashboardStats {
@@ -136,7 +137,7 @@ export interface JobsDashboardStats {
   closing_soon_count: number;
   saved_jobs_count: number;
   matching_profile_count: number;
-  last_sync_time: string;
+  last_sync_time?: string;
   active_sources_count: number;
   healthy_sources_count: number;
 }

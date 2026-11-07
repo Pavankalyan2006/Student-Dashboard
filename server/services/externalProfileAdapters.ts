@@ -45,15 +45,19 @@ export class GitHubAdapter implements PlatformAdapter {
   async sync(studentId: string, profile: StudentExternalProfile): Promise<AdapterSyncResult> {
     try {
       const gh = await githubVerification(studentId);
+      if (gh.username && profile.username && gh.username.toLowerCase() !== profile.username.toLowerCase()) {
+        return { status: 'FAILED', fields: [], data: {}, recordsUpdated: 0, error: `Your GitHub module is connected as @${gh.username}, not @${profile.username}, so its repositories are not shown for this profile.` };
+      }
       const repos = await GitHubService.listRepositories(studentId, {});
       const languages = Array.from(new Set(repos.map((r) => r.language).filter(Boolean)));
       return {
         status: 'SUCCESS',
-        fields: ['public_repositories', 'primary_languages', 'total_stars', 'top_repositories'],
+        fields: ['imported_repositories', 'primary_languages', 'total_stars', 'top_repositories'],
         data: {
           username: gh.username || profile.username,
           ownership_verified: gh.verified,
-          public_repositories: repos.length,
+          // Counts cover only repositories imported in the GitHub module, not everything on the GitHub account.
+          imported_repositories: repos.length,
           primary_languages: languages.slice(0, 5),
           total_stars: repos.reduce((acc, r) => acc + (r.stars || 0), 0),
           total_forks: repos.reduce((acc, r) => acc + (r.forks || 0), 0),

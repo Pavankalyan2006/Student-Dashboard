@@ -149,7 +149,7 @@ export function ExternalProfileHubPage({ onNavigate }: ExternalProfileHubPagePro
     <PageContainer>
       <PageHeader
         title="External Profile Hub"
-        description="Unified hub linking your verified professional profiles, competitive coding stats, AI repositories, and cross-platform consistency verification."
+        description="Your linked professional and coding profiles. Profiles show as verified only after a check (GitHub sign-in or token, or a code on your profile)."
         badge={
           <span className="text-xs px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-medium">
             Multi-Platform Sync
@@ -189,7 +189,7 @@ export function ExternalProfileHubPage({ onNavigate }: ExternalProfileHubPagePro
           }`}
         >
           <ExternalLink className="w-4 h-4" />
-          Connected Profiles ({externalProfilesCount || connections.length})
+          Linked Profiles ({externalProfilesCount || connections.length})
         </button>
         <button
           onClick={() => setActiveTab('consistency')}
@@ -200,7 +200,7 @@ export function ExternalProfileHubPage({ onNavigate }: ExternalProfileHubPagePro
           }`}
         >
           <ShieldCheck className="w-4 h-4" />
-          Career Consistency ({consistency?.consistency_score ?? 0}%)
+          Career Consistency
         </button>
         <button
           onClick={() => setActiveTab('skills')}
@@ -243,14 +243,14 @@ export function ExternalProfileHubPage({ onNavigate }: ExternalProfileHubPagePro
                 </div>
                 <h3 className="text-2xl font-bold text-white mb-2">Career Profile Consistency Review</h3>
                 <p className="text-sm text-slate-400 max-w-2xl">
-                  Our Career & Skill Agents cross-reference claims on your Resume, GitHub repositories, LinkedIn profile,
-                  and LeetCode submissions to ensure your professional identity is 100% verified and free of discrepancies.
+                  Compares claims on your resume with your linked profiles. No automatic cross-check is available yet, so
+                  nothing is scored here.
                 </p>
               </div>
 
               <div className="flex items-center gap-4 bg-slate-950/80 p-4 rounded-xl border border-slate-800">
                 <div className="text-center">
-                  <div className="text-4xl font-extrabold text-emerald-400">{consistency?.consistency_score ?? 0}%</div>
+                  <div className="text-4xl font-extrabold text-emerald-400">{consistency?.verified_matches?.length || consistency?.items_to_review?.length ? `${consistency?.consistency_score ?? 0}%` : '—'}</div>
                   <div className="text-xs text-slate-400 mt-0.5">Consistency Score</div>
                 </div>
                 <div className="h-10 w-px bg-slate-800" />
@@ -507,7 +507,9 @@ function ProfileCard({
   onConnect: () => void;
   isSyncing: boolean;
 }) {
-  const isConnected = !!connection && connection.status === 'CONNECTED';
+  // Connected = ownership verified; Linked = a saved profile link (not verified, nothing imported).
+  const isVerified = !!connection && (connection.status === 'CONNECTED' || connection.status === 'SYNCED');
+  const isConnected = !!connection && connection.status !== 'DISCONNECTED';
 
   return (
     <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl flex flex-col justify-between hover:border-slate-700 transition-colors">
@@ -518,19 +520,21 @@ function ProfileCard({
             <div>
               <h4 className="text-sm font-semibold text-white flex items-center gap-1.5">
                 {provider.display_name}
-                {isConnected && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
+                {isVerified && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
               </h4>
               <p className="text-xs text-slate-400">{provider.category}</p>
             </div>
           </div>
           <span
             className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-              isConnected
+              isVerified
                 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                : isConnected
+                ? 'bg-sky-500/10 text-sky-300 border border-sky-500/20'
                 : 'bg-slate-800 text-slate-400 border border-slate-700'
             }`}
           >
-            {isConnected ? 'Connected' : 'Not Linked'}
+            {isVerified ? 'Connected' : isConnected ? 'Linked (not verified)' : 'Not Linked'}
           </span>
         </div>
 

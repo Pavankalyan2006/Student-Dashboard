@@ -86,11 +86,15 @@ export function IntegrationsCenterPage({ onNavigate, initialTab = 'platforms' }:
 
     try {
       setIsConnecting(true);
-      await externalIntegrationsApi.connectPlatform(connectModalProvider.id, {
+      const conn = await externalIntegrationsApi.connectPlatform(connectModalProvider.id, {
         username: connectUsername || undefined,
         profile_url: connectProfileUrl || undefined,
       });
-      toast.success(`Successfully connected ${connectModalProvider.display_name}!`);
+      toast.success(
+        conn.status === 'CONNECTED'
+          ? `${connectModalProvider.display_name} connected (verified).`
+          : `${connectModalProvider.display_name} link saved. It is not verified and nothing was imported.`
+      );
       setConnectModalProvider(null);
       loadData();
     } catch (err: any) {
@@ -103,8 +107,10 @@ export function IntegrationsCenterPage({ onNavigate, initialTab = 'platforms' }:
   const handleSync = async (connectionId: string, providerName: string) => {
     try {
       setIsSyncingId(connectionId);
-      await externalIntegrationsApi.syncConnection(connectionId);
-      toast.success(`${providerName} synchronized successfully!`);
+      const result = await externalIntegrationsApi.syncConnection(connectionId);
+      // The server answers 200 with sync_status ERROR when nothing could be imported; show that, not "success".
+      if (result.sync_status === 'ERROR') toast.error(result.error_status || `${providerName}: nothing was imported.`);
+      else toast.success(`${providerName} synced.`);
       loadData();
     } catch (err: any) {
       toast.error('Sync failed: ' + err.message);
@@ -143,11 +149,11 @@ export function IntegrationsCenterPage({ onNavigate, initialTab = 'platforms' }:
     <PageContainer>
       <PageHeader
         title="Connected Platforms"
-        description="Connect your professional, coding, and developer accounts. Sync problem solving stats, repository activity, and verified skill evidence."
+        description="Save links to your coding and professional profiles. An account shows as Connected only after it is verified (GitHub sign-in or token); other links are saved as not verified."
         badge={
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-            Official APIs & Public Profiles
+            No passwords requested
           </span>
         }
         actions={
@@ -206,6 +212,7 @@ export function IntegrationsCenterPage({ onNavigate, initialTab = 'platforms' }:
           {providers.map((p) => {
             const connection = getConnectionForProvider(p.id);
             const isConnected = !!connection;
+            const isVerified = !!connection && (connection.status === 'CONNECTED' || connection.status === 'SYNCED');
 
             return (
               <div
@@ -236,12 +243,14 @@ export function IntegrationsCenterPage({ onNavigate, initialTab = 'platforms' }:
 
                     <span
                       className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                        isConnected
+                        isVerified
                           ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          : isConnected
+                          ? 'bg-sky-50 text-sky-700 border border-sky-200'
                           : 'bg-gray-100 text-gray-600'
                       }`}
                     >
-                      {isConnected ? 'CONNECTED' : 'DISCONNECTED'}
+                      {isVerified ? 'CONNECTED' : isConnected ? 'LINKED · NOT VERIFIED' : 'NOT LINKED'}
                     </span>
                   </div>
 
@@ -253,6 +262,11 @@ export function IntegrationsCenterPage({ onNavigate, initialTab = 'platforms' }:
                       Supported Capabilities
                     </span>
                     <div className="flex flex-wrap gap-1">
+                      {!Object.values(p.capabilities).some(Boolean) && (
+                        <span className="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded font-medium">
+                          Profile link only (no data import)
+                        </span>
+                      )}
                       {p.capabilities.profile && (
                         <span className="text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded font-medium">
                           Profile
@@ -301,7 +315,8 @@ export function IntegrationsCenterPage({ onNavigate, initialTab = 'platforms' }:
                         </a>
                       </div>
                       <p className="text-[11px] text-gray-400">
-                        Last synced: {connection.last_synced_at ? new Date(connection.last_synced_at).toLocaleTimeString() : 'Just now'}
+                        Last synced: {connection.last_synced_at ? new Date(connection.last_synced_at).toLocaleString() : 'Never'}
+                        {connection.error_status && <span className="block text-amber-600">{connection.error_status}</span>}
                       </p>
                     </div>
                   )}
@@ -337,7 +352,7 @@ export function IntegrationsCenterPage({ onNavigate, initialTab = 'platforms' }:
                       className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs gap-1"
                     >
                       <Link2 className="w-3.5 h-3.5" />
-                      Connect {p.name}
+                      {p.id === 'github' ? `Connect ${p.name}` : `Save ${p.name} link`}
                     </Button>
                   )}
                 </div>
@@ -388,6 +403,7 @@ export function IntegrationsCenterPage({ onNavigate, initialTab = 'platforms' }:
                   {providers.map((p) => {
                     const conn = getConnectionForProvider(p.id);
                     const isConnected = !!conn;
+                    const isVerified = !!conn && (conn.status === 'CONNECTED' || conn.status === 'SYNCED');
                     const isSyncing = isSyncingId === conn?.id;
 
                     return (
@@ -404,7 +420,7 @@ export function IntegrationsCenterPage({ onNavigate, initialTab = 'platforms' }:
                                 : 'bg-gray-100 text-gray-500'
                             }`}
                           >
-                            {isConnected ? 'READY / CONNECTED' : 'NOT CONNECTED'}
+                            {isVerified ? 'CONNECTED' : isConnected ? 'LINKED · NOT VERIFIED' : 'NOT LINKED'}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-gray-500">
@@ -416,7 +432,7 @@ export function IntegrationsCenterPage({ onNavigate, initialTab = 'platforms' }:
                         </td>
                         <td className="px-4 py-3">
                           <span className="text-[11px] text-gray-600">
-                            {isConnected ? 'Bidirectional profile & evidence pull' : 'Connect account to enable sync'}
+                            {p.capabilities.repositories ? 'Repositories imported in the GitHub module' : 'Link only; no data import available'}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-right">
@@ -525,19 +541,19 @@ export function IntegrationsCenterPage({ onNavigate, initialTab = 'platforms' }:
             <li className="flex items-start gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
               <span>
-                <strong>No Third-Party Passwords:</strong> The platform uses official OAuth 2.0 or verified public profiles. We never ask for or store passwords for LinkedIn, LeetCode, GitHub, or any service.
+                <strong>No Third-Party Passwords:</strong> We never ask for or store passwords for LinkedIn, LeetCode, GitHub or any other service. GitHub can be connected with its official sign-in or a token; other platforms are saved as profile links.
               </span>
             </li>
             <li className="flex items-start gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
               <span>
-                <strong>Token Vault Encryption:</strong> Authorized OAuth tokens are encrypted at rest with AES-256 and never transmitted to the browser or sent to AI prompt context.
+                <strong>Token Vault Encryption:</strong> The GitHub token is stored encrypted on the server and never sent to the browser or to AI prompts.
               </span>
             </li>
             <li className="flex items-start gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
               <span>
-                <strong>Read-Only Scope:</strong> Integrations pull verified learning evidence without modifying external profiles or publishing automated content on your behalf.
+                <strong>Read-Only Scope:</strong> Nothing is posted or changed on your external profiles.
               </span>
             </li>
           </ul>
@@ -591,7 +607,7 @@ export function IntegrationsCenterPage({ onNavigate, initialTab = 'platforms' }:
               </div>
 
               <div className="p-3 bg-blue-50/60 rounded-lg text-[11px] text-blue-900 border border-blue-200">
-                Safe alternative: Synchronizes public problem counts, contest ratings, or headline without password sharing.
+                Only your public username and profile link are saved. No password is asked for. The link is shown as not verified, and no data is imported from this platform{connectModalProvider.id === 'github' ? ' (connect GitHub with sign-in or a token on the GitHub page to verify it)' : ''}.
               </div>
 
               <div className="flex justify-end gap-2 pt-2">

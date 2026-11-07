@@ -31,6 +31,8 @@ export type ExternalPlatformCategory =
 
 export type ConnectionStatus =
   | 'CONNECTED'
+  /** Profile link saved; ownership not verified. */
+  | 'LINKED'
   | 'DISCONNECTED'
   | 'SYNCING'
   | 'SYNCED'
@@ -181,7 +183,7 @@ export interface JobAnalysisResult {
   title?: string;
   company?: string;
   overall_match_score?: number;
-  fit_score?: number;
+  fit_score?: number | null;
   matching_skills?: string[];
   matched_skills?: string[];
   missing_skills?: string[];

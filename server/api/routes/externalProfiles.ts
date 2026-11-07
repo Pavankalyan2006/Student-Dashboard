@@ -50,7 +50,7 @@ externalProfilesRouter.post('/validate-url', async (req: Request, res: Response)
  */
 externalProfilesRouter.get('/stats', requireAuth, async (req: Request, res: Response) => {
   try {
-    const studentId = (req as any).user?.id || (req as any).studentId || 'std_demo_1';
+    const studentId = req.user!.userId;
     const stats = await ExternalProfilesService.getDashboardStats(studentId);
     return res.json({ success: true, stats });
   } catch (err: any) {
@@ -64,7 +64,7 @@ externalProfilesRouter.get('/stats', requireAuth, async (req: Request, res: Resp
  */
 externalProfilesRouter.get('/consented-summary', requireAuth, async (req: Request, res: Response) => {
   try {
-    const studentId = (req as any).user?.id || (req as any).studentId || 'std_demo_1';
+    const studentId = req.user!.userId;
     const context = (req.query.context as 'resume' | 'career' | 'jobs') || 'resume';
     const summary = await ExternalProfilesService.getConsentedProfileSummary(studentId, context);
     return res.json({ success: true, summary });
@@ -79,7 +79,7 @@ externalProfilesRouter.get('/consented-summary', requireAuth, async (req: Reques
  */
 externalProfilesRouter.get('/', requireAuth, async (req: Request, res: Response) => {
   try {
-    const studentId = (req as any).user?.id || (req as any).studentId || 'std_demo_1';
+    const studentId = req.user!.userId;
     const profiles = await ExternalProfilesService.getStudentProfiles(studentId);
     return res.json({ success: true, profiles });
   } catch (err: any) {
@@ -93,7 +93,7 @@ externalProfilesRouter.get('/', requireAuth, async (req: Request, res: Response)
  */
 externalProfilesRouter.post('/', requireAuth, async (req: Request, res: Response) => {
   try {
-    const studentId = (req as any).user?.id || (req as any).studentId || 'std_demo_1';
+    const studentId = req.user!.userId;
     const profile = await ExternalProfilesService.addProfile(studentId, req.body);
     return res.status(201).json({ success: true, profile });
   } catch (err: any) {
@@ -111,7 +111,7 @@ externalProfilesRouter.post('/', requireAuth, async (req: Request, res: Response
  */
 externalProfilesRouter.post('/sync-all', requireAuth, async (req: Request, res: Response) => {
   try {
-    const studentId = (req as any).user?.id || (req as any).studentId || 'std_demo_1';
+    const studentId = req.user!.userId;
     const result = await ExternalProfilesService.syncAllEligibleProfiles(studentId);
     return res.json({ success: true, ...result });
   } catch (err: any) {
@@ -125,7 +125,7 @@ externalProfilesRouter.post('/sync-all', requireAuth, async (req: Request, res: 
  */
 externalProfilesRouter.get('/:id', requireAuth, async (req: Request, res: Response) => {
   try {
-    const studentId = (req as any).user?.id || (req as any).studentId || 'std_demo_1';
+    const studentId = req.user!.userId;
     const profile = await ExternalProfilesService.getProfileById(studentId, req.params.id);
     return res.json({ success: true, profile });
   } catch (err: any) {
@@ -142,7 +142,7 @@ externalProfilesRouter.get('/:id', requireAuth, async (req: Request, res: Respon
  */
 externalProfilesRouter.patch('/:id', requireAuth, async (req: Request, res: Response) => {
   try {
-    const studentId = (req as any).user?.id || (req as any).studentId || 'std_demo_1';
+    const studentId = req.user!.userId;
     const profile = await ExternalProfilesService.updateProfile(studentId, req.params.id, req.body);
     return res.json({ success: true, profile });
   } catch (err: any) {
@@ -162,7 +162,7 @@ externalProfilesRouter.patch('/:id', requireAuth, async (req: Request, res: Resp
  */
 externalProfilesRouter.delete('/:id', requireAuth, async (req: Request, res: Response) => {
   try {
-    const studentId = (req as any).user?.id || (req as any).studentId || 'std_demo_1';
+    const studentId = req.user!.userId;
     await ExternalProfilesService.deleteProfile(studentId, req.params.id);
     return res.json({ success: true, message: 'External profile removed' });
   } catch (err: any) {
@@ -179,7 +179,7 @@ externalProfilesRouter.delete('/:id', requireAuth, async (req: Request, res: Res
  */
 externalProfilesRouter.post('/:id/disconnect', requireAuth, async (req: Request, res: Response) => {
   try {
-    const studentId = (req as any).user?.id || (req as any).studentId || 'std_demo_1';
+    const studentId = req.user!.userId;
     await ExternalProfilesService.disconnectProfile(studentId, req.params.id);
     return res.json({ success: true, message: 'External profile disconnected' });
   } catch (err: any) {
@@ -193,7 +193,7 @@ externalProfilesRouter.post('/:id/disconnect', requireAuth, async (req: Request,
  */
 externalProfilesRouter.post('/:id/sync', requireAuth, async (req: Request, res: Response) => {
   try {
-    const studentId = (req as any).user?.id || (req as any).studentId || 'std_demo_1';
+    const studentId = req.user!.userId;
     const result = await ExternalProfilesService.syncProfile(studentId, req.params.id);
     return res.json({ success: true, ...result });
   } catch (err: any) {
@@ -207,7 +207,7 @@ externalProfilesRouter.post('/:id/sync', requireAuth, async (req: Request, res: 
  */
 externalProfilesRouter.post('/:id/verify-challenge/start', requireAuth, async (req: Request, res: Response) => {
   try {
-    const studentId = (req as any).user?.id || (req as any).studentId || 'std_demo_1';
+    const studentId = req.user!.userId;
     const challenge = await ExternalProfilesService.startChallengeVerification(studentId, req.params.id);
     return res.json({ success: true, challenge });
   } catch (err: any) {
@@ -221,7 +221,7 @@ externalProfilesRouter.post('/:id/verify-challenge/start', requireAuth, async (r
  */
 externalProfilesRouter.post('/:id/verify-challenge/check', requireAuth, async (req: Request, res: Response) => {
   try {
-    const studentId = (req as any).user?.id || (req as any).studentId || 'std_demo_1';
+    const studentId = req.user!.userId;
     const result = await ExternalProfilesService.checkChallengeVerification(studentId, req.params.id);
     return res.json({ success: true, ...result });
   } catch (err: any) {
@@ -235,7 +235,7 @@ externalProfilesRouter.post('/:id/verify-challenge/check', requireAuth, async (r
  */
 externalProfilesRouter.get('/:id/history', requireAuth, async (req: Request, res: Response) => {
   try {
-    const studentId = (req as any).user?.id || (req as any).studentId || 'std_demo_1';
+    const studentId = req.user!.userId;
     const history = await ExternalProfilesService.getProfileHistory(studentId, req.params.id);
     return res.json({ success: true, history });
   } catch (err: any) {

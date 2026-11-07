@@ -200,8 +200,11 @@ export interface JobSyncRun {
 export interface StudentJobMatchExplanation {
   job_id: string;
   student_id: string;
-  match_percentage: number;
-  is_eligible_qualification: boolean;
+  /** Share of the listing's skills found on the student's profile; null when the listing names no skills. */
+  match_percentage: number | null;
+  match_basis: string;
+  /** Always null: the platform does not judge qualification eligibility. */
+  is_eligible_qualification: boolean | null;
   matched_skills: string[];
   missing_skills: string[];
   qualification_match_details: string;

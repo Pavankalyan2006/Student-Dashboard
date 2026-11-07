@@ -249,24 +249,15 @@ jobsDiscoveryRouter.get('/jobs/:id/match', requireAuth, async (req: Request, res
       return res.status(404).json({ success: false, message: 'Job listing not found' });
     }
 
-    // Retrieve student context
-    const student = await db.getStudentById(studentId);
-    const resumes = await db.getResumes(studentId);
-
-    let extractedSkills: string[] = [];
-    if (resumes.length > 0) {
-      const resumeSkills = await db.getResumeSkills(resumes[0].id);
-      extractedSkills = resumeSkills.map((s) => s.skill);
+    // The student's own skills: profile skills plus the skills section of their resumes. No defaults are added.
+    const profileSkills = (await db.getStudentSkills(studentId)).map((s) => s.skill_name);
+    const resumeSkills: string[] = [];
+    for (const r of await db.getResumes(studentId)) {
+      for (const s of await db.getResumeSkills(r.id)) resumeSkills.push(s.skill);
     }
-    if (extractedSkills.length === 0) {
-      extractedSkills = ['Data Structures & Algorithms', 'C++', 'Java', 'Python', 'SQL', 'Computer Networks', 'Operating Systems', 'Git'];
-    }
-
     const matchExplanation = await JobAiService.explainMatch(job, {
       student_id: studentId,
-      branch: student?.branch || 'Computer Science & Engineering',
-      semester: student?.semester || 6,
-      skills: extractedSkills,
+      skills: Array.from(new Set([...profileSkills, ...resumeSkills])),
     });
 
     res.json({ success: true, data: matchExplanation });
@@ -287,8 +278,12 @@ jobsDiscoveryRouter.post('/jobs/:id/track', requireAuth, async (req: Request, re
       return res.status(404).json({ success: false, message: 'Job listing not found' });
     }
 
-    const { status, notes } = req.body;
-    const appStatus = status || 'APPLIED';
+    const { status, notes } = req.body || {};
+    // Tracking only records the opportunity; nothing is submitted to the employer. Default is SAVED, not APPLIED.
+    const appStatus = status || 'SAVED';
+    if (notes !== undefined && (typeof notes !== 'string' || notes.length > 2000)) {
+      return res.status(400).json({ success: false, message: 'notes must be text up to 2,000 characters', code: 'VALIDATION_ERROR' });
+    }
 
     // Create tracked application via LearningModulesService
     const app = await LearningModulesService.createApplication(studentId, {
@@ -299,7 +294,8 @@ jobsDiscoveryRouter.post('/jobs/:id/track', requireAuth, async (req: Request, re
       deadline: job.application_deadline,
       status: appStatus,
       salary_range: job.salary_text,
-      notes: notes || `Imported from Jobs Discovery (${job.category} category). Official Source: ${job.source_name}`,
+      notes: notes || '',
+      job_description: job.description || undefined,
     });
 
     // Also update saved job status
@@ -307,30 +303,31 @@ jobsDiscoveryRouter.post('/jobs/:id/track', requireAuth, async (req: Request, re
 
     res.status(201).json({
       success: true,
-      message: 'Opportunity successfully added to your Applications Tracker',
+      message: 'Added to your Applications Tracker. Nothing was sent to the employer.',
       data: app,
     });
   } catch (err: any) {
-    logger.error('Failed to track job application:', err);
-    res.status(500).json({ success: false, message: err.message });
+    const code = err.statusCode && err.statusCode < 500 ? err.statusCode : 500;
+    if (code === 500) logger.error('Failed to track job application:', err);
+    res.status(code).json({ success: false, message: err.message, code: err.code });
   }
 });
 
 // ============================================================================
 // 11. External Job Description Analysis & Gap Breakdown
 // ============================================================================
-jobsDiscoveryRouter.post('/analyze-jd', async (req: Request, res: Response) => {
+jobsDiscoveryRouter.post('/analyze-jd', requireAuth, async (req: Request, res: Response) => {
   try {
-    const { title, organization, description, category } = req.body;
-    if (!description || description.trim().length < 20) {
-      return res.status(400).json({ success: false, message: 'Please provide a valid job description with at least 20 characters.' });
+    const { title, organization, description, category } = req.body || {};
+    if (typeof description !== 'string' || description.trim().length < 20 || description.length > 20000) {
+      return res.status(400).json({ success: false, message: 'Paste a job description between 20 and 20,000 characters.', code: 'VALIDATION_ERROR' });
     }
 
     const analysis = await JobAiService.analyzeJobDescription({
-      title: title || 'Engineering Position',
-      organization: organization || 'Employer',
+      title: typeof title === 'string' ? title : '',
+      organization: typeof organization === 'string' ? organization : '',
       raw_text: description,
-      category,
+      category: category === 'GOVERNMENT' || category === 'PRIVATE' ? category : undefined,
     });
 
     res.json({ success: true, data: analysis });

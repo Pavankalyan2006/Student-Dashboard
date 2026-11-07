@@ -365,7 +365,8 @@ import {
 } from '../models/jobDiscoveryTypes';
 import {
   INITIAL_JOB_SOURCES,
-  VERIFIED_SEED_JOB_LISTINGS,
+  RETIRED_SEED_JOB_IDS,
+  RETIRED_FIXTURE_EXTERNAL_IDS,
   GOVERNMENT_SUBCATEGORIES,
   PRIVATE_SUBCATEGORIES,
 } from './jobsCatalog';
@@ -2982,12 +2983,9 @@ print(power_mod(2, 10, 1000))  # Output: 24
       },
     ]);
 
-    // Seed initial Jobs Discovery sources and verified listings
+    // Jobs Discovery sources only; listings come from real syncs, never from seed data.
     for (const src of INITIAL_JOB_SOURCES) {
       this.jobSources.set(src.id, { ...src });
-    }
-    for (const job of VERIFIED_SEED_JOB_LISTINGS) {
-      this.jobListings.set(job.id, { ...job });
     }
 
     this.isInitialized = true;
@@ -11620,6 +11618,25 @@ print(power_mod(2, 10, 1000))  # Output: 24
     return { added, updated, duplicates };
   }
 
+  /**
+   * Removes hand-written job listings that older versions seeded, and the "healthy, enabled" flags they gave to sources
+   * with no adapter. Called after a snapshot is restored. Returns how many listings were removed.
+   */
+  public retireFabricatedJobData(): number {
+    let removed = 0;
+    for (const [id, job] of this.jobListings) {
+      if (RETIRED_SEED_JOB_IDS.includes(id) || (job.external_job_id && RETIRED_FIXTURE_EXTERNAL_IDS.includes(job.external_job_id))) {
+        this.jobListings.delete(id);
+        removed++;
+      }
+    }
+    for (const seed of INITIAL_JOB_SOURCES) {
+      const cur = this.jobSources.get(seed.id);
+      if (cur && !seed.enabled) this.jobSources.set(seed.id, { ...cur, enabled: false, health_status: 'NOT_CONFIGURED' });
+    }
+    return removed;
+  }
+
   public async getJobSources(): Promise<JobSourceConfig[]> {
     await this.initialize();
     return Array.from(this.jobSources.values());
@@ -11762,8 +11779,13 @@ print(power_mod(2, 10, 1000))  # Output: 24
       private_jobs: pvtCount,
       closing_soon_count: closingSoon,
       saved_jobs_count: saved,
-      matching_profile_count: Math.min(jobs.length, 6),
-      last_sync_time: latestSync || new Date().toISOString(),
+      // Listings that name at least one skill on the student's profile (exact name, case-insensitive).
+      matching_profile_count: await (async () => {
+        if (!studentId) return 0;
+        const mine = new Set((await this.getStudentSkills(studentId)).map((s) => s.skill_name.toLowerCase()));
+        return jobs.filter((j) => (j.required_skills || []).some((r) => mine.has(r.toLowerCase()))).length;
+      })(),
+      last_sync_time: latestSync,
       active_sources_count: sources.filter((s) => s.enabled).length,
       healthy_sources_count: sources.filter((s) => s.health_status === 'HEALTHY').length,
     };

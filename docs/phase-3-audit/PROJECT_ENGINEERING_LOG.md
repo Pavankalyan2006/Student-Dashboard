@@ -51,3 +51,21 @@ Restart between `create` and `verify` to prove persistence.
   Evidence: `phase3-batch3.cjs create` 32/32, `verify` after restart 7/7 (`evidence/batch3-*.txt`);
   `phase3-resume-ui.cjs` at 1366 and 390 (no overflow, no page errors, `evidence/resume-ui.txt`, `resume-editor-*.png`).
   Tests 905/905, tsc 0. Batch 3 complete. Next: Batch 4 (Applications, Placement Prep, Connected Platforms).
+- 2026-11-07 07:30 Applications and Placement Prep done (P3-059..P3-066, commit 771f53a). JD analysis now compares
+  catalogue skills named in the JD with the student's own skills; inputs validated; placement scores and recommendations
+  come from real records; AI coach/STAR are model-only; 32 questions added (bank 36); four unreachable fake pages deleted.
+- 2026-11-07 09:50 Connected Platforms and Jobs Discovery done (P3-067..P3-081). **P0 P3-067**: every external-profiles
+  route read `req.user.id` (undefined) and fell back to `std_demo_1`, so all students shared one set of profiles; now
+  `req.user!.userId`. New status LINKED; CONNECTED only after GitHub OAuth/token or a live challenge check (Codeforces
+  official API, portfolio pages via an SSRF-safe fetch). Demo seed connections, sample activity, evidence, jobs and the
+  91% consistency score removed; provider registry sync/OAuth/connect stubs now throw. Jobs Discovery (found while
+  checking Internships): eight hand-written "verified" listings and three hard-coded government notices removed and purged
+  from old snapshots on start (`db.retireFabricatedJobData`); only Remotive (real public API) is enabled; a failed fetch
+  stores nothing (FAILED run, error shown); job ids now sha256 (the old prefix collided); match % is the plain share of
+  listed skills; analyze-jd needs sign-in and keeps AI fields model-only.
+  Two link stores remain (Integrations Center and External Profile Hub); Settings now lists both. Merging them is
+  left for later (not a Phase 3 defect fix).
+  Evidence: `phase3-batch4.cjs create` 43/43, `verify` after restart 6/6 (`evidence/batch4-*.txt`);
+  `phase3-batch4-ui.cjs` 6 pages x 2 widths: no "Connected" claims for an unverified student, no overflow, no page errors,
+  no 5xx (`evidence/batch4-ui.txt`, `b4-*.png`). Live GitHub/Codeforces/Remotive checks BLOCKED (no outbound access here;
+  the failure path was exercised). Tests 928/928, tsc 0. Batch 4 complete. Next: Batch 5.
