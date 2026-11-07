@@ -189,9 +189,19 @@ export class DocumentService {
       .digest('hex');
 
     const existingDocs = await db.getStudentDocuments(studentId, { limit: 1000 });
-    const duplicate = existingDocs.items.find(
-      (d) => d.original_filename === originalName && d.file_size === sizeBytes && d.status !== 'FAILED'
-    );
+    // A duplicate is the same content (sha-256). Matching only name and size treated a different file with
+    // the same name and length as a duplicate and silently dropped it.
+    let duplicate: any = null;
+    for (const item of existingDocs.items as any[]) {
+      if (item.status === 'FAILED') continue;
+      const full: any = (await db.getDocumentById(item.id, studentId)) || item;
+      const hash = full.metadata?.content_hash;
+      const same = contentBase64 && hash ? hash === contentHash : full.original_filename === originalName && full.file_size === sizeBytes;
+      if (same) {
+        duplicate = full;
+        break;
+      }
+    }
 
     if (duplicate) {
       logger.info(
@@ -213,7 +223,8 @@ export class DocumentService {
         }
       }
       const existingDoc = await db.getDocumentById(duplicate.id, studentId);
-      return existingDoc || (duplicate as any);
+      // Tell the caller that nothing new was stored.
+      return { ...((existingDoc || duplicate) as any), duplicate_of: duplicate.id };
     }
 
     // 4. Store file blob securely via StorageService
@@ -841,31 +852,44 @@ export class DocumentService {
       await DocumentProcessingService.processDocumentAsync(documentId, studentId);
     }
 
-    const chunks = await db.getDocumentChunks(documentId, studentId);
+    let chunks = await db.getDocumentChunks(documentId, studentId);
+    if (chunks.length === 0) {
+      // Not processed yet (or processed with no text): run the pipeline now and wait for it.
+      await DocumentProcessingService.runProcessingPipeline(documentId, studentId);
+      chunks = await db.getDocumentChunks(documentId, studentId);
+    }
+    const after = await this.getDocument(documentId, studentId);
+    if (after.status === 'FAILED' || chunks.length === 0) {
+      return {
+        success: false,
+        indexed: false,
+        status: after.status,
+        chunks_indexed: 0,
+        message: after.status === 'FAILED' ? `Processing failed: ${after.processing_error || 'unknown error'}` : 'No text could be extracted from this document, so there is nothing to index.',
+      };
+    }
 
-    // Ensure chunks are embedded in VectorStore
+    // Replace this document's vectors with fresh ones.
+    VectorStore.deleteDocumentVectors(documentId, studentId);
     for (const chunk of chunks) {
-      try {
-        const embedding = await EmbeddingService.embed(chunk.content);
-        VectorStore.addVector({
-          id: chunk.id,
-          vector: embedding,
-          documentId: doc.id,
-          pageNumber: chunk.metadata?.page_number || 1,
-          content: chunk.content,
-          studentId,
-        });
-      } catch {
-        // Continue indexing
-      }
+      const embedding = await EmbeddingService.embed(chunk.content);
+      VectorStore.addVector({
+        id: chunk.id,
+        vector: embedding,
+        documentId: doc.id,
+        pageNumber: chunk.metadata?.page_number || 1,
+        content: chunk.content,
+        studentId,
+      });
     }
 
     await db.updateDocument(documentId, studentId, {
       status: 'READY',
       content_indexed: true,
       metadata: {
-        ...(doc.metadata || {}),
+        ...(after.metadata || {}),
         content_indexed: true,
+        indexed_chunks: chunks.length,
         indexed_at: new Date().toISOString(),
       },
     });
@@ -880,7 +904,7 @@ export class DocumentService {
       indexed: true,
       status: 'READY',
       chunks_indexed: chunks.length,
-      message: 'Document successfully indexed into Knowledge Base',
+      message: `Indexed ${chunks.length} passage${chunks.length === 1 ? '' : 's'} into your Knowledge Base`,
     };
   }
 

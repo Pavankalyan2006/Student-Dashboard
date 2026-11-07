@@ -5,6 +5,10 @@ PASS  GL after restart: lesson and exercise completion kept
 PASS  GL after restart: exercise repository and hint usage kept
 PASS  GL after restart: sandbox repository kept
 PASS  GL unified progress shows the Git lab  -- 200 {"category":"Git Practice Lab","completed":1,"in_progress":0,"total":12}
+PASS  KB after restart: document still found by its text (vectors persisted)
+PASS  KB after restart: question still gets cited passages
+PASS  KB after restart: collection and its document kept
+PASS  KB after restart: question history kept
 PASS  RS remove a paper
 
-8/8 PASS
+12/12 PASS

@@ -93,6 +93,11 @@ export interface KnowledgeQuestionRecord {
   key_concepts: string[];
   follow_up_questions: string[];
   confidence_score: number;
+  /** AI_MODEL: the model answered from the retrieved passages. EXTRACTIVE: no model, the passages are shown as-is.
+   *  NO_SOURCES: nothing relevant was found in the student's documents, so no answer was produced. */
+  answer_mode?: 'AI_MODEL' | 'EXTRACTIVE' | 'NO_SOURCES';
+  /** confidence_score is the best retrieval similarity (0-1), not the model's own opinion of itself. */
+  confidence_basis?: 'RETRIEVAL_SIMILARITY';
   created_at: string;
 }
 
@@ -245,6 +250,11 @@ export interface AskKnowledgeQuestionResponse {
   key_concepts: string[];
   follow_up_questions: string[];
   confidence_score: number;
+  /** AI_MODEL: the model answered from the retrieved passages. EXTRACTIVE: no model, the passages are shown as-is.
+   *  NO_SOURCES: nothing relevant was found in the student's documents, so no answer was produced. */
+  answer_mode?: 'AI_MODEL' | 'EXTRACTIVE' | 'NO_SOURCES';
+  /** confidence_score is the best retrieval similarity (0-1), not the model's own opinion of itself. */
+  confidence_basis?: 'RETRIEVAL_SIMILARITY';
   created_at: string;
 }
 

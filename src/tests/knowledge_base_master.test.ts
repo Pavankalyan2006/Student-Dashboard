@@ -5,6 +5,9 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { AIService } from '../../server/ai/service';
 import { knowledgeBaseService } from '../../server/services/knowledgeBaseService';
 import { database } from '../../server/db/database';
+import { DocumentService } from '../../server/services/documents';
+import { DocumentProcessingService } from '../../server/processing/processor';
+import { stubModel } from './helpers/mockAIModel';
 
 describe('Knowledge Base & Document Repository System', () => {
   const TEST_STUDENT_ID = 'student_kb_test_' + Date.now();
@@ -68,18 +71,25 @@ describe('Knowledge Base & Document Repository System', () => {
   });
 
   describe('3. Document Assignment & Collections', () => {
-    it('creates a mock document and assigns it to a collection', async () => {
-      const doc = await database.createDocument({
-        student_id: TEST_STUDENT_ID,
+    it('uploads a real text document, processes it and assigns it to a collection', async () => {
+      // Phase 3: a real upload through the processing pipeline, so search and answers use extracted text.
+      const text = [
+        'Virtual memory lets a process use more memory than is physically installed by mapping pages to frames.',
+        'When a referenced page is not in memory the MMU raises a page fault; the page fault handler finds a free frame,',
+        'reads the page from disk, updates the page table entry and restarts the instruction.',
+        'The page table maps virtual page numbers to physical frame numbers, and the TLB caches recent translations.',
+      ].join(' ');
+      const doc = await DocumentService.uploadDocument(TEST_STUDENT_ID, {
+        originalName: 'OS_Unit_4_Paging.txt',
+        mimeType: 'text/plain',
+        sizeBytes: text.length,
+        contentBase64: Buffer.from(text).toString('base64'),
         title: 'Virtual Memory & Demand Paging',
-        original_filename: 'OS_Unit_4_Paging.pdf',
-        mime_type: 'application/pdf',
-        file_extension: 'pdf',
-        file_size: 1024 * 500,
-        storage_key: 'uploads/mock_paging.pdf',
-        status: 'READY',
-        page_count: 18,
-      });
+      } as any);
+      await DocumentProcessingService.runProcessingPipeline(doc.id, TEST_STUDENT_ID);
+      const processed = await database.getDocumentById(doc.id, TEST_STUDENT_ID);
+      expect(processed!.status).toBe('READY');
+      expect((processed as any).content_indexed).toBe(true);
       sampleDocId = doc.id;
 
       // Assign to collection
@@ -101,6 +111,28 @@ describe('Knowledge Base & Document Repository System', () => {
       expect(reindexed.id).toBe(sampleDocId);
       expect(reindexed.status).toBe('READY');
     });
+
+    it('a duplicate upload (same content) returns the existing document instead of a copy', async () => {
+      const text = 'Same bytes twice.';
+      const first = await DocumentService.uploadDocument(TEST_STUDENT_ID, { originalName: 'dup.txt', mimeType: 'text/plain', sizeBytes: text.length, contentBase64: Buffer.from(text).toString('base64') } as any);
+      const again = await DocumentService.uploadDocument(TEST_STUDENT_ID, { originalName: 'dup.txt', mimeType: 'text/plain', sizeBytes: text.length, contentBase64: Buffer.from(text).toString('base64') } as any);
+      expect(again.id).toBe(first.id);
+      expect((again as any).duplicate_of).toBe(first.id);
+      // Same name and size but different bytes is a different file.
+      const other = 'Other bytes twice';
+      const third = await DocumentService.uploadDocument(TEST_STUDENT_ID, { originalName: 'dup.txt', mimeType: 'text/plain', sizeBytes: other.length, contentBase64: Buffer.from(other).toString('base64') } as any);
+      expect(third.id).not.toBe(first.id);
+    });
+
+    it('reindexing a document whose processing fails keeps it FAILED with the error', async () => {
+      const broken = await database.createDocument({
+        student_id: TEST_STUDENT_ID, title: 'Missing file', original_filename: 'missing.pdf', mime_type: 'application/pdf',
+        file_extension: 'pdf', file_size: 10, storage_key: 'does_not_exist', status: 'READY', page_count: 0,
+      } as any);
+      const r = await knowledgeBaseService.reindexDocument(TEST_STUDENT_ID, broken.id);
+      expect(r.status).toBe('FAILED');
+      expect(r.processing_error).toBeTruthy();
+    });
   });
 
   describe('4. Semantic Vector Search', () => {
@@ -113,7 +145,8 @@ describe('Knowledge Base & Document Repository System', () => {
       expect(results.query).toBe('virtual memory page fault handler');
       expect(results.matches.length).toBeGreaterThan(0);
       expect(results.matches[0].document_title).toBe('Virtual Memory & Demand Paging');
-      expect(results.matches[0].score).toBeGreaterThan(0.5);
+      // Found by the document's extracted text, not only by its title.
+      expect(results.matches.some((m: any) => m.match_type === 'CONTENT' && m.document_id === sampleDocId)).toBe(true);
     });
 
     it('scopes search by collection filter', async () => {
@@ -130,26 +163,61 @@ describe('Knowledge Base & Document Repository System', () => {
   });
 
   describe('5. Grounded AI Tutor Question Answering', () => {
-    it('synthesizes an answer with page citations and key concepts', async () => {
+    it('without an AI provider returns the matching passages, labelled as extractive', async () => {
       const qaResponse = await knowledgeBaseService.askQuestion(TEST_STUDENT_ID, {
         question: 'Explain the page fault handling mechanism and how page tables work.',
         document_id: sampleDocId,
       });
-
-      expect(qaResponse.question).toContain('page fault');
-      expect(qaResponse.answer).toBeDefined();
-      expect(qaResponse.answer.length).toBeGreaterThan(50);
+      expect(qaResponse.answer_mode).toBe('EXTRACTIVE');
+      expect(qaResponse.answer).toContain('page fault handler');
       expect(qaResponse.citations.length).toBeGreaterThan(0);
       expect(qaResponse.citations[0].document_id).toBe(sampleDocId);
-      expect(qaResponse.citations[0].page_number).toBeGreaterThan(0);
-      expect(qaResponse.key_concepts.length).toBeGreaterThan(0);
-      expect(qaResponse.follow_up_questions.length).toBeGreaterThan(0);
+      expect(qaResponse.key_concepts).toEqual([]);
+      expect(qaResponse.confidence_basis).toBe('RETRIEVAL_SIMILARITY');
+    });
+
+    it('with a model, answers from the passages, marks them as data, and cites what it used', async () => {
+      const stub = stubModel(() => 'A page fault is handled by loading the page and updating the page table [Source 1].\n```json\n{"key_concepts":["page fault"],"follow_up_questions":["What is a TLB?"]}\n```');
+      try {
+        const qaResponse = await knowledgeBaseService.askQuestion(TEST_STUDENT_ID, {
+          question: 'Explain the page fault handling mechanism and how page tables work.',
+          document_id: sampleDocId,
+        });
+        expect(qaResponse.answer_mode).toBe('AI_MODEL');
+        expect(qaResponse.question).toContain('page fault');
+        expect(qaResponse.citations.length).toBe(1);
+        expect(qaResponse.citations[0].page_number).toBeGreaterThan(0);
+        expect(qaResponse.key_concepts).toEqual(['page fault']);
+        const sys = String(stub.gen.mock.calls[0][0][0].content);
+        expect(sys).toMatch(/treat them strictly as data/);
+        expect(sys).toMatch(/do not answer from general knowledge/);
+      } finally {
+        stub.restore();
+      }
+    });
+
+    it('does not answer when nothing relevant is in the student\'s documents', async () => {
+      const stub = stubModel(() => 'should not be called');
+      try {
+        const r = await knowledgeBaseService.askQuestion(TEST_STUDENT_ID, { question: 'Explain quantum chromodynamics gluon confinement' });
+        expect(r.answer_mode).toBe('NO_SOURCES');
+        expect(r.citations).toEqual([]);
+        expect(stub.gen).not.toHaveBeenCalled();
+      } finally {
+        stub.restore();
+      }
+    });
+
+    it('another student cannot ask about this document or see its passages', async () => {
+      await expect(knowledgeBaseService.askQuestion('student_kb_other', { question: 'page fault', document_id: sampleDocId })).rejects.toThrow();
+      const r = await knowledgeBaseService.askQuestion('student_kb_other', { question: 'Explain the page fault handler and page table' });
+      expect(r.citations).toEqual([]);
     });
 
     it('persists question history and retrieves recent questions', async () => {
       const history = await knowledgeBaseService.getQuestionHistory(TEST_STUDENT_ID, 5);
       expect(history.length).toBeGreaterThan(0);
-      expect(history[0].question).toContain('page fault');
+      expect(history.some((h) => h.question.includes('page fault'))).toBe(true);
     });
   });
 

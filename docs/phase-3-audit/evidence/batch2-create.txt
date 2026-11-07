@@ -4,7 +4,7 @@ PASS  RS search answers and names its source  -- CURATED, 1 results, live error:
 PASS  RS curated results are labelled CURATED with a note (live search unavailable)
 PASS  RS student B cannot search in A's project
 PASS  RS result has a source link to open  -- https://arxiv.org/abs/1706.03762
-PASS  RS save paper (server id, client id ignored)  -- paper_1794026867309_6x320i
+PASS  RS save paper (server id, client id ignored)  -- paper_1794027580700_db73qm
 PASS  RS saving the same paper again does not duplicate it
 PASS  RS empty title is refused
 PASS  RS save notes and reading status  -- 200
@@ -29,5 +29,23 @@ PASS  GL exercise graded complete from the repository state  --
 PASS  GL student B has their own untouched repository
 PASS  GL sandbox works
 PASS  GL progress counts the completion  -- {"lessons_total":13,"lessons_completed":1,"exercises_total":12,"exercises_comple
+PASS  KB upload accepted (QUEUED)  -- QUEUED
+PASS  KB processed and indexed (READY, content_indexed)  -- READY chunks=1
+PASS  KB extracted text is the file text (not base64)  -- [{"id":"page_doc_1794027580764_651t_1","document_id":"doc_1794027580764_651t","p
+PASS  KB same content uploaded again is reported as a duplicate
+PASS  KB executable rejected
+PASS  KB create collection  -- 201
+PASS  KB assign document to collection  -- 200
+PASS  KB student B cannot add their view of A's collection
+PASS  KB search finds the document by its text  -- CONTENT:0.6
+PASS  KB collection-scoped search
+PASS  KB student B search does not see A's document
+PASS  KB question without AI returns cited passages, labelled extractive  -- EXTRACTIVE cites=1 sim=0.69
+PASS  KB unrelated question: no answer invented, no citations
+PASS  KB student B cannot ask about A's document
+PASS  KB study material without AI is 503 and saves nothing  -- 503
+PASS  KB document text with instructions is only quoted as a passage (no AI here; model prompt isolation is unit-tested)
+PASS  KB reindex keeps it READY  -- 200
+PASS  KB deleted document is no longer searchable  -- 200
 
-31/31 PASS
+49/49 PASS

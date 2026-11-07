@@ -147,7 +147,7 @@ describe('Master Documents Page Compliance Test Suite (24 Requirements)', () => 
       originalName: 'move_test.pdf',
       mimeType: 'application/pdf',
       sizeBytes: 1000,
-      contentBase64: 'data:application/pdf;base64,dGVzdA==',
+      contentBase64: 'data:application/pdf;base64,dGVzdCBmaWxlIDE=',
       folderId: folder1.id,
     });
 
@@ -166,13 +166,14 @@ describe('Master Documents Page Compliance Test Suite (24 Requirements)', () => 
   });
 
   // 8. Searching by filename and metadata
+  // (Phase 3: fixtures use different bytes per file; identical bytes are now detected as the same document.)
   it('8. searches documents by display title, subject, and category', async () => {
     await DocumentService.uploadDocument(studentA, {
       title: 'Database Management Systems Normalization',
       originalName: 'dbms_bcnf_3nf.pdf',
       mimeType: 'application/pdf',
       sizeBytes: 1000,
-      contentBase64: 'data:application/pdf;base64,dGVzdA==',
+      contentBase64: 'data:application/pdf;base64,dGVzdCBmaWxlIDI=',
       category: 'Lecture Notes',
       subject: 'DBMS',
     });
@@ -182,7 +183,7 @@ describe('Master Documents Page Compliance Test Suite (24 Requirements)', () => 
       originalName: 'cn_sockets.pdf',
       mimeType: 'application/pdf',
       sizeBytes: 1000,
-      contentBase64: 'data:application/pdf;base64,dGVzdA==',
+      contentBase64: 'data:application/pdf;base64,dGVzdCBmaWxlIDM=',
       category: 'Laboratory Manuals',
       subject: 'Networks',
     });
@@ -205,7 +206,7 @@ describe('Master Documents Page Compliance Test Suite (24 Requirements)', () => 
       originalName: 'b.pdf',
       mimeType: 'application/pdf',
       sizeBytes: 5000,
-      contentBase64: 'data:application/pdf;base64,dGVzdA==',
+      contentBase64: 'data:application/pdf;base64,dGVzdCBmaWxlIDQ=',
       category: 'Research Papers',
       folderId: folder.id,
     });
@@ -215,7 +216,7 @@ describe('Master Documents Page Compliance Test Suite (24 Requirements)', () => 
       originalName: 'a.docx',
       mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       sizeBytes: 2000,
-      contentBase64: 'data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64,dGVzdA==',
+      contentBase64: 'data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64,dGVzdCBmaWxlIDU=',
       category: 'Lecture Notes',
     });
 
@@ -292,7 +293,7 @@ describe('Master Documents Page Compliance Test Suite (24 Requirements)', () => 
       originalName: 'star.pdf',
       mimeType: 'application/pdf',
       sizeBytes: 500,
-      contentBase64: 'data:application/pdf;base64,dGVzdA==',
+      contentBase64: 'data:application/pdf;base64,dGVzdCBmaWxlIDY=',
     });
 
     expect(doc.is_favorite).toBe(false);
@@ -316,7 +317,7 @@ describe('Master Documents Page Compliance Test Suite (24 Requirements)', () => 
       originalName: 'original.pdf',
       mimeType: 'application/pdf',
       sizeBytes: 500,
-      contentBase64: 'data:application/pdf;base64,dGVzdA==',
+      contentBase64: 'data:application/pdf;base64,dGVzdCBmaWxlIDc=',
       category: 'Other Documents',
     });
 

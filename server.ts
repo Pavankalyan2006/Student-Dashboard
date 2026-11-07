@@ -17,6 +17,7 @@ import { CareerService } from './server/services/careerService';
 import { MlLabService } from './server/services/mlLabService';
 import { SqlLabSandboxService } from './server/services/sqlLabSandboxService';
 import { GitLabService } from './server/services/gitLabService';
+import { VectorStore } from './server/rag/vectorStore';
 import { semesterStateStore } from './server/services/semesterCommandCenterService';
 import { healthRouter } from './server/api/routes/health';
 import { logger } from './server/core/logging';
@@ -66,6 +67,8 @@ async function setupPersistence() {
   registerPersistentSource('onboarding', onboardingStores as unknown as Record<string, any>);
   registerPersistentSource('career', CareerService as unknown as Record<string, any>, ['careerProfiles']);
   registerPersistentSource('mlLab', MlLabService as unknown as Record<string, any>, ['workspaces', 'customDatasets', 'experiments', 'fittedModels', 'predictions']);
+  // Search vectors for uploaded documents; without this, search and Q&A found nothing after a restart.
+  registerPersistentSource('vectorStore', VectorStore as unknown as Record<string, any>, ['store']);
   registerPersistentSource('gitLab', GitLabService as unknown as Record<string, any>, ['progress']);
   registerPersistentSource('sqlLab', SqlLabSandboxService as unknown as Record<string, any>, ['studentDbImages', 'queryHistories', 'savedQueries']);
   registerPersistentSource('semesterCommandCenter', semesterStateStore as unknown as Record<string, any>, ['states']);

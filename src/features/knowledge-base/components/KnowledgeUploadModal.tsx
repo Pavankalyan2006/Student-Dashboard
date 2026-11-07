@@ -7,6 +7,7 @@ import { documentsApi } from '../../documents/api/documentsApi';
 import { knowledgeBaseApi } from '../api/knowledgeBaseApi';
 import { KnowledgeCollection } from '../types/knowledgeBaseTypes';
 import { DocumentCardData } from '../../documents/types/document';
+import { toast } from 'sonner';
 
 interface KnowledgeUploadModalProps {
   isOpen: boolean;
@@ -96,6 +97,10 @@ export const KnowledgeUploadModal: React.FC<KnowledgeUploadModalProps> = ({
           title: title.trim() || file.name,
           tags: parsedTags,
         });
+
+        if ((created as any).duplicate_of) {
+          toast.info(`This file is already in your documents as "${created.title}". No copy was made.`);
+        }
 
         // 3. If collection selected, assign document
         if (collectionId && created.id) {

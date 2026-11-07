@@ -79,23 +79,31 @@ export class DocumentProcessingService {
 
       // 5. Stage: EMBEDDING
       await this.updateStatus(documentId, studentId, 'EMBEDDING');
+      // Reprocessing replaces the document's vectors instead of adding stale copies next to new ones.
+      VectorStore.deleteDocumentVectors(documentId, studentId);
       for (const chunk of chunks) {
         const vector = await EmbeddingService.embed(chunk.content);
         await VectorStore.addChunk(chunk, studentId, vector);
       }
 
       // 6. Stage: READY
+      // READY means processing finished; content_indexed says whether any text was found to search.
+      // Images and scanned PDFs have no extractable text (there is no OCR), so they are not searchable.
       await db.updateDocument(documentId, studentId, {
         status: 'READY',
         processing_completed_at: new Date().toISOString(),
         processing_error: undefined,
-      });
+        content_indexed: chunks.length > 0,
+        metadata: { ...((await db.getDocumentById(documentId, studentId))?.metadata || {}), indexed_chunks: chunks.length, indexed_at: new Date().toISOString() },
+      } as any);
 
       // Add student notification
       await db.createNotification({
         student_id: studentId,
         title: 'Document Ready for AI Learning',
-        message: `"${document.title}" (${createdPages.length} pages) has been parsed and indexed. You can now read, search, and chat with AI.`,
+        message: chunks.length > 0
+          ? `"${document.title}" (${createdPages.length} pages) has been parsed and indexed. You can now read, search, and chat with AI.`
+          : `"${document.title}" was stored, but no text could be extracted from it, so it cannot be searched or used for answers.`,
         type: 'ai',
         link: `/documents/${documentId}`,
       });

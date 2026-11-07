@@ -224,11 +224,22 @@ export const KnowledgeAiTutorQa: React.FC<KnowledgeAiTutorQaProps> = ({
               </div>
             </div>
 
+            {currentResponse.answer_mode && (
+              <p className="text-[11px] text-slate-400">
+                {currentResponse.answer_mode === 'AI_MODEL'
+                  ? 'AI answer based only on the passages cited below.'
+                  : currentResponse.answer_mode === 'EXTRACTIVE'
+                    ? 'AI is unavailable, so these are the matching passages from your documents (no AI summary).'
+                    : 'No matching passages were found in your documents.'}
+                {currentResponse.citations?.length ? ` Best match similarity: ${Math.round((currentResponse.confidence_score || 0) * 100)}%.` : ''}
+              </p>
+            )}
+
             {/* Grounded Citations */}
             {currentResponse.citations && currentResponse.citations.length > 0 && (
               <div>
                 <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 mb-2">
-                  <CheckCircle className="w-3.5 h-3.5 text-emerald-400" /> Grounded Source Citations
+                  <CheckCircle className="w-3.5 h-3.5 text-emerald-400" /> Sources from your documents
                 </span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   {currentResponse.citations.map((c, i) => (
