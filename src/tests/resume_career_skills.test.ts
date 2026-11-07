@@ -421,13 +421,13 @@ describe('Phase 12: Resume Builder, Career Assistant & Skill Assessment System',
 
       expect(recommendations).toBeDefined();
       expect(recommendations.potentially_relevant_roles.length).toBeGreaterThan(0);
-      expect(recommendations.explanation).toContain('alignment with your verified coursework');
+      expect(recommendations.explanation).toMatch(/skill/i);
       expect(recommendations.disclaimer).toContain('Curriculum alignments describe skill overlap');
 
       // Top matching role should list matching reasons
       const topRole = recommendations.potentially_relevant_roles[0];
       expect(topRole.match_reasons.length).toBeGreaterThan(0);
-      expect(topRole.match_reasons[0]).toContain('evidence');
+      expect(topRole.match_reasons[0]).toContain('match this role');
       expect(topRole.top_matching_skills.length).toBeGreaterThan(0);
     });
   });

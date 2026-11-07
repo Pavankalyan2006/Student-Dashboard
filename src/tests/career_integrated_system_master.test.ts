@@ -21,13 +21,18 @@ describe('Unified Career System E2E Master Suite (All 8 Pages & Cross-Module Int
   // PAGE 1: CAREER DASHBOARD & CAREER PROFILE
   // =========================================================================
   describe('Page 1: Career Dashboard & Career Profile', () => {
-    it('retrieves student personalized career profile with fallback defaults', async () => {
+    it('starts the career profile from onboarding answers without inventing roles, cities or skills', async () => {
+      const { OnboardingService } = await import('../../server/services/onboardingService');
+      await OnboardingService.saveCareerGoals(studentA, { target_job_role: 'Backend Developer', preferred_location: 'Remote', work_mode_preference: 'REMOTE' } as any);
       const profile = await CareerService.getCareerProfile(studentA);
-      expect(profile).toBeDefined();
       expect(profile.student_id).toBe(studentA);
-      expect(profile.target_roles.length).toBeGreaterThanOrEqual(1);
-      expect(profile.preferred_locations.length).toBeGreaterThanOrEqual(1);
-      expect(profile.preferred_work_arrangement).toBeDefined();
+      expect(profile.target_roles).toEqual(['Backend Developer']);
+      expect(profile.preferred_locations).toEqual(['Remote']);
+      expect(profile.preferred_work_arrangement).toBe('REMOTE');
+      const empty = await CareerService.getCareerProfile('std_p3_no_onboarding');
+      expect(empty.target_roles).toEqual([]);
+      expect(empty.preferred_locations).toEqual([]);
+      expect(empty.career_goals).toEqual([]);
     });
 
     it('updates career preferences (target roles, locations, work arrangement) and persists them', async () => {
@@ -59,10 +64,13 @@ describe('Unified Career System E2E Master Suite (All 8 Pages & Cross-Module Int
       expect(summary.readiness.resume_completeness).toBeGreaterThanOrEqual(0);
       expect(summary.readiness.resume_completeness).toBeLessThanOrEqual(100);
       expect(summary.readiness.resume_sections_status.length).toBeGreaterThanOrEqual(5);
-      expect(summary.readiness.skills_aligned_percentage).toBeGreaterThanOrEqual(0);
+      // Phase 3: null when the profile names no target role (no alignment is claimed then).
+      const aligned = summary.readiness.skills_aligned_percentage;
+      expect(aligned === null || (aligned >= 0 && aligned <= 100)).toBe(true);
+      if (aligned === null) expect(summary.readiness.target_role_name).toBeNull();
       expect(summary.readiness.projects_count).toBeGreaterThanOrEqual(0);
       expect(summary.readiness.placement_prep_progress).toBeDefined();
-      expect(summary.readiness.readiness_explanation).toContain('authentic records');
+      expect(summary.readiness.readiness_explanation).toContain('your own records');
 
       // 3. Recommended Actions
       expect(summary.recommended_actions.length).toBeGreaterThanOrEqual(1);

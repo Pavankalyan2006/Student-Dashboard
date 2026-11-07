@@ -339,7 +339,7 @@ export const CareerDashboardPage: React.FC<CareerDashboardPageProps> = ({ onNavi
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-semibold text-slate-500">Skill Alignment</span>
                 <span className="text-xs font-bold text-blue-600 bg-blue-50 dark:bg-blue-950 px-2 py-0.5 rounded">
-                  {readiness?.skills_aligned_percentage || 0}%
+                  {readiness?.skills_aligned_percentage == null ? 'No target role' : `${readiness.skills_aligned_percentage}%`}
                 </span>
               </div>
               <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden mb-2">
@@ -349,7 +349,9 @@ export const CareerDashboardPage: React.FC<CareerDashboardPageProps> = ({ onNavi
                 />
               </div>
               <p className="text-[11px] text-slate-500 leading-tight">
-                {readiness?.matching_skills.length || 0} verified matching skills vs target role criteria.
+                {readiness?.target_role_name
+                  ? `${readiness.matching_skills.length} of your skills match ${readiness.target_role_name}.`
+                  : 'Add a target role to your career profile to compare your skills.'}
               </p>
             </div>
             <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-semibold text-blue-600">

@@ -1,3 +1,4 @@
+import { skillMatches } from './careerService';
 import { db } from '../db/database';
 import {
   Skill,
@@ -187,9 +188,7 @@ export class SkillService {
     }[] = [];
 
     role.skills.forEach((reqSkill, idx) => {
-      const match = Array.from(skillMap.keys()).find(
-        (k) => reqSkill.toLowerCase().includes(k) || k.includes(reqSkill.toLowerCase())
-      );
+      const match = Array.from(skillMap.keys()).find((k) => skillMatches(reqSkill, [k]));
       const studentSkill = match ? skillMap.get(match) : undefined;
 
       if (
@@ -212,9 +211,9 @@ export class SkillService {
           recommended_learning_resource: {
             title: `Master ${reqSkill} Core Concepts`,
             type: reqSkill.toLowerCase().includes('dsa') || reqSkill.toLowerCase().includes('algorithm') ? 'DSA' : 'COURSE',
-            reference_id: role.recommended_courses[0] || 'crs_01j8k9m3q1',
+            reference_id: role.recommended_courses[0] || 'crs_cat_009',
           },
-          recommended_project: role.recommended_projects[0] || 'Full-stack System',
+          recommended_project: role.recommended_projects[0],
           recommended_practice: `Complete ${reqSkill} assessment or coding problems to add verified evidence.`,
         });
       }
