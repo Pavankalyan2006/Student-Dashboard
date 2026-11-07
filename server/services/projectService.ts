@@ -1,3 +1,4 @@
+import { ValidationError } from '../core/exceptions';
 import { db } from '../db/database';
 import {
   Project,
@@ -68,10 +69,64 @@ export class ProjectService {
   /**
    * Create a new project with slug generation and optional starter modules/technologies
    */
+  private static readonly STATUSES = ['DRAFT', 'PLANNING', 'IN_PROGRESS', 'ON_HOLD', 'COMPLETED', 'ARCHIVED'];
+  private static readonly TYPES = ['MINI_PROJECT', 'MAJOR_PROJECT', 'FINAL_YEAR_PROJECT', 'RESEARCH_PROJECT', 'PERSONAL_PROJECT', 'OPEN_SOURCE_PROJECT'];
+
+  /**
+   * Validates the fields a student may set on a project. Ownership, id, slug, progress and timestamps are
+   * server-controlled and are never taken from the request (a PATCH could previously set student_id).
+   */
+  private static cleanFields(data: any, isCreate: boolean): Partial<Project> {
+    const out: any = {};
+    const str = (k: string, max: number) => {
+      if (data[k] === undefined) return;
+      if (data[k] !== null && typeof data[k] !== 'string') throw new ValidationError(`${k} must be text`);
+      const v = (data[k] || '').trim();
+      if (v.length > max) throw new ValidationError(`${k} is too long (${max} characters at most)`);
+      out[k] = v;
+    };
+    str('title', 150); str('description', 5000); str('domain', 100); str('problem_statement', 5000);
+    str('target_users', 500); str('expected_outcome', 2000);
+    if (isCreate && !out.title) throw new ValidationError('A project title is required');
+    if (!isCreate && data.title !== undefined && !out.title) throw new ValidationError('A project title cannot be empty');
+    if (data.project_type !== undefined) {
+      if (!this.TYPES.includes(data.project_type)) throw new ValidationError(`project_type must be one of ${this.TYPES.join(', ')}`);
+      out.project_type = data.project_type;
+    }
+    if (data.status !== undefined) {
+      if (!this.STATUSES.includes(data.status)) throw new ValidationError(`status must be one of ${this.STATUSES.join(', ')}`);
+      out.status = data.status;
+    }
+    for (const k of ['repository_url', 'demo_url', 'documentation_url']) {
+      if (data[k] === undefined) continue;
+      const v = String(data[k] || '').trim();
+      if (v && !/^https?:\/\/[^\s/$.?#][^\s]*$/i.test(v)) throw new ValidationError(`${k} must be an http(s) URL`);
+      if (v.length > 500) throw new ValidationError(`${k} is too long`);
+      out[k] = v || undefined;
+    }
+    for (const k of ['start_date', 'target_end_date']) {
+      if (data[k] === undefined) continue;
+      const v = String(data[k] || '').trim();
+      if (v && Number.isNaN(Date.parse(v))) throw new ValidationError(`${k} must be a date`);
+      out[k] = v || undefined;
+    }
+    if (out.start_date && out.target_end_date && Date.parse(out.target_end_date) < Date.parse(out.start_date)) {
+      throw new ValidationError('target_end_date cannot be before start_date');
+    }
+    for (const k of ['objectives', 'tags', 'team_members']) {
+      if (data[k] === undefined) continue;
+      if (!Array.isArray(data[k])) throw new ValidationError(`${k} must be a list`);
+      out[k] = data[k].map((x: any) => String(x ?? '').trim()).filter(Boolean).slice(0, 50).map((x: string) => x.slice(0, 300));
+    }
+    return out;
+  }
+
   public static async createProject(
     studentId: string,
     data: CreateProjectRequest
   ): Promise<Project> {
+    const clean = this.cleanFields(data || {}, true) as any;
+    data = { ...data, ...clean };
     const id = `proj_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     const slug = data.title
       .toLowerCase()
@@ -84,16 +139,22 @@ export class ProjectService {
       student_id: studentId,
       title: data.title,
       slug,
-      description: data.description || `A ${data.project_type} focused on ${data.domain}.`,
-      project_type: data.project_type,
-      domain: data.domain,
+      description: clean.description || '',
+      project_type: (clean.project_type || 'PERSONAL_PROJECT') as any,
+      domain: clean.domain || '',
       problem_statement: data.problem_statement || '',
       objectives: data.objectives || [],
-      target_users: data.target_users || 'Students, engineers, and domain researchers',
+      target_users: clean.target_users || '',
       expected_outcome: data.expected_outcome || '',
-      status: 'PLANNING',
+      status: (clean.status || 'PLANNING') as any,
       progress_percentage: 0,
-      tags: [data.domain, data.project_type],
+      tags: clean.tags || [clean.domain, clean.project_type].filter(Boolean),
+      repository_url: clean.repository_url,
+      demo_url: clean.demo_url,
+      documentation_url: clean.documentation_url,
+      start_date: clean.start_date,
+      target_end_date: clean.target_end_date,
+      team_members: clean.team_members || [],
       created_at: now,
       updated_at: now,
     };
@@ -148,11 +209,20 @@ export class ProjectService {
     updates: Partial<Project>
   ): Promise<Project> {
     const project = await this.getProject(projectId, studentId);
+    const clean = this.cleanFields(updates || {}, false);
     const updated: Project = {
       ...project,
-      ...updates,
+      ...clean,
       updated_at: new Date().toISOString(),
     };
+    if (clean.status === 'COMPLETED' && project.status !== 'COMPLETED') updated.completed_at = updated.updated_at;
+    if (clean.status && clean.status !== 'COMPLETED') updated.completed_at = undefined;
+    if (clean.title && clean.title !== project.title) {
+      updated.slug = clean.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+    }
+    if (clean.status && clean.status !== project.status) {
+      await this.logActivity(projectId, studentId, 'STATUS_CHANGED', `Status changed from ${project.status} to ${clean.status}.`);
+    }
     await db.saveProject(updated);
     return updated;
   }

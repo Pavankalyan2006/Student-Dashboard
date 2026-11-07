@@ -36,7 +36,7 @@ router.get('/', async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     logger.error('Error listing projects', error);
-    res.status(500).json({ success: false, error: error.message });
+    res.status(error.statusCode || 500).json({ success: false, error: error.message, code: error.code });
   }
 });
 
@@ -55,7 +55,7 @@ router.post('/', async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     logger.error('Error creating project', error);
-    res.status(400).json({ success: false, error: error.message });
+    res.status(error.statusCode || 400).json({ success: false, error: error.message, code: error.code });
   }
 });
 
@@ -72,7 +72,7 @@ router.post('/generate-ideas', async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     logger.error('Error generating project ideas', error);
-    res.status(500).json({ success: false, error: error.message });
+    res.status(error.statusCode || 500).json({ success: false, error: error.message, code: error.code });
   }
 });
 
@@ -90,7 +90,7 @@ router.get('/:projectId', async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     const status = error.message.includes('Forbidden') ? 403 : 404;
-    res.status(status).json({ success: false, error: error.message });
+    res.status(error.statusCode || status).json({ success: false, error: error.message, code: error.code });
   }
 });
 
@@ -108,7 +108,7 @@ router.patch('/:projectId', async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     const status = error.message.includes('Forbidden') ? 403 : 400;
-    res.status(status).json({ success: false, error: error.message });
+    res.status(error.statusCode || status).json({ success: false, error: error.message, code: error.code });
   }
 });
 
@@ -126,7 +126,7 @@ router.delete('/:projectId', async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     const status = error.message.includes('Forbidden') ? 403 : 400;
-    res.status(status).json({ success: false, error: error.message });
+    res.status(error.statusCode || status).json({ success: false, error: error.message, code: error.code });
   }
 });
 
@@ -144,7 +144,7 @@ router.get('/:projectId/progress', async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     const status = error.message.includes('Forbidden') ? 403 : 404;
-    res.status(status).json({ success: false, error: error.message });
+    res.status(error.statusCode || status).json({ success: false, error: error.message, code: error.code });
   }
 });
 
@@ -162,7 +162,7 @@ router.get('/:projectId/activity', async (req: Request, res: Response) => {
       data: activities,
     });
   } catch (error: any) {
-    res.status(403).json({ success: false, error: error.message });
+    res.status(error.statusCode || 403).json({ success: false, error: error.message, code: error.code });
   }
 });
 
@@ -175,7 +175,7 @@ router.get('/:projectId/modules', async (req: Request, res: Response) => {
     const modules = await ProjectModuleTaskService.getModules(req.params.projectId, studentId);
     res.json({ success: true, data: modules });
   } catch (error: any) {
-    res.status(403).json({ success: false, error: error.message });
+    res.status(error.statusCode || 403).json({ success: false, error: error.message, code: error.code });
   }
 });
 
@@ -185,7 +185,7 @@ router.post('/:projectId/modules', async (req: Request, res: Response) => {
     const module = await ProjectModuleTaskService.createModule(req.params.projectId, studentId, req.body);
     res.status(201).json({ success: true, data: module });
   } catch (error: any) {
-    res.status(400).json({ success: false, error: error.message });
+    res.status(error.statusCode || 400).json({ success: false, error: error.message, code: error.code });
   }
 });
 
@@ -200,7 +200,7 @@ router.patch('/:projectId/modules/:moduleId', async (req: Request, res: Response
     );
     res.json({ success: true, data: module });
   } catch (error: any) {
-    res.status(400).json({ success: false, error: error.message });
+    res.status(error.statusCode || 400).json({ success: false, error: error.message, code: error.code });
   }
 });
 
@@ -210,7 +210,7 @@ router.delete('/:projectId/modules/:moduleId', async (req: Request, res: Respons
     await ProjectModuleTaskService.deleteModule(req.params.projectId, studentId, req.params.moduleId);
     res.json({ success: true, message: 'Module deleted' });
   } catch (error: any) {
-    res.status(400).json({ success: false, error: error.message });
+    res.status(error.statusCode || 400).json({ success: false, error: error.message, code: error.code });
   }
 });
 
@@ -224,7 +224,7 @@ router.get('/:projectId/tasks', async (req: Request, res: Response) => {
     const tasks = await ProjectModuleTaskService.getTasks(req.params.projectId, studentId, moduleId);
     res.json({ success: true, data: tasks });
   } catch (error: any) {
-    res.status(403).json({ success: false, error: error.message });
+    res.status(error.statusCode || 403).json({ success: false, error: error.message, code: error.code });
   }
 });
 
@@ -234,7 +234,7 @@ router.post('/:projectId/tasks', async (req: Request, res: Response) => {
     const task = await ProjectModuleTaskService.createTask(req.params.projectId, studentId, req.body);
     res.status(201).json({ success: true, data: task });
   } catch (error: any) {
-    res.status(400).json({ success: false, error: error.message });
+    res.status(error.statusCode || 400).json({ success: false, error: error.message, code: error.code });
   }
 });
 
@@ -249,7 +249,7 @@ router.patch('/:projectId/tasks/:taskId', async (req: Request, res: Response) =>
     );
     res.json({ success: true, data: task });
   } catch (error: any) {
-    res.status(400).json({ success: false, error: error.message });
+    res.status(error.statusCode || 400).json({ success: false, error: error.message, code: error.code });
   }
 });
 
@@ -259,7 +259,7 @@ router.delete('/:projectId/tasks/:taskId', async (req: Request, res: Response) =
     await ProjectModuleTaskService.deleteTask(req.params.projectId, studentId, req.params.taskId);
     res.json({ success: true, message: 'Task deleted' });
   } catch (error: any) {
-    res.status(400).json({ success: false, error: error.message });
+    res.status(error.statusCode || 400).json({ success: false, error: error.message, code: error.code });
   }
 });
 
@@ -272,7 +272,7 @@ router.get('/:projectId/milestones', async (req: Request, res: Response) => {
     const milestones = await ProjectModuleTaskService.getMilestones(req.params.projectId, studentId);
     res.json({ success: true, data: milestones });
   } catch (error: any) {
-    res.status(403).json({ success: false, error: error.message });
+    res.status(error.statusCode || 403).json({ success: false, error: error.message, code: error.code });
   }
 });
 
@@ -282,7 +282,7 @@ router.post('/:projectId/milestones', async (req: Request, res: Response) => {
     const milestone = await ProjectModuleTaskService.createMilestone(req.params.projectId, studentId, req.body);
     res.status(201).json({ success: true, data: milestone });
   } catch (error: any) {
-    res.status(400).json({ success: false, error: error.message });
+    res.status(error.statusCode || 400).json({ success: false, error: error.message, code: error.code });
   }
 });
 
@@ -297,7 +297,7 @@ router.patch('/:projectId/milestones/:milestoneId', async (req: Request, res: Re
     );
     res.json({ success: true, data: milestone });
   } catch (error: any) {
-    res.status(400).json({ success: false, error: error.message });
+    res.status(error.statusCode || 400).json({ success: false, error: error.message, code: error.code });
   }
 });
 
@@ -307,7 +307,7 @@ router.delete('/:projectId/milestones/:milestoneId', async (req: Request, res: R
     await ProjectModuleTaskService.deleteMilestone(req.params.projectId, studentId, req.params.milestoneId);
     res.json({ success: true, message: 'Milestone deleted' });
   } catch (error: any) {
-    res.status(400).json({ success: false, error: error.message });
+    res.status(error.statusCode || 400).json({ success: false, error: error.message, code: error.code });
   }
 });
 
@@ -320,7 +320,7 @@ router.get('/:projectId/architecture', async (req: Request, res: Response) => {
     const architecture = await ProjectArchitectureService.getArchitecture(req.params.projectId, studentId);
     res.json({ success: true, data: architecture });
   } catch (error: any) {
-    res.status(403).json({ success: false, error: error.message });
+    res.status(error.statusCode || 403).json({ success: false, error: error.message, code: error.code });
   }
 });
 
@@ -334,7 +334,7 @@ router.put('/:projectId/architecture', async (req: Request, res: Response) => {
     );
     res.json({ success: true, data: architecture });
   } catch (error: any) {
-    res.status(400).json({ success: false, error: error.message });
+    res.status(error.statusCode || 400).json({ success: false, error: error.message, code: error.code });
   }
 });
 
@@ -347,7 +347,7 @@ router.get('/:projectId/technologies', async (req: Request, res: Response) => {
     const tech = await ProjectService.getTechnologies(req.params.projectId, studentId);
     res.json({ success: true, data: tech });
   } catch (error: any) {
-    res.status(403).json({ success: false, error: error.message });
+    res.status(error.statusCode || 403).json({ success: false, error: error.message, code: error.code });
   }
 });
 
@@ -357,7 +357,7 @@ router.post('/:projectId/technologies', async (req: Request, res: Response) => {
     const tech = await ProjectService.addTechnology(req.params.projectId, studentId, req.body);
     res.status(201).json({ success: true, data: tech });
   } catch (error: any) {
-    res.status(400).json({ success: false, error: error.message });
+    res.status(error.statusCode || 400).json({ success: false, error: error.message, code: error.code });
   }
 });
 
@@ -367,7 +367,7 @@ router.delete('/:projectId/technologies/:techId', async (req: Request, res: Resp
     await ProjectService.removeTechnology(req.params.projectId, studentId, req.params.techId);
     res.json({ success: true, message: 'Technology removed' });
   } catch (error: any) {
-    res.status(400).json({ success: false, error: error.message });
+    res.status(error.statusCode || 400).json({ success: false, error: error.message, code: error.code });
   }
 });
 
@@ -380,7 +380,7 @@ router.get('/:projectId/documentation', async (req: Request, res: Response) => {
     const docs = await ProjectDocumentationService.getDocuments(req.params.projectId, studentId);
     res.json({ success: true, data: docs });
   } catch (error: any) {
-    res.status(403).json({ success: false, error: error.message });
+    res.status(error.statusCode || 403).json({ success: false, error: error.message, code: error.code });
   }
 });
 
@@ -394,7 +394,7 @@ router.get('/:projectId/documentation/:docId', async (req: Request, res: Respons
     );
     res.json({ success: true, data: doc });
   } catch (error: any) {
-    res.status(404).json({ success: false, error: error.message });
+    res.status(error.statusCode || 404).json({ success: false, error: error.message, code: error.code });
   }
 });
 
@@ -408,7 +408,7 @@ router.post('/:projectId/documentation', async (req: Request, res: Response) => 
     );
     res.status(201).json({ success: true, data: doc });
   } catch (error: any) {
-    res.status(400).json({ success: false, error: error.message });
+    res.status(error.statusCode || 400).json({ success: false, error: error.message, code: error.code });
   }
 });
 
@@ -422,7 +422,7 @@ router.delete('/:projectId/documentation/:docId', async (req: Request, res: Resp
     );
     res.json({ success: true, message: 'Document deleted' });
   } catch (error: any) {
-    res.status(400).json({ success: false, error: error.message });
+    res.status(error.statusCode || 400).json({ success: false, error: error.message, code: error.code });
   }
 });
 
@@ -437,7 +437,7 @@ router.post('/:projectId/documentation/generate', async (req: Request, res: Resp
     res.json({ success: true, data: doc });
   } catch (error: any) {
     logger.error('Error generating project documentation', error);
-    res.status(500).json({ success: false, error: error.message });
+    res.status(error.statusCode || 500).json({ success: false, error: error.message, code: error.code });
   }
 });
 
@@ -450,7 +450,7 @@ router.get('/:projectId/requirements', async (req: Request, res: Response) => {
     const reqs = await ProjectService.getRequirements(req.params.projectId, studentId);
     res.json({ success: true, data: reqs });
   } catch (error: any) {
-    res.status(403).json({ success: false, error: error.message });
+    res.status(error.statusCode || 403).json({ success: false, error: error.message, code: error.code });
   }
 });
 
@@ -460,7 +460,7 @@ router.post('/:projectId/requirements', async (req: Request, res: Response) => {
     const newReq = await ProjectService.addRequirement(req.params.projectId, studentId, req.body);
     res.status(201).json({ success: true, data: newReq });
   } catch (error: any) {
-    res.status(400).json({ success: false, error: error.message });
+    res.status(error.statusCode || 400).json({ success: false, error: error.message, code: error.code });
   }
 });
 
@@ -470,7 +470,7 @@ router.get('/:projectId/risks', async (req: Request, res: Response) => {
     const risks = await ProjectService.getRisks(req.params.projectId, studentId);
     res.json({ success: true, data: risks });
   } catch (error: any) {
-    res.status(403).json({ success: false, error: error.message });
+    res.status(error.statusCode || 403).json({ success: false, error: error.message, code: error.code });
   }
 });
 
@@ -480,7 +480,7 @@ router.post('/:projectId/risks', async (req: Request, res: Response) => {
     const newRisk = await ProjectService.addRisk(req.params.projectId, studentId, req.body);
     res.status(201).json({ success: true, data: newRisk });
   } catch (error: any) {
-    res.status(400).json({ success: false, error: error.message });
+    res.status(error.statusCode || 400).json({ success: false, error: error.message, code: error.code });
   }
 });
 
@@ -497,7 +497,7 @@ router.post('/:projectId/generate-plan', async (req: Request, res: Response) => 
     );
     res.json({ success: true, data: plan });
   } catch (error: any) {
-    res.status(500).json({ success: false, error: error.message });
+    res.status(error.statusCode || 500).json({ success: false, error: error.message, code: error.code });
   }
 });
 
@@ -511,7 +511,7 @@ router.post('/:projectId/apply-plan', async (req: Request, res: Response) => {
     );
     res.json({ success: true, data: result });
   } catch (error: any) {
-    res.status(400).json({ success: false, error: error.message });
+    res.status(error.statusCode || 400).json({ success: false, error: error.message, code: error.code });
   }
 });
 
@@ -521,7 +521,7 @@ router.post('/:projectId/generate-architecture', async (req: Request, res: Respo
     const arch = await ProjectPlanningService.generateArchitecture(req.params.projectId, studentId);
     res.json({ success: true, data: arch });
   } catch (error: any) {
-    res.status(500).json({ success: false, error: error.message });
+    res.status(error.statusCode || 500).json({ success: false, error: error.message, code: error.code });
   }
 });
 
@@ -531,7 +531,7 @@ router.post('/:projectId/analyze-scope', async (req: Request, res: Response) => 
     const scope = await ProjectPlanningService.analyzeProjectScope(req.params.projectId, studentId);
     res.json({ success: true, data: scope });
   } catch (error: any) {
-    res.status(500).json({ success: false, error: error.message });
+    res.status(error.statusCode || 500).json({ success: false, error: error.message, code: error.code });
   }
 });
 
@@ -541,7 +541,7 @@ router.post('/:projectId/analyze-risks', async (req: Request, res: Response) => 
     const risks = await ProjectPlanningService.analyzeProjectRisks(req.params.projectId, studentId);
     res.json({ success: true, data: risks });
   } catch (error: any) {
-    res.status(500).json({ success: false, error: error.message });
+    res.status(error.statusCode || 500).json({ success: false, error: error.message, code: error.code });
   }
 });
 
@@ -551,7 +551,7 @@ router.post('/:projectId/suggest-technologies', async (req: Request, res: Respon
     const suggestions = await ProjectPlanningService.suggestTechStack(req.params.projectId, studentId);
     res.json({ success: true, data: suggestions });
   } catch (error: any) {
-    res.status(500).json({ success: false, error: error.message });
+    res.status(error.statusCode || 500).json({ success: false, error: error.message, code: error.code });
   }
 });
 
@@ -570,7 +570,7 @@ router.post('/:projectId/ask-ai', async (req: Request, res: Response) => {
     );
     res.json({ success: true, data: answer });
   } catch (error: any) {
-    res.status(500).json({ success: false, error: error.message });
+    res.status(error.statusCode || 500).json({ success: false, error: error.message, code: error.code });
   }
 });
 
@@ -584,7 +584,7 @@ router.post('/:projectId/generate-notes', async (req: Request, res: Response) =>
     );
     res.json({ success: true, data: note });
   } catch (error: any) {
-    res.status(500).json({ success: false, error: error.message });
+    res.status(error.statusCode || 500).json({ success: false, error: error.message, code: error.code });
   }
 });
 

@@ -1,4 +1,6 @@
 import { AIService } from '../ai/service';
+import { isModelAvailable, requireModelText, rethrowAi } from '../ai/modelOutput';
+import { AppError } from '../core/exceptions';
 import { db } from '../db/database';
 import {
   GenerateProjectIdeasRequest,
@@ -51,22 +53,24 @@ Return ONLY a valid JSON array of project ideas matching this exact schema:
   }
 ]`;
 
+    if (!isModelAvailable()) {
+      throw new AppError('AI project ideas needs the AI provider, which is not available right now. Nothing was generated.', 503, 'AI_UNAVAILABLE');
+    }
     try {
       const response = await AIService.generate(
         [{ role: 'user', content: prompt }],
         'student_learning_agent',
         0.5
       );
-      const parsed = this.parseJsonArray(response.text);
+      const parsed = this.parseJsonArray(requireModelText(response, 'AI project ideas'));
       if (parsed && parsed.length > 0) {
         return parsed as ProjectIdea[];
       }
     } catch (err: any) {
-      logger.warn('AI idea generation fallback triggered', { error: err.message });
+      rethrowAi(err, 'AI project ideas');
     }
-
-    // Deterministic fallback project ideas tailored to the domain
-    return this.getFallbackIdeas(domain, difficulty);
+    // The model answered, but not in the required shape. Nothing is shown or saved.
+    throw new AppError('AI project ideas: the AI answered in an unexpected format, so nothing is shown. Please try again.', 502, 'AI_BAD_OUTPUT');
   }
 
   /**
@@ -125,21 +129,24 @@ Return ONLY a valid JSON object matching this schema:
   ]
 }`;
 
+    if (!isModelAvailable()) {
+      throw new AppError('AI project plan needs the AI provider, which is not available right now. Nothing was generated.', 503, 'AI_UNAVAILABLE');
+    }
     try {
       const response = await AIService.generate(
         [{ role: 'user', content: prompt }],
         'student_learning_agent',
         0.4
       );
-      const parsed = this.parseJsonObject(response.text);
+      const parsed = this.parseJsonObject(requireModelText(response, 'AI project plan'));
       if (parsed && Array.isArray(parsed.phases) && Array.isArray(parsed.modules)) {
         return parsed;
       }
     } catch (err: any) {
-      logger.warn('AI plan generation fallback triggered', { error: err.message });
+      rethrowAi(err, 'AI project plan');
     }
-
-    return this.getFallbackPlan(project);
+    // The model answered, but not in the required shape. Nothing is shown or saved.
+    throw new AppError('AI project plan: the AI answered in an unexpected format, so nothing is shown. Please try again.', 502, 'AI_BAD_OUTPUT');
   }
 
   /**
@@ -266,13 +273,16 @@ Return ONLY a valid JSON object matching this schema:
   ]
 }`;
 
+    if (!isModelAvailable()) {
+      throw new AppError('AI architecture suggestion needs the AI provider, which is not available right now. Nothing was generated.', 503, 'AI_UNAVAILABLE');
+    }
     try {
       const response = await AIService.generate(
         [{ role: 'user', content: prompt }],
         'student_learning_agent',
         0.4
       );
-      const parsed = this.parseJsonObject(response.text);
+      const parsed = this.parseJsonObject(requireModelText(response, 'AI architecture suggestion'));
       if (parsed && Array.isArray(parsed.nodes) && Array.isArray(parsed.edges)) {
         return ProjectArchitectureService.saveArchitecture(projectId, studentId, {
           architecture_type: parsed.architecture_type,
@@ -292,10 +302,10 @@ Return ONLY a valid JSON object matching this schema:
         });
       }
     } catch (err: any) {
-      logger.warn('AI architecture generation fallback', { error: err.message });
+      rethrowAi(err, 'AI architecture suggestion');
     }
-
-    return ProjectArchitectureService.initializeDefaultArchitecture(projectId);
+    // The model answered, but not in the required shape. Nothing is shown or saved.
+    throw new AppError('AI architecture suggestion: the AI answered in an unexpected format, so nothing is shown. Please try again.', 502, 'AI_BAD_OUTPUT');
   }
 
   /**
@@ -334,42 +344,24 @@ Return ONLY a valid JSON object:
   "recommendation": "Concise guidance on pacing and scope bounding"
 }`;
 
+    if (!isModelAvailable()) {
+      throw new AppError('AI scope analysis needs the AI provider, which is not available right now. Nothing was generated.', 503, 'AI_UNAVAILABLE');
+    }
     try {
       const response = await AIService.generate(
         [{ role: 'user', content: prompt }],
         'student_learning_agent',
         0.3
       );
-      const parsed = this.parseJsonObject(response.text);
+      const parsed = this.parseJsonObject(requireModelText(response, 'AI scope analysis'));
       if (parsed && Array.isArray(parsed.must_have)) {
         return parsed;
       }
     } catch (err: any) {
-      logger.warn('AI scope analysis fallback', { error: err.message });
+      rethrowAi(err, 'AI scope analysis');
     }
-
-    return {
-      must_have: [
-        'Core functional engine and model inference pipeline',
-        'Authenticated user access with input validation',
-        'Database persistence and relational schema integrity',
-      ],
-      should_have: [
-        'Real-time status updates and telemetry charts',
-        'Exportable analytical reports and diagnostic summaries',
-      ],
-      could_have: [
-        'Dark mode toggle and customizable clinician widgets',
-        'Automated model retraining pipeline',
-      ],
-      future: [
-        'Multi-hospital federated learning deployment',
-        'Mobile application companion for iOS/Android',
-      ],
-      scope_verdict: 'FEASIBLE',
-      recommendation:
-        'Scope is balanced for a capstone semester. Focus on delivering the Must Have pipeline before embarking on optional UI extras.',
-    };
+    // The model answered, but not in the required shape. Nothing is shown or saved.
+    throw new AppError('AI scope analysis: the AI answered in an unexpected format, so nothing is shown. Please try again.', 502, 'AI_BAD_OUTPUT');
   }
 
   /**
@@ -413,48 +405,24 @@ Return ONLY a valid JSON object:
   "mitigation_strategy": "Summary guidance for managing project risk"
 }`;
 
+    if (!isModelAvailable()) {
+      throw new AppError('AI risk analysis needs the AI provider, which is not available right now. Nothing was generated.', 503, 'AI_UNAVAILABLE');
+    }
     try {
       const response = await AIService.generate(
         [{ role: 'user', content: prompt }],
         'student_learning_agent',
         0.3
       );
-      const parsed = this.parseJsonObject(response.text);
+      const parsed = this.parseJsonObject(requireModelText(response, 'AI risk analysis'));
       if (parsed && Array.isArray(parsed.risks)) {
         return parsed;
       }
     } catch (err: any) {
-      logger.warn('AI risk analysis fallback', { error: err.message });
+      rethrowAi(err, 'AI risk analysis');
     }
-
-    return {
-      risks: [
-        {
-          category: 'TECHNICAL',
-          risk: 'Integration latency between inference microservice and web client exceeding real-time requirements',
-          probability: 'MEDIUM',
-          impact: 'HIGH',
-          mitigation: 'Implement Redis caching for recurrent predictions and optimize model with TensorRT quantization.',
-        },
-        {
-          category: 'DATA',
-          risk: 'Benchmark dataset distribution discrepancy leading to model degradation on novel test samples',
-          probability: 'MEDIUM',
-          impact: 'HIGH',
-          mitigation: 'Enforce robust train-validation-test splitting with synthetic data augmentation and confidence scoring.',
-        },
-        {
-          category: 'SCHEDULE',
-          risk: 'Underestimating time required for FHIR/EHR protocol parsing and schema transformation',
-          probability: 'LOW',
-          impact: 'MEDIUM',
-          mitigation: 'Utilize verified open-source FHIR Pydantic libraries instead of manual serialization.',
-        },
-      ],
-      overall_risk_level: 'MEDIUM',
-      mitigation_strategy:
-        'Prioritize end-to-end telemetry pipeline benchmarking early in Phase 2 to resolve throughput bottlenecks before UI polish.',
-    };
+    // The model answered, but not in the required shape. Nothing is shown or saved.
+    throw new AppError('AI risk analysis: the AI answered in an unexpected format, so nothing is shown. Please try again.', 502, 'AI_BAD_OUTPUT');
   }
 
   /**
@@ -492,54 +460,24 @@ Return ONLY a valid JSON object:
   ]
 }`;
 
+    if (!isModelAvailable()) {
+      throw new AppError('AI technology suggestions needs the AI provider, which is not available right now. Nothing was generated.', 503, 'AI_UNAVAILABLE');
+    }
     try {
       const response = await AIService.generate(
         [{ role: 'user', content: prompt }],
         'student_learning_agent',
         0.3
       );
-      const parsed = this.parseJsonObject(response.text);
+      const parsed = this.parseJsonObject(requireModelText(response, 'AI technology suggestions'));
       if (parsed && Array.isArray(parsed.suggestions)) {
         return parsed;
       }
     } catch (err: any) {
-      logger.warn('AI tech stack suggestion fallback', { error: err.message });
+      rethrowAi(err, 'AI technology suggestions');
     }
-
-    return {
-      suggestions: [
-        {
-          category: 'FRONTEND',
-          technology: 'React 19 + Vite + Tailwind CSS',
-          reason: 'Component modularity, rich chart ecosystems, and rapid development speed.',
-          alternative: 'Next.js / Vue 3',
-        },
-        {
-          category: 'BACKEND',
-          technology: 'FastAPI (Python)',
-          reason: 'High async throughput, automatic OpenAPI documentation, and seamless PyTorch integration.',
-          alternative: 'Express.js (Node.js)',
-        },
-        {
-          category: 'DATABASE',
-          technology: 'PostgreSQL + pgvector',
-          reason: 'Rock-solid ACID compliance joined with native vector embeddings support.',
-          alternative: 'MongoDB / Supabase',
-        },
-        {
-          category: 'AI',
-          technology: 'PyTorch + Hugging Face Transformers',
-          reason: 'Industry standard for neural model development and transfer learning.',
-          alternative: 'TensorFlow / Scikit-Learn',
-        },
-        {
-          category: 'DEPLOYMENT',
-          technology: 'Docker + Docker Compose',
-          reason: 'Reproducible local containerization for examiner demonstration without environment conflicts.',
-          alternative: 'AWS ECS / Render',
-        },
-      ],
-    };
+    // The model answered, but not in the required shape. Nothing is shown or saved.
+    throw new AppError('AI technology suggestions: the AI answered in an unexpected format, so nothing is shown. Please try again.', 502, 'AI_BAD_OUTPUT');
   }
 
   // --- Helper Parsers ---

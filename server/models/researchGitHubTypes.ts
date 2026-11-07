@@ -251,6 +251,11 @@ export interface GitHubConnection {
   profile_url?: string;
   last_synced_at?: string;
   sync_error?: string;
+  /** OAUTH or PAT: GitHub verified the token and the account belongs to the student.
+   *  PUBLIC_USERNAME: only a public username was entered; ownership is not verified and no token exists. */
+  connection_type?: 'OAUTH' | 'PAT' | 'PUBLIC_USERNAME';
+  sync_status?: 'SYNCED' | 'SYNC_FAILED' | 'PERMISSION_EXPIRED';
+  last_sync_attempt_at?: string;
   expires_at?: string;
   is_connected: boolean;
   created_at: string;

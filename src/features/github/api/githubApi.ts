@@ -19,9 +19,11 @@ export const githubApi = {
     return apiClient.get<{ oauth_url: string; state: string }>('/github/connect');
   },
 
-  async completeCallback(username: string = 'student-engineer'): Promise<any> {
-    return apiClient.get<any>(`/github/callback?username=${encodeURIComponent(username)}`);
+  /** Links a public GitHub username (no token; shown as an unverified public profile). */
+  async completeCallback(username: string): Promise<any> {
+    return apiClient.post('/github/connect-username', { username });
   },
+
 
   async disconnect(): Promise<{ disconnected: boolean }> {
     return apiClient.post<{ disconnected: boolean }>('/github/disconnect', {});

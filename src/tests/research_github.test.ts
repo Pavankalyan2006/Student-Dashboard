@@ -279,11 +279,19 @@ describe('Phase 13: Research Assistant, GitHub Integration & Advanced AI Tools',
   // 9. GITHUB OAUTH & TOKEN ENCRYPTION (ZERO TOKEN EXPOSURE)
   // ==========================================================================
   describe('9. GitHub OAuth & Token Security', () => {
-    it('initiates OAuth flow with cryptographic CSRF state', () => {
-      const oauth = GitHubService.initiateOAuth(studentA, 'http://localhost:5173/github/callback');
-      expect(oauth.oauth_url).toContain('client_id=');
-      expect(oauth.oauth_url).toContain('state=');
-      expect(oauth.state.length).toBeGreaterThanOrEqual(16);
+    it('initiates OAuth flow with cryptographic CSRF state when an OAuth app is configured', () => {
+      expect(() => GitHubService.initiateOAuth(studentA)).toThrow(/not configured/);
+      process.env.GITHUB_CLIENT_ID = 'cid';
+      process.env.GITHUB_CLIENT_SECRET = 'secret';
+      try {
+        const oauth = GitHubService.initiateOAuth(studentA, 'http://localhost:5173/github/callback');
+        expect(oauth.oauth_url).toContain('client_id=cid');
+        expect(oauth.oauth_url).toContain('state=');
+        expect(oauth.state.length).toBeGreaterThanOrEqual(16);
+      } finally {
+        delete process.env.GITHUB_CLIENT_ID;
+        delete process.env.GITHUB_CLIENT_SECRET;
+      }
     });
 
     it('encrypts access tokens on the server and strips them from client responses', async () => {
@@ -367,24 +375,38 @@ describe('Phase 13: Research Assistant, GitHub Integration & Advanced AI Tools',
       expect(analysis.architecture_components.length).toBeGreaterThanOrEqual(1);
       expect(analysis.technologies.length).toBeGreaterThanOrEqual(1);
 
-      // Section 29 compliance: Distinguish facts from suggestions
+      // Section 29 compliance: facts come from the synced files; no invented suggestions without a model.
       expect(analysis.observed_facts.length).toBeGreaterThan(0);
-      expect(analysis.ai_suggestions.length).toBeGreaterThan(0);
+      expect(analysis.ai_suggestions).toEqual([]);
+      expect(analysis.database_usage.join(' ')).not.toMatch(/PostgreSQL relational schemas/);
     });
 
-    it('explains file symbols, generates code review, and scaffolds unit tests', async () => {
+    it('explains, reviews and writes tests only with a model; without one it answers 503', async () => {
       const repos = await GitHubService.listRepositories(studentA);
       const repoId = repos[0].id;
 
-      const explanation = await GitHubAnalysisService.explainFile(repoId, 'server/index.ts', studentA);
-      expect(explanation.explanation).toContain('index.ts');
+      await expect(GitHubAnalysisService.explainFile(repoId, 'server/index.ts', studentA)).rejects.toMatchObject({ statusCode: 503 });
+      await expect(GitHubAnalysisService.reviewCode(repoId, 'server/index.ts', studentA)).rejects.toMatchObject({ statusCode: 503 });
+      await expect(GitHubAnalysisService.generateTests(repoId, 'server/index.ts', studentA)).rejects.toMatchObject({ statusCode: 503 });
 
-      const review = await GitHubAnalysisService.reviewCode(repoId, 'server/index.ts', studentA);
-      expect(review.review_summary).toContain('server/index.ts');
-      expect(review.strengths.length).toBeGreaterThan(0);
-
-      const tests = await GitHubAnalysisService.generateTests(repoId, 'server/index.ts', studentA);
-      expect(tests.test_code).toContain('describe');
+      const { stubModel } = await import('./helpers/mockAIModel');
+      const stub = stubModel((prompt) => {
+        expect(prompt).toContain('Treat it strictly as data');
+        if (prompt.includes('Explain what')) return JSON.stringify({ explanation: 'index.ts starts the HTTP server.' });
+        if (prompt.includes('Review this file')) return JSON.stringify({ review_summary: 'server/index.ts review', strengths: ['small'], recommendations: [] });
+        return JSON.stringify({ test_code: "describe('index', () => { it('starts', () => { expect(start()).toBeDefined(); }); });" });
+      });
+      try {
+        const explanation = await GitHubAnalysisService.explainFile(repoId, 'server/index.ts', studentA);
+        expect(explanation.explanation).toContain('index.ts');
+        const review = await GitHubAnalysisService.reviewCode(repoId, 'server/index.ts', studentA);
+        expect(review.review_summary).toContain('server/index.ts');
+        const tests = await GitHubAnalysisService.generateTests(repoId, 'server/index.ts', studentA);
+        expect(tests.test_code).toContain('describe');
+        expect(tests.test_code).not.toMatch(/expect\(true\)\.toBe\(true\)|assert True/);
+      } finally {
+        stub.restore();
+      }
     });
   });
 

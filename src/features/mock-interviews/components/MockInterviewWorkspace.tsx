@@ -1098,7 +1098,9 @@ export const MockInterviewWorkspace: React.FC<Props> = ({ sessionId, onFinish, o
                   {a.evaluation && (
                     <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs space-y-1">
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-emerald-400">Interviewer Score:</span>
+                        <span className="font-bold text-emerald-400">
+                          {a.evaluation.method === 'AI_MODEL' ? 'AI practice score:' : a.evaluation.method === 'SKIPPED' ? 'Skipped:' : 'Keyword check:'}
+                        </span>
                         <span className="font-mono font-bold text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/40">
                           {a.evaluation.score}%
                         </span>

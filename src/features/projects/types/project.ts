@@ -110,6 +110,12 @@ export interface Project {
   created_at: string;
   updated_at: string;
   completed_at?: string;
+  repository_url?: string;
+  demo_url?: string;
+  documentation_url?: string;
+  start_date?: string;
+  target_end_date?: string;
+  team_members?: string[];
 }
 
 export interface ProjectTechnology {

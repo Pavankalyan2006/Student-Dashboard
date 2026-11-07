@@ -121,11 +121,11 @@ export function useLinkGitHubProject(repoId: string) {
 export function useConnectGitHub() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (username?: string) => githubApi.completeCallback(username),
+    mutationFn: (username?: string) => githubApi.completeCallback(username || ''),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['github-status'] });
       qc.invalidateQueries({ queryKey: ['github-repos'] });
-      toast.success('GitHub account connected securely');
+      toast.success('Public GitHub profile linked (not verified as yours: no token was used)');
     },
     onError: (err: any) => {
       toast.error(err.message || 'Connection failed');
@@ -177,10 +177,13 @@ export function useSyncAllGitHub() {
       qc.invalidateQueries({ queryKey: ['github-repos'] });
       qc.invalidateQueries({ queryKey: ['github-featured'] });
       qc.invalidateQueries({ queryKey: ['github-languages'] });
-      toast.success(data.message || 'GitHub repositories and profile refreshed');
+      const n = (data as any)?.synced_repos_count;
+      toast.success(typeof n === 'number' ? `Synced from GitHub: ${n} repositories` : 'Synced from GitHub');
     },
     onError: (err: any) => {
-      toast.error(err.message || 'Sync failed');
+      // The server records the failed attempt; refresh status so the "Last sync failed" badge shows.
+      qc.invalidateQueries({ queryKey: ['github-status'] });
+      toast.error(err.message || 'Sync failed. Nothing was changed.');
     },
   });
 }

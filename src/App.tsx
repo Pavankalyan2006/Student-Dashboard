@@ -478,15 +478,10 @@ function AppContent() {
       return <ProjectCreatePage search={search} onNavigate={navigate} />;
     }
 
+    // There is no global documentation page: documentation lives inside each project (open a project,
+    // then its Documentation tab). This used to open a fixed demo project id for every student.
     if (path === '/projects/documentation' || path === '/projects/docs') {
-      return (
-        <ProjectWorkspacePage
-          projectId="proj_seed_ai_health_01"
-          activeTab="documentation"
-          initialTab="documentation"
-          onNavigate={navigate}
-        />
-      );
+      return <ProjectsPage onNavigate={navigate} />;
     }
 
     const projectTabMatch = path.match(/^\/projects\/([^/]+)\/([a-z]+)$/);

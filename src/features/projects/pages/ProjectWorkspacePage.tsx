@@ -941,29 +941,23 @@ export const ProjectWorkspacePage: React.FC<ProjectWorkspacePageProps> = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
-                {[
-                  {
-                    id: 'TC-01',
-                    mod: 'Auth',
-                    scenario: 'Reject expired or revoked JWT token',
-                    expected: '401 Unauthorized status returned',
-                    status: 'PASSED',
-                  },
-                  {
-                    id: 'TC-02',
-                    mod: 'Inference',
-                    scenario: 'Handle missing vital observation features',
-                    expected: 'Impute median value and compute risk',
-                    status: 'PASSED',
-                  },
-                  {
-                    id: 'TC-03',
-                    mod: 'Dashboard',
-                    scenario: 'WebSocket disconnect and auto-reconnect',
-                    expected: 'Reconnect within 3000ms with backoff',
-                    status: 'PENDING',
-                  },
-                ].map((row, idx) => (
+                {tasks.filter((t: any) => /test|verif|qa\b/i.test(`${t.title} ${t.description || ''}`)).length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="p-4 text-center text-slate-500">
+                      No test tasks yet. Add tasks with "test" in the title under Modules &amp; Tasks and they appear here with their real status.
+                    </td>
+                  </tr>
+                )}
+                {tasks
+                  .filter((t: any) => /test|verif|qa\b/i.test(`${t.title} ${t.description || ''}`))
+                  .map((t: any, i: number) => ({
+                    id: `T-${i + 1}`,
+                    mod: modules.find((m: any) => m.id === t.module_id)?.name || '-',
+                    scenario: t.title,
+                    expected: t.description || '-',
+                    status: t.status === 'DONE' ? 'DONE' : t.status,
+                  }))
+                  .map((row, idx) => (
                   <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
                     <td className="p-3 font-mono font-bold text-slate-700 dark:text-slate-300">
                       {row.id}
@@ -976,7 +970,7 @@ export const ProjectWorkspacePage: React.FC<ProjectWorkspacePageProps> = ({
                     <td className="p-3">
                       <span
                         className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                          row.status === 'PASSED'
+                          row.status === 'DONE'
                             ? 'bg-emerald-100 text-emerald-700'
                             : 'bg-amber-100 text-amber-700'
                         }`}
@@ -1136,6 +1130,42 @@ export const ProjectWorkspacePage: React.FC<ProjectWorkspacePageProps> = ({
                 <option value="ARCHIVED">Archived</option>
               </select>
             </div>
+
+            {[
+              { key: 'description', label: 'Description', type: 'textarea' },
+              { key: 'repository_url', label: 'GitHub repository URL', type: 'url', placeholder: 'https://github.com/you/repo' },
+              { key: 'demo_url', label: 'Live demo URL', type: 'url', placeholder: 'https://' },
+              { key: 'documentation_url', label: 'Documentation URL', type: 'url', placeholder: 'https://' },
+              { key: 'start_date', label: 'Start date', type: 'date' },
+              { key: 'target_end_date', label: 'Target completion date', type: 'date' },
+              { key: 'team_members', label: 'Team members (comma separated)', type: 'text' },
+            ].map((f) => {
+              const raw = (project as any)[f.key];
+              const value = Array.isArray(raw) ? raw.join(', ') : f.type === 'date' && raw ? String(raw).slice(0, 10) : raw || '';
+              const save = async (v: string) => {
+                if (v === value) return;
+                try {
+                  const payload: any = { [f.key]: f.key === 'team_members' ? v.split(',').map((x) => x.trim()).filter(Boolean) : v };
+                  await projectsApi.updateProject(projectId, payload);
+                  queryClient.invalidateQueries({ queryKey: ['project', projectId] });
+                  toast.success(`${f.label} saved`);
+                } catch (err: any) {
+                  toast.error(err?.response?.data?.error || `Could not save ${f.label}`);
+                }
+              };
+              return (
+                <div key={f.key}>
+                  <label htmlFor={`proj-${f.key}`} className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                    {f.label}
+                  </label>
+                  {f.type === 'textarea' ? (
+                    <textarea id={`proj-${f.key}`} defaultValue={value} rows={3} onBlur={(e) => save(e.target.value)} className="w-full text-xs p-2.5 rounded-xl border border-slate-200 dark:border-slate-700" />
+                  ) : (
+                    <input id={`proj-${f.key}`} type={f.type} defaultValue={value} placeholder={(f as any).placeholder} onBlur={(e) => save(e.target.value)} className="w-full text-xs p-2.5 rounded-xl border border-slate-200 dark:border-slate-700" />
+                  )}
+                </div>
+              );
+            })}
 
             {/* Danger Zone */}
             <div className="pt-6 border-t border-rose-100 dark:border-rose-950/40">

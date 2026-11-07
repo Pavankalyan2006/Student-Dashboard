@@ -408,7 +408,7 @@ export const MockInterviewSetupModal: React.FC<Props> = ({
                       <option value="">-- No specific resume attached --</option>
                       {studentResumes.map((r) => (
                         <option key={r.id} value={r.id}>
-                          {r.title || 'Master B.Tech Resume'} (Score: {r.ats_score || 88}%)
+                          {r.title || 'Untitled resume'}{typeof r.ats_score === 'number' ? ` (ATS check: ${r.ats_score}%)` : ''}
                         </option>
                       ))}
                     </select>

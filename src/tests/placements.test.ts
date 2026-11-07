@@ -216,8 +216,10 @@ describe('Phase 11: Placement Preparation & AI Mock Interview System', () => {
       expect(feedback.summary).toBeDefined();
       expect(feedback.topics_covered.length).toBeGreaterThan(0);
       expect(feedback.recommended_practice).toBeDefined();
-      expect(feedback.recommended_practice.quizzes.length).toBeGreaterThan(0);
-      expect(feedback.recommended_practice.courses.length).toBeGreaterThan(0);
+      // Recommendations are derived from missed concepts; no invented quiz or course ids.
+      for (const q of feedback.recommended_practice.quizzes as any[]) expect(q.route).toMatch(/^\/quiz\/create\?topic=/);
+      expect(feedback.recommended_practice.courses).toEqual([]);
+      expect((feedback as any).scoring_method).toBe('KEYWORD_MATCH');
     });
 
     it('tests deterministic adaptation logic across strong, partial, and weak answers', () => {
@@ -444,9 +446,14 @@ describe('Phase 11: Placement Preparation & AI Mock Interview System', () => {
         interview_type: 'HR',
         role_id: 'role_sde',
       });
+      // An unfinished interview has no feedback; reading it must not complete the session.
+      await expect(MockInterviewService.getFeedback(session.id, studentA)).rejects.toThrow(/not finished/i);
+      expect((await MockInterviewService.getSession(session.id, studentA)).session.status).not.toBe('COMPLETED');
+      await MockInterviewService.completeSession(session.id, studentA);
       const feedback = await MockInterviewService.getFeedback(session.id, studentA);
       expect(feedback).toBeDefined();
       expect(feedback.topics_covered).toBeDefined();
+      expect(feedback.overall_score).toBe(0);
 
       // Student B cannot get feedback
       await expect(

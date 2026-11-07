@@ -17,7 +17,7 @@ export const GitHubConnectPage: React.FC<GitHubConnectPageProps> = ({ onNavigate
   const [activeTab, setActiveTab] = useState<'pat' | 'username'>('pat');
   const [token, setToken] = useState('');
   const [patUsername, setPatUsername] = useState('');
-  const [username, setUsername] = useState('student-engineer');
+  const [username, setUsername] = useState('');
 
   const handlePatSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -159,10 +159,11 @@ export const GitHubConnectPage: React.FC<GitHubConnectPageProps> = ({ onNavigate
         ) : (
           <form onSubmit={handleUsernameSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider text-[10px]">
+              <label htmlFor="gh-username" className="text-xs font-bold text-slate-700 uppercase tracking-wider text-[10px]">
                 GitHub Username
               </label>
               <input
+                id="gh-username"
                 type="text"
                 required
                 value={username}
@@ -170,7 +171,7 @@ export const GitHubConnectPage: React.FC<GitHubConnectPageProps> = ({ onNavigate
                 className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:ring-2 focus:ring-indigo-500"
               />
               <p className="text-[11px] text-slate-400">
-                Connects using public GitHub profile data or student sandbox repositories.
+                Shows public profile data and public repositories only. No token is used, so this is not a verified connection and private data is never read.
               </p>
             </div>
 
@@ -184,13 +185,13 @@ export const GitHubConnectPage: React.FC<GitHubConnectPageProps> = ({ onNavigate
               ) : (
                 <FolderGit2 className="w-4 h-4 text-indigo-400" />
               )}
-              {connectUsernameMutation.isPending ? 'Connecting...' : 'Authorize Sandbox Connection'}
+              {connectUsernameMutation.isPending ? 'Looking up profile...' : 'Link public profile'}
             </button>
           </form>
         )}
 
         <p className="text-[11px] text-slate-400 text-center leading-relaxed">
-          OAuth state verified with CSRF cryptographic tokens. Tokens are encrypted server-side with AES-256 and never logged or exposed to the frontend.
+          Access tokens are validated with GitHub, encrypted on the server (AES-256) and never sent back to the browser. A read-only token is enough. OAuth sign-in is available only when the server has a GitHub OAuth app configured.
         </p>
       </div>
     </div>

@@ -1,4 +1,6 @@
 import { AIService } from '../ai/service';
+import { isModelAvailable, requireModelText, rethrowAi } from '../ai/modelOutput';
+import { AppError } from '../core/exceptions';
 import { db } from '../db/database';
 import { DocumentRetrievalService } from '../rag/retriever';
 import { ProjectService } from './projectService';
@@ -88,18 +90,17 @@ GUIDELINES:
       { role: 'user' as const, content: question },
     ];
 
+    if (!isModelAvailable()) {
+      throw new AppError('The project AI assistant needs the AI provider, which is not available right now. Nothing was generated.', 503, 'AI_UNAVAILABLE');
+    }
     try {
       const response = await AIService.generate(messages, 'student_learning_agent', 0.5);
       return {
-        response: response.text,
+        response: requireModelText(response, 'The project AI assistant'),
         references,
       };
     } catch (err: any) {
-      logger.warn('Project AI generation fallback', { error: err.message });
-      return {
-        response: `As your project mentor for **${project.title}**, I recommend focusing on your next task: "${tasks.find((t) => t.status !== 'DONE')?.title || 'Module Integration'}". Ensure your API contracts align with your ${tech.find((t) => t.category === 'BACKEND')?.technology || 'Backend'} implementation.`,
-        references,
-      };
+      rethrowAi(err, 'The project AI assistant');
     }
   }
 
@@ -131,22 +132,16 @@ ${project.problem_statement}
 ${project.objectives.map((o) => `- ${o}`).join('\n')}
 
 ### Architecture & Tech Stack Rationale
-- **Architecture Type**: ${arch?.architecture_type || 'Layered Architecture'}
-- **Data Flow**: ${arch?.data_flow || 'Client -> Server -> Database'}
+- **Architecture Type**: ${arch?.architecture_type || 'Not recorded yet'}
+- **Data Flow**: ${arch?.data_flow || 'Not recorded yet'}
 
 **Key Technologies:**
-${tech.map((t) => `- **${t.category}**: \`${t.technology}\` — ${t.reason || 'Core dependency'}`).join('\n')}
+${tech.map((t) => `- **${t.category}**: \`${t.technology}\` — ${t.reason || 'no reason recorded'}`).join('\n')}
 
 ### Modules Overview
 ${modules.map((m) => `#### ${m.name} (${m.priority} Priority - Status: ${m.status})\n${m.description}\n**Purpose**: ${m.purpose}`).join('\n\n')}
 
-### Key Viva Questions & Explanations
-1. **Why did you choose this architecture over alternatives?**
-   - Provides horizontal scalability, decoupled microservices, and independent service deployments.
-2. **How does the system ensure data integrity and security?**
-   - Secure token authentication, database ACID transactions, and validated schema contracts.
-3. **What was the most challenging technical hurdle?**
-   - Interfacing asynchronous data streams while maintaining low latency and deterministic failure recovery.`;
+_These notes are an export of the data saved in this project. They contain no AI-generated text._`;
 
     // Save directly into database Notes store
     const createdNote = await db.createNote({

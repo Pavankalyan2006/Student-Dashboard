@@ -31,7 +31,7 @@ export const MockInterviewResultPage: React.FC<Props> = ({ sessionId, onNavigate
   const answers = data?.answers || [];
 
   const fallbackFeedback = {
-    overall_score: session?.overall_score ?? 82,
+    overall_score: session?.overall_score ?? 0,
     summary: `Mock interview session completed with ${answers.length || 2} response(s) recorded. Strong foundational technical understanding and structured reasoning demonstrated.`,
     topics_covered: ['Core CS Fundamentals', 'System Architecture & Problem Solving'],
     concepts_explained_well: ['Core Conceptual Foundations', 'Structured Reasoning Steps'],
@@ -113,7 +113,7 @@ ${(feedback.communication_observations || []).map((c) => `- ${c}`).join('\n')}
         <div className="flex items-center gap-3">
           <div className="text-right">
             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Overall Accuracy</div>
-            <div className="text-2xl font-bold text-blue-600">{session.overall_score || 80}%</div>
+            <div className="text-2xl font-bold text-blue-600">{session.overall_score ?? 0}%</div>
           </div>
           <div className="text-right pl-3 border-l border-slate-200">
             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Concept Coverage</div>

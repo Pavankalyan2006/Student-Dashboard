@@ -23,22 +23,38 @@ githubRouter.get('/status', requireAuth, async (req: Request, res: Response) => 
 githubRouter.get('/connect', requireAuth, (req: Request, res: Response) => {
   try {
     const studentId = req.user!.userId;
-    const redirectUri = req.query.redirect_uri as string | undefined;
-    const oauth = GitHubService.initiateOAuth(studentId, redirectUri);
+    const oauth = GitHubService.initiateOAuth(studentId);
     res.json({ success: true, data: oauth });
   } catch (err: any) {
-    res.status(500).json({ success: false, message: err.message });
+    res.status(err.statusCode || 500).json({ success: false, message: err.message, code: err.code });
   }
 });
 
-githubRouter.get('/callback', requireAuth, async (req: Request, res: Response) => {
+// GitHub redirects the browser here. The student is identified by the server-side OAuth state, which is
+// single-use and expires after 10 minutes; a username query parameter is no longer accepted.
+githubRouter.get('/callback', async (req: Request, res: Response) => {
+  const wantsJson = String(req.headers.accept || '').includes('application/json');
   try {
-    const studentId = req.user!.userId;
-    const username = (req.query.username as string) || 'student-engineer';
-    const connection = await GitHubService.connectAccount(studentId, username);
+    if (req.query.error) {
+      // Still consume the state so it cannot be reused.
+      try { GitHubService.consumeOAuthState(req.query.state as string); } catch { /* ignore */ }
+      throw Object.assign(new Error(`GitHub authorization was not granted (${String(req.query.error)}).`), { statusCode: 400, code: 'OAUTH_DENIED' });
+    }
+    const { connection } = await GitHubService.completeOAuth(req.query.state as string, req.query.code as string);
+    if (wantsJson) return res.json({ success: true, data: connection });
+    return res.redirect('/github?connected=1');
+  } catch (err: any) {
+    if (wantsJson) return res.status(err.statusCode || 500).json({ success: false, message: err.message, code: err.code });
+    return res.redirect(`/github/connect?error=${encodeURIComponent(err.code || 'OAUTH_FAILED')}`);
+  }
+});
+
+githubRouter.post('/connect-username', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const connection = await GitHubService.connectPublicUsername(req.user!.userId, String(req.body?.username || ''));
     res.json({ success: true, data: connection });
   } catch (err: any) {
-    res.status(500).json({ success: false, message: err.message });
+    res.status(err.statusCode || 500).json({ success: false, message: err.message, code: err.code });
   }
 });
 
@@ -72,7 +88,7 @@ githubRouter.post('/disconnect', requireAuth, async (req: Request, res: Response
     const disconnected = await GitHubService.disconnectAccount(studentId);
     res.json({ success: true, data: { disconnected } });
   } catch (err: any) {
-    res.status(500).json({ success: false, message: err.message });
+    res.status(err.statusCode || 500).json({ success: false, message: err.message });
   }
 });
 

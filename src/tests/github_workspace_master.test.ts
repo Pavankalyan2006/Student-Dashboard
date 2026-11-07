@@ -27,13 +27,24 @@ describe('GitHub Workspace Master Test Suite — 23 Compliance Assertions', () =
       expect(status.stats.total_repositories).toBe(0);
     });
 
-    it('2. generates OAuth URL with cryptographically secure state parameter', () => {
-      const oauth = GitHubService.initiateOAuth(studentA, 'http://localhost:3000/github/callback');
-      expect(oauth.oauth_url).toContain('https://github.com/login/oauth/authorize');
-      expect(oauth.oauth_url).toContain('client_id=');
-      expect(oauth.oauth_url).toContain('scope=read%3Auser%20repo');
-      expect(oauth.state).toBeDefined();
-      expect(oauth.state.length).toBeGreaterThanOrEqual(16);
+    it('2. generates OAuth URL with a secure, server-stored state and the read-only scope', () => {
+      process.env.GITHUB_CLIENT_ID = 'test-client-id';
+      process.env.GITHUB_CLIENT_SECRET = 'test-client-secret';
+      try {
+        const oauth = GitHubService.initiateOAuth(studentA, 'http://evil.example/steal');
+        expect(oauth.oauth_url).toContain('https://github.com/login/oauth/authorize');
+        expect(oauth.oauth_url).toContain('client_id=test-client-id');
+        expect(oauth.oauth_url).toContain('scope=read%3Auser&');
+        expect(oauth.oauth_url).not.toContain('evil.example');
+        expect(oauth.state.length).toBeGreaterThanOrEqual(32);
+      } finally {
+        delete process.env.GITHUB_CLIENT_ID;
+        delete process.env.GITHUB_CLIENT_SECRET;
+      }
+    });
+
+    it('2b. refuses to start OAuth when no OAuth app is configured (no hard-coded client id)', () => {
+      expect(() => GitHubService.initiateOAuth(studentA)).toThrow(/not configured/);
     });
   });
 
@@ -41,12 +52,20 @@ describe('GitHub Workspace Master Test Suite — 23 Compliance Assertions', () =
   // 3 & 4. OAUTH STATE & CREDENTIAL HANDLING
   // ==========================================================================
   describe('3 & 4. OAuth State Validation & Graceful Fallbacks', () => {
-    it('3. rejects invalid or tampered OAuth state parameter', () => {
-      const validOAuth = GitHubService.initiateOAuth(studentA);
-      expect(validOAuth.state).toBeDefined();
-
-      const invalidState = 'tampered_state_attacker_token_999';
-      expect(invalidState).not.toBe(validOAuth.state);
+    it('3. rejects invalid, tampered and reused OAuth state parameters', () => {
+      process.env.GITHUB_CLIENT_ID = 'test-client-id';
+      process.env.GITHUB_CLIENT_SECRET = 'test-client-secret';
+      try {
+        const validOAuth = GitHubService.initiateOAuth(studentA);
+        expect(() => GitHubService.consumeOAuthState('tampered_state_attacker_token_999')).toThrow(/Invalid or expired/);
+        expect(() => GitHubService.consumeOAuthState(undefined)).toThrow(/Invalid or expired/);
+        expect(GitHubService.consumeOAuthState(validOAuth.state)).toBe(studentA);
+        // Single use: the same state cannot be replayed.
+        expect(() => GitHubService.consumeOAuthState(validOAuth.state)).toThrow(/Invalid or expired/);
+      } finally {
+        delete process.env.GITHUB_CLIENT_ID;
+        delete process.env.GITHUB_CLIENT_SECRET;
+      }
     });
 
     it('4. encrypts GitHub access tokens on server with AES-256 and decrypts accurately', () => {
@@ -296,7 +315,7 @@ describe('GitHub Workspace Master Test Suite — 23 Compliance Assertions', () =
       const analysis = await GitHubAnalysisService.analyzeRepository(repoId, studentA);
       expect(analysis.architecture_components.length).toBeGreaterThanOrEqual(1);
       expect(analysis.observed_facts.length).toBeGreaterThan(0);
-      expect(analysis.ai_suggestions.length).toBeGreaterThan(0);
+      expect(analysis.ai_suggestions).toEqual([]);
 
       // Evidence files must be actual files in the repository
       const firstComp = analysis.architecture_components[0];
@@ -352,25 +371,35 @@ describe('GitHub Workspace Master Test Suite — 23 Compliance Assertions', () =
   // 22. INTEGRATION WITH RESUME & CAREER MODULES
   // ==========================================================================
   describe('22. Grounded Resume Bullets & Direct Resume Export', () => {
-    it('22a. generates grounded STAR-format resume bullets without prompt injection vulnerabilities', async () => {
+    it('22a. resume bullets need the model (503 without one) and come back as unverified drafts', async () => {
       const repos = await GitHubService.listRepositories(studentA);
       const repoId = repos[0].id;
+      await expect(GitHubService.generateResumeBullets(repoId, studentA)).rejects.toMatchObject({ statusCode: 503 });
 
-      const result = await GitHubService.generateResumeBullets(
-        repoId,
-        studentA,
-        'Full-Stack Developer who optimized API throughput'
-      );
-
-      expect(result.bullets).toBeDefined();
-      expect(result.bullets.length).toBeGreaterThanOrEqual(2);
-      const bulletText = typeof result.bullets[0] === 'string' ? result.bullets[0] : (result.bullets[0] as any).bullet;
-      expect(bulletText).toContain(repos[0].name);
+      const { stubModel } = await import('./helpers/mockAIModel');
+      const stub = stubModel((prompt) => {
+        expect(prompt).toContain('<REPO_SOURCE_UNTRUSTED>');
+        return JSON.stringify([{ bullet: `Built ${repos[0].name} in ${repos[0].language}.`, technologies: [repos[0].language], context: 'Project' }, { bullet: 'Wrote tests.', technologies: [], context: 'Testing' }]);
+      });
+      try {
+        const result = await GitHubService.generateResumeBullets(repoId, studentA, 'Full-Stack Developer');
+        expect(result.bullets.length).toBe(2);
+        expect(result.bullets[0].bullet).toContain(repos[0].name);
+        expect(result.bullets.every((b: any) => b.verified === false)).toBe(true);
+      } finally {
+        stub.restore();
+      }
     });
 
     it('22b. exports verified GitHub project directly into the active resume in ResumeService', async () => {
       const repos = await GitHubService.listRepositories(studentA);
       const repoId = repos[0].id;
+
+      if (!(await db.getStudentById(studentA))) {
+        await db.createStudent({ id: studentA, name: 'Synthetic Student', email: `${studentA}@example.test`, password_hash: 'x', created_at: new Date().toISOString(), updated_at: new Date().toISOString() } as any);
+      }
+      // Another student's resume id is refused (it was previously written to).
+      await expect(GitHubService.exportToResume(repoId, studentA, { bullets: ['x'], resume_id: 'res_seed_01' })).rejects.toThrow(/not found/i);
 
       const exportResult = await GitHubService.exportToResume(repoId, studentA, {
         title: 'Distributed Analytics Pipeline',
@@ -395,7 +424,7 @@ describe('GitHub Workspace Master Test Suite — 23 Compliance Assertions', () =
   // 23. TECHNICAL INTERVIEW DEFENSE & EDUCATIONAL DISCOVERY
   // ==========================================================================
   describe('23. Technical Interview Prep & Learning Discovery', () => {
-    it('23a. generates 5 tailored technical interview questions with model answers from repository code', async () => {
+    it('23a. generates 5 repository interview questions without invented model answers', async () => {
       const repos = await GitHubService.listRepositories(studentA);
       const repoId = repos[0].id;
 
@@ -403,7 +432,8 @@ describe('GitHub Workspace Master Test Suite — 23 Compliance Assertions', () =
       expect(prep.questions.length).toBe(5);
       prep.questions.forEach((q) => {
         expect(q.question).toBeDefined();
-        expect(q.model_answer).toBeDefined();
+        expect(q.model_answer).toBeUndefined();
+        expect(q.answer).toMatch(/^Answer from your own work/);
         expect(q.key_points!.length).toBeGreaterThan(0);
       });
     });

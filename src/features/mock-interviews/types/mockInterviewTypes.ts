@@ -171,6 +171,7 @@ export interface MockInterviewAnswerEntity {
     model_answer_snippet?: string;
     follow_up_needed: boolean;
     suggested_follow_up?: string;
+    method?: 'AI_MODEL' | 'KEYWORD_MATCH' | 'SKIPPED';
   };
   created_at: string;
 }

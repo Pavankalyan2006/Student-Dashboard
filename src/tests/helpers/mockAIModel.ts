@@ -37,3 +37,16 @@ export function useMockQuizModel(): void {
     spy?.mockRestore();
   });
 }
+
+/**
+ * Phase 3: makes the AI provider look configured and answers every prompt with `responder(prompt)`.
+ * Returns the spies so a test can assert what was (or was not) sent to the model.
+ */
+export function stubModel(responder: (prompt: string) => string) {
+  const status = vi.spyOn(AIService, 'getStatus').mockReturnValue({ provider: 'stub', configured: true, model: 'test-stub' });
+  const gen = vi.spyOn(AIService, 'generate').mockImplementation(async (messages: any[]) => {
+    const prompt = messages.map((m) => m.content).join('\n');
+    return { text: responder(prompt), provider: 'test-stub', model: 'test-stub' } as any;
+  });
+  return { status, gen, restore: () => { status.mockRestore(); gen.mockRestore(); } };
+}

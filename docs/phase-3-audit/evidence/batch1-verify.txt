@@ -1,0 +1,7 @@
+PASS  after restart: MI session in history as COMPLETED with the same score  -- COMPLETED 56
+PASS  after restart: MI report retrievable
+PASS  after restart: B still cannot read A's report
+PASS  after restart: project keeps repository URL and status
+PASS  after restart: project tasks kept with status
+
+5/5 PASS
