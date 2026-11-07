@@ -1,4 +1,4 @@
-import { ValidationError } from '../core/exceptions';
+import { AuthorizationError, NotFoundError, ValidationError } from '../core/exceptions';
 import { db } from '../db/database';
 import {
   Project,
@@ -58,10 +58,10 @@ export class ProjectService {
   public static async getProject(projectId: string, studentId: string): Promise<Project> {
     const project = await db.getProjectById(projectId);
     if (!project) {
-      throw new Error(`Project with ID '${projectId}' not found`);
+      throw new NotFoundError(`Project with ID '${projectId}' not found`);
     }
     if (project.student_id !== studentId) {
-      throw new Error('Forbidden: You do not have permission to access this project');
+      throw new AuthorizationError('Forbidden: You do not have permission to access this project');
     }
     return project;
   }

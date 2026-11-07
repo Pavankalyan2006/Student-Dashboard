@@ -10,7 +10,7 @@ import { SkillAssessmentService } from '../../server/services/skillAssessmentSer
 import { ProjectService } from '../../server/services/projectService';
 import { ToolRegistry } from '../../server/ai/tools';
 
-import { useMockQuizModel } from './helpers/mockAIModel';
+import { useMockQuizModel, stubModel } from './helpers/mockAIModel';
 
 useMockQuizModel();
 
@@ -258,8 +258,8 @@ describe('Phase 12: Resume Builder, Career Assistant & Skill Assessment System',
       expect(analysis.contact_info_completeness).toBeDefined();
 
       // Transparent scoring explanation and disclaimer
-      expect(analysis.scoring_explanation).toContain('derived transparently');
-      expect(analysis.disclaimer).toContain('does not guarantee applicant tracking system placement');
+      expect(analysis.scoring_explanation).toContain('Resume checklist score');
+      expect(analysis.disclaimer).toContain('not an ATS score');
     });
 
     it('identifies weak bullet phrasings and suggests actionable alternatives with reasons', async () => {
@@ -333,7 +333,9 @@ describe('Phase 12: Resume Builder, Career Assistant & Skill Assessment System',
       expect(tailored.relevant_projects.length).toBeGreaterThanOrEqual(0);
 
       // Factual disclaimer
-      expect(tailored.disclaimer).toContain('The AI will never add claims, companies, or tools you have not verified');
+      expect(tailored.disclaimer).toContain('Nothing is added to your resume automatically');
+      // Phase 3: no template rewrites of the student's summary
+      expect(tailored.suggested_wording).toEqual([]);
     });
   });
 
@@ -341,47 +343,61 @@ describe('Phase 12: Resume Builder, Career Assistant & Skill Assessment System',
   // 6. AI RESUME IMPROVEMENT & ACTION BULLET GENERATOR
   // ==========================================
   describe('6. AI Resume Improvement & Bullet Formula', () => {
-    it('generates factual summary using verified student data without fabricating credentials', async () => {
-      const res = await CareerAIService.generateSummary(studentA, {
-        targetRole: 'Backend Developer',
-        targetIndustry: 'FinTech',
-      });
-
-      expect(res.summary).toBeDefined();
-      expect(res.summary.length).toBeGreaterThan(20);
-      expect(res.rationale).toBeDefined();
-
-      // Guardrail check: summary should not claim 10+ years experience or invented awards
-      expect(res.summary).not.toContain('15+ years');
-      expect(res.summary).not.toContain('Fortune 500 Director');
+    it('returns 503 AI_UNAVAILABLE for every suggestion helper when no model is configured (no template text)', async () => {
+      await expect(CareerAIService.generateSummary(studentA, { targetRole: 'Backend Developer' })).rejects.toMatchObject({ statusCode: 503, code: 'AI_UNAVAILABLE' });
+      await expect(CareerAIService.generateBullet({ task: 'built an API' })).rejects.toMatchObject({ statusCode: 503, code: 'AI_UNAVAILABLE' });
+      await expect(CareerAIService.improveWording({ currentText: 'Made a site', improvementType: 'CONCISE' })).rejects.toMatchObject({ statusCode: 503, code: 'AI_UNAVAILABLE' });
     });
 
-    it('generates action-oriented resume bullet following [Action + Tech + Contribution] formula without inventing numbers', async () => {
-      const res = await CareerAIService.generateBullet({
-        projectTitle: 'AI Learning Platform',
-        task: 'created vector search endpoint for PDF questions',
-        technology: 'FastAPI, pgvector, Python',
-      });
-
-      expect(res.bullet).toBeDefined();
-      expect(res.formula_breakdown).toBeDefined();
-      expect(res.formula_breakdown).toContain('Action');
-
-      // Should not invent false percentages if student provided none
-      expect(res.bullet).not.toContain('increased revenue by 95%');
+    it('validates inputs before calling the model', async () => {
+      await expect(CareerAIService.generateSummary(studentA, { targetRole: ' ' })).rejects.toMatchObject({ statusCode: 400 });
+      await expect(CareerAIService.generateBullet({ task: '' })).rejects.toMatchObject({ statusCode: 400 });
+      await expect(CareerAIService.improveWording({ currentText: 'x'.repeat(2001), improvementType: 'CONCISE' })).rejects.toMatchObject({ statusCode: 400 });
     });
 
-    it('improves wording showing current vs suggested vs reason', async () => {
-      const res = await CareerAIService.improveWording({
-        currentText: 'Made a website using React for displaying student scores.',
-        improvementType: 'TECHNICAL',
-        targetRole: 'Frontend Engineer',
-      });
+    it('generates a summary from the model, sending only profile data with the no-invention rules', async () => {
+      const stub = stubModel(() => JSON.stringify({ summary: 'Computer Science student building backend services with Python.', rationale: 'Uses listed skills only.' }));
+      try {
+        const res = await CareerAIService.generateSummary(studentA, { targetRole: 'Backend Developer', targetIndustry: 'FinTech' });
+        expect(res.summary).toContain('backend');
+        expect(res.rationale).toBe('Uses listed skills only.');
+        expect(res.suggestion_only).toBe(true);
+        const prompt = stub.gen.mock.calls[0][0].map((m: any) => m.content).join('\n');
+        expect(prompt).toContain('never invent employment');
+        expect(prompt).toContain('Backend Developer');
+      } finally {
+        stub.restore();
+      }
+    });
 
-      expect(res.current).toBe('Made a website using React for displaying student scores.');
-      expect(res.suggested).toBeDefined();
-      expect(res.suggested).not.toBe(res.current);
-      expect(res.reason).toBeDefined();
+    it('generates a bullet from the model and passes "(none)" when the student gave no outcome', async () => {
+      const stub = stubModel(() => JSON.stringify({ bullet: 'Built a vector search endpoint for PDF questions using FastAPI and pgvector.', formula_breakdown: 'Action: Built; Tech: FastAPI, pgvector' }));
+      try {
+        const res = await CareerAIService.generateBullet({ projectTitle: 'AI Learning Platform', task: 'created vector search endpoint for PDF questions', technology: 'FastAPI, pgvector, Python' });
+        expect(res.bullet).toContain('FastAPI');
+        expect(res.formula_breakdown).toContain('Action');
+        expect(res.suggestion_only).toBe(true);
+        const prompt = stub.gen.mock.calls[0][0].map((m: any) => m.content).join('\n');
+        expect(prompt).toContain('Outcome they reported: (none)');
+        expect(prompt).toContain('do not invent metrics');
+      } finally {
+        stub.restore();
+      }
+    });
+
+    it('improves wording showing current vs suggested vs reason, and rejects unusable model output', async () => {
+      let reply = JSON.stringify({ suggested: 'Built a React website that displays student scores.', reason: 'Clearer verb.' });
+      const stub = stubModel(() => reply);
+      try {
+        const res = await CareerAIService.improveWording({ currentText: 'Made a website using React for displaying student scores.', improvementType: 'TECHNICAL', targetRole: 'Frontend Engineer' });
+        expect(res.current).toBe('Made a website using React for displaying student scores.');
+        expect(res.suggested).not.toBe(res.current);
+        expect(res.reason).toBe('Clearer verb.');
+        reply = 'not json at all';
+        await expect(CareerAIService.improveWording({ currentText: 'Made a site', improvementType: 'CONCISE' })).rejects.toMatchObject({ statusCode: 502 });
+      } finally {
+        stub.restore();
+      }
     });
   });
 
@@ -650,6 +666,8 @@ describe('Phase 12: Resume Builder, Career Assistant & Skill Assessment System',
 
       const tool = ToolRegistry.getTool('generate_resume_bullets');
       expect(tool).toBeDefined();
+      const stub = stubModel(() => JSON.stringify({ bullet: 'Implemented a caching layer with Redis and Node.js.', formula_breakdown: 'Action: Implemented' }));
+      try {
 
       const result = await tool!.handler(
         {
@@ -665,6 +683,9 @@ describe('Phase 12: Resume Builder, Career Assistant & Skill Assessment System',
 
       expect(result.bullet).toBeDefined();
       expect(result.formula_breakdown).toBeDefined();
+      } finally {
+        stub.restore();
+      }
     });
   });
 });

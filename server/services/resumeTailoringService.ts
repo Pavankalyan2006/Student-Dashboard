@@ -85,31 +85,25 @@ export class ResumeTailoringService {
       return {
         project_id: p.id,
         title: p.title,
+        match_count: matchCount,
         alignment_reason: matchCount > 0
-          ? `Directly applies ${matchCount} technologies mentioned in the job description (${matchedTech.join(', ')}).`
-          : `Demonstrates software design and practical development principles.`,
+          ? `Uses ${matchCount} technolog${matchCount === 1 ? 'y' : 'ies'} named in the job description (${matchedTech.join(', ')}).`
+          : 'None of this project\'s listed technologies appear in the job description.',
       };
-    });
+    }).sort((a, b) => b.match_count - a.match_count).map(({ match_count, ...rest }) => rest);
 
-    // Suggested wording improvements (aligning terminology without fabricating achievements)
+    // No rewritten summary is produced here: a template summary would claim experience the student has not
+    // described. Wording suggestions come from the AI helpers in the editor, and only when the student asks.
     const suggestedWording: { section: string; current: string; suggested: string; reason: string }[] = [];
 
-    if (resumeData.resume.summary) {
-      suggestedWording.push({
-        section: 'Summary',
-        current: resumeData.resume.summary,
-        suggested: `Aspiring ${jobTitle} with practical foundation in ${matchedSkills.slice(0, 3).join(', ') || 'modern software engineering'}. Experienced in developing reliable applications, writing clean code, and working with modern developer toolchains.`,
-        reason: `Explicitly emphasizes alignment with the ${jobTitle} title while strictly utilizing verified skills.`,
-      });
-    }
-
-    // Relevant coursework
-    const relevantCoursework = [
-      'Data Structures & Algorithms',
-      'Database Management Systems',
-      'Operating Systems',
-      'Software Engineering & System Architecture',
-    ];
+    // Coursework comes from the student's own education entries, not a fixed list.
+    const relevantCoursework = Array.from(
+      new Set(
+        (resumeData.education || []).flatMap((e: any) =>
+          Array.isArray(e.relevant_coursework) ? e.relevant_coursework : typeof e.relevant_coursework === 'string' ? e.relevant_coursework.split(',').map((x: string) => x.trim()) : []
+        )
+      )
+    ).filter((c: any) => c && String(c).toLowerCase().split(/[^a-z0-9+#]+/).some((w) => w.length >= 4 && textLower.includes(w))) as string[];
 
     return {
       job_title: jobTitle,
@@ -121,7 +115,7 @@ export class ResumeTailoringService {
       relevant_projects: relevantProjects,
       relevant_coursework: relevantCoursework,
       suggested_resume_sections: ['Core Technical Skills', 'Featured Projects', 'Education & Coursework'],
-      disclaimer: 'Tailoring recommendations highlight relevant skills already in your profile. The AI will never add claims, companies, or tools you have not verified.',
+      disclaimer: 'Matching is by technology names from a fixed list found in both the job description and your resume skills. Nothing is added to your resume automatically.',
     };
   }
 }

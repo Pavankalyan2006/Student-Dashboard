@@ -52,6 +52,7 @@ import { MockInterviewsPage } from './features/mock-interviews/pages/MockIntervi
 // Phase 12: Resume Builder, Career Assistant & Skill Assessment Pages
 import { ResumePage } from './features/resume/pages/ResumePage';
 import { ResumeEditorPage } from './features/resume/pages/ResumeEditorPage';
+import { ResumeCreatePage } from './features/resume/pages/ResumeCreatePage';
 import { ResumePreviewPage } from './features/resume/pages/ResumePreviewPage';
 import { ResumeTailorPage } from './features/resume/pages/ResumeTailorPage';
 import { ResumeTemplatesPage } from './features/resume/pages/ResumeTemplatesPage';
@@ -630,7 +631,7 @@ function AppContent() {
     }
 
     if (path === '/resume/create') {
-      return <ResumeEditorPage resumeId="res_seed_01" onNavigate={navigate} />;
+      return <ResumeCreatePage onNavigate={navigate} />;
     }
 
     if (path === '/resume/templates') {

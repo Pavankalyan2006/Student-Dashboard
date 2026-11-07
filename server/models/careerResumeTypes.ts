@@ -331,7 +331,7 @@ export interface ResumeAnalysisResult {
   keyword_coverage: {
     found_keywords: string[];
     missing_keywords: string[];
-    coverage_percentage: number;
+    coverage_percentage: number | null;
   };
   section_structure: {
     valid: boolean;
@@ -352,8 +352,8 @@ export interface ResumeAnalysisResult {
     suggestions: string[];
   };
   role_alignment: {
-    target_role: string;
-    alignment_percentage: number;
+    target_role: string | null;
+    alignment_percentage: number | null;
     alignment_notes: string[];
     recommendations: string[];
   };

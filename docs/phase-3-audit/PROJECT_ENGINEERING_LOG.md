@@ -38,3 +38,16 @@ Restart between `create` and `verify` to prove persistence.
   vector store was not persisted. Answers are now grounded or say NO_SOURCES; extractive mode without AI. Batch 2 evidence:
   `phase3-batch2.cjs create` 49/49, `verify` after restart 12/12. Tests 888/888, tsc 0. Batch 2 complete.
   Next: Batch 3 (RAG, Career, Resume).
+- 2026-11-07 05:45 RAG done (P3-039..P3-042). Embeddings are a local 128-bucket hashed bag of words, not semantic; UI
+  labels now say so. Retrieval = vector + keyword path with a shared-content-word gate. Evaluation
+  (`scripts/audit/phase3-rag-eval.ts`, `evidence/rag-eval.json`, 8 documents, 25 queries): lexical hit@1 16/16 (MRR 1.0),
+  paraphrase hit@1 1/4 and hit@3 2/4 (a known limit of word matching), out-of-scope refused 4/5 ("quantum chromodynamics"
+  matched "time quantum"), cross-student leaks 0/5. Answer generation not evaluated: no AI provider in this container.
+- 2026-11-07 06:05 Career done (P3-043..P3-046). Invented default profile, broken course links, demo-record roadmaps,
+  substring skill matching and invented dashboard numbers removed. Tests 898/898.
+- 2026-11-07 06:40 Resume done (P3-047..P3-058). AI helpers are model-only suggestions (503 without a model); the analysis
+  score is a checklist of counts (no baselines, no "ATS" claim); `/resume/create` and project import no longer use demo ids.
+  Export is the browser print of the preview page (`/resume/:id/preview?print=true`); not separately changed.
+  Evidence: `phase3-batch3.cjs create` 32/32, `verify` after restart 7/7 (`evidence/batch3-*.txt`);
+  `phase3-resume-ui.cjs` at 1366 and 390 (no overflow, no page errors, `evidence/resume-ui.txt`, `resume-editor-*.png`).
+  Tests 905/905, tsc 0. Batch 3 complete. Next: Batch 4 (Applications, Placement Prep, Connected Platforms).

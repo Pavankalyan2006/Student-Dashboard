@@ -93,6 +93,7 @@ export class ResumeService {
       throw new NotFoundError(`Student '${studentId}' not found`);
     }
 
+    const goals = (await import('./onboardingService')).OnboardingService.getCareerGoalsSync(studentId);
     const resumeId = `res_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     const now = new Date().toISOString();
 
@@ -101,8 +102,9 @@ export class ResumeService {
       student_id: studentId,
       title: data.title || `${student.name} — Resume`,
       template: data.template || 'TECHNICAL',
-      target_role: data.target_role || 'Software Engineer',
-      target_industry: data.target_industry || 'Software Engineering',
+      // Taken from what the student entered (here or in onboarding); empty when they never said.
+      target_role: data.target_role?.trim() || goals?.target_job_role || '',
+      target_industry: data.target_industry?.trim() || goals?.preferred_industry || '',
       // Left empty for the student to write (or generate with AI); no claims are made for them.
       summary: data.summary || '',
       status: 'DRAFT',

@@ -8,7 +8,7 @@ import {
   CareerProfileData,
   CareerDashboardSummary,
 } from '../models/careerResumeTypes';
-import { NotFoundError, AuthorizationError } from '../core/exceptions';
+import { NotFoundError, AuthorizationError, ValidationError } from '../core/exceptions';
 import { logger } from '../core/logging';
 import { ResumeService } from './resumeService';
 import { PlacementService } from './placementService';
@@ -347,9 +347,27 @@ export class CareerService {
     patch: Partial<CareerProfileData>
   ): Promise<CareerProfileData> {
     const current = await this.getCareerProfile(studentId);
+    // Only the profile's own fields are accepted; anything else in the request body is ignored.
+    const clean: Partial<CareerProfileData> = {};
+    const list = (k: 'target_roles' | 'preferred_industries' | 'preferred_locations' | 'technical_skills' | 'career_goals') => {
+      const v = (patch as any)?.[k];
+      if (v === undefined) return;
+      if (!Array.isArray(v) || v.some((x) => typeof x !== 'string')) throw new ValidationError(`${k} must be a list of text values`);
+      clean[k] = v.map((x: string) => x.trim()).filter(Boolean).slice(0, 30);
+    };
+    (['target_roles', 'preferred_industries', 'preferred_locations', 'technical_skills', 'career_goals'] as const).forEach(list);
+    if (patch?.preferred_work_arrangement !== undefined) {
+      if (!['REMOTE', 'HYBRID', 'ONSITE', 'FLEXIBLE'].includes(patch.preferred_work_arrangement as string)) throw new ValidationError('preferred_work_arrangement must be REMOTE, HYBRID, ONSITE or FLEXIBLE');
+      clean.preferred_work_arrangement = patch.preferred_work_arrangement;
+    }
+    if (patch?.graduation_year !== undefined) {
+      const y = Number(patch.graduation_year);
+      if (!Number.isInteger(y) || y < 2000 || y > 2100) throw new ValidationError('graduation_year must be a year');
+      clean.graduation_year = y;
+    }
     const updated: CareerProfileData = {
       ...current,
-      ...patch,
+      ...clean,
       student_id: studentId,
       updated_at: new Date().toISOString(),
     };
@@ -419,7 +437,7 @@ export class CareerService {
     // The target role is the first role named in the student's career profile. Without one, no alignment is
     // claimed (earlier versions silently used the first role in the catalogue).
     const primaryTargetRole = allRoles.find((r) =>
-      careerProfile.target_roles.some((tr) => tr.trim() && (r.name.toLowerCase().includes(tr.toLowerCase()) || tr.toLowerCase().includes(r.name.toLowerCase())))
+      careerProfile.target_roles.some((tr) => tr.trim() && (r.id === tr || r.name.toLowerCase().includes(tr.toLowerCase()) || tr.toLowerCase().includes(r.name.toLowerCase())))
     );
     const mySkills = studentSkills.map((s) => s.skill_name);
     const matchingSkills = primaryTargetRole ? primaryTargetRole.skills.filter((req) => skillMatches(req, mySkills)) : [];

@@ -1,9 +1,10 @@
 import { ResumeService } from './resumeService';
 import { ResumeAnalysisResult } from '../models/careerResumeTypes';
+import { CareerService, skillMatches } from './careerService';
 
 export class ResumeAnalysisService {
   /**
-   * Perform comprehensive, transparent ATS and readability analysis
+   * Rule-based resume checklist. Every number comes from a count on the resume; nothing is estimated.
    */
   public static async analyzeResume(resumeId: string, studentId: string): Promise<ResumeAnalysisResult> {
     const data = await ResumeService.getFullResume(resumeId, studentId);
@@ -78,112 +79,98 @@ export class ResumeAnalysisService {
     }
 
     const readabilityIssues: string[] = [];
-    let readabilityScore = 85;
-
+    // Length is the only readability property measured here. Score 100 inside 150-800 words, scaled down outside it.
+    let readabilityScore = 100;
     if (totalWords < 150) {
-      readabilityIssues.push('Resume is brief (< 150 words). Expand on project technical architectures and responsibilities.');
-      readabilityScore -= 20;
+      readabilityIssues.push(`Resume text is brief (${totalWords} words, under 150). Describe what you built and how in your projects.`);
+      readabilityScore = Math.round((totalWords / 150) * 100);
     } else if (totalWords > 800) {
-      readabilityIssues.push('Resume is lengthy (> 800 words). Aim for a concise single-page layout for collegiate recruitment.');
-      readabilityScore -= 15;
+      readabilityIssues.push(`Resume text is long (${totalWords} words, over 800). Aim for a single page.`);
+      readabilityScore = Math.round((800 / totalWords) * 100);
     }
+    const readingLevel = totalWords < 150 ? 'Brief draft (length only)' : totalWords > 800 ? 'Long (length only)' : 'Within 150-800 words (length only)';
 
-    const readingLevel = totalWords > 250 ? 'Undergraduate / Professional (Standard)' : 'Brief Draft';
-
-    // 4. Weak Bullet Phrasing Detection
+    // 4. Weak phrasing. We point at the phrase; we do not rewrite it, because a stronger verb could overstate what the
+    // student did (earlier versions turned "responsible for" into "Engineered"). The editor's AI wording tool can suggest text.
     const weakPatterns = [
-      { regex: /^(worked on|helped with|responsible for|made a|created a simple|did)/i, fix: 'Begin with strong action verbs (e.g., Developed, Engineered, Optimized, Designed).' },
-      { regex: /tried to|attempted to/i, fix: 'State concrete contributions rather than tentative phrasing.' },
-      { regex: /etc\.|and so on/i, fix: 'Avoid ambiguous terms like "etc."; explicitly name tools and frameworks.' },
+      { regex: /^(worked on|helped with|responsible for|made a|created a simple|did)\b/i, fix: 'Starts with a vague phrase. Begin with the verb for what you actually did (for example Built, Wrote, Tested), keeping the same facts.' },
+      { regex: /tried to|attempted to/i, fix: 'Tentative phrasing. State what you did and, if it was not finished, say so plainly.' },
+      { regex: /etc\.|and so on/i, fix: 'Avoid "etc."; name the tools or features.' },
     ];
-
     const weakBulletPhrasings: { current: string; suggestion: string; reason: string }[] = [];
-
     for (const bullet of allBulletTexts) {
-      for (const wp of weakPatterns) {
-        if (wp.regex.test(bullet.trim())) {
-          let suggestion = bullet.replace(/^(worked on|helped with|responsible for)/i, 'Engineered');
-          suggestion = suggestion.replace(/^(made a|created a simple)/i, 'Developed a');
-          weakBulletPhrasings.push({
-            current: bullet,
-            suggestion: suggestion,
-            reason: wp.fix,
-          });
-          break;
-        }
-      }
+      const wp = weakPatterns.find((w) => w.regex.test(bullet.trim()));
+      if (wp) weakBulletPhrasings.push({ current: bullet, suggestion: '', reason: wp.fix });
     }
 
-    // 5. Keyword Coverage
-    const standardKeywords = [
-      'Python', 'JavaScript', 'TypeScript', 'React', 'SQL', 'PostgreSQL', 'Docker',
-      'Git', 'REST API', 'Data Structures', 'Algorithms', 'Testing', 'Linux', 'Database'
-    ];
-    const presentKeywords = new Set<string>();
-    const resumeTextLower = JSON.stringify(data).toLowerCase();
-
-    for (const kw of standardKeywords) {
-      if (resumeTextLower.includes(kw.toLowerCase())) {
-        presentKeywords.add(kw);
-      }
-    }
-
-    const foundKeywords = Array.from(presentKeywords);
-    const missingKeywords = standardKeywords.filter((kw) => !presentKeywords.has(kw));
-    const coveragePercentage = Math.round((foundKeywords.length / standardKeywords.length) * 100);
+    // 5. Keyword coverage against the target role's skills from the career role catalogue. Without a recognised target
+    // role there is no reference list, so coverage is not scored (null) instead of comparing against a generic list.
+    const targetRole = resume.target_role?.trim() || '';
+    const roles = targetRole ? await CareerService.listRoles() : [];
+    const t = targetRole.toLowerCase();
+    const role = roles.find((r) => r.name.toLowerCase() === t || r.slug === t.replace(/\s+/g, '-'))
+      || roles.find((r) => t && (t.includes(r.name.toLowerCase()) || r.name.toLowerCase().includes(t)));
+    const resumeSkillNames = skills.map((sk: any) => String(sk.skill || sk.name || '')).filter(Boolean);
+    const resumeText = [
+      resume.summary || '',
+      ...projects.flatMap((p: any) => [p.title || '', p.description_override || '', ...(p.technologies || []), ...(p.highlighted_features || [])]),
+      ...experience.flatMap((e: any) => [e.title || '', e.description || '', ...(e.achievements || [])]),
+      ...certifications.map((c: any) => c.name || c.title || ''),
+    ].join(' ');
+    const foundKeywords = role ? role.skills.filter((req) => skillMatches(req, resumeSkillNames) || skillMatches(req, [resumeText])) : [];
+    const missingKeywords = role ? role.skills.filter((req) => !foundKeywords.includes(req)) : [];
+    const coveragePercentage = role && role.skills.length ? Math.round((foundKeywords.length / role.skills.length) * 100) : null;
 
     // 6. Formatting Consistency
     const formattingIssues: string[] = [];
     const formattingSuggestions: string[] = [];
-
-    // Check date consistency in education & experience
     const allDates = [
       ...education.map((e) => e.start_date),
       ...education.map((e) => e.end_date),
       ...experience.map((e) => e.start_date),
       ...experience.map((e) => e.end_date),
     ].filter(Boolean);
-
     const hasStandardDates = allDates.every((d) => /^\d{4}(-\d{2})?$/.test(d) || d.toLowerCase() === 'present');
     if (!hasStandardDates && allDates.length > 0) {
       formattingIssues.push('Inconsistent date formats detected across education or experience entries.');
       formattingSuggestions.push('Use uniform YYYY-MM or Year notations (e.g., "2024-05" or "2024").');
     }
 
-    // 7. Role Alignment
-    const targetRole = resume.target_role || 'Software Engineer';
+    // 7. Role alignment = share of the role's skills listed in the resume Skills section (not inferred from prose).
     const roleAlignmentNotes: string[] = [];
     const roleRecommendations: string[] = [];
-    let alignmentPercentage = 75;
-
-    if (skills.length >= 5) {
-      roleAlignmentNotes.push(`Your resume contains ${skills.length} technical skills aligned with modern software engineering.`);
+    let alignmentPercentage: number | null = null;
+    if (!targetRole) {
+      roleRecommendations.push('Set a target role on this resume to compare it with that role\'s skills.');
+    } else if (!role) {
+      roleRecommendations.push(`"${targetRole}" is not in the career role catalogue, so role alignment was not measured.`);
     } else {
-      roleRecommendations.push('Add more foundational technologies matching your target role.');
-      alignmentPercentage -= 15;
+      const listed = role.skills.filter((req) => skillMatches(req, resumeSkillNames));
+      alignmentPercentage = role.skills.length ? Math.round((listed.length / role.skills.length) * 100) : null;
+      roleAlignmentNotes.push(`${listed.length} of ${role.skills.length} skills for ${role.name} appear in your Skills section${listed.length ? `: ${listed.join(', ')}` : ''}.`);
+      const notListed = role.skills.filter((req) => !listed.includes(req));
+      if (notListed.length) roleRecommendations.push(`Only list these if you have actually used them: ${notListed.slice(0, 6).join(', ')}.`);
     }
+    if (projects.length < 2) roleRecommendations.push(`Your resume has ${projects.length} project(s); recruiters for student roles usually look for at least 2.`);
 
-    if (projects.length >= 2) {
-      roleAlignmentNotes.push('Multiple projects demonstrate practical application of engineering tools.');
-      alignmentPercentage += 10;
-    } else {
-      roleRecommendations.push('Aim for at least 2 detailed technical projects.');
-      alignmentPercentage -= 10;
-    }
-
-    alignmentPercentage = Math.min(100, Math.max(20, alignmentPercentage));
-
-    // 8. Transparent Total Score Calculation
-    // Breakdown: Contact (15%) + Structure (25%) + Keywords (25%) + Readability (20%) + Alignment (15%)
-    const contactScore = contactComplete ? 15 : 8;
+    // 8. Score: each component is measured from the resume; components that cannot be measured are left out and the
+    // total is rescaled to the components that were measured. There are no baseline points.
+    const contactFields = 4;
+    const contactScore = Math.round(((contactFields - missingContact.length) / contactFields) * 15);
     const structureScore = Math.round((presentSections.length / Math.max(5, presentSections.length + missingSections.length)) * 25);
-    const keywordScore = Math.round((coveragePercentage / 100) * 25);
     const readScore = Math.round((readabilityScore / 100) * 20);
-    const alignScore = Math.round((alignmentPercentage / 100) * 15);
-
-    const calculatedScore = Math.min(100, contactScore + structureScore + keywordScore + readScore + alignScore);
-
-    const scoringExplanation = `Total calculated ATS readiness score (${calculatedScore}/100) is derived transparently: Contact Information (${contactScore}/15) + Section Structure (${structureScore}/25) + Technical Keyword Coverage (${keywordScore}/25) + Readability & Length (${readScore}/20) + Role Alignment (${alignScore}/15).`;
+    const parts: { label: string; got: number; max: number }[] = [
+      { label: 'Contact fields', got: contactScore, max: 15 },
+      { label: 'Section structure', got: structureScore, max: 25 },
+      { label: 'Length', got: readScore, max: 20 },
+    ];
+    if (coveragePercentage !== null) parts.push({ label: `Keywords for ${role!.name}`, got: Math.round((coveragePercentage / 100) * 25), max: 25 });
+    if (alignmentPercentage !== null) parts.push({ label: 'Skills section vs role', got: Math.round((alignmentPercentage / 100) * 15), max: 15 });
+    const got = parts.reduce((a, b) => a + b.got, 0);
+    const max = parts.reduce((a, b) => a + b.max, 0);
+    const calculatedScore = Math.round((got / max) * 100);
+    const skipped = coveragePercentage === null ? ' Keyword and role checks were not scored because no catalogue target role is set.' : '';
+    const scoringExplanation = `Resume checklist score ${calculatedScore}/100 = ${parts.map((x) => `${x.label} ${x.got}/${x.max}`).join(' + ')} (${got}/${max}, rescaled to 100).${skipped}`;
 
     return {
       keyword_coverage: {
@@ -210,7 +197,7 @@ export class ResumeAnalysisService {
         suggestions: formattingSuggestions,
       },
       role_alignment: {
-        target_role: targetRole,
+        target_role: role?.name || targetRole || null,
         alignment_percentage: alignmentPercentage,
         alignment_notes: roleAlignmentNotes,
         recommendations: roleRecommendations,
@@ -222,7 +209,7 @@ export class ResumeAnalysisService {
       weak_bullet_phrasings: weakBulletPhrasings,
       scoring_explanation: scoringExplanation,
       calculated_score: calculatedScore,
-      disclaimer: 'This analysis provides heuristic readability and parsing feedback. It does not guarantee applicant tracking system placement or employment outcomes.',
+      disclaimer: 'A checklist of measurable resume properties (contact fields, sections, length, role skills). It is not an ATS score and does not predict screening or hiring outcomes.',
     };
   }
 }

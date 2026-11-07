@@ -1,0 +1,3 @@
+{"width":1366,"opened_editor":"/resume/res_1794029049005_2zw8f/edit","imported_then_picker_empty":true,"back_goes_to":"/resume","overflow":0,"errors":[]}
+{"width":390,"opened_editor":"/resume/res_1794029051600_qbaev/edit","imported_then_picker_empty":true,"back_goes_to":"/resume","overflow":0,"errors":[]}
+resumes created for 2 visits: 2
