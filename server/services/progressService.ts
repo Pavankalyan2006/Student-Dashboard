@@ -152,12 +152,17 @@ export class ProgressService {
       ...dayBuckets[day],
     }));
 
+    // Git practice lab progress comes from the lab's own per-student records.
+    const { GitLabService } = await import('./gitLabService');
+    const gitLab = GitLabService.getProgress(studentId);
+
     // Real category breakdown
     const categoryBreakdown = [
       { category: 'Core Courses', completed: lessonsCount, in_progress: 0, total: lessonsCount },
       { category: 'DSA Practice', completed: dsaCount, in_progress: dsaProgress ? Math.max(0, dsaProgress.problems_attempted.length - dsaProgress.problems_solved.length) : 0, total: dsaProgress ? Math.max(dsaCount, dsaProgress.problems_attempted.length) : dsaCount },
       { category: 'Coding Lab', completed: codingCount, in_progress: codingSummary ? Math.max(0, codingSummary.problems_attempted - codingSummary.problems_completed) : 0, total: codingSummary ? Math.max(codingCount, codingSummary.problems_attempted) : codingCount },
       { category: 'Research Papers', completed: papersCount, in_progress: 0, total: papersCount },
+      { category: 'Git Practice Lab', completed: gitLab.exercises_completed, in_progress: 0, total: gitLab.exercises_total },
       { category: 'Engineering Projects', completed: projects.filter((p: any) => p.status === 'COMPLETED').length, in_progress: projects.filter((p: any) => p.status !== 'COMPLETED').length, total: projects.length },
     ];
 
@@ -177,6 +182,7 @@ export class ProgressService {
       // No readiness model exists yet, so no index is claimed; the interview count is real.
       placement: { readiness_index: null, mock_interviews_completed: interviewsCount },
       research: { papers_analyzed: papersCount },
+      git: { exercises_completed: gitLab.exercises_completed, exercises_total: gitLab.exercises_total, lessons_completed: gitLab.lessons_completed },
     };
 
     const activeGoals = goals.filter((g) => g.status === 'ACTIVE' || (g.status as string) === 'IN_PROGRESS').length;

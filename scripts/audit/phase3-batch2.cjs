@@ -44,10 +44,43 @@ async function research(A, B, st) {
   st.paper = saved.d.id; st.title = pick.title;
 }
 
+async function gitlab(A, B, st) {
+  const lessons = await api('GET', '/git-lab/lessons', A.t);
+  check('GL lessons list (13 topics)', lessons.s === 200 && lessons.d.length >= 13, lessons.d.length);
+  check('GL lessons need auth', (await api('GET', '/git-lab/lessons', null)).s === 401);
+  const done = await api('POST', '/git-lab/lessons/branches/complete', A.t);
+  check('GL mark lesson read', done.s === 200 && done.d.completed === true);
+  const ex = await api('GET', '/git-lab/exercises/resolve-conflict', A.t);
+  check('GL open conflict exercise (starts from a prepared repository)', ex.s === 200 && ex.d.repo.commits.length === 3 && ex.d.evaluation.passed === false, ex.d.repo?.commits?.length);
+  const host = await api('POST', '/git-lab/exercises/resolve-conflict/commands', A.t, { command: 'ls; cat /etc/passwd' });
+  check('GL host command chaining refused', host.s === 200 && host.d.result.ok === false, host.d.result?.output);
+  const other = await api('POST', '/git-lab/exercises/resolve-conflict/commands', A.t, { command: 'whoami' });
+  check('GL non-simulated programs refused', other.d.result.ok === false);
+  const m = await api('POST', '/git-lab/exercises/resolve-conflict/commands', A.t, { command: 'git merge feature/title' });
+  check('GL merge produces a conflict', /CONFLICT/.test(m.d.result.output) && !!m.d.repo.merge_in_progress, m.d.result.output.split('\n')[0]);
+  const early = await api('POST', '/git-lab/exercises/resolve-conflict/commands', A.t, { command: 'git commit -m "too early"' });
+  check('GL commit with unresolved conflict refused', early.d.result.ok === false);
+  check('GL solution locked before hints are used', (await api('GET', '/git-lab/exercises/resolve-conflict/solution', A.t)).s === 403);
+  const h = await api('POST', '/git-lab/exercises/resolve-conflict/hint', A.t);
+  check('GL hint', h.s === 200 && !!h.d.hint && h.d.hints_used === 1);
+  await api('POST', '/git-lab/exercises/resolve-conflict/commands', A.t, { command: 'echo "Title: Student Portal" > app.txt' });
+  await api('POST', '/git-lab/exercises/resolve-conflict/commands', A.t, { command: 'git add app.txt' });
+  const fin = await api('POST', '/git-lab/exercises/resolve-conflict/commands', A.t, { command: 'git commit -m "Merge feature/title"' });
+  check('GL exercise graded complete from the repository state', fin.d.evaluation.passed === true && fin.d.newly_completed === true && !!fin.d.explanation, fin.d.evaluation.checks.filter((c) => !c.passed).map((c) => c.label).join('; '));
+  const bex = await api('GET', '/git-lab/exercises/resolve-conflict', B.t);
+  check('GL student B has their own untouched repository', bex.d.evaluation.passed === false && !bex.d.repo.merge_in_progress && bex.d.repo.commits.length === 3);
+  const sb = await api('POST', '/git-lab/sandbox/commands', A.t, { command: 'git init' });
+  await api('POST', '/git-lab/sandbox/commands', A.t, { command: 'echo hi > a.txt' });
+  check('GL sandbox works', sb.d.result.ok && sb.d.repo.initialized);
+  const prog = await api('GET', '/git-lab/progress', A.t);
+  check('GL progress counts the completion', prog.d.exercises_completed === 1 && prog.d.lessons_completed === 1, JSON.stringify(prog.d).slice(0, 80));
+}
+
 async function create() {
   const A = await reg('A'); const B = await reg('B');
   const st = { A, B };
   await research(A, B, st);
+  await gitlab(A, B, st);
   fs.writeFileSync(STATE, JSON.stringify(st));
   summary();
 }
@@ -61,6 +94,15 @@ async function verify() {
   check('RS after restart: notes and reading status kept', p?.notes === 'P3 note: read section 3' && p?.reading_status === 'READING');
   const proj = await api('GET', `/research/${st.pid}`, A.t);
   check('RS after restart: search history kept', Array.isArray(proj.d.search_history) && proj.d.search_history.length >= 1, proj.d.search_history?.length);
+  const prog = await api('GET', '/git-lab/progress', A.t);
+  check('GL after restart: lesson and exercise completion kept', prog.d.exercises_completed === 1 && prog.d.lessons_completed === 1);
+  const ex = await api('GET', '/git-lab/exercises/resolve-conflict', A.t);
+  check('GL after restart: exercise repository and hint usage kept', ex.d.evaluation.passed === true && ex.d.hints.length === 1);
+  const sb = await api('GET', '/git-lab/sandbox', A.t);
+  check('GL after restart: sandbox repository kept', sb.d.repo.files.some((f) => f.path === 'a.txt'));
+  const up = await api('GET', '/progress', A.t);
+  const row = (up.d.category_breakdown || up.d.categoryBreakdown || []).find((c) => c.category === 'Git Practice Lab');
+  check('GL unified progress shows the Git lab', up.s === 200 && (row?.completed === 1 || up.d.subsystems?.git?.exercises_completed === 1), up.s + ' ' + JSON.stringify(row || up.d.subsystems?.git));
   if (st.second) {
     const del = await api('DELETE', `/research/papers/${st.second}`, A.t);
     const after = await api('GET', `/research/${st.pid}/papers`, A.t);

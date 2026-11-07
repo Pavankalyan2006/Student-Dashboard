@@ -101,6 +101,7 @@ import { DoubtSolverPage } from './features/doubts/pages/DoubtSolverPage';
 import { FlashcardsPage } from './features/flashcards/pages/FlashcardsPage';
 import { LabAssistantPage } from './features/labs/pages/LabAssistantPage';
 import { SqlLabPage } from './features/sql-lab/pages/SqlLabPage';
+import { GitLabPage } from './features/git-lab/pages/GitLabPage';
 import { MlLabPage } from './features/ml-lab/pages/MlLabPage';
 import { SystemDesignLabPage } from './features/system-design/pages/SystemDesignLabPage';
 import { KnowledgeBasePage } from './features/knowledge/pages/KnowledgeBasePage';
@@ -728,7 +729,11 @@ function AppContent() {
     // ==========================================
     // Phase 13: GitHub Integration Routes
     // ==========================================
-    if (path === '/github' || path === '/git') {
+    if (path === '/git' || path.startsWith('/git/')) {
+      return <GitLabPage onNavigate={navigate} />;
+    }
+
+    if (path === '/github') {
       return <GitHubDashboardPage onNavigate={navigate} />;
     }
 

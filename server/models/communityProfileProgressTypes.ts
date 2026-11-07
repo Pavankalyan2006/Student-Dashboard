@@ -115,7 +115,9 @@ export type ActivityEventType =
   | 'MOCK_INTERVIEW_COMPLETED'
   | 'RESUME_UPDATED'
   | 'SKILL_ASSESSMENT_COMPLETED'
-  | 'CERTIFICATE_EARNED';
+  | 'CERTIFICATE_EARNED'
+  | 'GIT_LESSON_COMPLETED'
+  | 'GIT_EXERCISE_COMPLETED';
 
 export interface StudentActivity {
   id: string;

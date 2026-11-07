@@ -1,0 +1,10 @@
+PASS  RS after restart: saved paper still there
+PASS  RS after restart: notes and reading status kept
+PASS  RS after restart: search history kept  -- 2
+PASS  GL after restart: lesson and exercise completion kept
+PASS  GL after restart: exercise repository and hint usage kept
+PASS  GL after restart: sandbox repository kept
+PASS  GL unified progress shows the Git lab  -- 200 {"category":"Git Practice Lab","completed":1,"in_progress":0,"total":12}
+PASS  RS remove a paper
+
+8/8 PASS

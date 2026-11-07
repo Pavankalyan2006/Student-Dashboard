@@ -1,0 +1,33 @@
+PASS  RS create project  -- 201
+PASS  RS no invented methodology on a new project  -- {"success":true,"data":null}
+PASS  RS search answers and names its source  -- CURATED, 1 results, live error: OpenAlex could not be searched (fetch failed).
+PASS  RS curated results are labelled CURATED with a note (live search unavailable)
+PASS  RS student B cannot search in A's project
+PASS  RS result has a source link to open  -- https://arxiv.org/abs/1706.03762
+PASS  RS save paper (server id, client id ignored)  -- paper_1794026867309_6x320i
+PASS  RS saving the same paper again does not duplicate it
+PASS  RS empty title is refused
+PASS  RS save notes and reading status  -- 200
+PASS  RS invalid reading status refused
+PASS  RS student B cannot read or edit A's paper
+PASS  RS analysis without an AI provider is 503 (no template analysis)  -- 503
+PASS  RS gaps without an AI provider is 503
+PASS  RS literature review without an AI provider is 503
+PASS  RS compare uses saved metadata only, no ranking  -- 200
+PASS  RS APA citation from saved metadata  -- 201
+PASS  GL lessons list (13 topics)  -- 13
+PASS  GL lessons need auth
+PASS  GL mark lesson read
+PASS  GL open conflict exercise (starts from a prepared repository)  -- 3
+PASS  GL host command chaining refused  -- Chaining, pipes and shell substitutions are not available. Run one command at a time.
+PASS  GL non-simulated programs refused
+PASS  GL merge produces a conflict  -- CONFLICT (content): Merge conflict in app.txt
+PASS  GL commit with unresolved conflict refused
+PASS  GL solution locked before hints are used
+PASS  GL hint
+PASS  GL exercise graded complete from the repository state  -- 
+PASS  GL student B has their own untouched repository
+PASS  GL sandbox works
+PASS  GL progress counts the completion  -- {"lessons_total":13,"lessons_completed":1,"exercises_total":12,"exercises_comple
+
+31/31 PASS
