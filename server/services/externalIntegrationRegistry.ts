@@ -777,8 +777,24 @@ export class ExternalIntegrationRegistry {
     return this.providers.get(id);
   }
 
+  /**
+   * Provider list as shown to students. Capabilities describe what this platform actually does today: only GitHub has
+   * a data source (repositories imported in the GitHub module) and a sign-in (when GitHub OAuth is configured).
+   * Every other provider is a saved profile link.
+   */
   public static getAllProviders(): ExternalProviderInfo[] {
-    return Array.from(this.providers.values()).map((p) => p.getInfo());
+    return Array.from(this.providers.values()).map((p) => {
+      const info = p.getInfo();
+      const isGithub = info.id === 'github';
+      const none = Object.fromEntries(Object.keys(info.capabilities).map((k) => [k, false])) as unknown as ProviderCapabilities;
+      return {
+        ...info,
+        authentication_method: isGithub ? info.authentication_method : 'PUBLIC_PROFILE_URL',
+        oauth_supported: isGithub,
+        api_supported: isGithub,
+        capabilities: isGithub ? { ...none, profile: true, repositories: true } : none,
+      };
+    });
   }
 
   public static getCapabilities(id: ExternalProviderId): ProviderCapabilities | undefined {

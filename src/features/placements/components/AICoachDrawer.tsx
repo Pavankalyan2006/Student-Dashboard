@@ -39,12 +39,13 @@ export const AICoachDrawer: React.FC<Props> = ({ isOpen, onClose }) => {
         },
       ]);
     },
-    onError: () => {
+    onError: (err: any) => {
+      // Show the real reason (for example, the AI provider is not configured) instead of a generic retry message.
       setMessages((prev) => [
         ...prev,
         {
           sender: 'AI',
-          text: 'I encountered an issue processing your placement query. Please try again or rephrase your question.',
+          text: err?.message || 'The coach could not answer. Please try again.',
         },
       ]);
     },

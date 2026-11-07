@@ -2077,50 +2077,116 @@ Output JSON format:
     return app;
   }
 
+  private static readonly APPLICATION_STATUSES: ApplicationStatus[] = [
+    'SAVED', 'APPLIED', 'ASSESSMENT', 'INTERVIEW', 'TECHNICAL_ROUND', 'HR_ROUND', 'OFFER', 'ACCEPTED', 'REJECTED', 'WITHDRAWN',
+  ];
+
+  private static checkStatus(status: unknown): ApplicationStatus {
+    if (!this.APPLICATION_STATUSES.includes(status as ApplicationStatus)) {
+      throw new ValidationError(`status must be one of ${this.APPLICATION_STATUSES.join(', ')}`);
+    }
+    return status as ApplicationStatus;
+  }
+
+  /** Validates the fields a student may set on an application. Returns only those fields, trimmed. */
+  private static cleanApplicationInput(data: any): Partial<InternshipApplication> & { job_description?: string } {
+    const out: any = {};
+    const text = (k: string, max: number) => {
+      if (data?.[k] === undefined || data[k] === null) return;
+      if (typeof data[k] !== 'string') throw new ValidationError(`${k} must be text`);
+      const v = data[k].trim();
+      if (v.length > max) throw new ValidationError(`${k} must be at most ${max} characters`);
+      out[k] = v;
+    };
+    text('company_name', 200);
+    text('role', 200);
+    text('location', 200);
+    text('salary_range', 100);
+    text('contact_person', 200);
+    text('resume_version_name', 200);
+    text('notes', 5000);
+    text('job_description', 20000);
+    text('application_url', 2000);
+    for (const k of ['application_date', 'deadline', 'interview_date', 'assessment_date']) {
+      text(k, 10);
+      if (out[k] && !/^\d{4}-\d{2}-\d{2}$/.test(out[k])) throw new ValidationError(`${k} must be a date (YYYY-MM-DD)`);
+      if (out[k] === '') out[k] = undefined;
+    }
+    // Only web links: a javascript: or data: URL would run in the page when the student clicks "Job Link".
+    if (out.application_url) {
+      let u: URL;
+      try { u = new URL(out.application_url); } catch { throw new ValidationError('application_url must be a web address (https://...)'); }
+      if (!['http:', 'https:'].includes(u.protocol)) throw new ValidationError('application_url must start with http:// or https://');
+    }
+    if (data?.status !== undefined) out.status = this.checkStatus(data.status);
+    return out;
+  }
+
+  /**
+   * Compares the skills named in a pasted job description with the skills on the student's profile. Only catalogue
+   * skills found in the text are listed; nothing is assumed. Returns undefined when the text names no known skill.
+   */
+  private static async analyseJobDescription(studentId: string, jd: string): Promise<JobDescriptionSkillAnalysis | undefined> {
+    const { skillMatches } = await import('./careerService');
+    const catalogue = await db.getSkills();
+    const named = catalogue.filter((sk) => skillMatches(sk.name, [jd]));
+    if (named.length === 0) return undefined;
+    const mine = await db.getStudentSkills(studentId);
+    const required_skills = named.map((sk) => {
+      const held = mine.find((m) => m.skill_id === sk.id || skillMatches(sk.name, [m.skill_name]));
+      if (held && held.evidence_count > 0) {
+        return { name: sk.name, evidence_status: 'EVIDENCE_AVAILABLE' as const, evidence_source: `${held.evidence_count} evidence item(s) on your profile (${held.source})` };
+      }
+      if (held) return { name: sk.name, evidence_status: 'DEVELOPING' as const, evidence_source: 'On your profile, no evidence recorded yet' };
+      return { name: sk.name, evidence_status: 'NOT_YET_ASSESSED' as const, evidence_source: 'Not on your profile' };
+    });
+    const withEvidence = required_skills.filter((r) => r.evidence_status === 'EVIDENCE_AVAILABLE').length;
+    const missing = required_skills.filter((r) => r.evidence_status === 'NOT_YET_ASSESSED').map((r) => r.name);
+    const noEvidence = required_skills.filter((r) => r.evidence_status === 'DEVELOPING').map((r) => r.name);
+    const recommended_preparation: string[] = [];
+    if (missing.length) recommended_preparation.push(`Named in the job description but not on your profile: ${missing.join(', ')}.`);
+    if (noEvidence.length) recommended_preparation.push(`On your profile without evidence yet (a project, course or quiz would add some): ${noEvidence.join(', ')}.`);
+    return {
+      required_skills,
+      // Share of the skills named in the job description for which the profile has evidence.
+      readiness_percent: Math.round((withEvidence / required_skills.length) * 100),
+      recommended_preparation,
+    };
+  }
+
   public static async createApplication(
     studentId: string,
-    data: Partial<InternshipApplication>
+    data: Partial<InternshipApplication> & { job_description?: string }
   ): Promise<InternshipApplication> {
-    if (!data.company_name || !data.role) {
+    const clean = this.cleanApplicationInput(data);
+    if (!clean.company_name || !clean.role) {
       throw new ValidationError('Company name and role are required');
     }
+    const status = clean.status || 'APPLIED';
+    const today = new Date().toISOString().split('T')[0];
     const appId = `app_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     const app: InternshipApplication = {
       id: appId,
       student_id: studentId,
-      company_name: data.company_name,
-      role: data.role,
-      location: data.location || 'Remote / Hybrid',
-      application_date: data.application_date || new Date().toISOString().split('T')[0],
-      deadline: data.deadline,
-      application_url: data.application_url,
-      status: data.status || 'APPLIED',
-      salary_range: data.salary_range,
-      notes: data.notes || '',
-      timeline: [
-        {
-          id: `ev_${Date.now()}`,
-          title: 'Application Created',
-          date: new Date().toISOString().split('T')[0],
-          status: data.status || 'APPLIED',
-        },
-      ],
-      jd_analysis: {
-        required_skills: [
-          { name: 'Core Computer Science & OOP', evidence_status: 'EVIDENCE_AVAILABLE', evidence_source: 'Coursework & coding lab' },
-          { name: 'Data Structures & Algorithms', evidence_status: 'EVIDENCE_AVAILABLE', evidence_source: 'DSA Lab verification' },
-          { name: 'Web / Backend Frameworks', evidence_status: 'DEVELOPING', evidence_source: 'Project builder experience' },
-        ],
-        readiness_percent: 80,
-        recommended_preparation: [
-          'Review company-specific engineering interview questions.',
-          'Practice explaining technical project architecture.',
-        ],
-      },
+      company_name: clean.company_name,
+      role: clean.role,
+      location: clean.location || '',
+      application_date: clean.application_date || today,
+      deadline: clean.deadline,
+      application_url: clean.application_url,
+      status,
+      salary_range: clean.salary_range,
+      interview_date: clean.interview_date,
+      assessment_date: clean.assessment_date,
+      contact_person: clean.contact_person,
+      resume_version_name: clean.resume_version_name,
+      notes: clean.notes || '',
+      job_description: clean.job_description || undefined,
+      timeline: [{ id: `ev_${Date.now()}`, title: status === 'SAVED' ? 'Saved to tracker' : 'Application recorded', date: today, status }],
+      jd_analysis: clean.job_description ? await this.analyseJobDescription(studentId, clean.job_description) : undefined,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
-
     this.applications.set(appId, app);
     return app;
   }
@@ -2131,42 +2197,43 @@ Output JSON format:
     newStatus: any,
     note?: string
   ): Promise<InternshipApplication> {
+    const status = this.checkStatus(newStatus);
     const app = await this.getApplicationById(studentId, appId);
-    app.status = newStatus;
+    if (note !== undefined && (typeof note !== 'string' || note.length > 1000)) throw new ValidationError('note must be text up to 1,000 characters');
+    app.status = status;
     app.timeline.push({
       id: `ev_${Date.now()}`,
-      title: note ? `Status changed to ${newStatus}: ${note}` : `Status changed to ${newStatus}`,
+      title: note ? `Status changed to ${status}: ${note}` : `Status changed to ${status}`,
       date: new Date().toISOString().split('T')[0],
-      status: newStatus,
+      status,
     });
     app.updated_at = new Date().toISOString();
+    this.applications.set(app.id, app);
     return app;
   }
 
   public static async updateApplication(
     studentId: string,
     appId: string,
-    patch: Partial<InternshipApplication>
+    patch: Partial<InternshipApplication> & { job_description?: string }
   ): Promise<InternshipApplication> {
     const app = await this.getApplicationById(studentId, appId);
-    if (patch.company_name !== undefined) app.company_name = patch.company_name;
-    if (patch.role !== undefined) app.role = patch.role;
-    if (patch.location !== undefined) app.location = patch.location;
-    if (patch.deadline !== undefined) app.deadline = patch.deadline;
-    if (patch.application_url !== undefined) app.application_url = patch.application_url;
-    if (patch.salary_range !== undefined) app.salary_range = patch.salary_range;
-    if (patch.notes !== undefined) app.notes = patch.notes;
-    if (patch.interview_date !== undefined) app.interview_date = patch.interview_date;
-    if (patch.assessment_date !== undefined) app.assessment_date = patch.assessment_date;
-    if (patch.contact_person !== undefined) app.contact_person = patch.contact_person;
-    if (patch.resume_version_name !== undefined) app.resume_version_name = patch.resume_version_name;
-    if (patch.status && patch.status !== app.status) {
-      app.status = patch.status;
+    const clean = this.cleanApplicationInput(patch);
+    if (clean.company_name === '' || clean.role === '') throw new ValidationError('Company name and role cannot be empty');
+    for (const k of ['company_name', 'role', 'location', 'deadline', 'application_url', 'salary_range', 'notes', 'interview_date', 'assessment_date', 'contact_person', 'resume_version_name', 'application_date'] as const) {
+      if (k in clean) (app as any)[k] = (clean as any)[k];
+    }
+    if ('job_description' in clean) {
+      app.job_description = clean.job_description || undefined;
+      app.jd_analysis = clean.job_description ? await this.analyseJobDescription(studentId, clean.job_description) : undefined;
+    }
+    if (clean.status && clean.status !== app.status) {
+      app.status = clean.status;
       app.timeline.push({
         id: `ev_${Date.now()}`,
-        title: `Status updated to ${patch.status}`,
+        title: `Status updated to ${clean.status}`,
         date: new Date().toISOString().split('T')[0],
-        status: patch.status,
+        status: clean.status,
       });
     }
     app.updated_at = new Date().toISOString();
@@ -2186,17 +2253,20 @@ Output JSON format:
     event: { title: string; date?: string; notes?: string; status?: ApplicationStatus }
   ): Promise<InternshipApplication> {
     const app = await this.getApplicationById(studentId, appId);
+    const title = typeof event?.title === 'string' ? event.title.trim() : '';
+    if (!title || title.length > 200) throw new ValidationError('A milestone title (up to 200 characters) is required');
+    if (event.date !== undefined && event.date !== '' && !/^\d{4}-\d{2}-\d{2}$/.test(String(event.date))) throw new ValidationError('date must be YYYY-MM-DD');
+    if (event.notes !== undefined && (typeof event.notes !== 'string' || event.notes.length > 2000)) throw new ValidationError('notes must be text up to 2,000 characters');
+    const status = event.status ? this.checkStatus(event.status) : app.status;
     const newEvent: ApplicationTimelineEvent = {
       id: `ev_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-      title: event.title,
+      title,
       date: event.date || new Date().toISOString().split('T')[0],
-      status: event.status || app.status,
+      status,
       notes: event.notes,
     };
     app.timeline.push(newEvent);
-    if (event.status && event.status !== app.status) {
-      app.status = event.status;
-    }
+    if (status !== app.status) app.status = status;
     app.updated_at = new Date().toISOString();
     this.applications.set(app.id, app);
     return app;

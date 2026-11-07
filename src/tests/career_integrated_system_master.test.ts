@@ -231,11 +231,9 @@ describe('Unified Career System E2E Master Suite (All 8 Pages & Cross-Module Int
   // PAGE 8: JOBS DISCOVERY & JOB-TO-APPLICATION CONVERSION
   // =========================================================================
   describe('Page 8: Jobs Discovery & 1-Click Track to Applications', () => {
-    it('discovers verified career opportunities and applies filters', async () => {
-      const jobs = await ExternalIntegrationService.searchJobs('engineer', 'Bengaluru');
-      expect(jobs.length).toBeGreaterThanOrEqual(1);
-      expect(jobs[0].title).toBeDefined();
-      expect(jobs[0].company_name).toBeDefined();
+    it('lists no invented job postings: a student only sees job descriptions they imported', async () => {
+      // Phase 3: there is no live job feed, so a student with no imports sees nothing (sample postings are demo-only).
+      expect(await ExternalIntegrationService.searchJobs('std_p3_no_jobs', 'engineer', 'Bengaluru')).toEqual([]);
     });
 
     it('imports an external job description and runs multi-agent gap analysis', async () => {
@@ -252,7 +250,7 @@ describe('Unified Career System E2E Master Suite (All 8 Pages & Cross-Module Int
     });
 
     it('1-click tracks a discovered job directly into the Application Tracker', async () => {
-      const targetJob = (await ExternalIntegrationService.searchJobs())[0];
+      const targetJob = (await ExternalIntegrationService.searchJobs(studentA))[0];
       expect(targetJob).toBeDefined();
 
       const newApp = await LearningModulesService.createApplication(studentA, {
@@ -331,24 +329,24 @@ describe('Unified Career System E2E Master Suite (All 8 Pages & Cross-Module Int
       expect(leetcode?.capabilities.code_submissions).toBe(true);
     });
 
-    it('connects a platform using legitimate profile information and marks it connected', async () => {
+    it('saves a platform link as LINKED (not CONNECTED) when ownership is not verified', async () => {
+      // Phase 3: studentA has no GitHub OAuth/token connection, so a username alone is only a saved link.
       const conn = await ExternalIntegrationService.connectPlatform(studentA, 'github' as any, {
         username: 'pavan-dev',
         profile_url: 'https://github.com/pavan-dev',
       });
-
-      expect(conn).toBeDefined();
       expect(conn.provider).toBe('github');
-      expect(conn.status).toBe('CONNECTED');
+      expect(conn.status).toBe('LINKED');
+      expect(conn.scopes).toEqual([]);
       expect(conn.student_id).toBe(studentA);
-
-      const connections = await ExternalIntegrationService.listConnections(studentA);
-      expect(connections.some((c) => c.provider === 'github' && c.status === 'CONNECTED')).toBe(true);
+      await expect(ExternalIntegrationService.connectPlatform(studentA, 'leetcode' as any, { username: 'x', code: 'abc' })).rejects.toMatchObject({ statusCode: 400 });
+      await expect(ExternalIntegrationService.connectPlatform(studentA, 'leetcode' as any, { username: 'x', profile_url: 'https://evil.example/x' })).rejects.toMatchObject({ statusCode: 400 });
     });
 
     it('disconnects an external platform and updates status safely', async () => {
       const connections = await ExternalIntegrationService.listConnections(studentA);
-      const ghConn = connections.find((c) => c.provider === 'github' && c.status === 'CONNECTED');
+      const ghConn = connections.find((c) => c.provider === 'github' && c.status !== 'DISCONNECTED');
+      expect(ghConn).toBeDefined();
       if (ghConn) {
         await ExternalIntegrationService.disconnectPlatform(studentA, ghConn.id);
         const refreshed = await ExternalIntegrationService.listConnections(studentA);

@@ -44,10 +44,6 @@ import { PlacementPlanPage } from './features/placements/pages/PlacementPlanPage
 import { TechnicalPreparationPage } from './features/placements/pages/TechnicalPreparationPage';
 import { RolePreparationPage } from './features/placements/pages/RolePreparationPage';
 import { PlacementProgressPage } from './features/placements/pages/PlacementProgressPage';
-import { MockInterviewSetupPage } from './features/placements/pages/MockInterviewSetupPage';
-import { MockInterviewSessionPage } from './features/placements/pages/MockInterviewSessionPage';
-import { MockInterviewResultPage } from './features/placements/pages/MockInterviewResultPage';
-import { MockInterviewHistoryPage } from './features/placements/pages/MockInterviewHistoryPage';
 import { MockInterviewsPage } from './features/mock-interviews/pages/MockInterviewsPage';
 // Phase 12: Resume Builder, Career Assistant & Skill Assessment Pages
 import { ResumePage } from './features/resume/pages/ResumePage';

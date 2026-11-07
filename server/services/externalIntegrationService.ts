@@ -1,7 +1,6 @@
 // server/services/externalIntegrationService.ts
 // Comprehensive business logic for External Platform Connections, Data Synchronization, Skill Evidence, and Career Consistency
 
-import crypto from 'crypto';
 import {
   ExternalProviderId,
   ExternalAccountConnection,
@@ -16,16 +15,15 @@ import { ExternalIntegrationRegistry } from './externalIntegrationRegistry';
 import { GitHubService } from './githubService';
 import { NotFoundError, ValidationError, AuthorizationError } from '../core/exceptions';
 import { logger } from '../core/logging';
+import { githubVerification } from './platformVerification';
 
 export class ExternalIntegrationService {
-  private static readonly ENCRYPTION_KEY =
-    process.env.INTEGRATION_ENCRYPTION_KEY || 'btech_external_integration_aes_256_key_32chars!';
-
   // In-memory collections keyed by student_id and connection_id
   private static connections: Map<string, ExternalAccountConnection> = new Map();
   private static activities: Map<string, ExternalActivity[]> = new Map();
   private static profiles: Map<string, ExternalProfile[]> = new Map();
-  private static jobs: Map<string, ExternalJob> = new Map();
+  /** Job descriptions a student imported, keyed by job id; each one belongs to one student. */
+  private static jobs: Map<string, ExternalJob & { student_id?: string }> = new Map();
 
   static {
     this.seedDemoData();
@@ -200,24 +198,10 @@ export class ExternalIntegrationService {
         posted_at: new Date(Date.now() - 4 * 86400000).toISOString(),
       },
     ];
+    // Sample postings belong to the demo account only; real students see only what they imported.
     for (const j of sampleJobs) {
-      this.jobs.set(j.id, j);
+      this.jobs.set(j.id, { ...j, student_id: studentId });
     }
-  }
-
-  /**
-   * Encrypt sensitive tokens using AES-256
-   */
-  public static encryptSecret(token: string): string {
-    const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipheriv(
-      'aes-256-cbc',
-      crypto.scryptSync(this.ENCRYPTION_KEY, 'salt', 32),
-      iv
-    );
-    let encrypted = cipher.update(token, 'utf8', 'hex');
-    encrypted += cipher.final('hex');
-    return `${iv.toString('hex')}:${encrypted}`;
   }
 
   /**
@@ -239,7 +223,8 @@ export class ExternalIntegrationService {
   }
 
   /**
-   * Connect or link an external platform
+   * Saves a platform link. Status is CONNECTED only when ownership is verified (GitHub OAuth or access token through the
+   * GitHub module); every other link is LINKED: saved, not verified, nothing imported. No scopes are invented.
    */
   public static async connectPlatform(
     studentId: string,
@@ -250,29 +235,57 @@ export class ExternalIntegrationService {
     if (!provider) {
       throw new ValidationError(`Unsupported external provider: '${providerId}'`);
     }
+    const info = provider.getInfo();
+    if (payload?.code !== undefined) {
+      throw new ValidationError(`${info.name} sign-in (OAuth) is not available here. Save your public profile link instead.`);
+    }
+    const username = typeof payload?.username === 'string' ? payload.username.trim() : '';
+    if (!/^[A-Za-z0-9_.-]{1,60}$/.test(username)) {
+      throw new ValidationError('Enter your username on that platform (letters, digits, "_", "-" or ".", up to 60 characters).');
+    }
+    let profileUrl: string | undefined;
+    if (payload?.profile_url) {
+      let u: URL;
+      try { u = new URL(String(payload.profile_url)); } catch { throw new ValidationError('profile_url must be a web address'); }
+      const official = new URL(info.official_url).hostname.replace(/^www\./, '');
+      if (u.protocol !== 'https:' || !(u.hostname === official || u.hostname.endsWith('.' + official))) {
+        throw new ValidationError(`profile_url must be an https link on ${official}`);
+      }
+      profileUrl = u.toString();
+    }
 
-    const connectionData = await provider.connectAccount(studentId, payload);
+    let status: ExternalAccountConnection['status'] = 'LINKED';
+    let scopes: string[] = [];
+    let displayName = `${info.name} (${username})`;
+    if (providerId === 'github') {
+      const gh = await githubVerification(studentId, username);
+      if (gh.verified) {
+        const conn = await (await import('../db/database')).db.getGitHubConnection(studentId);
+        status = 'CONNECTED';
+        scopes = conn?.scopes || [];
+        displayName = `GitHub (@${gh.username})`;
+      }
+    }
+
+    const now = new Date().toISOString();
     const connectionId = `conn_${providerId}_${studentId}`;
-
     const newConnection: ExternalAccountConnection = {
       id: connectionId,
       student_id: studentId,
       provider: providerId,
-      display_name: connectionData.display_name || `${provider.getInfo().name} Profile`,
-      username: connectionData.username || payload.username || 'student',
-      profile_url: connectionData.profile_url || payload.profile_url || provider.getInfo().official_url,
-      status: 'CONNECTED',
-      scopes: connectionData.scopes || ['public_profile'],
-      connected_at: new Date().toISOString(),
-      // Linking an account does not import anything, so no sync is claimed yet.
+      display_name: displayName,
+      username,
+      profile_url: profileUrl || '',
+      status,
+      scopes,
+      connected_at: now,
       last_synced_at: undefined,
       sync_status: 'IDLE',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      created_at: now,
+      updated_at: now,
     };
-
     this.connections.set(connectionId, newConnection);
-    logger.info(`External connection established for student ${studentId} to ${providerId}`);
+    logger.info(`External platform ${status === 'CONNECTED' ? 'connected (verified)' : 'linked (not verified)'} for student ${studentId}: ${providerId}`);
     return newConnection;
   }
 
@@ -485,18 +498,16 @@ export class ExternalIntegrationService {
   }
 
   /**
-   * Search available jobs across authorized feeds
+   * Searches the job descriptions this student imported. There is no live job feed: nothing is listed that the student
+   * did not add (earlier versions showed invented postings, and every student's imports, to everyone).
    */
-  public static async searchJobs(query?: string, location?: string): Promise<ExternalJob[]> {
-    const all = Array.from(this.jobs.values());
-    if (!query && !location) return all;
-
+  public static async searchJobs(studentId: string, query?: string, location?: string): Promise<ExternalJob[]> {
+    const all = Array.from(this.jobs.values()).filter((j) => j.student_id === studentId);
     const q = (query || '').toLowerCase();
     const loc = (location || '').toLowerCase();
-
     return all.filter((j) => {
-      const matchQ = !q || j.title.toLowerCase().includes(q) || j.company_name.toLowerCase().includes(q) || j.required_skills.some((s) => s.toLowerCase().includes(q));
-      const matchLoc = !loc || j.location.toLowerCase().includes(loc);
+      const matchQ = !q || j.title.toLowerCase().includes(q) || j.company_name.toLowerCase().includes(q) || j.required_skills.some((x) => x.toLowerCase().includes(q));
+      const matchLoc = !loc || (j.location || '').toLowerCase().includes(loc);
       return matchQ && matchLoc;
     });
   }
@@ -508,32 +519,49 @@ export class ExternalIntegrationService {
     studentId: string,
     data: Partial<ExternalJob> & { company?: string }
   ): Promise<ExternalJob & { company?: string }> {
-    const company = data.company_name || data.company;
-    if (!data.title || !company || !data.description) {
+    const company = String(data.company_name || data.company || '').trim();
+    const title = String(data.title || '').trim();
+    const description = String(data.description || '').trim();
+    if (!title || !company || !description) {
       throw new ValidationError('Job Title, Company Name, and Description are required');
     }
+    if (title.length > 200 || company.length > 200 || description.length > 20000) {
+      throw new ValidationError('Title and company must be at most 200 characters, description at most 20,000');
+    }
+    if (data.job_url) {
+      let u: URL;
+      try { u = new URL(String(data.job_url)); } catch { throw new ValidationError('job_url must be a web address'); }
+      if (!['http:', 'https:'].includes(u.protocol)) throw new ValidationError('job_url must start with http:// or https://');
+    }
+    // Skills are only those the student listed or catalogue skills named in the description.
+    let required = Array.isArray(data.required_skills) ? data.required_skills.map(String).filter(Boolean).slice(0, 30) : [];
+    if (!required.length) {
+      const { skillMatches } = await import('./careerService');
+      const { db } = await import('../db/database');
+      required = (await db.getSkills()).filter((sk) => skillMatches(sk.name, [description])).map((sk) => sk.name);
+    }
 
-    const jobId = `job_imp_${Date.now()}`;
+    const jobId = `job_imp_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
     const newJob: ExternalJob & { company?: string } = {
       id: jobId,
-      title: data.title,
+      title,
       company_name: company,
       company: company,
-      location: data.location || 'Bengaluru / Remote',
-      is_remote: data.is_remote ?? true,
+      location: data.location ? String(data.location).slice(0, 200) : '',
+      is_remote: typeof data.is_remote === 'boolean' ? data.is_remote : false,
       employment_type: data.employment_type || 'INTERNSHIP',
       experience_level: data.experience_level || 'INTERN',
       salary_range: data.salary_range,
       source: 'MANUAL_IMPORT',
       job_url: data.job_url,
       deadline: data.deadline,
-      description: data.description,
-      required_skills: data.required_skills || ['Software Engineering', 'Problem Solving'],
-      preferred_skills: data.preferred_skills || [],
+      description,
+      required_skills: required,
+      preferred_skills: Array.isArray(data.preferred_skills) ? data.preferred_skills.map(String).slice(0, 30) : [],
       posted_at: new Date().toISOString(),
     };
 
-    this.jobs.set(jobId, newJob as ExternalJob);
+    this.jobs.set(jobId, { ...(newJob as ExternalJob), student_id: studentId });
     logger.info(`Job description imported by student ${studentId}: ${newJob.title} at ${company}`);
     return newJob;
   }

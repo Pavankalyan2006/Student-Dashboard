@@ -71,7 +71,8 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
   // Create Form State
   const [companyName, setCompanyName] = React.useState('');
   const [role, setRole] = React.useState('');
-  const [location, setLocation] = React.useState('Bengaluru / Remote');
+  const [location, setLocation] = React.useState('');
+  const [createStatus, setCreateStatus] = React.useState<ApplicationStatus>('APPLIED');
   const [deadline, setDeadline] = React.useState('');
   const [applicationUrl, setApplicationUrl] = React.useState('');
   const [salaryRange, setSalaryRange] = React.useState('');
@@ -126,15 +127,21 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
         company_name: companyName,
         role,
         location,
-        deadline: deadline || new Date(Date.now() + 10 * 86400000).toISOString().split('T')[0],
-        application_url: applicationUrl,
+        deadline: deadline || undefined,
+        application_url: applicationUrl || undefined,
         salary_range: salaryRange,
-        notes: notes || 'Standard campus referral',
-        status: 'APPLIED',
-      });
-      toast.success('Internship application recorded and deadline reminder queued!');
+        notes,
+        status: createStatus,
+        job_description: jobDescription || undefined,
+      } as any);
+      toast.success(createStatus === 'SAVED' ? 'Saved to your tracker. Nothing was sent to the company.' : 'Application recorded in your tracker. Nothing was sent to the company.');
       setCompanyName('');
       setRole('');
+      setLocation('');
+      setDeadline('');
+      setApplicationUrl('');
+      setSalaryRange('');
+      setNotes('');
       setJobDescription('');
       setSelectedApp(created);
       setActiveView('kanban');
@@ -185,6 +192,7 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
       assessment_date: app.assessment_date || '',
       contact_person: app.contact_person || '',
       notes: app.notes || '',
+      job_description: app.job_description || '',
       status: app.status,
     });
     setIsEditModalOpen(true);
@@ -303,10 +311,16 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
   }
 
   // Conversion calculations
-  const totalApplied = applications.length;
+  const totalTracked = applications.length;
+  // Saved postings are not applications yet, so they are left out of the interview rate.
+  const totalApplied = applications.filter((a) => a.status !== 'SAVED').length;
   const interviewsCount = applications.filter((a) => a.status === 'INTERVIEW' || a.status === 'TECHNICAL_ROUND' || a.status === 'HR_ROUND').length;
   const offersCount = applications.filter((a) => a.status === 'OFFER' || a.status === 'ACCEPTED').length;
-  const interviewRate = totalApplied > 0 ? Math.round((interviewsCount / totalApplied) * 100) : 0;
+  const interviewRate = totalApplied > 0 ? Math.round((interviewsCount / totalApplied) * 100) : null;
+  const today = new Date().toISOString().split('T')[0];
+  const nextDeadline = applications
+    .filter((a) => a.deadline && a.deadline >= today && !['REJECTED', 'WITHDRAWN', 'ACCEPTED'].includes(a.status))
+    .sort((a, b) => (a.deadline! < b.deadline! ? -1 : 1))[0];
 
   return (
     <PageContainer>
@@ -364,8 +378,8 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
         <div className="p-4 rounded-xl border border-[#E4E7EC] bg-white shadow-xs flex items-center justify-between">
           <div>
             <p className="text-xs font-medium text-[#475467]">Total Tracked</p>
-            <h3 className="text-2xl font-bold text-[#101828] mt-1">{totalApplied}</h3>
-            <p className="text-xs text-blue-600 mt-0.5">Active candidates</p>
+            <h3 className="text-2xl font-bold text-[#101828] mt-1">{totalTracked}</h3>
+            <p className="text-xs text-blue-600 mt-0.5">{totalApplied} applied, {totalTracked - totalApplied} saved</p>
           </div>
           <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
             <Briefcase className="w-6 h-6" />
@@ -374,10 +388,10 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
 
         <div className="p-4 rounded-xl border border-[#E4E7EC] bg-white shadow-xs flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium text-[#475467]">Interviews Scheduled</p>
+            <p className="text-xs font-medium text-[#475467]">In Interview Rounds</p>
             <h3 className="text-2xl font-bold text-purple-600 mt-1">{interviewsCount}</h3>
             <p className="text-[11px] text-[#475467] mt-0.5">
-              {interviewRate}% interview rate ({interviewsCount}/{totalApplied || 1})
+              {interviewRate === null ? 'No applications yet' : `${interviewRate}% of applications (${interviewsCount}/${totalApplied})`}
             </p>
           </div>
           <div className="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600">
@@ -389,7 +403,7 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
           <div>
             <p className="text-xs font-medium text-[#475467]">Offers Received</p>
             <h3 className="text-2xl font-bold text-emerald-600 mt-1">{offersCount}</h3>
-            <p className="text-xs text-emerald-600 mt-0.5">Verified offers</p>
+            <p className="text-xs text-emerald-600 mt-0.5">As recorded by you</p>
           </div>
           <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
             <CheckCircle2 className="w-6 h-6" />
@@ -400,10 +414,10 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
           <div>
             <p className="text-xs font-medium text-[#475467]">Next Deadline / Round</p>
             <h3 className="text-sm font-bold text-[#101828] mt-1 truncate">
-              {applications.find((a) => a.deadline)?.deadline || 'None pending'}
+              {nextDeadline?.deadline || 'None upcoming'}
             </h3>
             <p className="text-xs text-amber-600 mt-0.5 truncate">
-              {applications.find((a) => a.deadline)?.company_name || 'All clear'}
+              {nextDeadline?.company_name || 'No open deadlines'}
             </p>
           </div>
           <div className="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
@@ -689,10 +703,10 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
               <div className="flex items-center justify-between">
                 <h4 className="text-xs font-bold text-blue-900 flex items-center gap-1.5">
                   <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-                  Verified Skill Evidence vs Job Description
+                  Skills named in the job description vs your profile
                 </h4>
                 <span className="text-xs font-bold text-blue-700">
-                  {selectedApp.jd_analysis.readiness_percent}% Skill Match
+                  {selectedApp.jd_analysis.readiness_percent}% with evidence
                 </span>
               </div>
 
@@ -709,14 +723,15 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
                           : 'bg-gray-100 text-gray-700'
                       }`}
                     >
-                      {s.evidence_status.replace(/_/g, ' ')}
+                      {s.evidence_status === 'NOT_YET_ASSESSED' ? 'NOT ON PROFILE' : s.evidence_status.replace(/_/g, ' ')}
                     </span>
+                    {s.evidence_source && <span className="text-[10px] text-gray-500 block">{s.evidence_source}</span>}
                   </div>
                 ))}
               </div>
 
               <div className="pt-2">
-                <span className="text-xs font-semibold text-blue-900 block">Recommended Preparation:</span>
+                <span className="text-xs font-semibold text-blue-900 block">What to work on:</span>
                 <ul className="list-disc pl-4 text-xs text-blue-800 space-y-0.5 mt-1">
                   {selectedApp.jd_analysis.recommended_preparation.map((prep, pIdx) => (
                     <li key={pIdx}>{prep}</li>
@@ -809,7 +824,7 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
             Add Internship / Job Application
           </h2>
           <form onSubmit={handleCreateApplication} className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-semibold text-[#344054] mb-1">Company Name *</label>
                 <input
@@ -834,7 +849,7 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-semibold text-[#344054] mb-1">Location</label>
                 <input
@@ -856,7 +871,7 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-semibold text-[#344054] mb-1">Posting URL</label>
                 <input
@@ -880,8 +895,22 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
             </div>
 
             <div>
+              <label htmlFor="app-create-status" className="block text-xs font-semibold text-[#344054] mb-1">Where are you with this one?</label>
+              <select
+                id="app-create-status"
+                value={createStatus}
+                onChange={(e) => setCreateStatus(e.target.value as ApplicationStatus)}
+                className="w-full px-3 py-2 text-sm border border-[#D0D5DD] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="SAVED">Saved, not applied yet</option>
+                <option value="APPLIED">I have applied</option>
+              </select>
+              <p className="text-[11px] text-gray-500 mt-1">This tracker only records what you do. It never submits an application for you.</p>
+            </div>
+
+            <div>
               <label className="block text-xs font-semibold text-[#344054] mb-1">
-                Paste Job Description (For Automatic Verified Skill-Gap Matching)
+                Job description (optional; skills it names are compared with your profile)
               </label>
               <textarea
                 placeholder="Paste key qualifications, tech stack, and responsibilities..."
@@ -897,7 +926,7 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
                 Cancel
               </Button>
               <Button type="submit" disabled={isSaving} className="bg-[#2563EB] text-white">
-                {isSaving ? 'Analyzing JD...' : 'Save & Track Application'}
+                {isSaving ? 'Saving...' : 'Save to tracker'}
               </Button>
             </div>
           </form>
@@ -922,7 +951,7 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
             </div>
 
             <form onSubmit={handleSaveEdit} className="space-y-3.5">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1">Company</label>
                   <input
@@ -945,7 +974,7 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1">Location</label>
                   <input
@@ -971,7 +1000,7 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1">Deadline Date</label>
                   <input
@@ -992,7 +1021,7 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1">Recruiter / Contact</label>
                   <input
@@ -1013,6 +1042,16 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
                     className="w-full px-2.5 py-1.5 text-xs border rounded-lg"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Job description (skills it names are compared with your profile)</label>
+                <textarea
+                  rows={3}
+                  value={editFormData.job_description || ''}
+                  onChange={(e) => setEditFormData({ ...editFormData, job_description: e.target.value })}
+                  className="w-full px-2.5 py-1.5 text-xs border rounded-lg"
+                />
               </div>
 
               <div>

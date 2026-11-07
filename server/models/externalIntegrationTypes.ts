@@ -31,6 +31,8 @@ export type ExternalPlatformCategory =
 
 export type ConnectionStatus =
   | 'CONNECTED'
+  /** Profile link saved by the student; ownership not verified, nothing imported. */
+  | 'LINKED'
   | 'DISCONNECTED'
   | 'SYNCING'
   | 'SYNCED'

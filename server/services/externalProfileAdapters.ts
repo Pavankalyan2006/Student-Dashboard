@@ -1,5 +1,5 @@
 // server/services/externalProfileAdapters.ts
-// Platform adapters for real data synchronization, official APIs, and challenge verification
+// Platform adapters. Only GitHub (imported repositories) and Codeforces (official public API) import data.
 
 import {
   ExternalPlatformId,
@@ -7,6 +7,7 @@ import {
 } from '../models/externalProfileTypes';
 import { GitHubService } from './githubService';
 import { logger } from '../core/logging';
+import { fetchOfficialJson, githubVerification, safeFetchText } from './platformVerification';
 
 export interface AdapterSyncResult {
   status: 'SUCCESS' | 'PARTIAL' | 'FAILED' | 'SKIPPED';
@@ -29,7 +30,8 @@ export interface PlatformAdapter {
 }
 
 /**
- * 1. GitHub Adapter (Reuses existing GitHubService)
+ * GitHub: data comes from the repositories the student imported through the GitHub module. Ownership is verified by
+ * GitHub OAuth / access token, or by a challenge code in the public GitHub bio (checked live through the GitHub API).
  */
 export class GitHubAdapter implements PlatformAdapter {
   getPlatformId(): ExternalPlatformId {
@@ -42,132 +44,50 @@ export class GitHubAdapter implements PlatformAdapter {
 
   async sync(studentId: string, profile: StudentExternalProfile): Promise<AdapterSyncResult> {
     try {
-      // Check existing GitHub connection status in GitHubService
-      const ghStatus = await GitHubService.getConnectionStatus(studentId);
-      const username = ghStatus.is_connected && ghStatus.connection?.username ? ghStatus.connection.username : profile.username;
-
-      // List repositories from GitHubService
+      const gh = await githubVerification(studentId);
       const repos = await GitHubService.listRepositories(studentId, {});
-
-      // Calculate languages and stars
       const languages = Array.from(new Set(repos.map((r) => r.language).filter(Boolean)));
-      const totalStars = repos.reduce((acc, r) => acc + (r.stars || 0), 0);
-      const totalForks = repos.reduce((acc, r) => acc + (r.forks || 0), 0);
-
-      const normalizedData = {
-        username,
-        connected_oauth: ghStatus.is_connected,
-        public_repositories: repos.length,
-        primary_languages: languages.slice(0, 5),
-        total_stars: totalStars,
-        total_forks: totalForks,
-        top_repositories: repos.slice(0, 5).map((r) => ({
-          name: r.name,
-          language: r.language,
-          stars: r.stars,
-          description: r.description,
-          url: r.url,
-        })),
-        last_synced: new Date().toISOString(),
-      };
-
       return {
         status: 'SUCCESS',
         fields: ['public_repositories', 'primary_languages', 'total_stars', 'top_repositories'],
-        data: normalizedData,
+        data: {
+          username: gh.username || profile.username,
+          ownership_verified: gh.verified,
+          public_repositories: repos.length,
+          primary_languages: languages.slice(0, 5),
+          total_stars: repos.reduce((acc, r) => acc + (r.stars || 0), 0),
+          total_forks: repos.reduce((acc, r) => acc + (r.forks || 0), 0),
+          top_repositories: repos.slice(0, 5).map((r) => ({ name: r.name, language: r.language, stars: r.stars, description: r.description, url: r.url })),
+          source: 'Repositories imported in the GitHub module',
+          last_synced: new Date().toISOString(),
+        },
         recordsUpdated: repos.length,
       };
     } catch (err: any) {
       logger.warn(`GitHubAdapter sync failed for student ${studentId}: ${err.message}`);
-      return {
-        status: 'FAILED',
-        fields: [],
-        data: {},
-        recordsUpdated: 0,
-        error: err.message || 'GitHub sync failed',
-      };
+      return { status: 'FAILED', fields: [], data: {}, recordsUpdated: 0, error: err.message || 'GitHub sync failed' };
     }
   }
 
   async verifyChallenge(profile: StudentExternalProfile, token: string): Promise<AdapterVerifyResult> {
-    // If connected via OAuth, it's inherently verified
-    if (profile.connection_method === 'OAUTH2') {
-      return { verified: true, message: 'Verified through official GitHub OAuth authentication.' };
-    }
-
-    // In a live environment, this checks the student's public bio or gist for the challenge token
-    // For local testing or challenge completion:
-    if (token) {
-      return {
-        verified: true,
-        message: `Challenge token '${token}' successfully verified on GitHub profile for @${profile.username}.`,
-      };
-    }
-
-    return { verified: false, message: 'Verification token not found on profile.' };
-  }
-}
-
-/**
- * 2. LeetCode Adapter
- */
-export class LeetCodeAdapter implements PlatformAdapter {
-  getPlatformId(): ExternalPlatformId {
-    return 'leetcode';
-  }
-
-  canSync(): boolean {
-    return true;
-  }
-
-  async sync(studentId: string, profile: StudentExternalProfile): Promise<AdapterSyncResult> {
+    const gh = await githubVerification(profile.student_id, profile.username);
+    if (gh.verified) return { verified: true, message: gh.message };
+    if (!token || !profile.username) return { verified: false, message: 'No challenge code to look for.' };
     try {
-      // Deterministic public metrics based on profile username
-      const username = profile.username;
-      const normalizedData = {
-        username,
-        problems_solved_total: 184,
-        easy_solved: 72,
-        medium_solved: 94,
-        hard_solved: 18,
-        contest_rating: 1685,
-        global_rank: 'Top 8.4%',
-        badges_count: 5,
-        streak_days: 28,
-        verified_source: 'PUBLIC_PROFILE_ENDPOINT',
-        last_synced: new Date().toISOString(),
-      };
-
-      return {
-        status: 'SUCCESS',
-        fields: ['problems_solved_total', 'easy_solved', 'medium_solved', 'hard_solved', 'contest_rating', 'global_rank'],
-        data: normalizedData,
-        recordsUpdated: 1,
-      };
+      const user = await fetchOfficialJson(`https://api.github.com/users/${encodeURIComponent(profile.username)}`);
+      const text = [user?.bio, user?.name, user?.blog, user?.company].filter(Boolean).join(' ');
+      return text.includes(token)
+        ? { verified: true, message: `Found the code in the public GitHub profile of @${profile.username}.` }
+        : { verified: false, message: `The code was not found in the bio of @${profile.username}. Save it in your GitHub bio and check again.` };
     } catch (err: any) {
-      return {
-        status: 'FAILED',
-        fields: [],
-        data: {},
-        recordsUpdated: 0,
-        error: err.message,
-      };
+      return { verified: false, message: `GitHub could not be reached (${err.message}), so the profile was not verified.` };
     }
-  }
-
-  async verifyChallenge(profile: StudentExternalProfile, token: string): Promise<AdapterVerifyResult> {
-    if (token) {
-      return {
-        verified: true,
-        message: `Challenge token '${token}' validated in LeetCode public 'About Me' field.`,
-      };
-    }
-    return { verified: false, message: 'Token not detected.' };
   }
 }
 
 /**
- * 3. Codeforces Adapter (Official Public API support)
+ * Codeforces: official public API (https://codeforces.com/apiHelp). Sync reads user.info and user.rating; the challenge
+ * code must be placed in the first name, last name or organisation field of the Codeforces profile.
  */
 export class CodeforcesAdapter implements PlatformAdapter {
   getPlatformId(): ExternalPlatformId {
@@ -178,142 +98,53 @@ export class CodeforcesAdapter implements PlatformAdapter {
     return true;
   }
 
+  private static async userInfo(handle: string): Promise<any> {
+    const r = await fetchOfficialJson(`https://codeforces.com/api/user.info?handles=${encodeURIComponent(handle)}`);
+    if (r?.status !== 'OK' || !Array.isArray(r.result) || !r.result[0]) throw new Error(r?.comment || 'Handle not found');
+    return r.result[0];
+  }
+
   async sync(studentId: string, profile: StudentExternalProfile): Promise<AdapterSyncResult> {
+    if (!profile.username) return { status: 'FAILED', fields: [], data: {}, recordsUpdated: 0, error: 'No Codeforces handle saved.' };
     try {
-      const username = profile.username;
-      // In live environment: fetch(`https://codeforces.com/api/user.info?handles=${username}`)
-      const normalizedData = {
-        username,
-        handle: username,
-        rating: 1420,
-        max_rating: 1485,
-        rank: 'Specialist',
-        max_rank: 'Specialist',
-        contests_participated: 18,
-        organization: 'National Institute of Technology',
+      const u = await CodeforcesAdapter.userInfo(profile.username);
+      const ratingHistory = await fetchOfficialJson(`https://codeforces.com/api/user.rating?handle=${encodeURIComponent(profile.username)}`).catch(() => null);
+      const contests = ratingHistory?.status === 'OK' && Array.isArray(ratingHistory.result) ? ratingHistory.result.length : null;
+      const data: Record<string, any> = {
+        handle: u.handle,
+        rating: u.rating ?? null,
+        max_rating: u.maxRating ?? null,
+        rank: u.rank ?? null,
+        max_rank: u.maxRank ?? null,
+        contests_participated: contests,
+        source: 'Codeforces public API',
         last_synced: new Date().toISOString(),
       };
-
-      return {
-        status: 'SUCCESS',
-        fields: ['rating', 'max_rating', 'rank', 'max_rank', 'contests_participated'],
-        data: normalizedData,
-        recordsUpdated: 1,
-      };
+      return { status: 'SUCCESS', fields: Object.keys(data).filter((k) => data[k] !== null), data, recordsUpdated: 1 };
     } catch (err: any) {
-      return {
-        status: 'FAILED',
-        fields: [],
-        data: {},
-        recordsUpdated: 0,
-        error: err.message,
-      };
+      return { status: 'FAILED', fields: [], data: {}, recordsUpdated: 0, error: `Codeforces could not be read (${err.message}). Nothing was imported.` };
     }
   }
 
   async verifyChallenge(profile: StudentExternalProfile, token: string): Promise<AdapterVerifyResult> {
-    return {
-      verified: true,
-      message: `Codeforces handle '@${profile.username}' verified via challenge token in organization field.`,
-    };
-  }
-}
-
-/**
- * 4. Kaggle Adapter
- */
-export class KaggleAdapter implements PlatformAdapter {
-  getPlatformId(): ExternalPlatformId {
-    return 'kaggle';
-  }
-
-  canSync(): boolean {
-    return true;
-  }
-
-  async sync(studentId: string, profile: StudentExternalProfile): Promise<AdapterSyncResult> {
-    const normalizedData = {
-      username: profile.username,
-      tier: 'Expert',
-      competitions_joined: 4,
-      notebooks_count: 8,
-      datasets_count: 2,
-      medals: { gold: 0, silver: 1, bronze: 3 },
-      featured_notebook: 'Multi-Class Iris Random Forest with 96.7% Accuracy',
-      last_synced: new Date().toISOString(),
-    };
-
-    return {
-      status: 'SUCCESS',
-      fields: ['tier', 'competitions_joined', 'notebooks_count', 'medals'],
-      data: normalizedData,
-      recordsUpdated: 1,
-    };
-  }
-
-  async verifyChallenge(profile: StudentExternalProfile, token: string): Promise<AdapterVerifyResult> {
-    return {
-      verified: true,
-      message: `Kaggle profile '${profile.username}' verified via bio challenge.`,
-    };
-  }
-}
-
-/**
- * 5. LinkedIn Adapter (OAuth or Manual Profile)
- */
-export class LinkedInAdapter implements PlatformAdapter {
-  getPlatformId(): ExternalPlatformId {
-    return 'linkedin';
-  }
-
-  canSync(): boolean {
-    return true;
-  }
-
-  async sync(studentId: string, profile: StudentExternalProfile): Promise<AdapterSyncResult> {
-    if (profile.connection_method === 'OAUTH2') {
-      const normalizedData = {
-        username: profile.username,
-        display_name: profile.display_name || 'B.Tech Student',
-        headline: profile.headline || 'B.Tech Computer Science & AI Candidate',
-        authorized_scopes: ['r_liteprofile', 'r_emailaddress'],
-        last_synced: new Date().toISOString(),
-      };
-      return {
-        status: 'SUCCESS',
-        fields: ['headline', 'display_name'],
-        data: normalizedData,
-        recordsUpdated: 1,
-      };
+    if (!token || !profile.username) return { verified: false, message: 'No challenge code to look for.' };
+    try {
+      const u = await CodeforcesAdapter.userInfo(profile.username);
+      const text = [u.firstName, u.lastName, u.organization].filter(Boolean).join(' ');
+      return text.includes(token)
+        ? { verified: true, message: `Found the code on Codeforces profile ${u.handle}.` }
+        : { verified: false, message: 'The code was not found in your Codeforces first name, last name or organisation. Save it there and check again.' };
+    } catch (err: any) {
+      return { verified: false, message: `Codeforces could not be reached (${err.message}), so the profile was not verified.` };
     }
-
-    // Manual URL: Cannot scrape private LinkedIn data without OAuth
-    return {
-      status: 'SKIPPED',
-      fields: [],
-      data: {
-        profile_url: profile.original_profile_url,
-        notice: 'Manual profile link saved. Detailed employment history requires official LinkedIn OAuth connection.',
-      },
-      recordsUpdated: 0,
-      error: 'Manual profile link saved. API synchronization requires official OAuth authentication.',
-    };
-  }
-
-  async verifyChallenge(profile: StudentExternalProfile): Promise<AdapterVerifyResult> {
-    if (profile.connection_method === 'OAUTH2') {
-      return { verified: true, message: 'Verified via official LinkedIn OAuth.' };
-    }
-    return {
-      verified: false,
-      message: 'Challenge verification is not supported on LinkedIn. Please connect via OAuth or keep as a verified link.',
-    };
   }
 }
 
 /**
- * 6. Generic Manual Link Adapter (For platforms without public API / OAuth)
+ * Every other platform (LeetCode, Kaggle, LinkedIn, HackerRank, ...): there is no official API or OAuth client here, so the
+ * link is saved and nothing is imported. Personal websites and GitHub Pages can be verified with a code on the page.
+ * Earlier versions returned the same invented statistics for every username (184 LeetCode problems, Codeforces rating
+ * 1420, Kaggle Expert) and reported every challenge as verified.
  */
 export class GenericManualLinkAdapter implements PlatformAdapter {
   constructor(private platformId: ExternalPlatformId) {}
@@ -330,28 +161,25 @@ export class GenericManualLinkAdapter implements PlatformAdapter {
     return {
       status: 'SKIPPED',
       fields: [],
-      data: {
-        url: profile.normalized_profile_url,
-        username: profile.username,
-        note: 'Saved as manual profile link. Platform does not offer public programmatic data synchronization.',
-      },
+      data: { url: profile.normalized_profile_url, username: profile.username },
       recordsUpdated: 0,
-      error: 'Platform does not support automated API data synchronization. Profile link is saved.',
+      error: 'This platform has no supported data import here. Your profile link is saved; nothing was imported.',
     };
   }
 
   async verifyChallenge(profile: StudentExternalProfile, token: string): Promise<AdapterVerifyResult> {
-    if (this.platformId === 'portfolio_website' || this.platformId === 'github_pages') {
-      return {
-        verified: true,
-        message: `Challenge token '${token}' validated via verification meta tag on ${profile.normalized_profile_url}.`,
-      };
+    if (this.platformId !== 'portfolio_website' && this.platformId !== 'github_pages') {
+      return { verified: false, message: 'Verification is not available for this platform. The link stays marked as added by you.' };
     }
-
-    return {
-      verified: false,
-      message: `Challenge-based verification is not available for this platform. Link is preserved as manually added.`,
-    };
+    if (!token) return { verified: false, message: 'No challenge code to look for.' };
+    try {
+      const html = await safeFetchText(profile.normalized_profile_url);
+      return html.includes(token)
+        ? { verified: true, message: `Found the code on ${profile.normalized_profile_url}.` }
+        : { verified: false, message: 'The code was not found on the page. Add it (for example in a meta tag) and check again.' };
+    } catch (err: any) {
+      return { verified: false, message: `The page could not be checked (${err.message}), so it was not verified.` };
+    }
   }
 }
 
@@ -363,10 +191,7 @@ export class ExternalProfileAdapterRegistry {
 
   static {
     this.register(new GitHubAdapter());
-    this.register(new LeetCodeAdapter());
     this.register(new CodeforcesAdapter());
-    this.register(new KaggleAdapter());
-    this.register(new LinkedInAdapter());
   }
 
   public static register(adapter: PlatformAdapter): void {

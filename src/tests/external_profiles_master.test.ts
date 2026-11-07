@@ -1,7 +1,7 @@
 // src/tests/external_profiles_master.test.ts
 // Comprehensive Test Suite for External Profiles & Platforms Management
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import {
   SUPPORTED_EXTERNAL_PLATFORMS,
   ExternalProfileValidator,
@@ -171,7 +171,8 @@ describe('External Profiles & Platforms - Comprehensive Test Suite', () => {
       expect(profile.platform_id).toBe('github');
       expect(profile.username).toBe('octocat');
       expect(profile.verification_status).toBe('MANUALLY_ADDED');
-      expect(['CONNECTED', 'SYNCED']).toContain(profile.connection_status);
+      // Phase 3: a saved link is LINKED, not CONNECTED, until ownership is verified.
+      expect(profile.connection_status).toBe('LINKED');
 
       createdProfileId = profile.id;
     });
@@ -215,14 +216,38 @@ describe('External Profiles & Platforms - Comprehensive Test Suite', () => {
       expect(profile.verification_challenge_token).toBe(challenge.token);
     });
 
-    it('checks challenge verification and marks profile VERIFIED when token matches', async () => {
-      const result = await ExternalProfilesService.checkChallengeVerification(
-        testStudentId,
-        createdProfileId
-      );
+    it('does not verify when GitHub cannot be reached or the code is not in the bio', async () => {
+      const down = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('network blocked'));
+      try {
+        const r1 = await ExternalProfilesService.checkChallengeVerification(testStudentId, createdProfileId);
+        expect(r1.verified).toBe(false);
+        expect(r1.message).toContain('could not be reached');
+      } finally {
+        down.mockRestore();
+      }
+      const noCode = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({ login: 'octocat', bio: 'hello' }), { status: 200 }));
+      try {
+        const r2 = await ExternalProfilesService.checkChallengeVerification(testStudentId, createdProfileId);
+        expect(r2.verified).toBe(false);
+        expect(r2.profile.connection_status).toBe('LINKED');
+      } finally {
+        noCode.mockRestore();
+      }
+    });
 
-      expect(result.verified).toBe(true);
-      expect(result.profile.verification_status).toBe('VERIFIED');
+    it('checks challenge verification and marks profile VERIFIED when the code is in the public GitHub bio', async () => {
+      const before = await ExternalProfilesService.getProfileById(testStudentId, createdProfileId);
+      const token = before.verification_challenge_token!;
+      const gh = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({ login: 'octocat', bio: `student ${token}` }), { status: 200 }));
+      try {
+        const result = await ExternalProfilesService.checkChallengeVerification(testStudentId, createdProfileId);
+        expect(String(gh.mock.calls[0][0])).toBe('https://api.github.com/users/octocat');
+        expect(result.verified).toBe(true);
+        expect(result.profile.verification_status).toBe('VERIFIED');
+        expect(result.profile.connection_status).toBe('CONNECTED');
+      } finally {
+        gh.mockRestore();
+      }
     });
 
     it('records sync run and snapshot during profile synchronization', async () => {
