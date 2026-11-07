@@ -294,13 +294,10 @@ export function DocumentsPage({ onNavigate }: DocumentsPageProps) {
             </div>
             <div>
               <h3 className="text-xs font-semibold text-slate-900 flex items-center gap-1.5">
-                Gemini Semantic Document Search & Synthesis
-                <span className="text-[10px] font-mono px-1.5 py-0.2 bg-blue-100 text-blue-700 rounded-full font-medium">
-                  gemini-flash-lite
-                </span>
+                Search and ask across your documents
               </h3>
               <p className="text-[11px] text-slate-500">
-                Ask a concept, theorem, or question to semantically fetch and synthesize answers across all your study materials.
+                Ask a question to find the matching passages in your study materials. An AI summary is added only when the AI provider is configured.
               </p>
             </div>
           </div>

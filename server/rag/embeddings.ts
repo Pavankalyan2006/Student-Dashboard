@@ -5,8 +5,9 @@ export class EmbeddingService {
   private static readonly VECTOR_DIMENSION = 128;
 
   /**
-   * Generates a normalized dense vector embedding for a given text string.
-   * Uses provider if available, with resilient deterministic semantic vector fallback.
+   * Returns a 128-dimension vector for the text. This is a local hashed bag-of-words (words and word pairs),
+   * not a learned semantic embedding: texts match when they share words, not when they mean the same thing.
+   * No embedding provider is called.
    */
   public static async embed(text: string): Promise<number[]> {
     const cleanText = text.trim();
@@ -25,12 +26,12 @@ export class EmbeddingService {
     return Promise.all(texts.map((t) => this.embed(t)));
   }
 
-  private static readonly STOPWORDS = new Set(['what', 'which', 'when', 'where', 'how', 'does', 'explain', 'describe', 'with', 'that', 'this', 'from', 'into', 'about', 'there', 'their', 'have', 'between', 'difference', 'define', 'example', 'give', 'tell', 'work', 'works', 'used', 'using', 'why', 'the', 'and', 'for', 'are', 'can', 'you', 'your']);
+  private static readonly STOPWORDS = new Set(['what', 'which', 'when', 'where', 'how', 'does', 'explain', 'describe', 'with', 'that', 'this', 'from', 'into', 'about', 'there', 'their', 'have', 'between', 'difference', 'define', 'example', 'give', 'tell', 'work', 'works', 'used', 'using', 'why', 'the', 'and', 'for', 'are', 'can', 'you', 'your', 'who', 'its', 'not', 'one', 'two', 'use', 'get', 'has', 'was', 'all', 'any', 'out', 'way', 'own', 'too', 'also', 'than', 'then', 'them', 'they', 'will', 'would', 'should', 'could', 'some', 'more', 'most', 'other', 'such', 'only', 'very', 'just', 'like', 'make', 'does', 'did', 'done', 'into', 'over', 'under', 'what', 'mean', 'means', 'meaning']);
 
-  /** Content words of a text (lower case, 4+ characters, no common question words). */
+  /** Content words of a text (lower case, 3+ characters so acronyms like TLB and TCP count, no common words). */
   public static contentTerms(text: string): Set<string> {
     return new Set(
-      text.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter((w) => w.length >= 4 && !this.STOPWORDS.has(w))
+      text.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter((w) => w.length >= 3 && !this.STOPWORDS.has(w))
     );
   }
 

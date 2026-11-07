@@ -72,10 +72,10 @@ export const KnowledgeSemanticSearch: React.FC<KnowledgeSemanticSearchProps> = (
           <div className="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
             <Search className="w-4 h-4" />
           </div>
-          <h2 className="text-xl font-bold text-white">Semantic Vector Search</h2>
+          <h2 className="text-xl font-bold text-white">Search your documents</h2>
         </div>
         <p className="text-xs text-slate-400 mb-5">
-          Find precise conceptual passages across all your indexed notes and textbooks using dense vector embeddings.
+          Find passages in your indexed notes and textbooks. Matching is by the words they share with your query (a local keyword-vector index, not an AI embedding model), so use the terms your notes use.
         </p>
 
         {/* Search Bar & Filters */}

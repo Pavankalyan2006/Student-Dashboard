@@ -47,6 +47,8 @@ export class DocumentRetrievalService {
     const scoredMap: Map<string, DocumentSearchResult> = new Map();
 
     for (const match of vectorMatches) {
+      // Hashed embeddings can collide; require at least one shared content word (see EmbeddingService).
+      if (!EmbeddingService.sharesContentTerm(query, match.content)) continue;
       let finalScore = match.score;
 
       // Keyword boost for hybrid search
@@ -70,6 +72,15 @@ export class DocumentRetrievalService {
         score: Math.min(1.0, finalScore),
         metadata: match.metadata,
       });
+    }
+
+    // Keyword path: short or acronym-heavy queries can fall under the vector similarity threshold.
+    if (scoredMap.size < topK) {
+      for (const k of VectorStore.keywordSearch(query, { studentId, documentId, documentIds, topK })) {
+        if (scoredMap.has(k.chunkId)) continue;
+        if (pageNumbers && pageNumbers.length > 0 && !pageNumbers.includes(k.pageNumber)) continue;
+        scoredMap.set(k.chunkId, { document_id: k.documentId, page_number: k.pageNumber, chunk_id: k.chunkId, content: k.content, score: k.score, metadata: k.metadata });
+      }
     }
 
     // Fallback: If vector store had few matches, search db chunks directly for keyword hits

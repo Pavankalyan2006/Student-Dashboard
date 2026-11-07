@@ -64,7 +64,7 @@ export const KnowledgeDashboardHeader: React.FC<KnowledgeDashboardHeaderProps> =
             <div>
               <h1 className="text-2xl font-bold text-white tracking-tight">AI Knowledge Base & Library</h1>
               <p className="text-sm text-slate-400">
-                Organize academic resources, perform semantic vector searches, and generate AI-grounded study decks
+                Organize study material, search inside your documents, and ask questions answered from your own files
               </p>
             </div>
           </div>

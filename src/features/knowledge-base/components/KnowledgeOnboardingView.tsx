@@ -56,9 +56,9 @@ export const KnowledgeOnboardingView: React.FC<KnowledgeOnboardingViewProps> = (
           <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center mb-3">
             <Search className="w-4 h-4" />
           </div>
-          <h4 className="text-sm font-semibold text-white mb-1">Semantic Vector Search</h4>
+          <h4 className="text-sm font-semibold text-white mb-1">Search inside documents</h4>
           <p className="text-xs text-slate-400">
-            Find concepts, formulas, and definitions across dozens of PDFs in milliseconds.
+            Find passages that use your search terms across the text of your uploaded files.
           </p>
         </div>
 

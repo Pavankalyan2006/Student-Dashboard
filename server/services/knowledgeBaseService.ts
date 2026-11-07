@@ -7,6 +7,7 @@ import { LearningModulesService } from './learningModulesService';
 import { DocumentProcessingService } from '../processing/processor';
 import { VectorStore } from '../rag/vectorStore';
 import { EmbeddingService } from '../rag/embeddings';
+import { DocumentRetrievalService } from '../rag/retriever';
 import { AIService } from '../ai/service';
 import { AIMessage } from '../ai/provider';
 import { isModelAvailable, requireModelText, rethrowAi } from '../ai/modelOutput';
@@ -419,15 +420,9 @@ export class KnowledgeBaseService {
     let relevantChunks: Array<{ chunkId: string; documentId: string; pageNumber: number; content: string; score: number }> = [];
     if (!scopeDocIds || scopeDocIds.length > 0) {
       try {
-        const queryVector = await EmbeddingService.embed(question);
-        relevantChunks = await VectorStore.search(queryVector, {
-          studentId,
-          documentId: input.document_id,
-          documentIds: scopeDocIds,
-          topK: 12,
-          minScore: 0.15,
-        });
-        relevantChunks = relevantChunks.filter((c) => EmbeddingService.sharesContentTerm(question, c.content)).slice(0, 6);
+        // Hybrid retrieval (vector + keyword), the same retriever the AI tutor uses.
+        const hits = await DocumentRetrievalService.retrieve({ studentId, query: question, documentId: input.document_id, documentIds: scopeDocIds, topK: 6 });
+        relevantChunks = hits.map((h) => ({ chunkId: h.chunk_id, documentId: h.document_id, pageNumber: h.page_number, content: h.content, score: h.score }));
       } catch (err) {
         logger.warn('Vector search failed for a knowledge base question', { error: err });
       }
