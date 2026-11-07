@@ -129,9 +129,6 @@ import {
   SEED_PLACEMENT_ROLES,
   SEED_PLACEMENT_COMPANIES,
   SEED_COMPANY_PROFILES,
-  SEED_MOCK_INTERVIEW_SESSIONS,
-  SEED_MOCK_QUESTIONS,
-  SEED_MOCK_ANSWERS,
   SEED_PLACEMENT_PLANS,
   SEED_PLACEMENT_PLAN_TASKS,
   SEED_GROUP_DISCUSSION_TOPICS,
@@ -196,8 +193,6 @@ import {
   SEED_RESEARCH_METHODOLOGY,
   SEED_RESEARCH_CITATIONS,
   SEED_LITERATURE_REVIEW,
-  SEED_GITHUB_CONNECTION,
-  SEED_GITHUB_REPOSITORIES,
   SEED_REPO_FILES,
   SEED_REPO_COMMITS,
   SEED_REPO_ISSUES,
@@ -2349,19 +2344,7 @@ print(power_mod(2, 10, 1000))  # Output: 24
         tags: ['role', 'placement', r.name.toLowerCase()],
       });
     }
-    for (const sess of SEED_MOCK_INTERVIEW_SESSIONS) {
-      this.mockInterviewSessions.set(sess.id, sess);
-    }
-    for (const mq of SEED_MOCK_QUESTIONS) {
-      const list = this.mockInterviewQuestions.get(mq.session_id) || [];
-      list.push(mq);
-      this.mockInterviewQuestions.set(mq.session_id, list);
-    }
-    for (const ma of SEED_MOCK_ANSWERS) {
-      const list = this.mockInterviewAnswers.get(ma.session_id) || [];
-      list.push(ma);
-      this.mockInterviewAnswers.set(ma.session_id, list);
-    }
+    // No mock interview is seeded: the demo session with an invented score of 82 was removed in Phase 3.
     for (const plan of SEED_PLACEMENT_PLANS) {
       this.placementPlans.set(plan.id, plan);
     }
@@ -2470,20 +2453,8 @@ print(power_mod(2, 10, 1000))  # Output: 24
 
     this.literatureReviews.set(SEED_LITERATURE_REVIEW.research_project_id, SEED_LITERATURE_REVIEW);
 
-    // GitHub Seeds
-    this.githubConnections.set(SEED_GITHUB_CONNECTION.student_id, SEED_GITHUB_CONNECTION);
-
-    for (const repo of SEED_GITHUB_REPOSITORIES) {
-      this.githubRepositories.set(repo.id, repo);
-      this.searchIndex.push({
-        id: repo.id,
-        title: repo.full_name,
-        description: repo.description,
-        type: 'projects',
-        url: `/github/repo/${repo.id}`,
-        tags: ['github', 'repository', repo.language.toLowerCase()],
-      });
-    }
+    // No GitHub connection or repositories are seeded: the demo account's OAuth connection and its repositories
+    // (with stars and commit counts) were invented, so they were removed in Phase 3.
 
     for (const [repoId, files] of Object.entries(SEED_REPO_FILES)) {
       this.githubRepoFiles.set(repoId, [...files]);
@@ -7045,137 +7016,13 @@ print(power_mod(2, 10, 1000))  # Output: 24
     return this.groupDiscussionTopics.get(id) || null;
   }
 
-  public async getMockInterviewSessions(studentId: string, autoSeed: boolean = false): Promise<MockInterviewSession[]> {
+  public async getMockInterviewSessions(studentId: string): Promise<MockInterviewSession[]> {
     await this.initialize();
-    let sessions = Array.from(this.mockInterviewSessions.values())
+    return Array.from(this.mockInterviewSessions.values())
       .filter((s) => s.student_id === studentId)
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    if (sessions.length === 0 && autoSeed) {
-      await this.seedDefaultMockInterview(studentId);
-      sessions = Array.from(this.mockInterviewSessions.values())
-        .filter((s) => s.student_id === studentId)
-        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    }
-    return sessions;
   }
 
-  public async seedDefaultMockInterview(studentId: string): Promise<void> {
-    const sessionId = `mock_seed_demo_${studentId}`;
-    if (this.mockInterviewSessions.has(sessionId)) return;
-
-    const sampleSession: MockInterviewSession = {
-      id: sessionId,
-      student_id: studentId,
-      interview_type: 'TECHNICAL',
-      role_id: 'role_sde',
-      company_id: 'comp_google',
-      difficulty: 'MEDIUM',
-      mode: 'SIMULATION',
-      duration_minutes: 30,
-      status: 'COMPLETED',
-      current_question_index: 2,
-      max_questions: 2,
-      overall_score: 85,
-      created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
-      completed_at: new Date(Date.now() - 2 * 86400000 + 1800000).toISOString(),
-      feedback: {
-        overall_score: 85,
-        summary: 'Excellent demonstration of database indexing and concurrency control concepts. Solid foundational knowledge of system design trade-offs.',
-        topics_covered: ['Database Systems', 'Concurrency & Locks', 'Algorithms'],
-        concepts_explained_well: ['B+ Tree Indexing', 'ACID Transactions', 'Optimistic Locking'],
-        concepts_to_review: ['Distributed Consensus (Raft / Paxos)', 'Database Sharding Hotspots'],
-        communication_observations: [
-          'Articulate explanation of trade-offs between B+ Trees and Hash Indexing.',
-          'Structured answers effectively using technical terminology.',
-        ],
-        technical_gaps: ['Review distributed multi-master replication edge cases.'],
-        concept_coverage_stat: {
-          covered: 4,
-          total: 5,
-          percentage: 80,
-        },
-        recommended_practice: {
-          quizzes: [{ id: 'quiz_dbms_01', title: 'DBMS Transactions & Indexing', topic: 'DBMS' }],
-          dsa_problems: [{ id: 'two_pointers', title: 'Two Pointers Traversal', difficulty: 'MEDIUM' }],
-          coding_challenges: [{ id: 'coding_api_pool', title: 'Connection Pooling' }],
-          courses: [{ id: 'crs_db_04', title: 'Database Systems & Distributed Queries' }],
-        },
-      },
-      feedback_summary: {
-        overall_score: 85,
-        summary: 'Excellent demonstration of database indexing and concurrency control concepts. Solid foundational knowledge of system design trade-offs.',
-        topics_covered: ['Database Systems', 'Concurrency & Locks', 'Algorithms'],
-        concepts_explained_well: ['B+ Tree Indexing', 'ACID Transactions', 'Optimistic Locking'],
-        concepts_to_review: ['Distributed Consensus (Raft / Paxos)', 'Database Sharding Hotspots'],
-        communication_observations: [
-          'Articulate explanation of trade-offs between B+ Trees and Hash Indexing.',
-          'Structured answers effectively using technical terminology.',
-        ],
-        technical_gaps: ['Review distributed multi-master replication edge cases.'],
-        concept_coverage_stat: {
-          covered: 4,
-          total: 5,
-          percentage: 80,
-        },
-        recommended_practice: {
-          quizzes: [{ id: 'quiz_dbms_01', title: 'DBMS Transactions & Indexing', topic: 'DBMS' }],
-          dsa_problems: [{ id: 'two_pointers', title: 'Two Pointers Traversal', difficulty: 'MEDIUM' }],
-          coding_challenges: [{ id: 'coding_api_pool', title: 'Connection Pooling' }],
-          courses: [{ id: 'crs_db_04', title: 'Database Systems & Distributed Queries' }],
-        },
-      },
-    };
-
-    this.mockInterviewSessions.set(sessionId, sampleSession);
-
-    const questions: MockInterviewQuestion[] = [
-      {
-        id: `q_seed_1_${studentId}`,
-        session_id: sessionId,
-        question_number: 1,
-        question: 'Explain how B+ Tree index structures work in relational databases like PostgreSQL, and why they are preferred over Hash Indexes for range queries.',
-        question_type: 'TECHNICAL',
-        topic: 'Database Management Systems',
-        difficulty: 'MEDIUM',
-        expected_concepts: ['B+ Tree Node Fan-out', 'Range Scan Efficiency', 'Leaf Linked List Pointer'],
-        created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
-      },
-      {
-        id: `q_seed_2_${studentId}`,
-        session_id: sessionId,
-        question_number: 2,
-        question: 'What is the difference between Optimistic Concurrency Control (OCC) and Pessimistic Locking in high-throughput transactional backends?',
-        question_type: 'TECHNICAL',
-        topic: 'Concurrency & Transactions',
-        difficulty: 'MEDIUM',
-        expected_concepts: ['Version Check on Commit', 'Lock Overhead vs Conflict Rate', 'Deadlock Avoidance'],
-        created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
-      },
-    ];
-    this.mockInterviewQuestions.set(sessionId, questions);
-
-    const answers: MockInterviewAnswer[] = [
-      {
-        id: `ans_seed_1_${studentId}`,
-        session_id: sessionId,
-        question_id: `q_seed_1_${studentId}`,
-        student_id: studentId,
-        answer_text: 'B+ Trees maintain sorted order with high fan-out, reducing I/O operations. Since the leaf nodes are connected via a bidirectional linked list, range scans like BETWEEN or inequality comparisons require O(log N) search to find the lower bound, followed by sequential traversal through the leaf pointers.',
-        duration_seconds: 120,
-        evaluation: {
-          covered_concepts: ['B+ Tree Node Fan-out', 'Range Scan Efficiency', 'Leaf Linked List Pointer'],
-          missing_concepts: [],
-          strengths: ['Clear explanation of leaf linked lists and range queries', 'Correct complexity notation'],
-          improvements: ['Mention cache-line alignment in modern SSD storage'],
-          score: 90,
-          clarity_feedback: 'Structured and technically precise explanation.',
-          follow_up_needed: false,
-        },
-        created_at: new Date(Date.now() - 2 * 86400000 + 180000).toISOString(),
-      },
-    ];
-    this.mockInterviewAnswers.set(sessionId, answers);
-  }
 
   public async getMockInterviewSessionById(id: string, studentId?: string): Promise<MockInterviewSession | null> {
     await this.initialize();
@@ -11622,6 +11469,30 @@ print(power_mod(2, 10, 1000))  # Output: 24
    * Removes hand-written job listings that older versions seeded, and the "healthy, enabled" flags they gave to sources
    * with no adapter. Called after a snapshot is restored. Returns how many listings were removed.
    */
+  /** Removes demo records with invented facts (connections, scores) that older versions seeded, from a restored snapshot. */
+  public retireFabricatedDemoData(): number {
+    let removed = 0;
+    for (const [id, sess] of this.mockInterviewSessions) {
+      if (id === 'mock_sess_seed_01' || id.startsWith('mock_seed_demo_')) {
+        this.mockInterviewSessions.delete(id);
+        this.mockInterviewQuestions.delete(id);
+        this.mockInterviewAnswers.delete(id);
+        removed++;
+      }
+    }
+    for (const [sid, conn] of this.githubConnections) {
+      if (conn.id === 'gh_conn_01') { this.githubConnections.delete(sid); removed++; }
+    }
+    for (const [id, repo] of this.githubRepositories) {
+      if (repo.github_connection_id === 'gh_conn_01') { this.githubRepositories.delete(id); removed++; }
+    }
+    for (const [sid, list] of this.studentExternalProfiles) {
+      const kept = list.filter((p) => !/^prof_(gh|lc|li|kg)_std_(demo_1|01j8k9x2p4)$/.test(p.id));
+      if (kept.length !== list.length) { removed += list.length - kept.length; this.studentExternalProfiles.set(sid, kept); }
+    }
+    return removed;
+  }
+
   public retireFabricatedJobData(): number {
     let removed = 0;
     for (const [id, job] of this.jobListings) {
@@ -11795,147 +11666,9 @@ print(power_mod(2, 10, 1000))  # Output: 24
   // External Profiles Management Database Access Methods
   // =========================================================================
 
-  private seedExternalProfiles(studentId: string): void {
-    if (studentId !== 'std_demo_1' && studentId !== 'std_01j8k9x2p4') return;
-    if (this.studentExternalProfiles.has(studentId)) return;
-
-    const demoProfiles: StudentExternalProfile[] = [
-      {
-        id: `prof_gh_${studentId}`,
-        student_id: studentId,
-        platform_id: 'github',
-        platform_name: 'GitHub',
-        username: 'aaravsharma-dev',
-        display_name: 'Aarav Sharma',
-        original_profile_url: 'https://github.com/aaravsharma-dev',
-        normalized_profile_url: 'https://github.com/aaravsharma-dev',
-        avatar_url: 'https://avatars.githubusercontent.com/u/10293847?v=4',
-        headline: 'B.Tech CSE Undergraduate | Full-Stack & ML Specialist',
-        bio: 'Passionate about distributed systems, microservices, and AI inference engines.',
-        connection_method: 'OAUTH2',
-        verification_status: 'CONNECTED_OAUTH',
-        connection_status: 'CONNECTED',
-        last_successful_sync: new Date(Date.now() - 3600000 * 2).toISOString(),
-        last_attempted_sync: new Date(Date.now() - 3600000 * 2).toISOString(),
-        sharing_settings: {
-          use_for_resume: true,
-          use_for_career: true,
-          use_for_job_matching: true,
-          use_for_skill_gap: true,
-          include_in_resume_links: true,
-          include_in_public_portfolio: true,
-        },
-        categories: ['DEVELOPER_CODE_HOSTING', 'PORTFOLIO_PROJECT'],
-        data_categories: ['Repositories (14)', 'Stars (42)', 'Languages (Python, TypeScript, Go)'],
-        metrics_summary: {
-          'Public Repositories': 14,
-          'Total Stars': 42,
-          'Primary Language': 'TypeScript',
-        },
-        created_at: new Date(Date.now() - 30 * 86400000).toISOString(),
-        updated_at: new Date(Date.now() - 3600000 * 2).toISOString(),
-      },
-      {
-        id: `prof_lc_${studentId}`,
-        student_id: studentId,
-        platform_id: 'leetcode',
-        platform_name: 'LeetCode',
-        username: 'aarav_code',
-        display_name: 'Aarav Sharma',
-        original_profile_url: 'https://leetcode.com/u/aarav_code',
-        normalized_profile_url: 'https://leetcode.com/u/aarav_code',
-        headline: 'LeetCode Knight | Contest Rating 1685',
-        connection_method: 'PUBLIC_PROFILE_URL',
-        verification_status: 'VERIFIED',
-        connection_status: 'SYNCED',
-        last_successful_sync: new Date(Date.now() - 86400000).toISOString(),
-        last_attempted_sync: new Date(Date.now() - 86400000).toISOString(),
-        sharing_settings: {
-          use_for_resume: true,
-          use_for_career: true,
-          use_for_job_matching: true,
-          use_for_skill_gap: true,
-          include_in_resume_links: true,
-          include_in_public_portfolio: true,
-        },
-        categories: ['CODING_PRACTICE', 'COMPETITIVE_PROGRAMMING'],
-        data_categories: ['Problems Solved (184)', 'Contest Rating (1685)', 'Rank (Top 8.4%)'],
-        metrics_summary: {
-          'Total Solved': 184,
-          'Medium Problems': 94,
-          'Contest Rating': 1685,
-        },
-        created_at: new Date(Date.now() - 25 * 86400000).toISOString(),
-        updated_at: new Date(Date.now() - 86400000).toISOString(),
-      },
-      {
-        id: `prof_li_${studentId}`,
-        student_id: studentId,
-        platform_id: 'linkedin',
-        platform_name: 'LinkedIn',
-        username: 'aarav-sharma-btech',
-        display_name: 'Aarav Sharma',
-        original_profile_url: 'https://www.linkedin.com/in/aarav-sharma-btech',
-        normalized_profile_url: 'https://www.linkedin.com/in/aarav-sharma-btech',
-        headline: 'B.Tech CSE Undergraduate | Software Engineering Intern Aspirant',
-        connection_method: 'OAUTH2',
-        verification_status: 'CONNECTED_OAUTH',
-        connection_status: 'CONNECTED',
-        last_successful_sync: new Date(Date.now() - 12 * 3600000).toISOString(),
-        last_attempted_sync: new Date(Date.now() - 12 * 3600000).toISOString(),
-        sharing_settings: {
-          use_for_resume: true,
-          use_for_career: true,
-          use_for_job_matching: true,
-          use_for_skill_gap: false,
-          include_in_resume_links: true,
-          include_in_public_portfolio: true,
-        },
-        categories: ['PROFESSIONAL_NETWORKING'],
-        data_categories: ['Headline', 'Education Verification', 'Public Profile'],
-        metrics_summary: {
-          'Headline': 'B.Tech CSE Undergraduate',
-          'Status': 'OAuth Connected',
-        },
-        created_at: new Date(Date.now() - 20 * 86400000).toISOString(),
-        updated_at: new Date(Date.now() - 12 * 3600000).toISOString(),
-      },
-      {
-        id: `prof_kg_${studentId}`,
-        student_id: studentId,
-        platform_id: 'kaggle',
-        platform_name: 'Kaggle',
-        username: 'aarav_ml',
-        display_name: 'Aarav Sharma',
-        original_profile_url: 'https://www.kaggle.com/aarav_ml',
-        normalized_profile_url: 'https://www.kaggle.com/aarav_ml',
-        headline: 'Kaggle Notebooks Expert | 1 Silver Medal',
-        connection_method: 'PUBLIC_PROFILE_URL',
-        verification_status: 'VERIFIED',
-        connection_status: 'SYNCED',
-        last_successful_sync: new Date(Date.now() - 3600000 * 5).toISOString(),
-        last_attempted_sync: new Date(Date.now() - 3600000 * 5).toISOString(),
-        sharing_settings: {
-          use_for_resume: true,
-          use_for_career: true,
-          use_for_job_matching: true,
-          use_for_skill_gap: true,
-          include_in_resume_links: true,
-          include_in_public_portfolio: true,
-        },
-        categories: ['DESIGN_DATA_SPECIALIZED', 'CODING_PRACTICE'],
-        data_categories: ['Notebooks Expert', 'Datasets (2)', 'Silver Medal (1)'],
-        metrics_summary: {
-          'Tier': 'Expert',
-          'Notebooks': 8,
-          'Silver Medals': 1,
-        },
-        created_at: new Date(Date.now() - 15 * 86400000).toISOString(),
-        updated_at: new Date(Date.now() - 3600000 * 5).toISOString(),
-      },
-    ];
-    this.studentExternalProfiles.set(studentId, demoProfiles);
-  }
+  /** Demo accounts used to get GitHub/LinkedIn "CONNECTED_OAUTH" and LeetCode/Kaggle "VERIFIED" profiles with invented
+   *  stats. Nothing is seeded now; a profile exists only when the student adds it. */
+  private seedExternalProfiles(_studentId: string): void {}
 
   public async getExternalProfiles(studentId: string): Promise<StudentExternalProfile[]> {
     await this.initialize();

@@ -73,8 +73,12 @@ async function setupPersistence() {
   registerPersistentSource('sqlLab', SqlLabSandboxService as unknown as Record<string, any>, ['studentDbImages', 'queryHistories', 'savedQueries']);
   registerPersistentSource('semesterCommandCenter', semesterStateStore as unknown as Record<string, any>, ['states']);
   restoreSnapshot();
+  const retiredDemo = db.retireFabricatedDemoData();
+  if (retiredDemo) logger.info(`Removed ${retiredDemo} demo record(s) with invented connections or scores left by an earlier version`);
   const retiredJobs = db.retireFabricatedJobData();
   if (retiredJobs) logger.info(`Removed ${retiredJobs} hand-written job listing(s) left by an earlier version`);
+  const retiredApps = LearningModulesService.retireSeededApplications();
+  if (retiredApps) logger.info(`Removed ${retiredApps} sample application(s) left by an earlier version`);
   const file = getSnapshotPath();
   logger.info(file ? `Data persistence enabled: ${file}` : 'Data persistence disabled (DATA_PERSISTENCE=off)');
 

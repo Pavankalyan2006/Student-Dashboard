@@ -9,8 +9,11 @@ describe('Phase 3 application tracker', () => {
     await db.initialize();
     (db as any).studentSkills.set(sid, [
       { id: 'ss1', student_id: sid, skill_id: 'sk_py', skill_name: 'Python', category: 'PROGRAMMING', source: 'PROJECT', evidence_count: 2, proficiency: 'INTERMEDIATE', confidence: 'MEDIUM', last_updated_at: '' },
-      { id: 'ss2', student_id: sid, skill_id: 'sk_sql', skill_name: 'SQL', category: 'DATABASE', source: 'STUDENT_DECLARED', evidence_count: 0, proficiency: 'BEGINNER', confidence: 'LOW', last_updated_at: '' },
+      { id: 'ss2', student_id: sid, skill_id: 'sk_sql', skill_name: 'SQL', category: 'DATABASE', source: 'STUDENT_DECLARED', evidence_count: 1, proficiency: 'BEGINNER', confidence: 'LOW', last_updated_at: '' },
     ]);
+    // Python has project evidence; SQL only a self-declaration, which must not count as evidence.
+    await db.saveSkillEvidence({ id: 'ev_p3_py', student_skill_id: 'ss1', student_id: sid, skill_id: 'sk_py', source_type: 'PROJECT', source_id: 'proj_x', description: 'Used in a project', created_at: '' } as any);
+    await db.saveSkillEvidence({ id: 'ev_p3_sql', student_skill_id: 'ss2', student_id: sid, skill_id: 'sk_sql', source_type: 'STUDENT_DECLARED', source_id: 'user_profile', description: 'Self-declared', created_at: '' } as any);
   });
 
   it('a new application has no invented location, deadline, notes or skill analysis', async () => {
@@ -55,5 +58,15 @@ describe('Phase 3 application tracker', () => {
     await expect(LearningModulesService.getApplicationById('std_p3_apps_b', a.id)).rejects.toMatchObject({ statusCode: 404 });
     await expect(LearningModulesService.updateApplication('std_p3_apps_b', a.id, { notes: 'x' })).rejects.toMatchObject({ statusCode: 404 });
     await expect(LearningModulesService.deleteApplication('std_p3_apps_b', a.id)).rejects.toMatchObject({ statusCode: 404 });
+  });
+});
+
+describe('Phase 3: no seeded applications', () => {
+  it('the demo accounts start with an empty tracker and old sample entries are removed', async () => {
+    expect(await LearningModulesService.getApplications('std_01j8k9x2p4')).toEqual([]);
+    expect(await LearningModulesService.getApplications('std_demo_1')).toEqual([]);
+    (LearningModulesService as any).applications.set('app_google_swe_std_x', { id: 'app_google_swe_std_x', student_id: 'std_x', created_at: '' });
+    expect(LearningModulesService.retireSeededApplications()).toBe(1);
+    expect(await LearningModulesService.getApplications('std_x')).toEqual([]);
   });
 });

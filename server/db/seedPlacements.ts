@@ -911,11 +911,9 @@ export const SEED_PLACEMENT_PLAN_TASKS: PlacementPlanTask[] = [
     category: 'PROJECT_INTERVIEW',
     scheduled_week: 2,
     scheduled_date: '2026-03-10',
-    status: 'COMPLETED',
+    status: 'PENDING',
     source_type: 'MOCK_INTERVIEW',
-    source_id: 'mock_sess_seed_01',
     created_at: '2026-03-01T00:00:00.000Z',
-    completed_at: '2026-03-10T14:25:00.000Z',
   },
 ];
 

@@ -117,3 +117,24 @@ describe('Phase 3: no demo connections or sample provider data', () => {
     }
   });
 });
+
+describe('Phase 3: the seeded demo login has no invented connections or scores', () => {
+  it('no external profiles, GitHub connection, repositories or scored mock interview for std_01j8k9x2p4', async () => {
+    const { db } = await import('../../server/db/database');
+    await db.initialize();
+    expect(await db.getExternalProfiles('std_01j8k9x2p4')).toEqual([]);
+    expect(await db.getGitHubConnection('std_01j8k9x2p4')).toBeNull();
+    expect(await db.getGitHubRepositories('std_01j8k9x2p4')).toEqual([]);
+    expect(await db.getMockInterviewSessions('std_01j8k9x2p4')).toEqual([]);
+  });
+
+  it('retireFabricatedDemoData removes such records left in an old snapshot', async () => {
+    const { db } = await import('../../server/db/database');
+    (db as any).mockInterviewSessions.set('mock_sess_seed_01', { id: 'mock_sess_seed_01', student_id: 'std_01j8k9x2p4', created_at: '' });
+    (db as any).githubConnections.set('std_01j8k9x2p4', { id: 'gh_conn_01', student_id: 'std_01j8k9x2p4', is_connected: true });
+    (db as any).studentExternalProfiles.set('std_01j8k9x2p4', [{ id: 'prof_li_std_01j8k9x2p4' }, { id: 'prof_kept' }]);
+    expect(db.retireFabricatedDemoData()).toBe(3);
+    expect((await db.getExternalProfiles('std_01j8k9x2p4')).map((p: any) => p.id)).toEqual(['prof_kept']);
+    (db as any).studentExternalProfiles.delete('std_01j8k9x2p4');
+  });
+});

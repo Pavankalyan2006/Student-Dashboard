@@ -54,7 +54,7 @@ Restart between `create` and `verify` to prove persistence.
 - 2026-11-07 07:30 Applications and Placement Prep done (P3-059..P3-066, commit 771f53a). JD analysis now compares
   catalogue skills named in the JD with the student's own skills; inputs validated; placement scores and recommendations
   come from real records; AI coach/STAR are model-only; 32 questions added (bank 36); four unreachable fake pages deleted.
-- 2026-11-07 09:50 Connected Platforms and Jobs Discovery done (P3-067..P3-081). **P0 P3-067**: every external-profiles
+- 2026-11-07 09:30 Connected Platforms and Jobs Discovery done (P3-067..P3-081). **P0 P3-067**: every external-profiles
   route read `req.user.id` (undefined) and fell back to `std_demo_1`, so all students shared one set of profiles; now
   `req.user!.userId`. New status LINKED; CONNECTED only after GitHub OAuth/token or a live challenge check (Codeforces
   official API, portfolio pages via an SSRF-safe fetch). Demo seed connections, sample activity, evidence, jobs and the
@@ -69,3 +69,11 @@ Restart between `create` and `verify` to prove persistence.
   `phase3-batch4-ui.cjs` 6 pages x 2 widths: no "Connected" claims for an unverified student, no overflow, no page errors,
   no 5xx (`evidence/batch4-ui.txt`, `b4-*.png`). Live GitHub/Codeforces/Remotive checks BLOCKED (no outbound access here;
   the failure path was exercised). Tests 928/928, tsc 0. Batch 4 complete. Next: Batch 5.
+- 2026-11-07 09:50 Batch 5 checks. Route sweep (`phase3-unauth-sweep.cjs`): 859 routes, 800 need sign-in, the 59 open
+  ones are health, auth and catalogue reads. Responsive (`phase3-responsive.cjs`): 14 module pages x 390/768/1366, 42/42
+  with no overflow, page error or API 5xx. Integration (`phase3-integration.cjs`) 13/13 after fixing P3-082. The seeded
+  demo login still showed fake Connected/Verified profiles, a GitHub OAuth connection, a mock interview scored 82 and
+  three invented applications (P3-083..P3-087): seeds removed, old snapshots purged on start
+  (`db.retireFabricatedDemoData`, `LearningModulesService.retireSeededApplications`); `phase3-demo-account.cjs` 6/6.
+  Full regression (`phase3-regression.sh`): tsc 0, vitest 931/931, vite build OK, Phase 3 batches 1-4 create and verify
+  all PASS, Phase 1/2 probes 0 FAIL (`evidence/batch5-regression.txt`).

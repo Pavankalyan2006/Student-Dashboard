@@ -693,108 +693,8 @@ export class LearningModulesService {
       updated_at: new Date().toISOString(),
     });
 
-    // 9. Internship Applications
-    const appId = 'app_google_swe_' + studentId;
-    this.applications.set(appId, {
-      id: appId,
-      student_id: studentId,
-      company_name: 'Google',
-      role: 'Software Engineering Intern (Summer 2026)',
-      location: 'Bengaluru / Hyderabad, India',
-      application_date: new Date(Date.now() - 10 * 86400000).toISOString().split('T')[0],
-      deadline: new Date(Date.now() + 5 * 86400000).toISOString().split('T')[0],
-      application_url: 'https://careers.google.com/jobs/results/12345',
-      status: 'TECHNICAL_ROUND',
-      salary_range: '₹1,20,000/month + housing stipend',
-      interview_date: new Date(Date.now() + 4 * 86400000).toISOString(),
-      contact_person: 'Priya Sen (University Talent Recruiter)',
-      notes: 'Cleared initial screening and coding assessment. Round 1 technical interview scheduled on Trees, Graphs, and System Optimization.',
-      resume_version_name: 'Pavan_BTech_Software_SWE_2026.pdf',
-      timeline: [
-        { id: 'ev_1', title: 'Application Submitted Online', date: new Date(Date.now() - 10 * 86400000).toISOString().split('T')[0], status: 'APPLIED', notes: 'Tailored resume emphasizing distributed systems & Go.' },
-        { id: 'ev_2', title: 'Online Coding Assessment (OA)', date: new Date(Date.now() - 5 * 86400000).toISOString().split('T')[0], status: 'ASSESSMENT', notes: 'Completed 2 LeetCode Medium problems (DP and Topological Sort) with all test cases passed.' },
-        { id: 'ev_3', title: 'Technical Interview Round 1', date: new Date(Date.now() + 4 * 86400000).toISOString().split('T')[0], status: 'TECHNICAL_ROUND', notes: 'Focus areas: Graph algorithms, concurrency, and clean OOP design.' },
-      ],
-      jd_analysis: {
-        required_skills: [
-          { name: 'Data Structures & Algorithms', evidence_status: 'EVIDENCE_AVAILABLE', evidence_source: 'DSA Lab 92% mastery & LeetCode tracking' },
-          { name: 'C++ or Go or Python', evidence_status: 'EVIDENCE_AVAILABLE', evidence_source: 'Distributed Key-Value Store project in Go' },
-          { name: 'Database Systems & SQL', evidence_status: 'DEVELOPING', evidence_source: 'DBMS Lab & university coursework' },
-          { name: 'Large-scale Distributed Systems', evidence_status: 'DEVELOPING', evidence_source: 'System Design Lab TinyURL practice' },
-        ],
-        readiness_percent: 85,
-        recommended_preparation: [
-          'Revise graph traversal (Dijkstra and Topological Sort).',
-          'Review Go goroutines, channels, and race condition detection.',
-          'Practice explaining time and space complexity trade-offs out loud.',
-        ],
-      },
-      created_at: new Date(Date.now() - 10 * 86400000).toISOString(),
-      updated_at: new Date().toISOString(),
-    });
-
-    const msftAppId = 'app_microsoft_sde_' + studentId;
-    this.applications.set(msftAppId, {
-      id: msftAppId,
-      student_id: studentId,
-      company_name: 'Microsoft',
-      role: 'Software Engineering Intern - Cloud & AI',
-      location: 'Hyderabad / Bengaluru, India',
-      application_date: new Date(Date.now() - 25 * 86400000).toISOString().split('T')[0],
-      deadline: new Date(Date.now() - 15 * 86400000).toISOString().split('T')[0],
-      application_url: 'https://careers.microsoft.com/us/en/job/1598234',
-      status: 'OFFER',
-      salary_range: '₹1,25,000/month + relocation',
-      interview_date: new Date(Date.now() - 5 * 86400000).toISOString(),
-      contact_person: 'Rahul Verma (University Talent Advisor)',
-      notes: 'Cleared technical and hiring manager rounds. Received official offer letter for summer internship!',
-      resume_version_name: 'Pavan_BTech_Software_SWE_2026.pdf',
-      timeline: [
-        { id: 'msft_ev_1', title: 'Application Submitted', date: new Date(Date.now() - 25 * 86400000).toISOString().split('T')[0], status: 'APPLIED' },
-        { id: 'msft_ev_2', title: 'Coding Assessment Completed', date: new Date(Date.now() - 18 * 86400000).toISOString().split('T')[0], status: 'ASSESSMENT' },
-        { id: 'msft_ev_3', title: 'Technical Rounds (DSA & Architecture)', date: new Date(Date.now() - 10 * 86400000).toISOString().split('T')[0], status: 'TECHNICAL_ROUND' },
-        { id: 'msft_ev_4', title: 'Official Offer Extended', date: new Date(Date.now() - 3 * 86400000).toISOString().split('T')[0], status: 'OFFER', notes: 'Acceptance deadline: 2 weeks.' },
-      ],
-      jd_analysis: {
-        required_skills: [
-          { name: 'C# / Java / C++ or Go', evidence_status: 'EVIDENCE_AVAILABLE', evidence_source: 'Coursework & verified projects' },
-          { name: 'Cloud Computing & Distributed Systems', evidence_status: 'EVIDENCE_AVAILABLE', evidence_source: 'Distributed Key-Value Store' },
-          { name: 'Data Structures & Algorithms', evidence_status: 'EVIDENCE_AVAILABLE', evidence_source: '90%+ Mastery in DSA Lab' },
-        ],
-        readiness_percent: 92,
-        recommended_preparation: ['Prepare onboarding documentation.'],
-      },
-      created_at: new Date(Date.now() - 25 * 86400000).toISOString(),
-      updated_at: new Date().toISOString(),
-    });
-
-    const amzAppId = 'app_amazon_sde_' + studentId;
-    this.applications.set(amzAppId, {
-      id: amzAppId,
-      student_id: studentId,
-      company_name: 'Amazon',
-      role: 'SDE Intern (2026 Batch)',
-      location: 'Hyderabad / Chennai, India',
-      application_date: new Date(Date.now() - 2 * 86400000).toISOString().split('T')[0],
-      deadline: new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0],
-      application_url: 'https://amazon.jobs/en/jobs/2591823',
-      status: 'APPLIED',
-      salary_range: '₹1,10,000/month',
-      notes: 'Applied via student career portal referral. Awaiting OA link.',
-      timeline: [
-        { id: 'amz_ev_1', title: 'Application Submitted Online', date: new Date(Date.now() - 2 * 86400000).toISOString().split('T')[0], status: 'APPLIED' },
-      ],
-      jd_analysis: {
-        required_skills: [
-          { name: 'Object-Oriented Programming (OOP)', evidence_status: 'EVIDENCE_AVAILABLE', evidence_source: 'Java OOP Lab Coursework' },
-          { name: 'Data Structures & Algorithms', evidence_status: 'EVIDENCE_AVAILABLE', evidence_source: 'DSA Lab Verification' },
-        ],
-        readiness_percent: 88,
-        recommended_preparation: ['Review Amazon Leadership Principles with STAR format examples.'],
-      },
-      created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
-      updated_at: new Date().toISOString(),
-    });
+    // 9. Internship applications: none are seeded, not even for the demo accounts. Earlier versions added Google,
+    // Microsoft and Amazon applications with invented statuses, interview rounds and readiness scores.
   }
 
   // ==========================================
@@ -2056,17 +1956,22 @@ Output JSON format:
   // ==========================================
   // 10. Internship Tracker Methods
   // ==========================================
+  /** Removes the sample applications earlier versions seeded for demo accounts from a restored snapshot. */
+  public static retireSeededApplications(): number {
+    let removed = 0;
+    for (const id of Array.from(this.applications.keys())) {
+      if (/^app_(google_swe|microsoft_sde|amazon_sde)_/.test(id)) {
+        this.applications.delete(id);
+        removed++;
+      }
+    }
+    return removed;
+  }
+
   public static async getApplications(studentId: string): Promise<InternshipApplication[]> {
-    let studentApps = Array.from(this.applications.values())
+    return Array.from(this.applications.values())
       .filter((a) => a.student_id === studentId)
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    if (studentApps.length === 0) {
-      this.seedDemoData(studentId);
-      studentApps = Array.from(this.applications.values())
-        .filter((a) => a.student_id === studentId)
-        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    }
-    return studentApps;
   }
 
   public static async getApplicationById(studentId: string, appId: string): Promise<InternshipApplication> {
@@ -2132,12 +2037,16 @@ Output JSON format:
     const named = catalogue.filter((sk) => skillMatches(sk.name, [jd]));
     if (named.length === 0) return undefined;
     const mine = await db.getStudentSkills(studentId);
+    // A self-declaration is recorded as an evidence item; it is not evidence, so it is not counted here.
+    const evidence = (await db.getSkillEvidence(studentId)).filter((e) => e.source_type !== 'STUDENT_DECLARED');
     const required_skills = named.map((sk) => {
       const held = mine.find((m) => m.skill_id === sk.id || skillMatches(sk.name, [m.skill_name]));
-      if (held && held.evidence_count > 0) {
-        return { name: sk.name, evidence_status: 'EVIDENCE_AVAILABLE' as const, evidence_source: `${held.evidence_count} evidence item(s) on your profile (${held.source})` };
+      const items = held ? evidence.filter((e) => e.skill_id === held.skill_id) : [];
+      if (held && items.length > 0) {
+        const kinds = Array.from(new Set(items.map((e) => String(e.source_type).toLowerCase().replace(/_/g, ' '))));
+        return { name: sk.name, evidence_status: 'EVIDENCE_AVAILABLE' as const, evidence_source: `${items.length} evidence item(s): ${kinds.join(', ')}` };
       }
-      if (held) return { name: sk.name, evidence_status: 'DEVELOPING' as const, evidence_source: 'On your profile, no evidence recorded yet' };
+      if (held) return { name: sk.name, evidence_status: 'DEVELOPING' as const, evidence_source: held.source === 'STUDENT_DECLARED' ? 'Declared on your profile; no evidence recorded yet' : 'On your profile, no evidence recorded yet' };
       return { name: sk.name, evidence_status: 'NOT_YET_ASSESSED' as const, evidence_source: 'Not on your profile' };
     });
     const withEvidence = required_skills.filter((r) => r.evidence_status === 'EVIDENCE_AVAILABLE').length;
