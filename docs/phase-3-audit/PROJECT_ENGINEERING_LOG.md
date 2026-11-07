@@ -34,3 +34,7 @@ Restart between `create` and `verify` to prove persistence.
   Evidence: `scripts/audit/phase3-batch2.cjs create` 31/31, `verify` after restart 8/8 (`evidence/batch2-*.txt`),
   screenshots `evidence/gitlab-1366.png`, `gitlab-390.png`. Tests 883/883, tsc 0.
   Next: Knowledge Base (Batch 2 last module).
+- 2026-11-07 05:25 Knowledge Base done (P3-032..P3-039). Root causes: bare-base64 uploads were parsed as text, and the
+  vector store was not persisted. Answers are now grounded or say NO_SOURCES; extractive mode without AI. Batch 2 evidence:
+  `phase3-batch2.cjs create` 49/49, `verify` after restart 12/12. Tests 888/888, tsc 0. Batch 2 complete.
+  Next: Batch 3 (RAG, Career, Resume).
