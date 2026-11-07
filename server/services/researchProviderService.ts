@@ -19,6 +19,11 @@ export interface ResearchPaperSearchResult {
   total: number;
   provider: PaperProvider;
   query: string;
+  /** LIVE: fetched from the provider just now. CURATED: the small offline list built into the app. */
+  source?: 'LIVE' | 'CURATED';
+  /** Why live search was not used (provider unreachable, error status), when source is CURATED. */
+  live_error?: string;
+  source_note?: string;
 }
 
 export class ResearchProviderService {
@@ -36,7 +41,7 @@ export class ResearchProviderService {
       venue: 'Advances in Neural Information Processing Systems (NeurIPS 2017)',
       doi: '10.48550/arXiv.1706.03762',
       url: 'https://arxiv.org/abs/1706.03762',
-      provider: 'OPENALEX',
+      provider: 'CURATED',
       external_id: 'openalex_W2964344043',
       citation_count: 98500,
       metadata: {
@@ -54,7 +59,7 @@ export class ResearchProviderService {
       venue: 'Advances in Neural Information Processing Systems (NeurIPS 2020)',
       doi: '10.48550/arXiv.2005.11401',
       url: 'https://arxiv.org/abs/2005.11401',
-      provider: 'SEMANTIC_SCHOLAR',
+      provider: 'CURATED',
       external_id: 'corpus_6b349195b4c10c',
       citation_count: 3420,
       metadata: {
@@ -72,7 +77,7 @@ export class ResearchProviderService {
       venue: 'International Conference on Learning Representations (ICLR 2024)',
       doi: '10.48550/arXiv.2310.11511',
       url: 'https://arxiv.org/abs/2310.11511',
-      provider: 'OPENALEX',
+      provider: 'CURATED',
       external_id: 'openalex_W4388123940',
       citation_count: 615,
       metadata: {
@@ -90,7 +95,7 @@ export class ResearchProviderService {
       venue: 'IEEE Transactions on Pattern Analysis and Machine Intelligence (TPAMI)',
       doi: '10.1109/TPAMI.2018.2889473',
       url: 'https://ieeexplore.ieee.org/document/8594636',
-      provider: 'CROSSREF',
+      provider: 'CURATED',
       external_id: 'crossref_10.1109/TPAMI.2018.2889473',
       citation_count: 2890,
       metadata: {
@@ -108,7 +113,7 @@ export class ResearchProviderService {
       venue: 'USENIX Symposium on Networked Systems Design and Implementation (NSDI 12)',
       doi: '10.5555/2228298.2228301',
       url: 'https://www.usenix.org/conference/nsdi12/technical-sessions/presentation/zaharia',
-      provider: 'CROSSREF',
+      provider: 'CURATED',
       external_id: 'crossref_nsdi12_zaharia',
       citation_count: 14200,
       metadata: {
@@ -126,7 +131,7 @@ export class ResearchProviderService {
       venue: 'ACM Transactions on Computer Systems (TOCS)',
       doi: '10.1145/2491245',
       url: 'https://dl.acm.org/doi/10.1145/2491245',
-      provider: 'OPENALEX',
+      provider: 'CURATED',
       external_id: 'openalex_W2165039238',
       citation_count: 5310,
       metadata: {
@@ -144,7 +149,7 @@ export class ResearchProviderService {
       venue: 'USENIX Annual Technical Conference (USENIX ATC 14)',
       doi: '10.5555/2643634.2643666',
       url: 'https://www.usenix.org/conference/atc14/technical-sessions/presentation/ongaro',
-      provider: 'CROSSREF',
+      provider: 'CURATED',
       external_id: 'crossref_atc14_ongaro',
       citation_count: 6780,
       metadata: {
@@ -173,10 +178,89 @@ export class ResearchProviderService {
     },
   ];
 
+  /** Rebuilds an OpenAlex abstract from its inverted index. */
+  private static abstractFromIndex(idx?: Record<string, number[]>): string {
+    if (!idx) return '';
+    const words: string[] = [];
+    for (const [w, positions] of Object.entries(idx)) for (const p of positions) words[p] = w;
+    return words.filter(Boolean).join(' ');
+  }
+
   /**
-   * Search academic papers across providers with filtering
+   * Live search on OpenAlex (free scholarly API, no key). Every field comes from the API response;
+   * nothing is filled in. Throws when OpenAlex cannot be reached or answers with an error.
+   */
+  public static async searchOpenAlex(params: PaperSearchParams): Promise<ResearchPaper[]> {
+    const filters: string[] = [];
+    const minYear = params.year_min ?? params.yearStart;
+    const maxYear = params.year_max ?? params.yearEnd;
+    if (minYear) filters.push(`from_publication_date:${Number(minYear)}-01-01`);
+    if (maxYear) filters.push(`to_publication_date:${Number(maxYear)}-12-31`);
+    if (params.author) filters.push(`raw_author_name.search:${String(params.author).replace(/[,|]/g, ' ')}`);
+    const q = [params.query, params.domain, params.venue].filter(Boolean).join(' ').trim();
+    const url = new URL('https://api.openalex.org/works');
+    if (q) url.searchParams.set('search', q);
+    if (filters.length) url.searchParams.set('filter', filters.join(','));
+    url.searchParams.set('per-page', String(Math.min(25, params.limit || 10)));
+    if (process.env.OPENALEX_MAILTO) url.searchParams.set('mailto', process.env.OPENALEX_MAILTO);
+    const res = await fetch(url.toString(), { headers: { Accept: 'application/json', 'User-Agent': 'BTech-Student-AI-Platform/1.0' }, signal: AbortSignal.timeout(10000) });
+    if (!res.ok) throw new Error(`OpenAlex answered ${res.status}`);
+    const body: any = await res.json();
+    const now = new Date().toISOString();
+    return (Array.isArray(body?.results) ? body.results : []).map((w: any, i: number) => ({
+      id: `paper_oa_${String(w.id || i).split('/').pop()}`,
+      research_project_id: '',
+      student_id: '',
+      title: w.display_name || w.title || '(untitled)',
+      abstract: this.abstractFromIndex(w.abstract_inverted_index),
+      authors: (w.authorships || []).map((a: any) => a?.author?.display_name).filter(Boolean),
+      publication_year: Number(w.publication_year) || 0,
+      venue: w.primary_location?.source?.display_name || '',
+      doi: w.doi ? String(w.doi).replace(/^https?:\/\/doi\.org\//, '') : undefined,
+      url: w.doi || w.primary_location?.landing_page_url || w.id,
+      provider: 'OPENALEX' as PaperProvider,
+      external_id: w.id,
+      citation_count: Number(w.cited_by_count) || 0,
+      is_saved: false,
+      metadata: { open_access: Boolean(w.open_access?.is_oa), type: w.type, retrieved_at: now, source: 'LIVE' },
+      created_at: now,
+    }));
+  }
+
+  /**
+   * Search academic papers. Tries live OpenAlex first; when it cannot be reached the small curated list
+   * is searched instead and the result says so (source CURATED, live_error). Earlier versions searched
+   * only the curated list and labelled the results as OpenAlex.
    */
   public static async searchPapers(
+    first: string | PaperSearchParams,
+    second?: string,
+    third?: PaperSearchParams
+  ): Promise<ResearchPaperSearchResult> {
+    const params: PaperSearchParams = typeof first === 'object' && first !== null ? first : third || { query: '' };
+    let liveError: string | undefined;
+    if (process.env.RESEARCH_LIVE_SEARCH !== 'off' && params.provider !== 'CURATED') {
+      try {
+        const papers = await this.searchOpenAlex(params);
+        return { papers, total: papers.length, provider: 'OPENALEX', query: params.query || '', source: 'LIVE' };
+      } catch (err: any) {
+        liveError = `OpenAlex could not be searched (${err?.name === 'TimeoutError' ? 'timeout' : err?.message || 'network error'}).`;
+        logger.warn('Live paper search failed; using the curated list', { error: liveError });
+      }
+    } else {
+      liveError = 'Live search is turned off on this server.';
+    }
+    const curated = await this.searchCurated(first, second, third);
+    return {
+      ...curated,
+      provider: 'CURATED',
+      source: 'CURATED',
+      live_error: liveError,
+      source_note: 'Results come from a small curated list of well-known papers built into the app. Citation counts are approximate snapshots, not live data.',
+    };
+  }
+
+  private static async searchCurated(
     first: string | PaperSearchParams,
     second?: string,
     third?: PaperSearchParams
@@ -241,6 +325,8 @@ export class ResearchProviderService {
         const matchYearStart = minYear === undefined || p.publication_year >= minYear;
         const matchYearEnd = maxYear === undefined || p.publication_year <= maxYear;
 
+        const matchAuthor = !authorLower || p.authors.some((a) => a.toLowerCase().includes(authorLower));
+        if (!matchAuthor) return false;
         const wordHit = words.some(
           (w) =>
             p.title.toLowerCase().includes(w) ||
@@ -274,7 +360,7 @@ export class ResearchProviderService {
     return {
       papers: formattedPapers,
       total: matched.length,
-      provider: params.provider || 'OPENALEX',
+      provider: 'CURATED',
       query: rawQuery,
     };
   }

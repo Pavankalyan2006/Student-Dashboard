@@ -16,7 +16,8 @@ export type PaperProvider =
   | 'CROSSREF'
   | 'SEMANTIC_SCHOLAR'
   | 'MANUAL'
-  | 'PDF_UPLOAD';
+  | 'PDF_UPLOAD'
+  | 'CURATED';
 
 export type QuestionCategory =
   | 'PRIMARY'
@@ -74,6 +75,10 @@ export interface ResearchPaper {
   external_id?: string;
   citation_count: number;
   is_saved: boolean;
+  /** The student's own reading notes and status (Phase 3). */
+  notes?: string;
+  reading_status?: 'TO_READ' | 'READING' | 'READ';
+  updated_at?: string;
   metadata: Record<string, any>;
   created_at: string;
 }

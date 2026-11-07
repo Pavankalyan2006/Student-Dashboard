@@ -43,7 +43,7 @@ researchRouter.post('/', requireAuth, async (req: Request, res: Response) => {
     res.status(201).json({ success: true, data: project });
   } catch (err: any) {
     logger.error('Failed to create research project', { error: err.message });
-    res.status(err.status || 400).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 400).json({ success: false, message: err.message });
   }
 });
 
@@ -54,7 +54,26 @@ researchRouter.get('/papers/:paper_id', requireAuth, async (req: Request, res: R
     const paper = await ResearchService.getPaper(req.params.paper_id, studentId);
     res.json({ success: true, data: paper });
   } catch (err: any) {
-    res.status(err.status || 404).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 404).json({ success: false, message: err.message });
+  }
+});
+
+researchRouter.patch('/papers/:paper_id', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const paper = await ResearchService.updatePaperNotes(req.params.paper_id, req.user!.userId, { notes: req.body?.notes, reading_status: req.body?.reading_status });
+    res.json({ success: true, data: paper });
+  } catch (err: any) {
+    res.status(err.statusCode || err.status || 500).json({ success: false, message: err.message, code: err.code });
+  }
+});
+
+researchRouter.delete('/papers/:paper_id', requireAuth, async (req: Request, res: Response) => {
+  try {
+    await ResearchService.getPaper(req.params.paper_id, req.user!.userId); // owner check
+    const deleted = await ResearchService.deletePaper(req.params.paper_id, req.user!.userId);
+    res.json({ success: true, data: { deleted } });
+  } catch (err: any) {
+    res.status(err.statusCode || err.status || 500).json({ success: false, message: err.message, code: err.code });
   }
 });
 
@@ -115,7 +134,7 @@ researchRouter.get('/:id', requireAuth, async (req: Request, res: Response) => {
     const project = await ResearchService.getProject(req.params.id, studentId);
     res.json({ success: true, data: project });
   } catch (err: any) {
-    res.status(err.status || 404).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 404).json({ success: false, message: err.message });
   }
 });
 
@@ -125,7 +144,7 @@ researchRouter.patch('/:id', requireAuth, async (req: Request, res: Response) =>
     const updated = await ResearchService.updateProject(req.params.id, studentId, req.body);
     res.json({ success: true, data: updated });
   } catch (err: any) {
-    res.status(err.status || 400).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 400).json({ success: false, message: err.message });
   }
 });
 
@@ -156,6 +175,7 @@ researchRouter.get('/:id/papers', requireAuth, async (req: Request, res: Respons
 researchRouter.post('/:id/papers/search', requireAuth, async (req: Request, res: Response) => {
   try {
     const { query, author, year_min, year_max, domain, venue } = req.body;
+    const project = await ResearchService.getProject(req.params.id, req.user!.userId); // owner check
     const results = await ResearchProviderService.searchPapers({
       query: query || '',
       author,
@@ -165,6 +185,10 @@ researchRouter.post('/:id/papers/search', requireAuth, async (req: Request, res:
       venue,
       limit: 20,
     });
+    // Search history is kept on the project (last 20 searches) so it survives a reload.
+    const history = Array.isArray((project as any).search_history) ? (project as any).search_history : [];
+    history.unshift({ query: query || '', author, year_min, year_max, domain, venue, source: results.source, results_count: results.papers.length, searched_at: new Date().toISOString() });
+    await ResearchService.updateProject(req.params.id, req.user!.userId, { search_history: history.slice(0, 20) } as any);
     res.json({ success: true, data: results });
   } catch (err: any) {
     res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
@@ -190,7 +214,7 @@ researchRouter.post('/:id/papers/import', requireAuth, async (req: Request, res:
 
     return res.status(400).json({ success: false, message: 'Either document_id or paper object must be provided' });
   } catch (err: any) {
-    res.status(err.status || 400).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 400).json({ success: false, message: err.message });
   }
 });
 
@@ -214,7 +238,7 @@ researchRouter.post('/:id/questions', requireAuth, async (req: Request, res: Res
     const question = await ResearchService.addQuestion(req.params.id, studentId, req.body);
     res.status(201).json({ success: true, data: question });
   } catch (err: any) {
-    res.status(err.status || 400).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 400).json({ success: false, message: err.message });
   }
 });
 
@@ -244,7 +268,7 @@ researchRouter.post('/:id/gaps', requireAuth, async (req: Request, res: Response
     const gap = await ResearchService.addGap(req.params.id, studentId, req.body);
     res.status(201).json({ success: true, data: gap });
   } catch (err: any) {
-    res.status(err.status || 400).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 400).json({ success: false, message: err.message });
   }
 });
 
@@ -274,7 +298,7 @@ researchRouter.post('/:id/ideas', requireAuth, async (req: Request, res: Respons
     const idea = await ResearchService.addIdea(req.params.id, studentId, req.body);
     res.status(201).json({ success: true, data: idea });
   } catch (err: any) {
-    res.status(err.status || 400).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 400).json({ success: false, message: err.message });
   }
 });
 
@@ -298,7 +322,7 @@ researchRouter.patch('/:id/methodology', requireAuth, async (req: Request, res: 
     const methodology = await ResearchService.saveMethodology(req.params.id, studentId, req.body);
     res.json({ success: true, data: methodology });
   } catch (err: any) {
-    res.status(err.status || 400).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 400).json({ success: false, message: err.message });
   }
 });
 
@@ -337,7 +361,7 @@ researchRouter.patch('/:id/literature-review', requireAuth, async (req: Request,
     const review = await ResearchService.saveLiteratureReview(req.params.id, studentId, req.body);
     res.json({ success: true, data: review });
   } catch (err: any) {
-    res.status(err.status || 400).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 400).json({ success: false, message: err.message });
   }
 });
 
@@ -367,7 +391,7 @@ researchRouter.post('/:id/citations', requireAuth, async (req: Request, res: Res
     );
     res.status(201).json({ success: true, data: citation });
   } catch (err: any) {
-    res.status(err.status || 400).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 400).json({ success: false, message: err.message });
   }
 });
 

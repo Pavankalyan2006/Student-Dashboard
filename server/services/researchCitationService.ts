@@ -71,6 +71,10 @@ export class ResearchCitationService {
     if (!paper) {
       throw new NotFoundError(`Research paper '${paperId}' not found`);
     }
+    // The citation always goes into the paper's own project (the URL project id was not owner-checked).
+    if (projectId && projectId !== paper.research_project_id) {
+      throw new NotFoundError(`Research paper '${paperId}' is not in this project`);
+    }
 
     const formatted = this.formatCitation(paper, style);
     const bibtex = this.toBibTeX(paper);
@@ -78,7 +82,7 @@ export class ResearchCitationService {
     const citation: ResearchCitation = {
       id: `cite_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
       student_id: studentId,
-      research_project_id: projectId || paper.research_project_id,
+      research_project_id: paper.research_project_id,
       paper_id: paper.id,
       source_type: 'PAPER',
       citation_style: style,

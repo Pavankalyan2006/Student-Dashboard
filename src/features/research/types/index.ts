@@ -57,10 +57,14 @@ export interface ResearchPaper {
   venue: string;
   doi?: string;
   url?: string;
-  provider: 'OPENALEX' | 'CROSSREF' | 'SEMANTIC_SCHOLAR' | 'PUBMED' | 'PDF_UPLOAD' | 'MANUAL';
+  provider: 'OPENALEX' | 'CROSSREF' | 'SEMANTIC_SCHOLAR' | 'PUBMED' | 'PDF_UPLOAD' | 'MANUAL' | 'CURATED';
   external_id?: string;
   citation_count: number;
   is_saved: boolean;
+  /** The student's own reading notes and status (Phase 3). */
+  notes?: string;
+  reading_status?: 'TO_READ' | 'READING' | 'READ';
+  updated_at?: string;
   metadata?: {
     is_peer_reviewed?: boolean;
     open_access?: boolean;

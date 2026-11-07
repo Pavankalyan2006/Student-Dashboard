@@ -27,6 +27,59 @@ interface PapersPanelProps {
   papers: ResearchPaper[];
 }
 
+/** The student's own reading notes and status for a saved paper, stored on the server. */
+const PaperNotes: React.FC<{ paper: ResearchPaper; projectId: string }> = ({ paper, projectId }) => {
+  const qc = useQueryClient();
+  const [notes, setNotes] = useState(paper.notes || '');
+  const [status, setStatus] = useState<'TO_READ' | 'READING' | 'READ'>(paper.reading_status || 'TO_READ');
+  const [saving, setSaving] = useState(false);
+  const save = async () => {
+    setSaving(true);
+    try {
+      await researchApi.updatePaperNotes(paper.id, { notes, reading_status: status });
+      await qc.invalidateQueries({ queryKey: ['research-papers', projectId] });
+      toast.success('Notes saved');
+    } catch (err: any) {
+      toast.error(err?.message || 'Could not save notes');
+    } finally {
+      setSaving(false);
+    }
+  };
+  const remove = async () => {
+    if (!window.confirm('Remove this paper from the project? Its notes will be deleted too.')) return;
+    try {
+      await researchApi.deletePaper(paper.id);
+      await qc.invalidateQueries({ queryKey: ['research-papers', projectId] });
+      toast.success('Paper removed');
+    } catch (err: any) {
+      toast.error(err?.message || 'Could not remove the paper');
+    }
+  };
+  return (
+    <div className="pt-3 border-t border-slate-100 space-y-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <label htmlFor={`status-${paper.id}`} className="text-xs font-semibold text-slate-700">Reading status</label>
+        <select id={`status-${paper.id}`} value={status} onChange={(e) => setStatus(e.target.value as any)} className="text-xs border border-slate-200 rounded-lg px-2 py-1">
+          <option value="TO_READ">To read</option>
+          <option value="READING">Reading</option>
+          <option value="READ">Read</option>
+        </select>
+      </div>
+      <label htmlFor={`notes-${paper.id}`} className="sr-only">Your notes</label>
+      <textarea id={`notes-${paper.id}`} value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} maxLength={20000}
+        placeholder="Your notes on this paper" className="w-full text-xs border border-slate-200 rounded-lg p-2" />
+      <div className="flex gap-2">
+        <button onClick={save} disabled={saving} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-900 text-white disabled:opacity-50 cursor-pointer">
+          {saving ? 'Saving...' : 'Save notes'}
+        </button>
+        <button onClick={remove} className="px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-200 text-rose-600 hover:bg-rose-50 cursor-pointer">
+          Remove paper
+        </button>
+      </div>
+    </div>
+  );
+};
+
 export const PapersPanel: React.FC<PapersPanelProps> = ({ projectId, papers }) => {
   const qc = useQueryClient();
   const importMutation = useImportPaper(projectId);
@@ -36,6 +89,7 @@ export const PapersPanel: React.FC<PapersPanelProps> = ({ projectId, papers }) =
   const [venueFilter, setVenueFilter] = useState('');
   const [yearMin, setYearMin] = useState<number | undefined>();
   const [searchResults, setSearchResults] = useState<ResearchPaper[]>([]);
+  const [searchSource, setSearchSource] = useState<{ source?: string; note?: string; error?: string } | null>(null);
   const [isSearching, setIsSearching] = useState(false);
 
   // Analysis state
@@ -68,6 +122,7 @@ export const PapersPanel: React.FC<PapersPanelProps> = ({ projectId, papers }) =
         year_min: yearMin,
       });
       setSearchResults(res.papers);
+      setSearchSource({ source: res.source, note: res.source_note, error: res.live_error });
       if (res.papers.length === 0) {
         toast.info('No papers found for this search. Try broader keywords.');
       }
@@ -209,7 +264,9 @@ export const PapersPanel: React.FC<PapersPanelProps> = ({ projectId, papers }) =
         {searchResults.length > 0 && (
           <div className="pt-4 border-t border-slate-100 space-y-3">
             <div className="flex items-center justify-between text-xs">
-              <span className="font-bold text-slate-700">Discovered Papers ({searchResults.length})</span>
+              <span className="font-bold text-slate-700">
+                {searchSource?.source === 'LIVE' ? 'OpenAlex results' : 'Curated list results'} ({searchResults.length})
+              </span>
               <button
                 onClick={() => setSearchResults([])}
                 className="text-slate-400 hover:text-slate-600 cursor-pointer"
@@ -218,6 +275,11 @@ export const PapersPanel: React.FC<PapersPanelProps> = ({ projectId, papers }) =
               </button>
             </div>
 
+            {searchSource?.source === 'CURATED' && (
+              <p role="status" className="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-2">
+                {searchSource.error ? `${searchSource.error} ` : ''}{searchSource.note}
+              </p>
+            )}
             <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
               {searchResults.map((p) => {
                 const isSaved = papers.some((saved) => saved.title.toLowerCase() === p.title.toLowerCase());
@@ -324,7 +386,13 @@ export const PapersPanel: React.FC<PapersPanelProps> = ({ projectId, papers }) =
                     </div>
                   </div>
 
-                  <p className="text-xs text-slate-600 leading-relaxed">{p.abstract}</p>
+                  <p className="text-xs text-slate-600 leading-relaxed">{p.abstract || 'No abstract available for this paper.'}</p>
+                  {p.url && (
+                    <a href={p.url} target="_blank" rel="noopener noreferrer" className="text-xs font-medium text-indigo-600 hover:underline">
+                      Open source page
+                    </a>
+                  )}
+                  <PaperNotes paper={p} projectId={projectId} />
                 </div>
               );
             })}
