@@ -40,7 +40,7 @@ externalProfilesRouter.post('/validate-url', async (req: Request, res: Response)
     const result = ExternalProfilesService.validateProfileUrl(platform_id, url);
     return res.json({ success: true, ...result });
   } catch (err: any) {
-    return res.status(400).json({ success: false, error: err.message });
+    return res.status(err.statusCode && err.statusCode < 500 ? err.statusCode : 400).json({ success: false, error: err.message, code: err.code });
   }
 });
 
@@ -54,7 +54,7 @@ externalProfilesRouter.get('/stats', requireAuth, async (req: Request, res: Resp
     const stats = await ExternalProfilesService.getDashboardStats(studentId);
     return res.json({ success: true, stats });
   } catch (err: any) {
-    return res.status(500).json({ success: false, error: err.message });
+    return res.status(err.statusCode && err.statusCode < 500 ? err.statusCode : 500).json({ success: false, error: err.message, code: err.code });
   }
 });
 
@@ -69,7 +69,7 @@ externalProfilesRouter.get('/consented-summary', requireAuth, async (req: Reques
     const summary = await ExternalProfilesService.getConsentedProfileSummary(studentId, context);
     return res.json({ success: true, summary });
   } catch (err: any) {
-    return res.status(500).json({ success: false, error: err.message });
+    return res.status(err.statusCode && err.statusCode < 500 ? err.statusCode : 500).json({ success: false, error: err.message, code: err.code });
   }
 });
 
@@ -83,7 +83,7 @@ externalProfilesRouter.get('/', requireAuth, async (req: Request, res: Response)
     const profiles = await ExternalProfilesService.getStudentProfiles(studentId);
     return res.json({ success: true, profiles });
   } catch (err: any) {
-    return res.status(500).json({ success: false, error: err.message });
+    return res.status(err.statusCode && err.statusCode < 500 ? err.statusCode : 500).json({ success: false, error: err.message, code: err.code });
   }
 });
 
@@ -115,7 +115,7 @@ externalProfilesRouter.post('/sync-all', requireAuth, async (req: Request, res: 
     const result = await ExternalProfilesService.syncAllEligibleProfiles(studentId);
     return res.json({ success: true, ...result });
   } catch (err: any) {
-    return res.status(500).json({ success: false, error: err.message });
+    return res.status(err.statusCode && err.statusCode < 500 ? err.statusCode : 500).json({ success: false, error: err.message, code: err.code });
   }
 });
 
@@ -132,7 +132,7 @@ externalProfilesRouter.get('/:id', requireAuth, async (req: Request, res: Respon
     if (err instanceof NotFoundError) {
       return res.status(404).json({ success: false, error: err.message });
     }
-    return res.status(500).json({ success: false, error: err.message });
+    return res.status(err.statusCode && err.statusCode < 500 ? err.statusCode : 500).json({ success: false, error: err.message, code: err.code });
   }
 });
 
@@ -152,7 +152,7 @@ externalProfilesRouter.patch('/:id', requireAuth, async (req: Request, res: Resp
     if (err instanceof NotFoundError) {
       return res.status(404).json({ success: false, error: err.message });
     }
-    return res.status(500).json({ success: false, error: err.message });
+    return res.status(err.statusCode && err.statusCode < 500 ? err.statusCode : 500).json({ success: false, error: err.message, code: err.code });
   }
 });
 
@@ -169,7 +169,7 @@ externalProfilesRouter.delete('/:id', requireAuth, async (req: Request, res: Res
     if (err instanceof NotFoundError) {
       return res.status(404).json({ success: false, error: err.message });
     }
-    return res.status(500).json({ success: false, error: err.message });
+    return res.status(err.statusCode && err.statusCode < 500 ? err.statusCode : 500).json({ success: false, error: err.message, code: err.code });
   }
 });
 
@@ -183,7 +183,7 @@ externalProfilesRouter.post('/:id/disconnect', requireAuth, async (req: Request,
     await ExternalProfilesService.disconnectProfile(studentId, req.params.id);
     return res.json({ success: true, message: 'External profile disconnected' });
   } catch (err: any) {
-    return res.status(500).json({ success: false, error: err.message });
+    return res.status(err.statusCode && err.statusCode < 500 ? err.statusCode : 500).json({ success: false, error: err.message, code: err.code });
   }
 });
 
@@ -197,7 +197,7 @@ externalProfilesRouter.post('/:id/sync', requireAuth, async (req: Request, res: 
     const result = await ExternalProfilesService.syncProfile(studentId, req.params.id);
     return res.json({ success: true, ...result });
   } catch (err: any) {
-    return res.status(500).json({ success: false, error: err.message });
+    return res.status(err.statusCode && err.statusCode < 500 ? err.statusCode : 500).json({ success: false, error: err.message, code: err.code });
   }
 });
 
@@ -211,7 +211,7 @@ externalProfilesRouter.post('/:id/verify-challenge/start', requireAuth, async (r
     const challenge = await ExternalProfilesService.startChallengeVerification(studentId, req.params.id);
     return res.json({ success: true, challenge });
   } catch (err: any) {
-    return res.status(400).json({ success: false, error: err.message });
+    return res.status(err.statusCode && err.statusCode < 500 ? err.statusCode : 400).json({ success: false, error: err.message, code: err.code });
   }
 });
 
@@ -225,7 +225,7 @@ externalProfilesRouter.post('/:id/verify-challenge/check', requireAuth, async (r
     const result = await ExternalProfilesService.checkChallengeVerification(studentId, req.params.id);
     return res.json({ success: true, ...result });
   } catch (err: any) {
-    return res.status(400).json({ success: false, error: err.message });
+    return res.status(err.statusCode && err.statusCode < 500 ? err.statusCode : 400).json({ success: false, error: err.message, code: err.code });
   }
 });
 
@@ -239,6 +239,6 @@ externalProfilesRouter.get('/:id/history', requireAuth, async (req: Request, res
     const history = await ExternalProfilesService.getProfileHistory(studentId, req.params.id);
     return res.json({ success: true, history });
   } catch (err: any) {
-    return res.status(500).json({ success: false, error: err.message });
+    return res.status(err.statusCode && err.statusCode < 500 ? err.statusCode : 500).json({ success: false, error: err.message, code: err.code });
   }
 });

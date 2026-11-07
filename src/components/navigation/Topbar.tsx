@@ -38,7 +38,7 @@ export function Topbar({ currentPath, onNavigate }: TopbarProps) {
   const breadcrumbs = getBreadcrumbs();
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-[#E4E7EC] bg-white/95 px-4 sm:px-6 backdrop-blur-md">
+    <header className="print:hidden sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-[#E4E7EC] bg-white/95 px-4 sm:px-6 backdrop-blur-md">
       {/* Left zone: Mobile trigger & Breadcrumbs */}
       <div className="flex items-center gap-3 min-w-0">
         <button

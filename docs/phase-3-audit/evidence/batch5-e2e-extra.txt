@@ -1,0 +1,17 @@
+PASS  E2E9 add education  -- 200
+PASS  E2E9 add skills  -- 200
+PASS  E2E9 add project  -- 200
+PASS  E2E9 preview shows education, skills and project  -- 
+PASS  E2E9 printed PDF contains the resume content  -- 204750 bytes
+PASS  E2E9 printed PDF has no app navigation chrome
+PASS  E2E9 B cannot read A's resume  -- 403
+PASS  E2E11 plan created for a real role  -- 201 5 tasks
+PASS  E2E11 unknown role refused (no "Software Engineer" fallback)
+PASS  E2E11 B cannot read A's plan
+PASS  E2E12 link Codeforces profile: saved, not CONNECTED, sync failure explained  -- FAILED Codeforces could not be read (fetch failed). Nothing was imported.
+PASS  E2E12 verification challenge issued  -- 200
+PASS  E2E12 live check cannot reach Codeforces here: not verified, says why  -- 200 {"success":true,"verified":false,"message":"Codeforces could not be reached (fetch failed), so the profile was not verif
+PASS  E2E12 disconnect  -- DISCONNECTED
+PASS  E2E12 B cannot disconnect A's profile
+
+15/15 PASS

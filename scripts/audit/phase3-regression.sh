@@ -18,3 +18,4 @@ for b in 1 2 3 4; do echo "## phase3 batch$b verify after restart"; STATE=$S/b$b
 for b in 1 2 5; do echo "## phase2 batch$b verify after restart"; STATE=$S/p2b$b.json node scripts/audit/phase2-batch$b.cjs verify > $S/v.txt 2>&1; echo "PASS $(grep -c 'PASS' $S/v.txt) FAIL $(grep -c 'FAIL' $S/v.txt)"; done
 echo "## integration"; node scripts/audit/phase3-integration.cjs 2>&1 | grep -E "^FAIL |PASS$"
 echo "## demo account"; node scripts/audit/phase3-demo-account.cjs 2>&1 | grep -E "^FAIL |PASS$"
+echo "## e2e extra (resume PDF export, placement plan, platform disconnect)"; node scripts/audit/phase3-e2e-extra.cjs 2>&1 | grep -E "^FAIL |PASS$"
