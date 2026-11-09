@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { healthRouter } from './routes/health';
+import { pilotFeedbackRouter } from './routes/pilotFeedback';
 import { authRouter } from './routes/auth';
 import { studentsRouter } from './routes/students';
 import { notificationsRouter } from './routes/notifications';
@@ -81,6 +82,8 @@ apiV1Router.use('/', externalIntegrationsRouter);
 apiV1Router.use('/', semesterCommandCenterRouter);
 apiV1Router.use('/', systemDesignRouter);
 apiV1Router.use('/', gateRouter);
+// Phase 6: private pilot feedback (own entries only; no admin route).
+apiV1Router.use('/', pilotFeedbackRouter);
 
 // Dedicated AI Mock Interview Endpoints
 import { mockInterviewsRouter } from './routes/mockInterviews';

@@ -2,6 +2,15 @@ import * as React from 'react';
 import { GraduationCap, Target, UserCog } from 'lucide-react';
 import type { DashboardProfileContext } from '../types/dashboard';
 
+const SECTION_LABELS: Record<string, string> = {
+  account: 'Account',
+  academic: 'Academic profile',
+  skills: 'Technical skills',
+  experience: 'Projects and experience',
+  career: 'Career goals',
+  learning: 'Learning preferences',
+};
+
 /**
  * Phase 5: shows what the platform knows about the student, straight from the central profile.
  * Missing values are shown as "Not set" with a link to fill them in; nothing is assumed.
@@ -37,7 +46,12 @@ export function DashboardProfileSummary({ profile, onNavigate }: { profile: Dash
           <span className="text-sm font-semibold text-[#101828]">{profile.completion_percentage}%</span>
         </div>
         {profile.incomplete_sections.length > 0 && (
-          <p className="text-xs text-[#475467]">To finish: {profile.incomplete_sections.join(', ')}</p>
+          // Phase 6 (P6-004): the raw section keys read as unfinished required work right after a
+          // completed registration. Once registration is complete, what is left is optional.
+          <p className="text-xs text-[#475467]">
+            {profile.onboarding_completed ? 'Optional details you can still add: ' : 'Still to fill in: '}
+            {profile.incomplete_sections.map((k) => SECTION_LABELS[k] || k).join(', ')}
+          </p>
         )}
         <button onClick={() => onNavigate(profile.onboarding_completed ? '/profile/edit' : '/onboarding')} className="text-xs font-semibold text-[#1570EF] hover:underline">
           {profile.onboarding_completed ? 'Update profile' : 'Continue registration'}

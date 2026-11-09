@@ -7376,9 +7376,33 @@ print(power_mod(2, 10, 1000))  # Output: 24
     return this.skills.get(id) || null;
   }
 
+  /**
+   * Phase 6 (P6-002): skills a student enters in registration / Student Profile live in the
+   * central profile, not in this store, so career, resume, jobs, progress and AI tools saw
+   * "no skills". The profile service registers a provider; its skills are merged here as
+   * STUDENT_DECLARED / NOT_ASSESSED entries (read-only copies, never written to this store),
+   * and only when no skill with the same name is already recorded here.
+   */
+  private declaredSkillsProvider: ((studentId: string) => StudentSkill[]) | null = null;
+
+  public setDeclaredSkillsProvider(fn: ((studentId: string) => StudentSkill[]) | null): void {
+    this.declaredSkillsProvider = fn;
+  }
+
   public async getStudentSkills(studentId: string): Promise<StudentSkill[]> {
     await this.initialize();
-    return this.studentSkills.get(studentId) || [];
+    const stored = this.studentSkills.get(studentId) || [];
+    if (!this.declaredSkillsProvider) return stored;
+    let declared: StudentSkill[] = [];
+    try {
+      declared = this.declaredSkillsProvider(studentId);
+    } catch {
+      return stored;
+    }
+    if (!declared.length) return stored;
+    const have = new Set(stored.map((s) => s.skill_name.trim().toLowerCase()));
+    const extra = declared.filter((d) => !have.has(d.skill_name.trim().toLowerCase()));
+    return extra.length ? [...stored, ...extra] : stored;
   }
 
   public async saveStudentSkill(skill: StudentSkill): Promise<void> {

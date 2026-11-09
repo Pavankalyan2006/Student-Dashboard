@@ -5,6 +5,7 @@
 // modules (semester centre, AI context, resume, planner...) keep reading synchronously; they are
 // written only after the Postgres transaction commits.
 import { db } from '../../db/database';
+import type { StudentSkill } from '../../models/careerResumeTypes';
 import { onboardingStores } from '../onboardingService';
 import type {
   CareerGoals,
@@ -550,3 +551,42 @@ function syncSyllabusSubjects(studentId: string, a: AcademicSection, prevEdu?: E
     updated_at: now,
   });
 }
+
+// Phase 6 (P6-002): expose the profile's declared skills to every module that reads
+// db.getStudentSkills (career, resume, jobs match, progress, AI tools). Read-only copies.
+const DECLARED_CATEGORY: Record<string, StudentSkill['category']> = {
+  PROGRAMMING_LANGUAGE: 'PROGRAMMING',
+  FRONTEND: 'WEB',
+  BACKEND: 'WEB',
+  DATABASE: 'DATABASE',
+  AI_ML: 'AI_ML',
+  CLOUD: 'CLOUD',
+  DEVELOPER_TOOLS: 'DEVOPS',
+  TESTING: 'SOFTWARE_ENGINEERING',
+  OTHER: 'DOMAIN',
+};
+
+export function declaredProfileSkills(studentId: string): StudentSkill[] {
+  const assessment: StudentSkillsAssessment | undefined = onboardingStores.skillsAssessments.get(studentId);
+  if (!assessment?.skills?.length) return [];
+  const updated = assessment.updated_at || new Date(0).toISOString();
+  return assessment.skills
+    .filter((s) => s.skill_name && s.self_reported_level !== 'NOT_STARTED')
+    .map((s) => {
+      const slug = s.skill_name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      return {
+        id: `decl_${studentId}_${slug}`,
+        student_id: studentId,
+        skill_id: `declared:${slug}`,
+        skill_name: s.skill_name.trim(),
+        category: DECLARED_CATEGORY[normalizeCategory(s.skill_category)] || 'DOMAIN',
+        source: 'STUDENT_DECLARED' as const,
+        evidence_count: 0,
+        proficiency: levelToProficiency(s.self_reported_level),
+        confidence: 'NOT_ASSESSED' as const,
+        last_updated_at: updated,
+      };
+    });
+}
+
+db.setDeclaredSkillsProvider(declaredProfileSkills);

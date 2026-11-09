@@ -660,6 +660,22 @@ export function ProfileSettingsPage({
               />
             </div>
 
+            {/* Phase 6: private pilot feedback, problem reports and privacy concerns */}
+            <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h4 className="text-xs font-bold text-[#101828]">Pilot feedback and privacy concerns</h4>
+                <p className="text-[11px] text-[#667085]">
+                  Send private feedback, report a problem, or raise a privacy or security concern. Only you can see what you sent, and you can withdraw it.
+                </p>
+              </div>
+              <button
+                onClick={() => onNavigate?.('/pilot-feedback')}
+                className="px-3.5 py-1.5 text-xs font-semibold text-[#344054] bg-white border border-slate-200 hover:bg-slate-50 rounded-xl shrink-0"
+              >
+                Open pilot feedback
+              </button>
+            </div>
+
             {/* Data Export section */}
             <div className="p-4 rounded-xl border border-blue-200 bg-blue-50/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>

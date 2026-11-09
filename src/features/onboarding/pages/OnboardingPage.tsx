@@ -325,7 +325,8 @@ function Shell({ step, completed, skipped, onJump, children }: { step: number; c
   return (
     <div className="min-h-screen bg-[#F9FAFB] py-8 px-4">
       <div className="max-w-5xl mx-auto grid md:grid-cols-[240px_1fr] gap-6">
-        <nav aria-label="Registration steps" className="bg-white rounded-xl border border-[#EAECF0] p-4 h-fit">
+        {/* Phase 6 (P6-005): on phones the step list filled the first screen and pushed the form below the fold; it now follows the form there. */}
+        <nav aria-label="Registration steps" className="order-2 md:order-1 bg-white rounded-xl border border-[#EAECF0] p-4 h-fit">
           <p className="text-xs font-semibold text-[#667085] mb-3">Student registration</p>
           <ol className="space-y-1">
             {REGISTRATION_STEPS.map((s) => {
@@ -348,7 +349,7 @@ function Shell({ step, completed, skipped, onJump, children }: { step: number; c
             })}
           </ol>
         </nav>
-        <main className="bg-white rounded-xl border border-[#EAECF0] p-5 sm:p-6">{children}</main>
+        <main className="order-1 md:order-2 bg-white rounded-xl border border-[#EAECF0] p-5 sm:p-6">{children}</main>
       </div>
     </div>
   );
