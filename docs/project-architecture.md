@@ -123,3 +123,11 @@ sequenceDiagram
 3. **Tool Registry (`server/ai/tools.ts`)**:
    - Provides safe, sandboxed tools: `get_student_context`, `get_semester_subjects`, `get_syllabus_topics`, `get_weak_topics`, `generate_quiz`, `create_note`, `schedule_revision`, `create_study_plan`.
    - Enforces ownership checks on every tool execution.
+
+---
+
+## Phase 5 update (2026-11-09)
+
+Registration and the student profile now go through one central service (`server/services/studentProfile/`) with the
+profile context API at `/api/v1/profile/me/*`. Firebase Authentication can replace the email/password provider when
+configured; Supabase Postgres can replace the snapshot as the profile store. See `docs/phase-5/PROJECT_ARCHITECTURE.md`.
