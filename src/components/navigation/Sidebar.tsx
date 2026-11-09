@@ -43,6 +43,7 @@ import {
   ExternalLink,
   BookOpenCheck,
   Languages,
+  MessageSquareHeart,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useUiStore } from '../../store/uiStore';
@@ -137,6 +138,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { name: 'Student Profile', href: '/profile', icon: User },
       { name: 'Notifications', href: '/notifications', icon: Bell },
       { name: 'Settings', href: '/profile/settings', icon: Settings },
+      { name: 'Pilot Feedback', href: '/pilot-feedback', icon: MessageSquareHeart },
     ],
   },
 ];

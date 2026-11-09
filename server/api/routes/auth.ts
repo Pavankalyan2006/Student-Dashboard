@@ -26,8 +26,21 @@ export function authAttemptLimiter(name: string, max: number, windowMs: number) 
         return next(new AppError('Too many attempts. Please wait a few minutes and try again.', 429, 'RATE_LIMITED'));
       }
     }
+    (req as any).authAttemptKeys = keys;
     next();
   };
+}
+
+/**
+ * Phase 6 (P6-006): a successful sign-in no longer counts against the limit. Before, every
+ * sign-in counted, so the eleventh student signing in within 15 minutes from one campus or lab
+ * network (one shared IP) was refused. Failed attempts still count per IP and per email.
+ */
+function forgiveAuthAttempt(req: Request) {
+  for (const key of ((req as any).authAttemptKeys as string[] | undefined) || []) {
+    const b = attemptBuckets.get(key);
+    if (b && b.count > 0) b.count--;
+  }
 }
 export function resetAuthAttemptLimiter() {
   attemptBuckets.clear();
@@ -72,6 +85,8 @@ authRouter.post('/auth/login', authAttemptLimiter('login', 10, 15 * 60 * 1000), 
     if (!isMatch) {
       throw new AuthenticationError('Invalid email or password');
     }
+
+    forgiveAuthAttempt(req);
 
     const tokenPayload = {
       userId: student.id,
@@ -167,6 +182,7 @@ authRouter.post('/auth/firebase/session', authAttemptLimiter('firebase-session',
         maxAge: 60 * 60 * 1000,
       });
     }
+    forgiveAuthAttempt(req); // P6-006: only failed session attempts count against the shared-IP limit
     const { profile, completion } = await StudentProfileService.getProfile(result.student.id);
     res.status(result.created ? 201 : 200).json({
       success: true,

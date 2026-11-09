@@ -27,6 +27,7 @@ import { DSAProblemPage } from './features/dsa/pages/DSAProblemPage';
 import { DSAProgressPage } from './features/dsa/pages/DSAProgressPage';
 import { DSAAiTutorPage } from './features/dsa/pages/DSAAiTutorPage';
 import { QuizPage } from './features/quiz/pages/QuizPage';
+import { PilotFeedbackPage } from './features/feedback/pages/PilotFeedbackPage';
 import { QuizCreatePage } from './features/quiz/pages/QuizCreatePage';
 import { QuizPlayerPage } from './features/quiz/pages/QuizPlayerPage';
 import { QuizResultPage } from './features/quiz/pages/QuizResultPage';
@@ -800,6 +801,10 @@ function AppContent() {
 
     if (path === '/profile/bookmarks' || path === '/bookmarks') {
       return <ProfileBookmarksPage onNavigate={navigate} />;
+    }
+
+    if (path === '/pilot-feedback' || path === '/feedback') {
+      return <PilotFeedbackPage onNavigate={navigate} />;
     }
 
     if (path === '/profile/settings' || path === '/settings') {

@@ -25,6 +25,8 @@ import { logger } from './server/core/logging';
 import { db } from './server/db/database';
 import { LearningModulesService } from './server/services/learningModulesService';
 import { ExternalIntegrationService } from './server/services/externalIntegrationService';
+import { pilotFeedbackStores } from './server/services/pilotFeedbackService';
+import { corsDecision, CORS_BASE_OPTIONS } from './server/core/corsPolicy';
 import {
   registerPersistentSource,
   restoreSnapshot,
@@ -71,6 +73,7 @@ async function setupPersistence() {
   registerPersistentSource('mlLab', MlLabService as unknown as Record<string, any>, ['workspaces', 'customDatasets', 'experiments', 'fittedModels', 'predictions']);
   // Search vectors for uploaded documents; without this, search and Q&A found nothing after a restart.
   registerPersistentSource('vectorStore', VectorStore as unknown as Record<string, any>, ['store']);
+  registerPersistentSource('pilotFeedback', pilotFeedbackStores as unknown as Record<string, any>);
   registerPersistentSource('gitLab', GitLabService as unknown as Record<string, any>, ['progress']);
   registerPersistentSource('sqlLab', SqlLabSandboxService as unknown as Record<string, any>, ['studentDbImages', 'queryHistories', 'savedQueries']);
   registerPersistentSource('semesterCommandCenter', semesterStateStore as unknown as Record<string, any>, ['states']);
@@ -107,19 +110,12 @@ async function startServer() {
         'http://127.0.0.1:5173',
       ];
 
+  // Same-origin requests are always allowed (see server/core/corsPolicy.ts, P6-003).
   app.use(
-    cors({
-      origin: (origin, callback) => {
-        // Allow requests with no origin (like mobile apps, curl, server-to-server)
-        if (!origin) return callback(null, true);
-        if (process.env.NODE_ENV !== 'production' || allowedOrigins.includes(origin)) {
-          return callback(null, true);
-        }
-        return callback(new Error('CORS origin rejected by security policy'));
-      },
-      credentials: true,
-      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID'],
+    cors((req, callback) => {
+      const refused = corsDecision(req.header('Origin'), req.header('Host'), allowedOrigins, process.env.NODE_ENV === 'production');
+      if (refused) return callback(refused);
+      return callback(null, { ...CORS_BASE_OPTIONS, origin: true });
     })
   );
 

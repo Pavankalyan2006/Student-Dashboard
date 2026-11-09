@@ -14,3 +14,17 @@ Added in Phase 5:
   new 7-step `OnboardingPage`, `DashboardProfileSummary`, recommendations panel on module landing pages (`App.tsx`).
 
 Data flow and module wiring: PHASE_5_PROFILE_CONTEXT_ARCHITECTURE.md, PHASE_5_PROFILE_PROPAGATION_REPORT.md.
+
+## Phase 6 update
+
+No new application and no admin role. Added:
+
+- `server/services/pilotFeedbackService.ts`, `server/api/routes/pilotFeedback.ts`: private pilot feedback (own entries
+  only, consent version, retention, contact-detail redaction), persisted by the snapshot store as `pilotFeedback`.
+  Front end: `src/features/feedback/pages/PilotFeedbackPage.tsx` at `/pilot-feedback`. Owner export:
+  `scripts/pilot/export-feedback.cjs` (pseudonymous, offline).
+- `server/core/corsPolicy.ts`: same-origin requests always allowed; the allowlist applies to cross-origin requests.
+- `db.getStudentSkills` now merges the central profile's declared skills (read-only, via a provider registered by
+  `studentProfile/profileCache.ts`), so the profile is the single source of skills for career, resume, jobs, progress
+  and AI tools.
+- `scripts/pilot/`: synthetic journey and UI walkthrough scripts for pilot readiness checks.

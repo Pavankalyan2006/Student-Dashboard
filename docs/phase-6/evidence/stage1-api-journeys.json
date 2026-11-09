@@ -1,0 +1,901 @@
+{
+  "base": "http://localhost:3611",
+  "ran_at": "2026-11-09T14:21:21.452Z",
+  "students": [
+    "std_1794234077176_jt2n",
+    "std_1794234078896_qy4c"
+  ],
+  "results": [
+    {
+      "workflow": "WF1 Registration",
+      "step": "A: duplicate submit creates one account",
+      "result": "PASS",
+      "detail": "statuses 201/409"
+    },
+    {
+      "workflow": "WF1 Registration",
+      "step": "A: onboarding resumes after interruption",
+      "result": "PASS",
+      "detail": "current_step 3"
+    },
+    {
+      "workflow": "WF1 Registration",
+      "step": "A: onboarding completes (retry safe)",
+      "result": "PASS",
+      "detail": "200/200"
+    },
+    {
+      "workflow": "WF1 Registration",
+      "step": "A: retried project step does not duplicate",
+      "result": "PASS",
+      "detail": "projects 1"
+    },
+    {
+      "workflow": "WF1 Registration",
+      "step": "A: logout and login again",
+      "result": "PASS",
+      "detail": "200"
+    },
+    {
+      "workflow": "WF1 Registration",
+      "step": "A: wrong password refused with a clear message",
+      "result": "PASS",
+      "detail": "401 Invalid email or password"
+    },
+    {
+      "workflow": "WF1 Registration",
+      "step": "B: duplicate submit creates one account",
+      "result": "PASS",
+      "detail": "statuses 201/409"
+    },
+    {
+      "workflow": "WF1 Registration",
+      "step": "B: onboarding resumes after interruption",
+      "result": "PASS",
+      "detail": "current_step 3"
+    },
+    {
+      "workflow": "WF1 Registration",
+      "step": "B: onboarding completes (retry safe)",
+      "result": "PASS",
+      "detail": "200/200"
+    },
+    {
+      "workflow": "WF1 Registration",
+      "step": "B: retried project step does not duplicate",
+      "result": "PASS",
+      "detail": "projects 1"
+    },
+    {
+      "workflow": "WF1 Registration",
+      "step": "B: logout and login again",
+      "result": "PASS",
+      "detail": "200"
+    },
+    {
+      "workflow": "WF1 Registration",
+      "step": "B: wrong password refused with a clear message",
+      "result": "PASS",
+      "detail": "401 Invalid email or password"
+    },
+    {
+      "workflow": "Profile propagation",
+      "step": "semester change saves",
+      "result": "PASS",
+      "detail": "200 "
+    },
+    {
+      "workflow": "Profile propagation",
+      "step": "Student Profile shows new semester",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "workflow": "Profile propagation",
+      "step": "Semester Command Center shows new semester",
+      "result": "PASS",
+      "detail": "semester_number 6"
+    },
+    {
+      "workflow": "Profile propagation",
+      "step": "AI Tutor context uses new semester",
+      "result": "PASS",
+      "detail": "{\"profile_version\":9,\"degree\":\"B.Tech\",\"branch\":\"Computer Science and Engineering\",\"specialization\":null,\"academic_year\":3,\"semester\":6,\"subjects\":[\"Operating Systems\",\"Database Management Systems\"],\"preferred_language\":"
+    },
+    {
+      "workflow": "Profile propagation",
+      "step": "historical note unchanged after semester change",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "workflow": "Profile propagation",
+      "step": "add a skill",
+      "result": "PASS",
+      "detail": "200 "
+    },
+    {
+      "workflow": "Profile propagation",
+      "step": "Career recommendations consider profile skills",
+      "result": "PASS",
+      "detail": "top Backend Developer 40% — Based on the 2 skills recorded on your profile compared with each role's listed skills."
+    },
+    {
+      "workflow": "Profile propagation",
+      "step": "Skills store sees profile skills",
+      "result": "PASS",
+      "detail": "200"
+    },
+    {
+      "workflow": "Profile propagation",
+      "step": "Resume context includes new skill",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "workflow": "Profile propagation",
+      "step": "Jobs context includes new skill",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "workflow": "Isolation",
+      "step": "B cannot see A notes",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "workflow": "Isolation",
+      "step": "B profile has no A data",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "workflow": "Isolation",
+      "step": "no token → 401",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "workflow": "WF2 Academic learning",
+      "step": "course recommendations from profile",
+      "result": "PASS",
+      "detail": "11 items"
+    },
+    {
+      "workflow": "WF2 Academic learning",
+      "step": "course catalogue lists courses",
+      "result": "PASS",
+      "detail": "200"
+    },
+    {
+      "workflow": "WF2 Academic learning",
+      "step": "open a course",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "workflow": "WF2 Academic learning",
+      "step": "enroll in a course",
+      "result": "PASS",
+      "detail": "201"
+    },
+    {
+      "workflow": "WF2 Academic learning",
+      "step": "AI Tutor answers",
+      "result": "BLOCKED",
+      "detail": "200 AI unavailable (no GEMINI_API_KEY)"
+    },
+    {
+      "workflow": "WF2 Academic learning",
+      "step": "create study notes",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "workflow": "WF3 Revision",
+      "step": "create a flashcard deck",
+      "result": "PASS",
+      "detail": "201 "
+    },
+    {
+      "workflow": "WF3 Revision",
+      "step": "add a card",
+      "result": "PASS",
+      "detail": "201 "
+    },
+    {
+      "workflow": "WF3 Revision",
+      "step": "review a card",
+      "result": "PASS",
+      "detail": "200 "
+    },
+    {
+      "workflow": "WF3 Revision",
+      "step": "AI flashcard generation",
+      "result": "BLOCKED",
+      "detail": "503 AI_UNAVAILABLE"
+    },
+    {
+      "workflow": "WF3 Revision",
+      "step": "a new student has a quiz to take without AI",
+      "result": "BLOCKED",
+      "detail": "0 quizzes; the Quiz UI only creates quizzes by AI generation"
+    },
+    {
+      "workflow": "WF3 Revision",
+      "step": "AI quiz generation",
+      "result": "BLOCKED",
+      "detail": "503 AI_UNAVAILABLE"
+    },
+    {
+      "workflow": "WF3 Revision",
+      "step": "quiz scored server-side (1 of 2 correct)",
+      "result": "PASS",
+      "detail": "200 correct 1"
+    },
+    {
+      "workflow": "WF3 Revision",
+      "step": "quiz progress reflects the attempt",
+      "result": "PASS",
+      "detail": "{\"student_id\":\"std_1794234077176_jt2n\",\"total_quizzes_taken\":1,\"total_quizzes\":1,\"total_quizzes_completed\":1,\"completed_quizzes\":1,\"total_questions_answered\":2,\"questions_answered\":2,\"average_score\":50,\"accuracy_rate\":50"
+    },
+    {
+      "workflow": "WF4 Programming",
+      "step": "run Python code",
+      "result": "PASS",
+      "detail": "200 {\"status\":\"SUCCESS\",\"stdout\":\"45\\n\",\"stderr\":\"\",\"exit_code\":0,\"execution_time_ms\":63,\"isolation\":\"namespace\",\"execution_id\":\"exec_1794234081155_9oya\"}"
+    },
+    {
+      "workflow": "WF4 Programming",
+      "step": "save the program",
+      "result": "PASS",
+      "detail": "201 "
+    },
+    {
+      "workflow": "WF4 Programming",
+      "step": "B cannot see A saved code",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "workflow": "WF5 AI/ML experimentation",
+      "step": "upload a CSV dataset",
+      "result": "PASS",
+      "detail": "201 "
+    },
+    {
+      "workflow": "WF5 AI/ML experimentation",
+      "step": "train a model and see evaluation metrics",
+      "result": "PASS",
+      "detail": "201 accuracy 0.9167"
+    },
+    {
+      "workflow": "WF5 AI/ML experimentation",
+      "step": "B cannot see A dataset",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "workflow": "WF6 Research",
+      "step": "create a research project",
+      "result": "PASS",
+      "detail": "201 "
+    },
+    {
+      "workflow": "WF6 Research",
+      "step": "search for papers",
+      "result": "BLOCKED",
+      "detail": "200 0 results CURATED (live providers unreachable; curated list has no match)"
+    },
+    {
+      "workflow": "WF6 Research",
+      "step": "upload supporting material",
+      "result": "PASS",
+      "detail": "201 "
+    },
+    {
+      "workflow": "WF6 Research",
+      "step": "ask a question grounded in the document (RAG)",
+      "result": "PASS",
+      "detail": "200 AI answers are not available right now. These are the most relevant passages from your documents:\n\n[Source 1: Page replacement notes, page 1]\nBelady anomaly: with FIFO page replacement, adding frames can increase page fa | mode EXTRACTIVE | citations 1"
+    },
+    {
+      "workflow": "WF6 Research",
+      "step": "B cannot query A document",
+      "result": "PASS",
+      "detail": "403"
+    },
+    {
+      "workflow": "WF8 Learning goals",
+      "step": "create a goal",
+      "result": "PASS",
+      "detail": "201 "
+    },
+    {
+      "workflow": "WF8 Learning goals",
+      "step": "complete a milestone updates progress",
+      "result": "PASS",
+      "detail": "200 progress 50"
+    },
+    {
+      "workflow": "WF8 Learning goals",
+      "step": "B cannot read A goal",
+      "result": "PASS",
+      "detail": "404"
+    },
+    {
+      "workflow": "WF9 Community",
+      "step": "post a question",
+      "result": "PASS",
+      "detail": "201 "
+    },
+    {
+      "workflow": "WF9 Community",
+      "step": "other students see the question",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "workflow": "WF9 Community",
+      "step": "public question exposes no email/phone/CGPA",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "workflow": "WF9 Community",
+      "step": "answer a question",
+      "result": "PASS",
+      "detail": "201 "
+    },
+    {
+      "workflow": "WF9 Community",
+      "step": "B cannot edit A question",
+      "result": "PASS",
+      "detail": "403"
+    },
+    {
+      "workflow": "WF9 Community",
+      "step": "A notified of the answer",
+      "result": "PASS",
+      "detail": "200"
+    },
+    {
+      "workflow": "WF7 Career",
+      "step": "create a resume",
+      "result": "PASS",
+      "detail": "201 "
+    },
+    {
+      "workflow": "WF7 Career",
+      "step": "resume pre-fills profile skills",
+      "result": "PASS",
+      "detail": "[{\"id\":\"rsk_1794234081299_0\",\"resume_id\":\"res_1794234081299_93x6r\",\"skill\":\"Python\",\"category\":\"PROGRAMMING\",\"proficiency\":\"INTERMEDIATE\",\"source\":\"STUDENT_ENTERED\",\"order_index\":0},{\"id\":\"rsk_1794234081299_1\",\"resume_id"
+    },
+    {
+      "workflow": "WF7 Career",
+      "step": "jobs list (genuine listings only)",
+      "result": "BLOCKED",
+      "detail": "200 0 listings"
+    },
+    {
+      "workflow": "WF7 Career",
+      "step": "save an application",
+      "result": "PASS",
+      "detail": "201 "
+    },
+    {
+      "workflow": "WF7 Career",
+      "step": "B cannot see A application",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "workflow": "WF10 Account management",
+      "step": "update notification preferences",
+      "result": "PASS",
+      "detail": "200 "
+    },
+    {
+      "workflow": "WF10 Account management",
+      "step": "set profile visibility",
+      "result": "PASS",
+      "detail": "200 "
+    },
+    {
+      "workflow": "WF10 Account management",
+      "step": "visibility persists after login",
+      "result": "PASS",
+      "detail": "{\"id\":\"priv_std_1794234077176_jt2n\",\"student_id\":\"std_1794234077176_jt2n\",\"profile_visibility\":\"PRIVATE\",\"project_visibility\":\"COMMUNITY\",\"github_visibility\":\"PUBLIC\",\"research_visibility\":\"PRIVATE\",\"resume_visibility\":\""
+    },
+    {
+      "workflow": "Pilot feedback",
+      "step": "submit private feedback",
+      "result": "PASS",
+      "detail": "201"
+    },
+    {
+      "workflow": "Pilot feedback",
+      "step": "B cannot see A feedback",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "workflow": "Pilot feedback",
+      "step": "withdraw feedback",
+      "result": "PASS",
+      "detail": ""
+    }
+  ],
+  "timings": [
+    {
+      "label": "POST /auth/register",
+      "n": 4,
+      "statuses": "409,201",
+      "p50": 167,
+      "max": 437
+    },
+    {
+      "label": "PUT /profile/me/onboarding/steps/:n",
+      "n": 14,
+      "statuses": "200",
+      "p50": 127,
+      "max": 199
+    },
+    {
+      "label": "GET /profile/me/onboarding",
+      "n": 2,
+      "statuses": "200",
+      "p50": 4,
+      "max": 7
+    },
+    {
+      "label": "POST /profile/me/onboarding/complete",
+      "n": 4,
+      "statuses": "200",
+      "p50": 6,
+      "max": 147
+    },
+    {
+      "label": "GET /profile/me",
+      "n": 4,
+      "statuses": "200",
+      "p50": 4,
+      "max": 5
+    },
+    {
+      "label": "POST /auth/logout",
+      "n": 2,
+      "statuses": "200",
+      "p50": 3,
+      "max": 4
+    },
+    {
+      "label": "POST /auth/login",
+      "n": 3,
+      "statuses": "200",
+      "p50": 121,
+      "max": 129
+    },
+    {
+      "label": "POST /auth/login (wrong password)",
+      "n": 2,
+      "statuses": "401",
+      "p50": 109,
+      "max": 123
+    },
+    {
+      "label": "POST /notes",
+      "n": 2,
+      "statuses": "201",
+      "p50": 5,
+      "max": 5
+    },
+    {
+      "label": "PATCH /profile/me/academic",
+      "n": 1,
+      "statuses": "200",
+      "p50": 103,
+      "max": 103
+    },
+    {
+      "label": "GET /semester/overview",
+      "n": 1,
+      "statuses": "200",
+      "p50": 10,
+      "max": 10
+    },
+    {
+      "label": "GET /profile/me/context/tutor",
+      "n": 1,
+      "statuses": "200",
+      "p50": 2,
+      "max": 2
+    },
+    {
+      "label": "GET /notes/note_1794234080219_2nmit",
+      "n": 1,
+      "statuses": "200",
+      "p50": 3,
+      "max": 3
+    },
+    {
+      "label": "PUT /profile/me/skills",
+      "n": 1,
+      "statuses": "200",
+      "p50": 144,
+      "max": 144
+    },
+    {
+      "label": "GET /career/recommendations",
+      "n": 1,
+      "statuses": "200",
+      "p50": 9,
+      "max": 9
+    },
+    {
+      "label": "GET /skills/profile",
+      "n": 1,
+      "statuses": "200",
+      "p50": 4,
+      "max": 4
+    },
+    {
+      "label": "GET /profile/me/context/resume",
+      "n": 1,
+      "statuses": "200",
+      "p50": 4,
+      "max": 4
+    },
+    {
+      "label": "GET /profile/me/context/jobs",
+      "n": 1,
+      "statuses": "200",
+      "p50": 4,
+      "max": 4
+    },
+    {
+      "label": "GET /notes",
+      "n": 2,
+      "statuses": "200",
+      "p50": 4,
+      "max": 4
+    },
+    {
+      "label": "GET /profile/me (no token)",
+      "n": 1,
+      "statuses": "401",
+      "p50": 3,
+      "max": 3
+    },
+    {
+      "label": "GET /profile/me/recommendations/courses",
+      "n": 1,
+      "statuses": "200",
+      "p50": 9,
+      "max": 9
+    },
+    {
+      "label": "GET /courses?limit=5",
+      "n": 1,
+      "statuses": "200",
+      "p50": 14,
+      "max": 14
+    },
+    {
+      "label": "GET /courses/:id",
+      "n": 1,
+      "statuses": "200",
+      "p50": 4,
+      "max": 4
+    },
+    {
+      "label": "POST /courses/:id/enroll",
+      "n": 1,
+      "statuses": "201",
+      "p50": 4,
+      "max": 4
+    },
+    {
+      "label": "POST /ai/chat",
+      "n": 1,
+      "statuses": "200",
+      "p50": 428,
+      "max": 428
+    },
+    {
+      "label": "POST /flashcards/decks",
+      "n": 1,
+      "statuses": "201",
+      "p50": 7,
+      "max": 7
+    },
+    {
+      "label": "POST /flashcards/decks/:id/cards",
+      "n": 1,
+      "statuses": "201",
+      "p50": 5,
+      "max": 5
+    },
+    {
+      "label": "POST /flashcards/.../review",
+      "n": 1,
+      "statuses": "200",
+      "p50": 5,
+      "max": 5
+    },
+    {
+      "label": "POST /ai/tutor/generate-flashcards",
+      "n": 1,
+      "statuses": "503",
+      "p50": 4,
+      "max": 4
+    },
+    {
+      "label": "GET /quizzes",
+      "n": 1,
+      "statuses": "200",
+      "p50": 3,
+      "max": 3
+    },
+    {
+      "label": "POST /quiz/generate",
+      "n": 1,
+      "statuses": "503",
+      "p50": 5,
+      "max": 5
+    },
+    {
+      "label": "POST /quiz",
+      "n": 1,
+      "statuses": "201",
+      "p50": 5,
+      "max": 5
+    },
+    {
+      "label": "POST /quiz/:id/start",
+      "n": 1,
+      "statuses": "200",
+      "p50": 5,
+      "max": 5
+    },
+    {
+      "label": "GET /quiz/:id/questions",
+      "n": 1,
+      "statuses": "200",
+      "p50": 3,
+      "max": 3
+    },
+    {
+      "label": "POST /quiz/attempts/:id/submit",
+      "n": 1,
+      "statuses": "200",
+      "p50": 9,
+      "max": 9
+    },
+    {
+      "label": "GET /quiz/progress",
+      "n": 1,
+      "statuses": "200",
+      "p50": 3,
+      "max": 3
+    },
+    {
+      "label": "POST /coding/run",
+      "n": 1,
+      "statuses": "200",
+      "p50": 116,
+      "max": 116
+    },
+    {
+      "label": "POST /coding/saved",
+      "n": 1,
+      "statuses": "201",
+      "p50": 5,
+      "max": 5
+    },
+    {
+      "label": "GET /coding/saved",
+      "n": 1,
+      "statuses": "200",
+      "p50": 3,
+      "max": 3
+    },
+    {
+      "label": "POST /ml-lab/datasets/upload",
+      "n": 1,
+      "statuses": "201",
+      "p50": 7,
+      "max": 7
+    },
+    {
+      "label": "POST /ml-lab/experiments",
+      "n": 1,
+      "statuses": "201",
+      "p50": 14,
+      "max": 14
+    },
+    {
+      "label": "GET /ml-lab/datasets",
+      "n": 1,
+      "statuses": "200",
+      "p50": 4,
+      "max": 4
+    },
+    {
+      "label": "POST /research",
+      "n": 1,
+      "statuses": "201",
+      "p50": 4,
+      "max": 4
+    },
+    {
+      "label": "POST /research/:id/papers/search",
+      "n": 1,
+      "statuses": "200",
+      "p50": 43,
+      "max": 43
+    },
+    {
+      "label": "POST /documents",
+      "n": 1,
+      "statuses": "201",
+      "p50": 7,
+      "max": 7
+    },
+    {
+      "label": "POST /knowledge-base/ask",
+      "n": 1,
+      "statuses": "200",
+      "p50": 8,
+      "max": 8
+    },
+    {
+      "label": "POST /knowledge-base/ask (other student)",
+      "n": 1,
+      "statuses": "403",
+      "p50": 4,
+      "max": 4
+    },
+    {
+      "label": "POST /goals",
+      "n": 1,
+      "statuses": "201",
+      "p50": 4,
+      "max": 4
+    },
+    {
+      "label": "POST /goals/:id/milestones/:mid/toggle",
+      "n": 1,
+      "statuses": "200",
+      "p50": 4,
+      "max": 4
+    },
+    {
+      "label": "GET /goals/:id (other student)",
+      "n": 1,
+      "statuses": "404",
+      "p50": 3,
+      "max": 3
+    },
+    {
+      "label": "GET /community/topics",
+      "n": 1,
+      "statuses": "200",
+      "p50": 4,
+      "max": 4
+    },
+    {
+      "label": "POST /community/questions",
+      "n": 1,
+      "statuses": "201",
+      "p50": 5,
+      "max": 5
+    },
+    {
+      "label": "GET /community/questions/:id",
+      "n": 1,
+      "statuses": "200",
+      "p50": 4,
+      "max": 4
+    },
+    {
+      "label": "POST /community/questions/:id/answers",
+      "n": 1,
+      "statuses": "201",
+      "p50": 4,
+      "max": 4
+    },
+    {
+      "label": "PATCH /community/questions/:id (other student)",
+      "n": 1,
+      "statuses": "403",
+      "p50": 8,
+      "max": 8
+    },
+    {
+      "label": "GET /notifications",
+      "n": 1,
+      "statuses": "200",
+      "p50": 3,
+      "max": 3
+    },
+    {
+      "label": "POST /resumes",
+      "n": 1,
+      "statuses": "201",
+      "p50": 9,
+      "max": 9
+    },
+    {
+      "label": "GET /jobs-discovery/jobs",
+      "n": 1,
+      "statuses": "200",
+      "p50": 3,
+      "max": 3
+    },
+    {
+      "label": "POST /applications",
+      "n": 1,
+      "statuses": "201",
+      "p50": 4,
+      "max": 4
+    },
+    {
+      "label": "GET /applications",
+      "n": 1,
+      "statuses": "200",
+      "p50": 2,
+      "max": 2
+    },
+    {
+      "label": "PATCH /notifications/preferences",
+      "n": 1,
+      "statuses": "200",
+      "p50": 3,
+      "max": 3
+    },
+    {
+      "label": "PATCH /profile/privacy",
+      "n": 1,
+      "statuses": "200",
+      "p50": 3,
+      "max": 3
+    },
+    {
+      "label": "GET /profile/privacy",
+      "n": 1,
+      "statuses": "200",
+      "p50": 4,
+      "max": 4
+    },
+    {
+      "label": "GET /pilot-feedback/config",
+      "n": 1,
+      "statuses": "200",
+      "p50": 4,
+      "max": 4
+    },
+    {
+      "label": "POST /pilot-feedback",
+      "n": 1,
+      "statuses": "201",
+      "p50": 5,
+      "max": 5
+    },
+    {
+      "label": "GET /pilot-feedback/mine",
+      "n": 1,
+      "statuses": "200",
+      "p50": 4,
+      "max": 4
+    },
+    {
+      "label": "DELETE /pilot-feedback/mine/:id",
+      "n": 1,
+      "statuses": "200",
+      "p50": 3,
+      "max": 3
+    }
+  ]
+}

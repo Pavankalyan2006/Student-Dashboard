@@ -37,6 +37,9 @@ export function checkPasswordStrength(password: unknown, email?: string): string
   return password;
 }
 
+/** Emails with a legacy registration in progress (see registerLegacy). */
+const pendingLegacyEmails = new Set<string>();
+
 const inflight = new Map<string, Promise<{ student: SafeStudent; created: boolean; linked: boolean }>>();
 
 function toAccountRow(s: Student): StudentAccountRow {
@@ -237,9 +240,25 @@ export class IdentityService {
     if (await db.getStudentByEmail(email)) {
       throw new ConflictError('An account with this email address already exists. Please sign in instead.');
     }
+    // Phase 6 (P6-001): a double-click or a retry after a dropped connection sends the same
+    // registration twice. Both requests passed the check above while the first was still hashing,
+    // so two accounts with one email were created. Reserve the email synchronously after the
+    // check; a concurrent duplicate gets the same 409 as an existing account.
+    if (pendingLegacyEmails.has(email)) {
+      throw new ConflictError('An account with this email address already exists. Please sign in instead.');
+    }
+    pendingLegacyEmails.add(email);
+    try {
+      return await this.createLegacyAccount(body, name!, email, password);
+    } finally {
+      pendingLegacyEmails.delete(email);
+    }
+  }
+
+  private static async createLegacyAccount(body: Record<string, any>, name: string, email: string, password: string): Promise<SafeStudent> {
     const passwordHash = await Security.hashPassword(password);
     const created = await db.createStudent({
-      name: name!,
+      name,
       display_name: typeof body.display_name === 'string' && body.display_name.trim() ? body.display_name.trim() : undefined,
       email,
       password_hash: passwordHash,
