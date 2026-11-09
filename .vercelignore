@@ -1,0 +1,7 @@
+data/vault
+data/runtime
+coverage
+docs
+*.log
+.env*
+!.env.example
