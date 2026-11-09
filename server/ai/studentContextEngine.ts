@@ -4,6 +4,7 @@ import { semesterCommandCenterService } from '../services/semesterCommandCenterS
 import { OnboardingService } from '../services/onboardingService';
 import { logger } from '../core/logging';
 import { StudentAIPersona } from '../models/onboardingTypes';
+import { StudentProfileService } from '../services/studentProfile/studentProfileService';
 
 export type ContextDomain = 'GENERAL' | 'ACADEMIC' | 'LEARNING' | 'CODING' | 'PROJECT' | 'CAREER' | 'EXAM';
 
@@ -21,7 +22,8 @@ export interface UnifiedStudentContext {
   student: {
     id: string;
     name: string;
-    email: string;
+    /** Phase 5: not populated; AI contexts never carry the email address. */
+    email?: string;
     branch: string;
     semester: number;
     role: string;
@@ -107,48 +109,27 @@ export class StudentContextEngine {
     studentId: string,
     options: StudentContextOptions = {}
   ): Promise<UnifiedStudentContext> {
-    let student = await db.getStudentById(studentId);
-    if (!student) {
-      try {
-        const edu = await OnboardingService.getEducationProfile(studentId);
-        if (edu) {
-          student = {
-            id: studentId,
-            name: 'B.Tech Student',
-            email: `${studentId}@btech.edu`,
-            branch: edu.branch || 'CSE',
-            semester: edu.current_semester || 1,
-            role: 'STUDENT',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          } as any;
-        }
-      } catch {}
-    }
+    const student = await db.getStudentById(studentId);
     if (!student) {
       throw new Error(`Student ${studentId} not found for context loading`);
     }
+    // Phase 5: the central profile is the source for academic, skill and career fields.
+    const profile = StudentProfileService.getProfileSync(studentId);
 
     const domain = options.domain || 'GENERAL';
     let baseContext: any;
     try {
       baseContext = await db.getStudentLearningContext(studentId);
     } catch {
-      baseContext = {
-        current_course: { name: 'Design and Analysis of Algorithms', code: 'CS401', progress: 50 },
-        current_lesson: { title: 'Introduction', topic: 'Algorithm Foundations', progress: 50 },
-        recent_topics: [],
-        weak_areas: [],
-      };
+      baseContext = { current_course: null, current_lesson: null, recent_topics: [], weak_areas: [] };
     }
 
     const result: UnifiedStudentContext = {
       student: {
         id: student.id,
         name: student.name,
-        email: student.email,
-        branch: student.branch,
-        semester: student.semester,
+        branch: profile?.academic.branch || student.branch,
+        semester: profile?.academic.current_semester || student.semester,
         role: student.role,
         created_at: student.created_at,
       },
@@ -197,7 +178,7 @@ export class StudentContextEngine {
     }
 
     // 2. Learning Context (for LEARNING, ACADEMIC, GENERAL)
-    if (domain === 'LEARNING' || domain === 'GENERAL' || domain === 'ACADEMIC') {
+    if ((domain === 'LEARNING' || domain === 'GENERAL' || domain === 'ACADEMIC') && baseContext.current_course) {
       result.learning = {
         currentCourse: baseContext.current_course,
         currentLesson: baseContext.current_lesson,
@@ -212,7 +193,8 @@ export class StudentContextEngine {
         result.coding = {
           problemsSolved: progress.overall_indicators.coding_problems_solved || 0,
           dsaSolved: progress.overall_indicators.dsa_problems_solved || 0,
-          topSkills: ['Data Structures', 'Algorithms', 'TypeScript', 'Python'],
+          // Student-reported skills only (Phase 5); previously a fixed list.
+          topSkills: (profile?.skills.skills || []).slice(0, 6).map((sk) => `${sk.name} (${sk.proficiency.toLowerCase()})`),
         };
       } catch (err) {
         logger.warn(`[StudentContextEngine] Failed loading coding progress context: ${err}`);
@@ -238,19 +220,13 @@ export class StudentContextEngine {
     if (domain === 'CAREER' || domain === 'GENERAL' || options.includeCareer) {
       try {
         const goals = await OnboardingService.getCareerGoals(studentId);
-        if (goals && (goals.target_job_role || goals.career_directions?.length > 0)) {
+        const roles = profile?.career.target_roles || [];
+        if (roles.length || goals?.career_directions?.length) {
+          // No invented readiness score or default role: only what the student entered.
           result.career = {
-            targetRole: goals.target_job_role || (goals.career_directions?.[0]?.replace(/_/g, ' ') || 'Software Engineer'),
-            careerDirections: goals.career_directions?.map(c => c.replace(/_/g, ' ')) || [],
-            readinessScore: 78,
-            topGaps: goals.desired_technical_skills?.length > 0 ? goals.desired_technical_skills.slice(0, 3) : ['Distributed Systems', 'System Design Scale'],
-          };
-        } else {
-          result.career = {
-            targetRole: 'Full Stack Software Engineer',
-            careerDirections: ['Software Development'],
-            readinessScore: 70,
-            topGaps: ['Distributed Systems', 'Cloud Deployment'],
+            targetRole: roles[0] || goals?.target_job_role,
+            careerDirections: goals?.career_directions?.map((c) => c.replace(/_/g, ' ')) || [],
+            topGaps: goals?.desired_technical_skills?.slice(0, 3) || [],
           };
         }
       } catch (err) {
@@ -269,14 +245,8 @@ export class StudentContextEngine {
           currentYear: edu.current_year,
           currentSemester: edu.current_semester,
           expectedGraduationYear: edu.expected_graduation_year,
-          tenthBoard: edu.tenth_board,
-          tenthPercentage: edu.tenth_percentage,
-          twelfthStream: edu.twelfth_stream,
-          twelfthPercentage: edu.twelfth_percentage,
-          entranceExam: edu.entrance_exam_name,
-          entranceRank: edu.entrance_exam_rank,
-          firstGenerationEngineer: edu.first_generation_engineer,
-          financialUrgency: edu.financial_urgency,
+          // Phase 5: school marks, entrance ranks and family/financial context are personal data the
+          // AI provider does not need; they are no longer copied into AI context.
         };
       }
 
@@ -322,36 +292,24 @@ export class StudentContextEngine {
 
     // AI Companion Header & Tone Directives
     if (context.aiPersona) {
+      // Phase 5: only the tone is sent. The persona's summary and directives embed the student's
+      // name, school marks and family/financial context, which the AI provider does not need.
       lines.push(
-        `### Active Student AI Companion: ${context.aiPersona.agent_companion_name}`,
-        `- **Pedagogical Persona Tone**: ${context.aiPersona.pedagogical_tone}`,
-        `- **Knowledge Graph Context**: ${context.aiPersona.knowledge_graph_summary}`,
-        `- **Pedagogical Directives**:`,
-        ...context.aiPersona.primary_focus_directives.map((d) => `  * ${d}`),
+        `### Tutor tone: ${context.aiPersona.pedagogical_tone.replace(/_/g, ' ').toLowerCase()}`,
         ``
       );
     }
 
+    // Phase 5: no name, email or institution in AI prompts.
     lines.push(
       `### Verified Student Context:`,
-      `- **Student**: ${context.student.name} (${context.student.branch}, Semester ${context.student.semester})`
+      `- **Student**: ${context.student.branch || 'Branch not set'}, Semester ${context.student.semester || 'not set'}`
     );
 
     if (context.education) {
       lines.push(
-        `- **Academic Program**: ${context.education.degree} in ${context.education.branch} at ${context.education.institution} (Year ${context.education.currentYear}, Sem ${context.education.currentSemester})`
+        `- **Academic Program**: ${context.education.degree} in ${context.education.branch} (Year ${context.education.currentYear}, Sem ${context.education.currentSemester})`
       );
-      if (context.education.tenthPercentage || context.education.twelfthPercentage || context.education.entranceExam) {
-        lines.push(
-          `- **Academic Heritage**: 10th: ${context.education.tenthPercentage ? `${context.education.tenthPercentage}%` : 'N/A'}, 12th/Diploma: ${context.education.twelfthPercentage ? `${context.education.twelfthPercentage}% (${context.education.twelfthStream || 'PCM'})` : 'N/A'}, Entrance: ${context.education.entranceExam || 'Exam'} Rank #${context.education.entranceRank || 'N/A'}`
-        );
-      }
-      if (context.education.firstGenerationEngineer) {
-        lines.push(`- **Socio-Economic Context**: First-generation engineer in family (requires approachable, confidence-building explanations)`);
-      }
-      if (context.education.financialUrgency) {
-        lines.push(`- **Career Urgency**: ${context.education.financialUrgency.replace(/_/g, ' ')}`);
-      }
     }
 
     if (context.preferences) {
@@ -385,7 +343,7 @@ export class StudentContextEngine {
       }
     }
 
-    if (context.learning) {
+    if (context.learning && context.learning.currentCourse) {
       lines.push(
         `- **Active Course Focus**: ${context.learning.currentCourse.name} (${context.learning.currentCourse.progress}% complete)`
       );
@@ -394,13 +352,13 @@ export class StudentContextEngine {
 
     if (context.coding) {
       lines.push(
-        `- **Programming Progress**: ${context.coding.problemsSolved} challenges & ${context.coding.dsaSolved} DSA problems solved. Skills: ${context.coding.topSkills.join(', ')}`
+        `- **Programming Progress**: ${context.coding.problemsSolved} challenges & ${context.coding.dsaSolved} DSA problems solved.${context.coding.topSkills.length ? ` Self-reported skills: ${context.coding.topSkills.join(', ')}` : ''}`
       );
     }
 
-    if (context.career) {
+    if (context.career && context.career.targetRole) {
       lines.push(
-        `- **Career Objective**: ${context.career.targetRole} (Readiness: ${context.career.readinessScore}%). Focus Gaps: ${context.career.topGaps?.join(', ')}`
+        `- **Career Objective**: ${context.career.targetRole}${context.career.topGaps?.length ? `. Skills the student wants to build: ${context.career.topGaps.join(', ')}` : ''}`
       );
     }
 

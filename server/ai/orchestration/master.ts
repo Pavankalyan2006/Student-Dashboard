@@ -4,6 +4,8 @@ import { TaskPlanner } from './planner';
 import { AgentExecutor } from './executor';
 import { ResponseSynthesizer } from './synthesizer';
 import { AgentContext, AgentWorkflowRecord, SourceProvenance } from './types';
+import { StudentProfileService } from '../../services/studentProfile/studentProfileService';
+import { formatAcademicPromptLine } from '../../services/studentProfile/moduleContext';
 import { AIMessageRecord, ToolExecutionSummary, AgentPlanItem, AICitationItem } from '../../models/types';
 import { logger } from '../../core/logging';
 import { AIService } from '../service';
@@ -234,11 +236,14 @@ export class MasterAgent {
       else if (mUpper.includes('REVISION') || mUpper === 'MODE_G') promptKey = 'tutor_revision';
 
       let systemInstruction = PromptService.getPrompt(promptKey);
-      systemInstruction += `\n\nACADEMIC STUDENT PROFILE:
-- Degree: B.Tech Engineering
-- Branch: ${student.branch || 'Engineering'}
-- Current Semester: Semester ${student.semester || 6}
-- Student Name: ${student.name || 'Student'}`;
+      // Phase 5: academic context comes from the central profile, minimised for the AI provider:
+      // no name, email, phone or other personal identifiers are sent.
+      const tutorCtx = StudentProfileService.moduleContextSync(studentId, 'tutor') || {};
+      const profileLine = formatAcademicPromptLine(tutorCtx);
+      systemInstruction += `\n\nSTUDENT ACADEMIC CONTEXT (from the student's own profile; do not assume anything not listed):\n- ${profileLine || 'The student has not filled in their academic profile yet.'}`;
+      if (tutorCtx.preferred_language && tutorCtx.preferred_language !== 'English') {
+        systemInstruction += `\n- Prefer explanations in ${tutorCtx.preferred_language}; keep technical terms in English.`;
+      }
 
       if (studentContext.weak_areas?.length) {
         systemInstruction += `\n- Weak / Remedial Focus Areas: ${studentContext.weak_areas.join(', ')}`;

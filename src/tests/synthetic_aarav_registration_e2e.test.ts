@@ -287,9 +287,10 @@ describe('SECTION 56: Synthetic Student Registration, Onboarding & Whole-Platfor
     expect(context.career?.targetRole).toBe('Software Development / AI/ML Engineering');
 
     const promptText = StudentContextEngine.formatPromptContext(context);
-    expect(promptText).toContain('Aarav Test Student');
+    // Phase 5: the AI prompt carries academic context but no name or institution.
+    expect(promptText).not.toContain('Aarav Test Student');
     expect(promptText).toContain('Artificial Intelligence and Machine Learning');
-    expect(promptText).toContain('National Institute of Technology (NIT)');
+    expect(promptText).not.toContain('National Institute of Technology (NIT)');
     expect(promptText).toContain('Software Development / AI/ML Engineering');
   });
 

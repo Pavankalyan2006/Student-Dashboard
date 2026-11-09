@@ -43,7 +43,7 @@ export function useMockQuizModel(): void {
  * Returns the spies so a test can assert what was (or was not) sent to the model.
  */
 export function stubModel(responder: (prompt: string) => string) {
-  const status = vi.spyOn(AIService, 'getStatus').mockReturnValue({ provider: 'stub', configured: true, model: 'test-stub' });
+  const status = vi.spyOn(AIService, 'getStatus').mockReturnValue({ provider: 'stub', configured: true, model: 'test-stub', usage: {} as any });
   const gen = vi.spyOn(AIService, 'generate').mockImplementation(async (messages: any[]) => {
     const prompt = messages.map((m) => m.content).join('\n');
     return { text: responder(prompt), provider: 'test-stub', model: 'test-stub' } as any;
