@@ -29,6 +29,19 @@ export function getSnapshotPath(): string | null {
   return path.resolve(process.env.DATA_SNAPSHOT_PATH || './data/runtime/db-snapshot.json');
 }
 
+export function encodeValue(value: unknown): unknown {
+  return encode(value);
+}
+
+export function decodeValue(value: any): any {
+  return decode(value);
+}
+
+/** Read-only view of the registered sources (used by the Postgres state store). */
+export function getRegisteredSources(): ReadonlyArray<{ name: string; target: Record<string, any>; keys: string[] }> {
+  return sources;
+}
+
 function encode(value: unknown): unknown {
   if (value instanceof Map) {
     return { __type: 'Map', entries: Array.from(value.entries()).map(([k, v]) => [k, encode(v)]) };
@@ -72,6 +85,9 @@ export function registerPersistentSource(name: string, target: Record<string, an
       const v = target[k];
       return v instanceof Map || v instanceof Set || Array.isArray(v);
     });
+  // Re-registering a name replaces it (a retried serverless cold start registers again).
+  const existing = sources.findIndex((s) => s.name === name);
+  if (existing >= 0) sources.splice(existing, 1);
   sources.push({ name, target, keys: resolvedKeys });
 }
 

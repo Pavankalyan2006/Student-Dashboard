@@ -61,3 +61,7 @@ Phase 14 delivers a unified student personal productivity, community, and learni
 - Unit & Integration Test Suite: 18 test files, 279 tests passing with 100% success (`npm test -- --run`).
 - TypeScript: Typecheck passes with zero errors (`npx tsc --noEmit`).
 - Production Bundle: Vite production build passes (`npm run build`).
+
+## Deploy to Vercel
+
+See [docs/deployment/VERCEL_DEPLOYMENT.md](docs/deployment/VERCEL_DEPLOYMENT.md).
