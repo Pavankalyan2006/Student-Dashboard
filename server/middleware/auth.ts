@@ -3,13 +3,53 @@ import { Security, TokenPayload } from '../core/security';
 import { AuthenticationError, AuthorizationError } from '../core/exceptions';
 import { db } from '../db/database';
 import { UserRole } from '../models/types';
+import { config } from '../core/config';
+import {
+  isFirebaseAuthEnabled,
+  looksLikeFirebaseIdToken,
+  verifyFirebaseIdToken,
+  VerifiedFirebaseUser,
+  FirebaseUnavailableError,
+} from '../auth/firebaseAdmin';
 
 declare global {
   namespace Express {
     interface Request {
       user?: TokenPayload;
+      /** Phase 5: set when the request carries a valid Firebase ID token (even before the student record exists). */
+      firebaseUser?: VerifiedFirebaseUser;
     }
   }
+}
+
+const PUBLIC_AUTH_PATHS = new Set(['/api/v1/auth/login', '/api/v1/auth/register', '/api/v1/auth/refresh', '/api/v1/auth/config']);
+
+/**
+ * Phase 5: Firebase ID token path. The token is verified with the Firebase Admin SDK; the student is
+ * resolved from the verified uid, never from anything the client sends.
+ */
+async function authenticateFirebase(req: Request, res: Response, next: NextFunction, token: string, fromHeader: boolean) {
+  let user: VerifiedFirebaseUser;
+  try {
+    user = await verifyFirebaseIdToken(token);
+  } catch (err) {
+    if (req.cookies?.access_token && !(err instanceof FirebaseUnavailableError)) res.clearCookie('access_token');
+    if (!req.path.startsWith('/api')) return next();
+    if (err instanceof FirebaseUnavailableError) return next(err);
+    if (PUBLIC_AUTH_PATHS.has(req.path)) return next();
+    return fromHeader ? next(err) : next();
+  }
+  req.firebaseUser = user;
+  const { findStudentByFirebaseUid } = await import('../services/studentProfile/identityService');
+  const student = await findStudentByFirebaseUid(user.uid);
+  if (!student) return next(); // not provisioned yet: only POST /auth/firebase/session will accept this
+  if (!student.is_active || student.status === 'SUSPENDED' || student.status === 'DISABLED' || student.status === 'PENDING') {
+    if (req.path.startsWith('/api')) return next(new AuthenticationError('Student account is suspended, pending approval, or inactive'));
+    return next();
+  }
+  if (user.email_verified && !student.email_verified) student.email_verified = true;
+  req.user = { userId: student.id, email: student.email, role: student.role, name: student.name };
+  return next();
 }
 
 export async function authenticate(req: Request, res: Response, next: NextFunction) {
@@ -26,6 +66,16 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
 
     if (!token) {
       return next(); // Unauthenticated, proceeding; routes needing auth will call requireAuth
+    }
+
+    if (isFirebaseAuthEnabled() && looksLikeFirebaseIdToken(token)) {
+      return authenticateFirebase(req, res, next, token, Boolean(authHeader));
+    }
+    if (config.authProvider === 'firebase') {
+      // One authoritative provider: once Firebase is configured, tokens from the old provider are not accepted.
+      if (req.cookies?.access_token) res.clearCookie('access_token');
+      if (!req.path.startsWith('/api') || PUBLIC_AUTH_PATHS.has(req.path) || !authHeader) return next();
+      return next(new AuthenticationError('Please sign in again.'));
     }
 
     try {

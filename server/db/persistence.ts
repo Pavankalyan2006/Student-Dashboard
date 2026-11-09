@@ -147,3 +147,22 @@ export function flushSnapshot(): void {
   }
   saveSnapshotNow();
 }
+
+/**
+ * Phase 5: synchronous save that reports failure, for writes whose success message must mean
+ * "persisted" (registration, profile edits). No-op when persistence is disabled.
+ */
+export function saveSnapshotStrict(): void {
+  const file = getSnapshotPath();
+  if (!file) return;
+  const payload: Record<string, any> = { version: 1, saved_at: new Date().toISOString(), sources: {} };
+  for (const source of sources) {
+    const data: Record<string, unknown> = {};
+    for (const key of source.keys) data[key] = encode(source.target[key]);
+    payload.sources[source.name] = data;
+  }
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  const tmp = `${file}.tmp`;
+  fs.writeFileSync(tmp, JSON.stringify(payload), { mode: 0o600 });
+  fs.renameSync(tmp, file);
+}

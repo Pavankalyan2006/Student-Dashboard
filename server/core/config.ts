@@ -24,6 +24,14 @@ export interface ServerConfig {
   storageLocalPath: string;
   maxUploadSizeBytes: number;
   allowedUploadMimeTypes: string[];
+  /** Phase 5: which provider owns student credentials. See docs/phase-5/PHASE_5_AUTHENTICATION_REPORT.md. */
+  authProvider: 'legacy' | 'firebase';
+  firebaseProjectId?: string;
+  /** Phase 5: where the central student profile is stored. 'supabase' needs SUPABASE_DB_URL. */
+  profileStore: 'snapshot' | 'supabase';
+  supabaseUrl?: string;
+  supabaseDbUrl?: string;
+  supabaseServiceRoleConfigured: boolean;
 }
 
 export const config: ServerConfig = {
@@ -63,7 +71,26 @@ export const config: ServerConfig = {
     'text/csv',
     'application/rtf',
   ],
+  // Firebase becomes the authoritative provider only when the owner configures a project for the
+  // backend. Without it the existing email/password provider keeps working unchanged.
+  authProvider:
+    (process.env.AUTH_PROVIDER as 'legacy' | 'firebase') ||
+    (process.env.FIREBASE_PROJECT_ID ? 'firebase' : 'legacy'),
+  firebaseProjectId: process.env.FIREBASE_PROJECT_ID,
+  profileStore:
+    (process.env.PROFILE_STORE as 'snapshot' | 'supabase') ||
+    (process.env.SUPABASE_DB_URL ? 'supabase' : 'snapshot'),
+  supabaseUrl: process.env.SUPABASE_URL,
+  supabaseDbUrl: process.env.SUPABASE_DB_URL,
+  supabaseServiceRoleConfigured: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
 };
+
+if (config.authProvider === 'firebase' && !config.firebaseProjectId) {
+  throw new Error('AUTH_PROVIDER=firebase needs FIREBASE_PROJECT_ID so ID tokens can be verified.');
+}
+if (config.profileStore === 'supabase' && !config.supabaseDbUrl) {
+  throw new Error('PROFILE_STORE=supabase needs SUPABASE_DB_URL (server-only Postgres connection string).');
+}
 
 
 // Refuse to run in production with the published development JWT secrets: anyone
