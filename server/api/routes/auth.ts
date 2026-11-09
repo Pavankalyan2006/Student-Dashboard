@@ -3,12 +3,43 @@ import { db } from '../../db/database';
 import { Security } from '../../core/security';
 import { AuthenticationError, ValidationError } from '../../core/exceptions';
 import { requireAuth } from '../../middleware/auth';
-import { OnboardingService } from '../../services/onboardingService';
+import { AppError } from '../../core/exceptions';
+import { config } from '../../core/config';
+import { IdentityService, checkPasswordStrength } from '../../services/studentProfile/identityService';
+import { StudentProfileService, requireVerifiedEmail } from '../../services/studentProfile/studentProfileService';
+import type { Request, Response, NextFunction } from 'express';
 
 export const authRouter = Router();
 
-authRouter.post('/auth/login', async (req, res, next) => {
+// Phase 5: small fixed-window limiter for credential endpoints (per IP + route, and per email for login).
+const attemptBuckets = new Map<string, { count: number; resetAt: number }>();
+export function authAttemptLimiter(name: string, max: number, windowMs: number) {
+  return (req: Request, _res: Response, next: NextFunction) => {
+    if (process.env.VITEST && !process.env.AUTH_RATE_LIMIT_IN_TESTS) return next();
+    const now = Date.now();
+    const keys = [`${name}:ip:${req.ip}`];
+    if (typeof req.body?.email === 'string') keys.push(`${name}:email:${req.body.email.trim().toLowerCase()}`);
+    for (const key of keys) {
+      const b = attemptBuckets.get(key);
+      if (!b || b.resetAt < now) attemptBuckets.set(key, { count: 1, resetAt: now + windowMs });
+      else if (++b.count > max) {
+        return next(new AppError('Too many attempts. Please wait a few minutes and try again.', 429, 'RATE_LIMITED'));
+      }
+    }
+    next();
+  };
+}
+export function resetAuthAttemptLimiter() {
+  attemptBuckets.clear();
+}
+
+function legacyPasswordAuthDisabled() {
+  return new AppError('Password sign-in is handled by Firebase on this server.', 409, 'PASSWORD_AUTH_DISABLED');
+}
+
+authRouter.post('/auth/login', authAttemptLimiter('login', 10, 15 * 60 * 1000), async (req, res, next) => {
   try {
+    if (config.authProvider === 'firebase') throw legacyPasswordAuthDisabled();
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -36,7 +67,8 @@ authRouter.post('/auth/login', async (req, res, next) => {
       throw new AuthenticationError('Your account is inactive. Please contact your administrator.');
     }
 
-    const isMatch = await Security.comparePassword(password, student.password_hash);
+    // Accounts linked to Firebase have no local password.
+    const isMatch = student.password_hash ? await Security.comparePassword(String(password), student.password_hash) : false;
     if (!isMatch) {
       throw new AuthenticationError('Invalid email or password');
     }
@@ -72,122 +104,78 @@ authRouter.post('/auth/login', async (req, res, next) => {
   }
 });
 
-authRouter.post('/auth/register', async (req, res, next) => {
+authRouter.post('/auth/register', authAttemptLimiter('register', 20, 60 * 60 * 1000), async (req, res, next) => {
   try {
-    const {
-      name,
-      email,
-      password,
-      degree,
-      branch,
-      semester,
-      admission_year,
-      institution,
-      roll_number,
-      target_role,
-      learning_goal,
-    } = req.body;
-
-    if (!name || !email || !password) {
-      throw new ValidationError('Name, academic email, and password are required');
+    if (config.authProvider === 'firebase') {
+      throw new AppError(
+        'Accounts are created with Firebase sign-up on this server. Use the registration form, which signs you up with Firebase.',
+        409,
+        'PASSWORD_AUTH_DISABLED'
+      );
     }
-
-    const trimmedEmail = email.trim().toLowerCase();
-    if (!trimmedEmail.includes('@') || !trimmedEmail.includes('.')) {
-      throw new ValidationError('Please enter a valid email address');
-    }
-
-    if (password.length < 6) {
-      throw new ValidationError('Password must be at least 6 characters');
-    }
-
-    const existingStudent = await db.getStudentByEmail(trimmedEmail);
-    if (existingStudent) {
-      throw new ValidationError('An account with this email address already exists. Please sign in instead.');
-    }
-
-    const passwordHash = await Security.hashPassword(password);
-    const sem = Number(semester) || 1;
-    const brn = branch || 'Computer Science & Engineering';
-    const deg = degree || 'B.Tech';
-
-    const newStudent = await db.createStudent({
-      name: name.trim(),
-      display_name: req.body.display_name ? req.body.display_name.trim() : name.trim().split(' ')[0],
-      avatar_url: req.body.avatar_url || undefined,
-      email: trimmedEmail,
-      password_hash: passwordHash,
-      branch: brn,
-      semester: sem,
-      role: 'STUDENT',
-      is_active: true,
-      status: 'ACTIVE',
-      onboarding_completed: false,
-    } as any);
-
-    // Initialize their education profile in OnboardingService
-    try {
-      await OnboardingService.saveEducationProfile(newStudent.id, {
-        degree: deg,
-        branch: brn,
-        institution: institution || 'B.Tech Engineering College',
-        current_year: Math.ceil(sem / 2),
-        current_semester: sem,
-        admission_year: admission_year || new Date().getFullYear() - Math.floor((sem - 1) / 2),
-        expected_graduation_year: (admission_year || new Date().getFullYear()) + 4,
-        study_mode: 'FULL_TIME',
-      });
-
-      if (target_role) {
-        await OnboardingService.saveCareerGoals(newStudent.id, {
-          target_job_role: target_role,
-          career_directions: [target_role.includes('AI') ? 'AI_ML' : target_role.includes('Data') ? 'DATA_SCIENCE' : 'SOFTWARE_DEVELOPMENT'],
-        });
-        await OnboardingService.updateOnboardingStep(newStudent.id, 'CAREER_GOALS', true, false);
-      }
-
-      if (learning_goal) {
-        await OnboardingService.saveAcademicHistory(newStudent.id, {
-          previous_goals: [learning_goal],
-        });
-      }
-
-      await OnboardingService.updateOnboardingStep(newStudent.id, 'BASIC_PROFILE', true, false);
-      await OnboardingService.updateOnboardingStep(newStudent.id, 'EDUCATION', true, false);
-    } catch (e) {
-      // Non-blocking
-    }
-
-    const tokenPayload = {
-      userId: newStudent.id,
-      email: newStudent.email,
-      role: newStudent.role,
-      name: newStudent.name,
-    };
-
+    const student = await IdentityService.registerLegacy(req.body || {});
+    const tokenPayload = { userId: student.id, email: student.email, role: student.role, name: student.name };
     const accessToken = Security.generateAccessToken(tokenPayload);
     const refreshToken = Security.generateRefreshToken(tokenPayload);
-
     res.cookie('access_token', accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge: 2 * 60 * 60 * 1000,
     });
-
-    res.status(201).json({
-      success: true,
-      data: {
-        token: accessToken,
-        refreshToken,
-        student: newStudent,
-      },
-    });
+    res.status(201).json({ success: true, data: { token: accessToken, refreshToken, student } });
   } catch (err) {
     next(err);
   }
 });
 
+// Phase 5: tells the browser which provider owns credentials on this server.
+authRouter.get('/auth/config', (_req, res) => {
+  res.json({
+    success: true,
+    data: {
+      provider: config.authProvider,
+      email_verification_required: requireVerifiedEmail(),
+      profile_store: config.profileStore,
+    },
+  });
+});
+
+/**
+ * Phase 5: Firebase session bootstrap. Called by the browser after every Firebase sign-up/sign-in
+ * with the Firebase ID token as the bearer token. Verifies the token (middleware), then finds or
+ * creates the student (idempotent; safe to retry after a failure) and returns the profile.
+ */
+authRouter.post('/auth/firebase/session', authAttemptLimiter('firebase-session', 60, 15 * 60 * 1000), async (req, res, next) => {
+  try {
+    if (!req.firebaseUser) throw new AuthenticationError('A valid Firebase ID token is required');
+    const body = req.body || {};
+    const result = await IdentityService.bootstrapFirebaseStudent(req.firebaseUser, {
+      full_name: body.full_name,
+      accept_terms: body.accept_terms,
+      accept_privacy: body.accept_privacy,
+      phone: body.phone,
+    });
+    const header = req.headers.authorization;
+    const idToken = header && header.startsWith('Bearer ') ? header.slice(7) : req.cookies?.access_token;
+    if (idToken) {
+      // Same Firebase token as an httpOnly cookie for plain links (downloads, previews). No second session.
+      res.cookie('access_token', idToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 1000,
+      });
+    }
+    const { profile, completion } = await StudentProfileService.getProfile(result.student.id);
+    res.status(result.created ? 201 : 200).json({
+      success: true,
+      data: { student: result.student, created: result.created, linked: result.linked, profile, completion },
+    });
+  } catch (err) {
+    next(err);
+  }
+});
 
 authRouter.post('/auth/logout', (_req, res) => {
   res.clearCookie('access_token');
@@ -217,6 +205,7 @@ authRouter.get('/auth/me', requireAuth, async (req, res, next) => {
 
 authRouter.post('/auth/refresh', async (req, res, next) => {
   try {
+    if (config.authProvider === 'firebase') throw legacyPasswordAuthDisabled();
     const { refreshToken } = req.body;
     if (!refreshToken) {
       throw new ValidationError('Refresh token required');
@@ -255,6 +244,7 @@ authRouter.post('/auth/refresh', async (req, res, next) => {
 
 authRouter.post('/auth/change-password', requireAuth, async (req, res, next) => {
   try {
+    if (config.authProvider === 'firebase') throw legacyPasswordAuthDisabled();
     const studentId = req.user!.userId;
     const { oldPassword, currentPassword, newPassword } = req.body;
     const oldPass = oldPassword || currentPassword;
@@ -263,9 +253,7 @@ authRouter.post('/auth/change-password', requireAuth, async (req, res, next) => 
       throw new ValidationError('Current password and new password are required');
     }
 
-    if (newPassword.length < 6) {
-      throw new ValidationError('New password must be at least 6 characters');
-    }
+    checkPasswordStrength(newPassword, req.user!.email);
 
     const student = await db.getStudentById(studentId);
     if (!student) {

@@ -14,6 +14,14 @@ export interface Student {
   avatar_url?: string;
   display_name?: string;
   onboarding_completed?: boolean;
+  /** Phase 5 identity fields. firebase_uid is unique and set only by the server from a verified ID token. */
+  auth_provider?: 'legacy' | 'firebase';
+  firebase_uid?: string;
+  email_verified?: boolean;
+  phone?: string;
+  terms_accepted_at?: string;
+  privacy_accepted_at?: string;
+  onboarding_completed_at?: string;
   created_at: string;
   updated_at: string;
 }

@@ -13,6 +13,7 @@ import { globalRateLimiter } from './server/middleware/rateLimiter';
 import { maintenanceMiddleware } from './server/middleware/maintenance';
 import { apiV1Router } from './server/api/router';
 import { onboardingStores } from './server/services/onboardingService';
+import { studentProfileStores } from './server/services/studentProfile/profileCache';
 import { CareerService } from './server/services/careerService';
 import { MlLabService } from './server/services/mlLabService';
 import { SqlLabSandboxService } from './server/services/sqlLabSandboxService';
@@ -65,6 +66,7 @@ async function setupPersistence() {
     'jobs',
   ]);
   registerPersistentSource('onboarding', onboardingStores as unknown as Record<string, any>);
+  registerPersistentSource('studentProfile', studentProfileStores as unknown as Record<string, any>);
   registerPersistentSource('career', CareerService as unknown as Record<string, any>, ['careerProfiles']);
   registerPersistentSource('mlLab', MlLabService as unknown as Record<string, any>, ['workspaces', 'customDatasets', 'experiments', 'fittedModels', 'predictions']);
   // Search vectors for uploaded documents; without this, search and Q&A found nothing after a restart.
@@ -147,7 +149,7 @@ async function startServer() {
     res.setHeader('Permissions-Policy', 'camera=(), microphone=(self), geolocation=()');
     res.setHeader(
       'Content-Security-Policy',
-      "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' https: ws: wss:; frame-ancestors 'self';"
+      "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://www.googletagmanager.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' https: ws: wss:; frame-src 'self' https://*.firebaseapp.com; frame-ancestors 'self';"
     );
     if (process.env.NODE_ENV === 'production') {
       res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');

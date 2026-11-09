@@ -292,7 +292,9 @@ describe('Unified Personalization Modules E2E Test Suite', () => {
       expect(updated.graduation_year).toBe(2026);
       expect(updated.github_url).toBe('https://github.com/alice-personalization');
       expect(updated.skills).toHaveLength(3);
-      expect(updated.completion_percentage).toBeGreaterThanOrEqual(70);
+      // Phase 5: one completion number, computed by the central profile service.
+      const { StudentProfileService } = await import('../../server/services/studentProfile/studentProfileService');
+      expect(updated.completion_percentage).toBe((await StudentProfileService.getCompletion(studentAlice)).overall_percentage);
     });
 
     it('3.3 enforces validation on bio character length and URLs', async () => {

@@ -28,6 +28,8 @@ import {
 } from '../../../../server/models/communityProfileProgressTypes';
 import { toast } from 'sonner';
 
+import { ProfileManager } from '../components/ProfileManager';
+
 export function ProfilePage({ onNavigate }: { onNavigate: (path: string) => void }) {
   const [profile, setProfile] = React.useState<StudentProfileData | null>(null);
   const [portfolio, setPortfolio] = React.useState<UnifiedPortfolioSummary | null>(null);
@@ -39,6 +41,10 @@ export function ProfilePage({ onNavigate }: { onNavigate: (path: string) => void
 
   React.useEffect(() => {
     loadData();
+    // Phase 5: reload the header and summaries after any confirmed profile save.
+    const onUpdate = () => loadData();
+    window.addEventListener('profile:updated', onUpdate);
+    return () => window.removeEventListener('profile:updated', onUpdate);
   }, []);
 
   const loadData = async () => {
@@ -76,6 +82,8 @@ export function ProfilePage({ onNavigate }: { onNavigate: (path: string) => void
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
+      {/* Phase 5: complete profile management (central profile service). */}
+      <ProfileManager />
       {/* Header Banner */}
       <div className="relative overflow-hidden rounded-2xl border border-[#E4E7EC] bg-white p-6 sm:p-8 shadow-xs">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">

@@ -70,6 +70,25 @@ import { RepositoryDetailPage } from './pages/RepositoryDetailPage';
 // Phase 14: Community, Student Profile, Progress & Student Utilities
 import { ProfilePage } from './features/profile/pages/ProfilePage';
 import { ProfileEditPage } from './features/profile/pages/ProfileEditPage';
+import { ProfileRecommendationsPanel } from './features/profile/components/ProfileManager';
+
+/** Module landing routes that show profile-based recommendations, mapped to the recommendation module. */
+const PROFILE_RECOMMENDATION_ROUTES: Record<string, string> = {
+  '/courses': 'courses',
+  '/coding': 'coding',
+  '/coding-lab': 'coding',
+  '/dsa': 'dsa',
+  '/dsa-lab': 'dsa',
+  '/sql-lab': 'sql',
+  '/ml-lab': 'ml',
+  '/system-design': 'system_design',
+  '/gate': 'gate',
+  '/mock-interviews': 'interview',
+  '/career': 'career',
+  '/jobs': 'jobs',
+  '/placements': 'placement',
+  '/study-planner': 'planner',
+};
 import { ProfileActivityPage } from './features/profile/pages/ProfileActivityPage';
 import { ProfileAchievementsPage } from './features/profile/pages/ProfileAchievementsPage';
 import { ProfileCertificatesPage } from './features/profile/pages/ProfileCertificatesPage';
@@ -1077,8 +1096,17 @@ function AppContent() {
     return <NotFoundPage onNavigate={navigate} />;
   };
 
+  // Phase 5: module landing pages show recommendations driven by the central student profile.
+  const routePath = currentPath.split('?')[0].split('#')[0];
+  const recommendationModule = PROFILE_RECOMMENDATION_ROUTES[routePath];
+
   return (
     <AppShell currentPath={currentPath.split('?')[0]} onNavigate={navigate}>
+      {recommendationModule && student && (
+        <div className="px-4 sm:px-6 lg:px-8 pt-4">
+          <ProfileRecommendationsPanel module={recommendationModule} onNavigate={navigate} />
+        </div>
+      )}
       {renderRoute()}
     </AppShell>
   );

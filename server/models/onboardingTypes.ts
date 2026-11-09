@@ -75,6 +75,8 @@ export interface EducationProfile {
   degree: DegreeType;
   branch: string;
   specialization?: string;
+  /** Phase 5 */
+  department?: string;
   institution: string;
   university?: string;
   current_year: number;
@@ -84,6 +86,8 @@ export interface EducationProfile {
   study_mode: StudyMode;
   education_status?: string;
   previous_qualification?: string;
+  /** Phase 5: structured list; previous_qualification keeps the first entry for older readers. */
+  previous_qualifications?: string[];
   current_cgpa?: number;
   cgpa_scale?: number;
   academic_interests?: string[];
@@ -159,7 +163,7 @@ export interface SemesterSyllabusData {
 }
 
 // --- Step 5: Skills Self-Assessment ---
-export type SkillLevel = 'NOT_STARTED' | 'BEGINNER' | 'BASIC' | 'INTERMEDIATE' | 'ADVANCED' | 'NOT_SURE';
+export type SkillLevel = 'NOT_STARTED' | 'BEGINNER' | 'BASIC' | 'INTERMEDIATE' | 'ADVANCED' | 'EXPERT' | 'NOT_SURE';
 
 export interface SkillSelfAssessment {
   skill_name: string;
@@ -268,6 +272,17 @@ export interface CareerGoals {
   favorite_subjects?: string[];
   challenging_subjects?: string[];
   achievements_and_rewards?: string[];
+  // Phase 5 structured career profile (single-value fields above keep the first entry for older readers)
+  target_roles?: string[];
+  career_interests?: string[];
+  preferred_industries?: string[];
+  preferred_locations?: string[];
+  internship_interests?: string[];
+  placement_goals?: string;
+  higher_education_interests?: string[];
+  competitive_exams?: string[];
+  gate_paper?: string;
+  short_term_goals?: string;
   updated_at: string;
 }
 
@@ -306,6 +321,8 @@ export interface LearningPreferences {
   preferred_study_time: 'MORNING' | 'AFTERNOON' | 'EVENING' | 'NIGHT' | 'FLEXIBLE';
   revision_frequency: 'DAILY' | 'ALTERNATE_DAYS' | 'WEEKLY' | 'BEFORE_EXAMS' | 'FLEXIBLE';
   learning_pace?: 'FAST_PACED' | 'STEADY_BALANCED' | 'FOUNDATIONAL_STEP_BY_STEP';
+  /** Phase 5: fields holding a placeholder value because the student has not chosen one. */
+  unset_fields?: string[];
   updated_at: string;
 }
 

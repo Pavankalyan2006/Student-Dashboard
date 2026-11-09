@@ -151,6 +151,15 @@ export function StudentContextProvider({ children }: { children: React.ReactNode
     loadAllContext();
   }, [loadAllContext]);
 
+  // Phase 5: reload when the central profile changes anywhere in the app.
+  React.useEffect(() => {
+    const onUpdate = () => {
+      void loadAllContext();
+    };
+    window.addEventListener('profile:updated', onUpdate);
+    return () => window.removeEventListener('profile:updated', onUpdate);
+  }, [loadAllContext]);
+
   // Synchronized update methods
   const updateProfile = async (data: any): Promise<boolean> => {
     setIsSaving(true);

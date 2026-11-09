@@ -1,6 +1,7 @@
 import https from 'https';
 import { config } from '../core/config';
 import { logger } from '../core/logging';
+import { AppError } from '../core/exceptions';
 
 export interface AIMessage {
   role: 'user' | 'model' | 'system' | 'assistant';
@@ -31,9 +32,47 @@ export interface AIProvider {
   embed?(text: string): Promise<number[]>;
 }
 
+/** Phase 5: never let an API key reach a log line or an error message. */
+export function redactSecrets(text: string): string {
+  return String(text || '')
+    .replace(/AIza[0-9A-Za-z_-]{20,}/g, '[redacted-key]')
+    .replace(/([?&]key=)[^&\s]+/gi, '$1[redacted]')
+    .replace(/(x-goog-api-key["']?\s*[:=]\s*["']?)[^"'\s,]+/gi, '$1[redacted]');
+}
+
+const MAX_PROMPT_CHARS = Number(process.env.AI_MAX_PROMPT_CHARS) || 200_000;
+
+/** Phase 5: in-process usage counters (no prompt text is stored). */
+export class AIUsageTracker {
+  private static totals = { calls: 0, failures: 0, promptTokens: 0, completionTokens: 0, totalTokens: 0 };
+  private static byModel = new Map<string, { calls: number; failures: number; totalTokens: number }>();
+  static record(model: string, usage?: { promptTokens: number; completionTokens: number; totalTokens: number }) {
+    this.totals.calls++;
+    if (usage) {
+      this.totals.promptTokens += usage.promptTokens;
+      this.totals.completionTokens += usage.completionTokens;
+      this.totals.totalTokens += usage.totalTokens;
+    }
+    const m = this.byModel.get(model) || { calls: 0, failures: 0, totalTokens: 0 };
+    m.calls++;
+    m.totalTokens += usage?.totalTokens || 0;
+    this.byModel.set(model, m);
+  }
+  static recordFailure(model: string) {
+    this.totals.failures++;
+    const m = this.byModel.get(model) || { calls: 0, failures: 0, totalTokens: 0 };
+    m.failures++;
+    this.byModel.set(model, m);
+  }
+  static snapshot() {
+    return { ...this.totals, by_model: Object.fromEntries(this.byModel) };
+  }
+}
+
 export class GeminiProvider implements AIProvider {
   public readonly name = 'gemini';
   private readonly apiKey: string;
+  private lastUsage: { promptTokens: number; completionTokens: number; totalTokens: number } | null = null;
   private readonly supportedModels: string[];
 
   constructor() {
@@ -88,13 +127,15 @@ export class GeminiProvider implements AIProvider {
     return new Promise((resolve, reject) => {
       const options = {
         hostname: 'generativelanguage.googleapis.com',
-        path: `/v1beta/models/${model}:generateContent?key=${this.apiKey}`,
+        // Phase 5: the key travels in a header, never in the URL (URLs end up in proxy and error logs).
+        path: `/v1beta/models/${encodeURIComponent(model)}:generateContent`,
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Content-Length': Buffer.byteLength(body),
+          'x-goog-api-key': this.apiKey,
         },
-        timeout: 55000,
+        timeout: Number(process.env.GEMINI_TIMEOUT_MS) || 30000,
       };
 
       const req = https.request(options, (res) => {
@@ -105,6 +146,14 @@ export class GeminiProvider implements AIProvider {
             try {
               const parsed = JSON.parse(responseData);
               const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
+              const um = parsed.usageMetadata;
+              if (um) {
+                this.lastUsage = {
+                  promptTokens: um.promptTokenCount || 0,
+                  completionTokens: um.candidatesTokenCount || 0,
+                  totalTokens: um.totalTokenCount || 0,
+                };
+              }
               if (text) {
                 resolve(text);
               } else {
@@ -119,7 +168,7 @@ export class GeminiProvider implements AIProvider {
               const errObj = JSON.parse(responseData);
               errMsg = errObj.error?.message || errMsg;
             } catch {}
-            reject(new Error(`Gemini model '${model}' returned ${errMsg}`));
+            reject(new Error(`Gemini model '${model}' returned ${redactSecrets(errMsg)}`));
           }
         });
       });
@@ -130,7 +179,7 @@ export class GeminiProvider implements AIProvider {
       });
 
       req.on('error', (err) => {
-        reject(err);
+        reject(new Error(redactSecrets(err.message || 'network error')));
       });
 
       req.write(body);
@@ -150,6 +199,11 @@ export class GeminiProvider implements AIProvider {
     }
 
     if (this.apiKey) {
+      const totalChars =
+        options.messages.reduce((n, m) => n + (m.content?.length || 0), 0) + (options.systemInstruction?.length || 0);
+      if (totalChars > MAX_PROMPT_CHARS) {
+        throw new AppError('This request is too long for the AI provider. Shorten the text and try again.', 413, 'AI_INPUT_TOO_LARGE');
+      }
       const contents = options.messages.map((m) => ({
         role: m.role === 'assistant' || m.role === 'model' ? 'model' : 'user',
         parts: [{ text: m.content }],
@@ -166,12 +220,17 @@ export class GeminiProvider implements AIProvider {
           );
 
           if (generatedText) {
+            const usage = this.lastUsage || undefined;
+            this.lastUsage = null;
+            AIUsageTracker.record(model, usage);
             return {
               text: generatedText,
+              usage,
             };
           }
         } catch (err: any) {
-          logger.warn(`Gemini model '${model}' call failed: ${err.message}. Trying next fallback...`);
+          AIUsageTracker.recordFailure(model);
+          logger.warn(`Gemini model '${model}' call failed: ${redactSecrets(err.message)}. Trying next fallback...`);
         }
       }
     }

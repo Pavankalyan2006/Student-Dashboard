@@ -38,6 +38,8 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
     error: {
       code,
       message,
+      // Phase 5: per-field validation messages so forms can show them next to the field.
+      ...((err as any)?.details && err instanceof AppError ? { details: (err as any).details } : {}),
       request_id: req.id,
     },
   });

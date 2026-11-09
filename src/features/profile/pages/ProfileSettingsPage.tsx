@@ -33,6 +33,8 @@ import {
   StudentPreference,
 } from '../../../../server/models/communityProfileProgressTypes';
 import { toast } from 'sonner';
+import { useAuth } from '../../../hooks/useAuth';
+import { getAnalyticsConsent, setAnalyticsConsent } from '../../../lib/analytics';
 import { useStudentContext } from '../../../hooks/useStudentContext';
 
 export function ProfileSettingsPage({
@@ -43,6 +45,8 @@ export function ProfileSettingsPage({
   onNavigate: (path: string) => void;
 }) {
   const { refreshStudentContext } = useStudentContext();
+  const { provider, sendPasswordReset, student: authStudent } = useAuth();
+  const [analyticsConsent, setAnalyticsConsentState] = React.useState(getAnalyticsConsent());
   const [activeTab, setActiveTab] = React.useState(initialTab);
   const [loading, setLoading] = React.useState(true);
   const [saving, setSaving] = React.useState(false);
@@ -277,6 +281,30 @@ export function ProfileSettingsPage({
           </div>
 
           {/* Change Password Form */}
+          {provider === 'firebase' ? (
+            <div className="bg-white rounded-2xl border border-[#E4E7EC] p-6 space-y-3 shadow-2xs">
+              <div className="flex items-center gap-2">
+                <KeyRound className="h-4 w-4 text-blue-600" />
+                <h2 className="text-sm font-bold text-[#101828]">Password</h2>
+              </div>
+              <p className="text-xs text-[#667085]">Your password is managed by the sign-in service. We will email you a secure link to change it.</p>
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!authStudent?.email) return;
+                  try {
+                    await sendPasswordReset(authStudent.email);
+                    toast.success('Password reset email sent. Check your inbox.');
+                  } catch (err: any) {
+                    toast.error(err?.message || 'Could not send the reset email');
+                  }
+                }}
+                className="px-4 py-2 text-xs font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] rounded-lg"
+              >
+                Email me a password reset link
+              </button>
+            </div>
+          ) : (
           <div className="bg-white rounded-2xl border border-[#E4E7EC] p-6 space-y-4 shadow-2xs">
             <div className="flex items-center gap-2">
               <KeyRound className="h-4 w-4 text-blue-600" />
@@ -328,6 +356,7 @@ export function ProfileSettingsPage({
               </button>
             </form>
           </div>
+          )}
         </div>
       )}
 
@@ -611,6 +640,24 @@ export function ProfileSettingsPage({
                 <option value="PRIVATE">Strictly Private</option>
                 <option value="PUBLIC">Public</option>
               </select>
+            </div>
+
+            {/* Phase 5: product analytics are off until the student opts in */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3.5 rounded-xl border border-slate-200 bg-slate-50/50">
+              <div>
+                <label htmlFor="analytics-consent" className="text-xs font-semibold text-[#101828]">Usage analytics</label>
+                <p className="text-[11px] text-[#667085]">Share anonymous usage events (no name, email, answers or documents). Off by default.</p>
+              </div>
+              <input
+                id="analytics-consent"
+                type="checkbox"
+                checked={analyticsConsent}
+                onChange={(e) => {
+                  setAnalyticsConsent(e.target.checked);
+                  setAnalyticsConsentState(e.target.checked);
+                }}
+                className="h-4 w-4"
+              />
             </div>
 
             {/* Data Export section */}

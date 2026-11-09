@@ -180,9 +180,10 @@ describe('Complete Student Lifecycle & Whole-Platform Personalization Verificati
 
     // Format prompt context for LLM agents
     const promptString = StudentContextEngine.formatPromptContext(context);
-    expect(promptString).toContain('Aditya Varma');
+    // Phase 5: academic context yes; name and institution are not sent to the AI provider.
+    expect(promptString).not.toContain('Aditya Varma');
     expect(promptString).toContain('Computer Science & Engineering (CSE)');
-    expect(promptString).toContain('National Institute of Technology (NIT)');
+    expect(promptString).not.toContain('National Institute of Technology (NIT)');
     expect(promptString).toContain('Software Development Engineer (SDE)');
     expect(promptString).toContain('HANDS_ON');
   });

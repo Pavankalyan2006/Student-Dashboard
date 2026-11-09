@@ -1,4 +1,4 @@
-import { AIProvider, GeminiProvider, MockAIProvider, AIMessage, AIGenerateResult } from './provider';
+import { AIProvider, GeminiProvider, MockAIProvider, AIMessage, AIGenerateResult, AIUsageTracker } from './provider';
 import { PromptService } from './prompts';
 import { ToolRegistry } from './tools';
 import { config } from '../core/config';
@@ -10,12 +10,14 @@ export class AIService {
     config.aiProvider === 'gemini' ? new GeminiProvider() : new MockAIProvider();
 
   /** What the UI may truthfully show about the AI provider: its name, model and whether a key is set. */
-  public static getStatus(): { provider: string; configured: boolean; model: string | null } {
+  public static getStatus(): { provider: string; configured: boolean; model: string | null; usage: ReturnType<typeof AIUsageTracker.snapshot> } {
     const p: any = this.provider;
     return {
       provider: p.name,
       configured: p.name === 'gemini' ? Boolean(p.configured) : false,
       model: p.name === 'gemini' && p.configured ? p.primaryModel : null,
+      // Counts only; never prompt text and never the key.
+      usage: AIUsageTracker.snapshot(),
     };
   }
 

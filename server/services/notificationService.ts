@@ -95,10 +95,21 @@ export class NotificationService {
       link?: string;
     }
   ): Promise<NotificationItem> {
-    if (typeof studentIdOrPayload === 'string') {
-      return db.createNotificationItem(studentIdOrPayload, data!);
+    const studentId = typeof studentIdOrPayload === 'string' ? studentIdOrPayload : studentIdOrPayload.student_id;
+    const payload = typeof studentIdOrPayload === 'string' ? data! : studentIdOrPayload;
+    // Phase 5: honour the student's notification preferences (one record, edited in profile and settings).
+    const prefs = await db.getNotificationPreferences(studentId);
+    const kind = String(payload.type || '').toUpperCase();
+    const isReminder = /REMINDER|DEADLINE|REVISION|STUDY_PLAN/.test(kind);
+    const muted =
+      prefs.in_app === false ||
+      (isReminder && /REVISION/.test(kind) && prefs.revision_reminders === false) ||
+      (isReminder && /DEADLINE/.test(kind) && prefs.goal_deadlines === false) ||
+      (isReminder && /STUDY/.test(kind) && prefs.study_reminders === false);
+    if (muted) {
+      return { id: '', student_id: studentId, ...payload, is_read: true, suppressed: true, created_at: new Date().toISOString() } as any;
     }
-    return db.createNotificationItem(studentIdOrPayload.student_id, studentIdOrPayload);
+    return db.createNotificationItem(studentId, payload as any);
   }
 
   public static async deleteNotification(arg1: string, arg2?: string): Promise<{ success: boolean }> {
