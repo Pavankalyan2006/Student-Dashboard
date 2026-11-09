@@ -85,6 +85,12 @@ export const config: ServerConfig = {
   supabaseServiceRoleConfigured: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
 };
 
+if (!['legacy', 'firebase'].includes(config.authProvider)) {
+  throw new Error(`AUTH_PROVIDER must be 'legacy' or 'firebase' (got '${config.authProvider}').`);
+}
+if (!['snapshot', 'supabase'].includes(config.profileStore)) {
+  throw new Error(`PROFILE_STORE must be 'snapshot' or 'supabase' (got '${config.profileStore}').`);
+}
 if (config.authProvider === 'firebase' && !config.firebaseProjectId) {
   throw new Error('AUTH_PROVIDER=firebase needs FIREBASE_PROJECT_ID so ID tokens can be verified.');
 }
