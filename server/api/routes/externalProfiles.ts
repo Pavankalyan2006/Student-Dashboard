@@ -40,7 +40,7 @@ externalProfilesRouter.post('/validate-url', async (req: Request, res: Response)
     const result = ExternalProfilesService.validateProfileUrl(platform_id, url);
     return res.json({ success: true, ...result });
   } catch (err: any) {
-    return res.status(400).json({ success: false, error: err.message });
+    return res.status(err.statusCode && err.statusCode < 500 ? err.statusCode : 400).json({ success: false, error: err.message, code: err.code });
   }
 });
 
@@ -50,11 +50,11 @@ externalProfilesRouter.post('/validate-url', async (req: Request, res: Response)
  */
 externalProfilesRouter.get('/stats', requireAuth, async (req: Request, res: Response) => {
   try {
-    const studentId = (req as any).user?.id || (req as any).studentId || 'std_demo_1';
+    const studentId = req.user!.userId;
     const stats = await ExternalProfilesService.getDashboardStats(studentId);
     return res.json({ success: true, stats });
   } catch (err: any) {
-    return res.status(500).json({ success: false, error: err.message });
+    return res.status(err.statusCode && err.statusCode < 500 ? err.statusCode : 500).json({ success: false, error: err.message, code: err.code });
   }
 });
 
@@ -64,12 +64,12 @@ externalProfilesRouter.get('/stats', requireAuth, async (req: Request, res: Resp
  */
 externalProfilesRouter.get('/consented-summary', requireAuth, async (req: Request, res: Response) => {
   try {
-    const studentId = (req as any).user?.id || (req as any).studentId || 'std_demo_1';
+    const studentId = req.user!.userId;
     const context = (req.query.context as 'resume' | 'career' | 'jobs') || 'resume';
     const summary = await ExternalProfilesService.getConsentedProfileSummary(studentId, context);
     return res.json({ success: true, summary });
   } catch (err: any) {
-    return res.status(500).json({ success: false, error: err.message });
+    return res.status(err.statusCode && err.statusCode < 500 ? err.statusCode : 500).json({ success: false, error: err.message, code: err.code });
   }
 });
 
@@ -79,11 +79,11 @@ externalProfilesRouter.get('/consented-summary', requireAuth, async (req: Reques
  */
 externalProfilesRouter.get('/', requireAuth, async (req: Request, res: Response) => {
   try {
-    const studentId = (req as any).user?.id || (req as any).studentId || 'std_demo_1';
+    const studentId = req.user!.userId;
     const profiles = await ExternalProfilesService.getStudentProfiles(studentId);
     return res.json({ success: true, profiles });
   } catch (err: any) {
-    return res.status(500).json({ success: false, error: err.message });
+    return res.status(err.statusCode && err.statusCode < 500 ? err.statusCode : 500).json({ success: false, error: err.message, code: err.code });
   }
 });
 
@@ -93,7 +93,7 @@ externalProfilesRouter.get('/', requireAuth, async (req: Request, res: Response)
  */
 externalProfilesRouter.post('/', requireAuth, async (req: Request, res: Response) => {
   try {
-    const studentId = (req as any).user?.id || (req as any).studentId || 'std_demo_1';
+    const studentId = req.user!.userId;
     const profile = await ExternalProfilesService.addProfile(studentId, req.body);
     return res.status(201).json({ success: true, profile });
   } catch (err: any) {
@@ -111,11 +111,11 @@ externalProfilesRouter.post('/', requireAuth, async (req: Request, res: Response
  */
 externalProfilesRouter.post('/sync-all', requireAuth, async (req: Request, res: Response) => {
   try {
-    const studentId = (req as any).user?.id || (req as any).studentId || 'std_demo_1';
+    const studentId = req.user!.userId;
     const result = await ExternalProfilesService.syncAllEligibleProfiles(studentId);
     return res.json({ success: true, ...result });
   } catch (err: any) {
-    return res.status(500).json({ success: false, error: err.message });
+    return res.status(err.statusCode && err.statusCode < 500 ? err.statusCode : 500).json({ success: false, error: err.message, code: err.code });
   }
 });
 
@@ -125,14 +125,14 @@ externalProfilesRouter.post('/sync-all', requireAuth, async (req: Request, res: 
  */
 externalProfilesRouter.get('/:id', requireAuth, async (req: Request, res: Response) => {
   try {
-    const studentId = (req as any).user?.id || (req as any).studentId || 'std_demo_1';
+    const studentId = req.user!.userId;
     const profile = await ExternalProfilesService.getProfileById(studentId, req.params.id);
     return res.json({ success: true, profile });
   } catch (err: any) {
     if (err instanceof NotFoundError) {
       return res.status(404).json({ success: false, error: err.message });
     }
-    return res.status(500).json({ success: false, error: err.message });
+    return res.status(err.statusCode && err.statusCode < 500 ? err.statusCode : 500).json({ success: false, error: err.message, code: err.code });
   }
 });
 
@@ -142,7 +142,7 @@ externalProfilesRouter.get('/:id', requireAuth, async (req: Request, res: Respon
  */
 externalProfilesRouter.patch('/:id', requireAuth, async (req: Request, res: Response) => {
   try {
-    const studentId = (req as any).user?.id || (req as any).studentId || 'std_demo_1';
+    const studentId = req.user!.userId;
     const profile = await ExternalProfilesService.updateProfile(studentId, req.params.id, req.body);
     return res.json({ success: true, profile });
   } catch (err: any) {
@@ -152,7 +152,7 @@ externalProfilesRouter.patch('/:id', requireAuth, async (req: Request, res: Resp
     if (err instanceof NotFoundError) {
       return res.status(404).json({ success: false, error: err.message });
     }
-    return res.status(500).json({ success: false, error: err.message });
+    return res.status(err.statusCode && err.statusCode < 500 ? err.statusCode : 500).json({ success: false, error: err.message, code: err.code });
   }
 });
 
@@ -162,14 +162,14 @@ externalProfilesRouter.patch('/:id', requireAuth, async (req: Request, res: Resp
  */
 externalProfilesRouter.delete('/:id', requireAuth, async (req: Request, res: Response) => {
   try {
-    const studentId = (req as any).user?.id || (req as any).studentId || 'std_demo_1';
+    const studentId = req.user!.userId;
     await ExternalProfilesService.deleteProfile(studentId, req.params.id);
     return res.json({ success: true, message: 'External profile removed' });
   } catch (err: any) {
     if (err instanceof NotFoundError) {
       return res.status(404).json({ success: false, error: err.message });
     }
-    return res.status(500).json({ success: false, error: err.message });
+    return res.status(err.statusCode && err.statusCode < 500 ? err.statusCode : 500).json({ success: false, error: err.message, code: err.code });
   }
 });
 
@@ -179,11 +179,11 @@ externalProfilesRouter.delete('/:id', requireAuth, async (req: Request, res: Res
  */
 externalProfilesRouter.post('/:id/disconnect', requireAuth, async (req: Request, res: Response) => {
   try {
-    const studentId = (req as any).user?.id || (req as any).studentId || 'std_demo_1';
+    const studentId = req.user!.userId;
     await ExternalProfilesService.disconnectProfile(studentId, req.params.id);
     return res.json({ success: true, message: 'External profile disconnected' });
   } catch (err: any) {
-    return res.status(500).json({ success: false, error: err.message });
+    return res.status(err.statusCode && err.statusCode < 500 ? err.statusCode : 500).json({ success: false, error: err.message, code: err.code });
   }
 });
 
@@ -193,11 +193,11 @@ externalProfilesRouter.post('/:id/disconnect', requireAuth, async (req: Request,
  */
 externalProfilesRouter.post('/:id/sync', requireAuth, async (req: Request, res: Response) => {
   try {
-    const studentId = (req as any).user?.id || (req as any).studentId || 'std_demo_1';
+    const studentId = req.user!.userId;
     const result = await ExternalProfilesService.syncProfile(studentId, req.params.id);
     return res.json({ success: true, ...result });
   } catch (err: any) {
-    return res.status(500).json({ success: false, error: err.message });
+    return res.status(err.statusCode && err.statusCode < 500 ? err.statusCode : 500).json({ success: false, error: err.message, code: err.code });
   }
 });
 
@@ -207,11 +207,11 @@ externalProfilesRouter.post('/:id/sync', requireAuth, async (req: Request, res: 
  */
 externalProfilesRouter.post('/:id/verify-challenge/start', requireAuth, async (req: Request, res: Response) => {
   try {
-    const studentId = (req as any).user?.id || (req as any).studentId || 'std_demo_1';
+    const studentId = req.user!.userId;
     const challenge = await ExternalProfilesService.startChallengeVerification(studentId, req.params.id);
     return res.json({ success: true, challenge });
   } catch (err: any) {
-    return res.status(400).json({ success: false, error: err.message });
+    return res.status(err.statusCode && err.statusCode < 500 ? err.statusCode : 400).json({ success: false, error: err.message, code: err.code });
   }
 });
 
@@ -221,11 +221,11 @@ externalProfilesRouter.post('/:id/verify-challenge/start', requireAuth, async (r
  */
 externalProfilesRouter.post('/:id/verify-challenge/check', requireAuth, async (req: Request, res: Response) => {
   try {
-    const studentId = (req as any).user?.id || (req as any).studentId || 'std_demo_1';
+    const studentId = req.user!.userId;
     const result = await ExternalProfilesService.checkChallengeVerification(studentId, req.params.id);
     return res.json({ success: true, ...result });
   } catch (err: any) {
-    return res.status(400).json({ success: false, error: err.message });
+    return res.status(err.statusCode && err.statusCode < 500 ? err.statusCode : 400).json({ success: false, error: err.message, code: err.code });
   }
 });
 
@@ -235,10 +235,10 @@ externalProfilesRouter.post('/:id/verify-challenge/check', requireAuth, async (r
  */
 externalProfilesRouter.get('/:id/history', requireAuth, async (req: Request, res: Response) => {
   try {
-    const studentId = (req as any).user?.id || (req as any).studentId || 'std_demo_1';
+    const studentId = req.user!.userId;
     const history = await ExternalProfilesService.getProfileHistory(studentId, req.params.id);
     return res.json({ success: true, history });
   } catch (err: any) {
-    return res.status(500).json({ success: false, error: err.message });
+    return res.status(err.statusCode && err.statusCode < 500 ? err.statusCode : 500).json({ success: false, error: err.message, code: err.code });
   }
 });

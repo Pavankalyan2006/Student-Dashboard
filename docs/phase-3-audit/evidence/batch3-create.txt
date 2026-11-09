@@ -1,0 +1,34 @@
+PASS  RAG question cites the matching document only  -- doc_1794028919288_bu2a
+PASS  RAG confidence is labelled as retrieval similarity
+PASS  RAG second topic routes to the TCP document
+PASS  RAG out-of-scope question: NO_SOURCES, no citations  -- NO_SOURCES
+PASS  RAG student B gets nothing from A's documents
+PASS  RAG scoped to one document does not cite others  -- 200 EXTRACTIVE
+PASS  CR new student: no invented alignment, no target role  -- null
+PASS  CR role catalogue loads  -- 13
+PASS  CR profile rejects bad values
+PASS  CR profile saves own fields and ignores others  -- 200
+PASS  CR recommendations answer  -- 200
+PASS  CR roadmap generated from the role learning path  -- 8 steps
+PASS  CR mark a roadmap step complete  -- 200
+PASS  CR student B cannot read A's roadmap
+PASS  CR roadmap without role_id is refused
+PASS  RS create resume with no invented target role  -- ""
+PASS  RS student B cannot open A's resume
+PASS  RS student B cannot ask AI on A's resume
+PASS  RS import the student's own project  -- 200
+PASS  RS importing the same project twice does not duplicate it
+PASS  RS cannot import another student's project
+PASS  RS analysis compares against the target role skills  -- 20
+PASS  RS contact score counts the 2 of 4 fields given  -- Resume checklist score 43/100 = Contact fields 8/15 + Section structure 25/25 + Length 2/20 + Keywords for Backend Developer 5/25 + Skills section vs role 3/15 (43/100, rescaled to 100).
+PASS  RS weak phrasing flagged without a rewritten claim
+PASS  RS analysis is not labelled an ATS score
+PASS  RS tailoring: gaps listed, no summary rewrite  -- 200
+PASS  RS tailoring without a job description is refused
+PASS  RS AI summary without an AI provider is 503 AI_UNAVAILABLE  -- 503 AI_UNAVAILABLE
+PASS  RS AI bullet without an AI provider is 503 AI_UNAVAILABLE  -- 503 AI_UNAVAILABLE
+PASS  RS AI improve without an AI provider is 503 AI_UNAVAILABLE  -- 503 AI_UNAVAILABLE
+PASS  RS AI bullet without a task is refused
+PASS  RS save a version  -- 201
+
+32/32 PASS

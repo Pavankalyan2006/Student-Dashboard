@@ -75,7 +75,7 @@ export const PlacementProgressPage: React.FC<Props> = ({ onNavigate }) => {
     .map((s, idx) => ({
       round: `Mock ${idx + 1}`,
       type: s.interview_type,
-      score: s.overall_score || 70,
+      score: Number(s.overall_score ?? 0),
     }));
 
   return (
@@ -149,7 +149,7 @@ export const PlacementProgressPage: React.FC<Props> = ({ onNavigate }) => {
             <span className="text-xs text-slate-400">sessions evaluated</span>
           </div>
           <p className="text-[11px] text-slate-500">
-            Average Score: {completedInterviews.length > 0 ? `${Math.round(completedInterviews.reduce((a, b) => a + (b.overall_score || 70), 0) / completedInterviews.length)}%` : 'No data yet'}
+            Average Score: {completedInterviews.length > 0 ? `${Math.round(completedInterviews.reduce((a, b) => a + Number(b.overall_score ?? 0), 0) / completedInterviews.length)}%` : 'No data yet'}
           </p>
         </div>
 

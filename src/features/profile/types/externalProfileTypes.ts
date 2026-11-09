@@ -55,6 +55,7 @@ export type VerificationStatus =
 
 export type ConnectionStatus =
   | 'CONNECTED'
+  | 'LINKED'
   | 'DISCONNECTED'
   | 'SYNCING'
   | 'SYNCED'

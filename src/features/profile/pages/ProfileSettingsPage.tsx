@@ -24,6 +24,8 @@ import {
   User,
 } from 'lucide-react';
 import { communityProfileApi } from '../../../api/communityProfileApi';
+import { externalIntegrationsApi } from '../../../api/externalIntegrationsApi';
+import { externalProfilesApi } from '../api/externalProfilesApi';
 import { onboardingApi } from '../../../api/onboardingApi';
 import {
   StudentPrivacySetting,
@@ -653,63 +655,68 @@ export function ProfileSettingsPage({
             </p>
           </div>
 
-          <div className="space-y-3">
-            {[
-              {
-                name: 'GitHub',
-                icon: Github,
-                status: 'Connected',
-                account: profile?.github_username || 'aarav-nit',
-                link: '/github',
-              },
-              {
-                name: 'LinkedIn',
-                icon: ExternalLink,
-                status: 'Connected',
-                account: 'Aarav (AIML)',
-                link: '/profile/external',
-              },
-              {
-                name: 'LeetCode',
-                icon: Globe,
-                status: 'Connected',
-                account: 'aarav_coder',
-                link: '/profile/external',
-              },
-            ].map((plat) => (
-              <div
-                key={plat.name}
-                className="p-4 rounded-xl border border-slate-200 flex items-center justify-between"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-slate-900 text-white">
-                    <plat.icon className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-[#101828]">{plat.name}</h4>
-                    <p className="text-[11px] text-[#667085]">
-                      Account: <span className="font-semibold text-slate-800">{plat.account}</span>
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                    <CheckCircle2 className="h-3 w-3" />
-                    <span>{plat.status}</span>
-                  </span>
-                  <button
-                    onClick={() => onNavigate(plat.link)}
-                    className="px-3 py-1.5 text-xs font-medium text-[#2563EB] hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
-                  >
-                    Manage
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+          <PlatformLinksList onNavigate={onNavigate} />
         </div>
       )}
+    </div>
+  );
+}
+
+/** The student's real platform links (from the server). Earlier this tab showed GitHub, LinkedIn and LeetCode as
+ *  "Connected" with sample account names for every student. */
+function PlatformLinksList({ onNavigate }: { onNavigate: (path: string) => void }) {
+  const [conns, setConns] = React.useState<any[] | null>(null);
+  const [error, setError] = React.useState<string | null>(null);
+  React.useEffect(() => {
+    // Links live in two places (Integrations Center and the External Profile Hub); show both.
+    Promise.all([externalIntegrationsApi.getConnections(), externalProfilesApi.getProfiles()])
+      .then(([c, profiles]) =>
+        setConns([
+          ...c.filter((x) => x.status !== 'DISCONNECTED'),
+          ...profiles
+            .filter((p) => p.connection_status !== 'DISCONNECTED')
+            .map((p) => ({
+              id: p.id,
+              provider: p.platform_name || p.platform_id,
+              username: p.username,
+              display_name: p.display_name,
+              status: p.verification_status === 'VERIFIED' || p.verification_status === 'CONNECTED_OAUTH' ? 'CONNECTED' : 'LINKED',
+            })),
+        ])
+      )
+      .catch((e: any) => setError(e?.message || 'Could not load your platform links'));
+  }, []);
+  if (error) return <p className="text-xs text-rose-600">{error}</p>;
+  if (!conns) return <p className="text-xs text-[#667085]">Loading your platform links...</p>;
+  return (
+    <div className="space-y-3">
+      {conns.length === 0 && <p className="text-xs text-[#667085]">You have not linked any platforms yet.</p>}
+      {conns.map((c) => {
+        const verified = c.status === 'CONNECTED' || c.status === 'SYNCED';
+        return (
+          <div key={c.id} className="p-4 rounded-xl border border-slate-200 flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h4 className="text-xs font-bold text-[#101828] capitalize">{c.provider}</h4>
+              <p className="text-[11px] text-[#667085] truncate">
+                Account: <span className="font-semibold text-slate-800">{c.username || c.display_name}</span>
+              </p>
+            </div>
+            <span
+              className={`text-[11px] font-semibold px-2 py-0.5 rounded border ${
+                verified ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-sky-700 bg-sky-50 border-sky-200'
+              }`}
+            >
+              {verified ? 'Connected' : 'Linked (not verified)'}
+            </span>
+          </div>
+        );
+      })}
+      <button
+        onClick={() => onNavigate('/integrations')}
+        className="px-3 py-1.5 text-xs font-medium text-[#2563EB] hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+      >
+        Manage platforms
+      </button>
     </div>
   );
 }

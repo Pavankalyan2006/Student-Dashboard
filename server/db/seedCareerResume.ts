@@ -70,8 +70,8 @@ export const SEED_CAREER_ROLES: CareerRole[] = [
     industry: 'Technology / Enterprise Software',
     skills: ['Data Structures & Algorithms', 'System Architecture', 'OOP Principles', 'DBMS & SQL', 'Operating Systems'],
     technical_topics: ['Arrays, Trees, Dynamic Programming', 'Database Normalization', 'Concurrency & Threads', 'REST APIs'],
-    recommended_courses: ['crs_01j8k9m3q1', 'crs_01j8k9m3q2'], // DSA, OS
-    recommended_projects: ['prj_seed_01', 'prj_seed_02'],
+    recommended_courses: ['crs_cat_009', 'crs_cat_010', 'crs_cat_024'], // catalogue course ids (Phase 3: the old ids did not exist)
+    recommended_projects: ['Library management system with tests', 'Command-line task scheduler'], // project ideas (were the demo student's project ids)
     recommended_tools: ['Git', 'VS Code', 'GDB / Debugger', 'Docker'],
     interview_topics: ['Time and Space Complexity Analysis', 'Graph Traversals (BFS/DFS)', 'Dynamic Programming Subproblems', 'Multithreading and Synchronization'],
     coding_topics: ['Binary Search', 'Sliding Window', 'Two Pointers', 'Tree Traversals', 'Graph Shortest Path'],
@@ -98,8 +98,8 @@ export const SEED_CAREER_ROLES: CareerRole[] = [
     industry: 'Cloud & SaaS Platforms',
     skills: ['Node.js / Python / Java / Go', 'PostgreSQL / MongoDB', 'Redis & Message Queues', 'REST & GraphQL', 'Docker & CI/CD'],
     technical_topics: ['ACID & Transactions', 'Index Optimization', 'Connection Pooling', 'JWT & OAuth2 Security', 'Microservice Patterns'],
-    recommended_courses: ['crs_01j8k9m3q1', 'crs_01j8k9m3q3'],
-    recommended_projects: ['prj_seed_01'],
+    recommended_courses: ['crs_cat_017', 'crs_cat_019', 'crs_cat_021'], // catalogue course ids (Phase 3: the old ids did not exist)
+    recommended_projects: ['REST API with authentication and rate limiting', 'Job queue worker with retries'], // project ideas (were the demo student's project ids)
     recommended_tools: ['Postman', 'Docker', 'PostgreSQL', 'Redis', 'GitHub Actions'],
     interview_topics: ['REST vs GraphQL tradeoffs', 'SQL indexing (B-Tree vs Hash)', 'Distributed locking with Redis', 'Database isolation levels'],
     coding_topics: ['Rate Limiting Algorithms', 'LRU Cache implementation', 'Trie for autocomplete', 'String parsing & serialization'],
@@ -126,8 +126,8 @@ export const SEED_CAREER_ROLES: CareerRole[] = [
     industry: 'Consumer Tech & Digital Products',
     skills: ['React / TypeScript', 'CSS & Tailwind', 'State Management (Zustand / Redux)', 'Browser Internals & DOM', 'Web Performance'],
     technical_topics: ['Virtual DOM Reconciliation', 'Bundle Splitting & Lazy Loading', 'Accessibility (ARIA)', 'CSS Grid & Flexbox'],
-    recommended_courses: ['crs_01j8k9m3q1'],
-    recommended_projects: ['prj_seed_01'],
+    recommended_courses: ['crs_cat_013', 'crs_cat_016', 'crs_cat_012'], // catalogue course ids (Phase 3: the old ids did not exist)
+    recommended_projects: ['Accessible component library', 'Responsive dashboard with charts'], // project ideas (were the demo student's project ids)
     recommended_tools: ['Chrome DevTools', 'Vite', 'Figma', 'React Developer Tools'],
     interview_topics: ['React Component Lifecycle & Hooks', 'Browser Critical Rendering Path', 'Optimizing Core Web Vitals', 'Accessible Form Controls'],
     coding_topics: ['Debounce and Throttle utilities', 'DOM manipulation without frameworks', 'Deep object cloning', 'Virtual list implementation'],
@@ -154,8 +154,8 @@ export const SEED_CAREER_ROLES: CareerRole[] = [
     industry: 'Software & Startups',
     skills: ['TypeScript / React', 'Node.js / Express / Next.js', 'PostgreSQL / Prisma', 'REST / GraphQL APIs', 'Docker / CI/CD'],
     technical_topics: ['Full-stack Authentication & JWT', 'Server-Side Rendering (SSR)', 'Database Migrations & Concurrency', 'State Management'],
-    recommended_courses: ['crs_01j8k9m3q1', 'crs_01j8k9m3q3'],
-    recommended_projects: ['prj_seed_01'],
+    recommended_courses: ['crs_cat_018', 'crs_cat_016', 'crs_cat_017'], // catalogue course ids (Phase 3: the old ids did not exist)
+    recommended_projects: ['Full-stack notes app with login', 'Event booking site with payments sandbox'], // project ideas (were the demo student's project ids)
     recommended_tools: ['VS Code', 'Docker', 'Postman', 'Vite', 'PostgreSQL'],
     interview_topics: ['End-to-end request flow', 'State synchronization between client and server', 'Authentication flow with refresh tokens', 'Monorepo vs polyrepo design'],
     coding_topics: ['API route handlers', 'Pagination logic', 'Search and filter pipelines', 'Form validation schema parsing'],
@@ -182,8 +182,8 @@ export const SEED_CAREER_ROLES: CareerRole[] = [
     industry: 'Artificial Intelligence & Data',
     skills: ['Python & PyTorch', 'Data Preprocessing & Feature Engineering', 'Vector Databases & Embeddings', 'LLM Fine-tuning & RAG', 'Model Serving'],
     technical_topics: ['Loss Functions & Optimization', 'Transformer Attention Mechanism', 'Vector Search (Cosine, ANN)', 'Precision, Recall, ROC-AUC'],
-    recommended_courses: ['crs_01j8k9m3q2'],
-    recommended_projects: ['prj_seed_02'],
+    recommended_courses: ['crs_cat_037', 'crs_cat_040'], // catalogue course ids (Phase 3: the old ids did not exist)
+    recommended_projects: ['Image classifier with evaluation report', 'Model training pipeline with experiment tracking'], // project ideas (were the demo student's project ids)
     recommended_tools: ['PyTorch', 'Jupyter Lab', 'Hugging Face', 'Milvus / ChromaDB', 'FastAPI'],
     interview_topics: ['Self-attention mechanism in Transformers', 'Bias vs Variance tradeoff', 'RAG chunking and hybrid search strategies', 'Quantization (8-bit, 4-bit)'],
     coding_topics: ['Matrix multiplication optimization', 'Cosine similarity calculation', 'Custom dataset DataLoader implementation', 'Cross-entropy loss calculation'],
@@ -210,8 +210,8 @@ export const SEED_CAREER_ROLES: CareerRole[] = [
     industry: 'Business Intelligence & Analytics',
     skills: ['Advanced SQL', 'Python (Pandas, NumPy)', 'PowerBI / Tableau', 'Statistical Hypothesis Testing', 'Data Warehousing'],
     technical_topics: ['Window Functions & CTEs', 'Dimensional Modeling (Star/Snowflake)', 'ETL Pipeline Sanitation', 'A/B Testing Metrics'],
-    recommended_courses: ['crs_01j8k9m3q2'],
-    recommended_projects: ['prj_seed_02'],
+    recommended_courses: ['crs_cat_053', 'crs_cat_022', 'crs_cat_057'], // catalogue course ids (Phase 3: the old ids did not exist)
+    recommended_projects: ['Sales data dashboard from a public dataset', 'SQL analysis report on open data'], // project ideas (were the demo student's project ids)
     recommended_tools: ['SQL IDE', 'Jupyter', 'Tableau / PowerBI', 'Excel / Sheets'],
     interview_topics: ['SQL Window functions (RANK vs DENSE_RANK)', 'Cohort analysis methodology', 'Null hypothesis testing and p-values', 'Data anomalies and outliers'],
     coding_topics: ['SQL complex aggregations', 'Pandas DataFrame grouping and pivoting', 'Data cleaning transforms', 'Percentile calculation'],
@@ -238,8 +238,8 @@ export const SEED_CAREER_ROLES: CareerRole[] = [
     industry: 'Predictive Modeling & Research',
     skills: ['Probability & Statistics', 'Scikit-Learn & XGBoost', 'SQL & BigQuery', 'Feature Engineering', 'Model Validation'],
     technical_topics: ['Cross-Validation Strategies', 'Regularization (L1/L2)', 'Clustering & Dimensionality Reduction (PCA)', 'ROC & Precision-Recall'],
-    recommended_courses: ['crs_01j8k9m3q2'],
-    recommended_projects: ['prj_seed_02'],
+    recommended_courses: ['crs_cat_052', 'crs_cat_037', 'crs_cat_054'], // catalogue course ids (Phase 3: the old ids did not exist)
+    recommended_projects: ['Prediction model with feature analysis', 'A/B test analysis notebook'], // project ideas (were the demo student's project ids)
     recommended_tools: ['Python', 'Scikit-learn', 'XGBoost', 'Jupyter', 'Pandas'],
     interview_topics: ['L1 vs L2 regularization geometric meaning', 'Handling imbalanced datasets (SMOTE vs focal loss)', 'ROC-AUC curve interpretation', 'Feature selection techniques'],
     coding_topics: ['Gradient descent optimization from scratch', 'K-Means clustering algorithm', 'Stratified K-fold cross-validation', 'Confusion matrix calculation'],
@@ -266,8 +266,8 @@ export const SEED_CAREER_ROLES: CareerRole[] = [
     industry: 'Cloud Infrastructure & Managed Services',
     skills: ['AWS / GCP Architecture', 'Terraform / IaC', 'Networking & VPCs', 'IAM & Cloud Security', 'Cost Optimization'],
     technical_topics: ['VPC Peering & Subnets', 'CIDR & Routing Tables', 'Load Balancing & Auto Scaling', 'CloudWatch & Monitoring'],
-    recommended_courses: ['crs_01j8k9m3q3'],
-    recommended_projects: ['prj_seed_01'],
+    recommended_courses: ['crs_cat_066', 'crs_cat_033'], // catalogue course ids (Phase 3: the old ids did not exist)
+    recommended_projects: ['Deploy a web app with infrastructure as code', 'Static site on cloud storage with CDN'], // project ideas (were the demo student's project ids)
     recommended_tools: ['Terraform', 'AWS CLI', 'Docker', 'Kubernetes'],
     interview_topics: ['Designing a high-availability multi-AZ system', 'IAM least-privilege policies', 'Cost optimization strategies for cloud compute', 'Disaster recovery strategies (RPO and RTO)'],
     coding_topics: ['Terraform HCL module design', 'CloudWatch alarm scripting', 'Docker container multi-stage builds', 'Subnet IP range calculation'],
@@ -294,8 +294,8 @@ export const SEED_CAREER_ROLES: CareerRole[] = [
     industry: 'Infrastructure & Site Reliability',
     skills: ['Kubernetes & Docker', 'GitHub Actions / GitLab CI', 'Linux Administration', 'Prometheus & Grafana', 'Bash / Python Scripting'],
     technical_topics: ['Pod Scheduling & Ingress', 'Rolling Updates & Canary Deploys', 'Systemd & Linux Kernels', 'Service Meshes'],
-    recommended_courses: ['crs_01j8k9m3q3'],
-    recommended_projects: ['prj_seed_01'],
+    recommended_courses: ['crs_cat_065', 'crs_cat_063', 'crs_cat_064'], // catalogue course ids (Phase 3: the old ids did not exist)
+    recommended_projects: ['CI/CD pipeline for a sample app', 'Containerised app with monitoring'], // project ideas (were the demo student's project ids)
     recommended_tools: ['Kubernetes', 'Helm', 'Docker', 'Grafana', 'Prometheus'],
     interview_topics: ['Kubernetes pod lifecycle and restart policies', 'Canary vs Blue-Green deployment strategies', 'Troubleshooting high CPU/Memory on Linux servers', 'Secret management in CI/CD'],
     coding_topics: ['Bash automation scripts', 'Kubernetes deployment YAML manifests', 'CI/CD pipeline workflow definitions', 'Log parsing with regular expressions'],
@@ -322,8 +322,8 @@ export const SEED_CAREER_ROLES: CareerRole[] = [
     industry: 'Information Security & Compliance',
     skills: ['Network Security & Wireshark', 'OWASP Top 10', 'Penetration Testing Basics', 'Cryptography & PKI', 'SIEM & Log Analysis'],
     technical_topics: ['SQL Injection & XSS Mitigations', 'TLS Handshake & Certificates', 'Zero Trust Architecture', 'Firewall Rules & IDS/IPS'],
-    recommended_courses: ['crs_01j8k9m3q3'],
-    recommended_projects: ['prj_seed_01'],
+    recommended_courses: ['crs_cat_034', 'crs_cat_020'], // catalogue course ids (Phase 3: the old ids did not exist)
+    recommended_projects: ['Log analysis tool for failed logins', 'Vulnerability scan report of a lab app'], // project ideas (were the demo student's project ids)
     recommended_tools: ['Wireshark', 'Nmap', 'Burp Suite', 'Splunk'],
     interview_topics: ['How SQL injection occurs and how parameterized queries prevent it', 'Diffie-Hellman key exchange mechanics', 'CSRF tokens and SameSite cookie policies', 'Incident triage procedure for compromised credentials'],
     coding_topics: ['Password hashing with bcrypt and salt', 'Input sanitization regex', 'Port scanner script in Python', 'JWT signature verification'],
@@ -350,8 +350,8 @@ export const SEED_CAREER_ROLES: CareerRole[] = [
     industry: 'Software Quality & Reliability',
     skills: ['Selenium / Playwright / Cypress', 'Unit Testing (Jest/PyTest)', 'API Testing (Postman/RestAssured)', 'Load Testing (JMeter/k6)', 'Test Planning'],
     technical_topics: ['Page Object Model', 'Boundary Value Analysis', 'Equivalence Partitioning', 'Flaky Test Remediation'],
-    recommended_courses: ['crs_01j8k9m3q1'],
-    recommended_projects: ['prj_seed_01'],
+    recommended_courses: ['crs_cat_030'], // catalogue course ids (Phase 3: the old ids did not exist)
+    recommended_projects: ['End-to-end test suite for a web app', 'API test suite with CI'], // project ideas (were the demo student's project ids)
     recommended_tools: ['Playwright', 'Postman', 'k6', 'Jest', 'Git'],
     interview_topics: ['Designing test cases for an e-commerce checkout flow', 'Page Object Model advantages and maintenance', 'Load testing metrics (p95, p99 latency vs error rate)', 'Continuous testing in CI pipelines'],
     coding_topics: ['Playwright end-to-end script', 'Unit test with mocking and spies', 'Parameterized test assertions', 'API regression test script'],
@@ -378,8 +378,8 @@ export const SEED_CAREER_ROLES: CareerRole[] = [
     industry: 'Mobile & Consumer Software',
     skills: ['React Native / Flutter / Swift / Kotlin', 'Mobile UI & Gestures', 'Offline Storage (SQLite)', 'Push Notifications', 'App Store Deployment'],
     technical_topics: ['Mobile Lifecycle Events', 'Memory Constraints & Battery Efficiency', 'Deep Linking & Navigation', 'Permissions Architecture'],
-    recommended_courses: ['crs_01j8k9m3q1'],
-    recommended_projects: ['prj_seed_01'],
+    recommended_courses: ['crs_cat_004'], // catalogue course ids (Phase 3: the old ids did not exist)
+    recommended_projects: ['Offline-first to-do mobile app', 'Expense tracker mobile app'], // project ideas (were the demo student's project ids)
     recommended_tools: ['Android Studio', 'Xcode', 'React Native CLI', 'Postman'],
     interview_topics: ['React Native Bridge vs New Architecture (JSI)', 'Mobile offline-first data sync patterns', 'App launch time optimization', 'Push notification delivery pipeline'],
     coding_topics: ['Infinite scroll with pagination on mobile', 'Local SQLite database wrapper', 'Custom touch gesture handler', 'Image caching utility'],
@@ -406,8 +406,8 @@ export const SEED_CAREER_ROLES: CareerRole[] = [
     industry: 'Generative AI & Enterprise Automation',
     skills: ['LLM APIs & Prompt Engineering', 'RAG & Vector Databases', 'AI Agent Frameworks', 'Evaluation & Guardrails', 'Full-stack Integration'],
     technical_topics: ['Function Calling & Tool Execution', 'Embedding Models & Semantic Search', 'Context Window Management', 'Prompt Injection Defense'],
-    recommended_courses: ['crs_01j8k9m3q2'],
-    recommended_projects: ['prj_seed_01', 'prj_seed_02'],
+    recommended_courses: ['crs_cat_046', 'crs_cat_047', 'crs_cat_045'], // catalogue course ids (Phase 3: the old ids did not exist)
+    recommended_projects: ['Document Q&A with retrieval and citations', 'Prompt evaluation harness'], // project ideas (were the demo student's project ids)
     recommended_tools: ['LangChain / LlamaIndex', 'ChromaDB', 'FastAPI', 'OpenAI / Gemini SDK'],
     interview_topics: ['Designing reliable AI tool calling with validation', 'RAG retrieval evaluation metrics (faithfulness, recall)', 'Mitigating hallucination through grounding', 'Context chunking and token budget strategies'],
     coding_topics: ['Tool dispatcher with schema validation', 'Cosine distance vector retriever', 'Prompt templating with variables', 'Streaming SSE response handler'],

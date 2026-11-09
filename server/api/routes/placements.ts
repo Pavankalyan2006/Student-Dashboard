@@ -392,7 +392,7 @@ placementsRouter.post('/coach/ask', requireAuth, async (req: Request, res: Respo
     );
     res.json({ success: true, data: result });
   } catch (err: any) {
-    res.status(500).json({ success: false, message: err.message });
+    res.status(err.statusCode || 500).json({ success: false, message: err.message, code: err.code });
   }
 });
 
@@ -401,7 +401,7 @@ placementsRouter.post('/star/improve', requireAuth, async (req: Request, res: Re
     const result = await PlacementAIService.improveWithStar(req.body.raw_answer);
     res.json({ success: true, data: result });
   } catch (err: any) {
-    res.status(500).json({ success: false, message: err.message });
+    res.status(err.statusCode || 500).json({ success: false, message: err.message, code: err.code });
   }
 });
 
@@ -416,7 +416,7 @@ placementsRouter.post('/notes/export', requireAuth, async (req: Request, res: Re
     );
     res.json({ success: true, data: note });
   } catch (err: any) {
-    res.status(500).json({ success: false, message: err.message });
+    res.status(err.statusCode || 500).json({ success: false, message: err.message, code: err.code });
   }
 });
 

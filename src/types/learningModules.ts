@@ -647,6 +647,7 @@ export interface InternshipApplication {
   contact_person?: string;
   notes: string;
   timeline: ApplicationTimelineEvent[];
+  job_description?: string;
   jd_analysis?: JobDescriptionSkillAnalysis;
   resume_version_name?: string;
   created_at: string;

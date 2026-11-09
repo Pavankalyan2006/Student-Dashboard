@@ -92,6 +92,8 @@ export interface KnowledgeQuestionRecord {
   key_concepts: string[];
   follow_up_questions: string[];
   confidence_score: number;
+  answer_mode?: 'AI_MODEL' | 'EXTRACTIVE' | 'NO_SOURCES';
+  confidence_basis?: 'RETRIEVAL_SIMILARITY';
   created_at: string;
 }
 
@@ -244,6 +246,8 @@ export interface AskKnowledgeQuestionResponse {
   key_concepts: string[];
   follow_up_questions: string[];
   confidence_score: number;
+  answer_mode?: 'AI_MODEL' | 'EXTRACTIVE' | 'NO_SOURCES';
+  confidence_basis?: 'RETRIEVAL_SIMILARITY';
   created_at: string;
 }
 

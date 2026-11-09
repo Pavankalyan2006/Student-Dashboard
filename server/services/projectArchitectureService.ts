@@ -19,8 +19,10 @@ export class ProjectArchitectureService {
     let arch = await db.getProjectArchitecture(projectId);
 
     if (!arch) {
-      // Auto-initialize standard default architecture for new projects
-      arch = await this.initializeDefaultArchitecture(projectId);
+      // Nothing saved yet: return an empty diagram instead of saving a generic three-tier template
+      // as if it were the student's own design.
+      const now = new Date().toISOString();
+      return { id: '', project_id: projectId, architecture_type: '', description: '', nodes: [], edges: [], data_flow: '', created_at: now, updated_at: now };
     }
 
     return arch;

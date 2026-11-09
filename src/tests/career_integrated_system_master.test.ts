@@ -21,13 +21,18 @@ describe('Unified Career System E2E Master Suite (All 8 Pages & Cross-Module Int
   // PAGE 1: CAREER DASHBOARD & CAREER PROFILE
   // =========================================================================
   describe('Page 1: Career Dashboard & Career Profile', () => {
-    it('retrieves student personalized career profile with fallback defaults', async () => {
+    it('starts the career profile from onboarding answers without inventing roles, cities or skills', async () => {
+      const { OnboardingService } = await import('../../server/services/onboardingService');
+      await OnboardingService.saveCareerGoals(studentA, { target_job_role: 'Backend Developer', preferred_location: 'Remote', work_mode_preference: 'REMOTE' } as any);
       const profile = await CareerService.getCareerProfile(studentA);
-      expect(profile).toBeDefined();
       expect(profile.student_id).toBe(studentA);
-      expect(profile.target_roles.length).toBeGreaterThanOrEqual(1);
-      expect(profile.preferred_locations.length).toBeGreaterThanOrEqual(1);
-      expect(profile.preferred_work_arrangement).toBeDefined();
+      expect(profile.target_roles).toEqual(['Backend Developer']);
+      expect(profile.preferred_locations).toEqual(['Remote']);
+      expect(profile.preferred_work_arrangement).toBe('REMOTE');
+      const empty = await CareerService.getCareerProfile('std_p3_no_onboarding');
+      expect(empty.target_roles).toEqual([]);
+      expect(empty.preferred_locations).toEqual([]);
+      expect(empty.career_goals).toEqual([]);
     });
 
     it('updates career preferences (target roles, locations, work arrangement) and persists them', async () => {
@@ -59,10 +64,13 @@ describe('Unified Career System E2E Master Suite (All 8 Pages & Cross-Module Int
       expect(summary.readiness.resume_completeness).toBeGreaterThanOrEqual(0);
       expect(summary.readiness.resume_completeness).toBeLessThanOrEqual(100);
       expect(summary.readiness.resume_sections_status.length).toBeGreaterThanOrEqual(5);
-      expect(summary.readiness.skills_aligned_percentage).toBeGreaterThanOrEqual(0);
+      // Phase 3: null when the profile names no target role (no alignment is claimed then).
+      const aligned = summary.readiness.skills_aligned_percentage;
+      expect(aligned === null || (aligned >= 0 && aligned <= 100)).toBe(true);
+      if (aligned === null) expect(summary.readiness.target_role_name).toBeNull();
       expect(summary.readiness.projects_count).toBeGreaterThanOrEqual(0);
       expect(summary.readiness.placement_prep_progress).toBeDefined();
-      expect(summary.readiness.readiness_explanation).toContain('authentic records');
+      expect(summary.readiness.readiness_explanation).toContain('your own records');
 
       // 3. Recommended Actions
       expect(summary.recommended_actions.length).toBeGreaterThanOrEqual(1);
@@ -223,11 +231,9 @@ describe('Unified Career System E2E Master Suite (All 8 Pages & Cross-Module Int
   // PAGE 8: JOBS DISCOVERY & JOB-TO-APPLICATION CONVERSION
   // =========================================================================
   describe('Page 8: Jobs Discovery & 1-Click Track to Applications', () => {
-    it('discovers verified career opportunities and applies filters', async () => {
-      const jobs = await ExternalIntegrationService.searchJobs('engineer', 'Bengaluru');
-      expect(jobs.length).toBeGreaterThanOrEqual(1);
-      expect(jobs[0].title).toBeDefined();
-      expect(jobs[0].company_name).toBeDefined();
+    it('lists no invented job postings: a student only sees job descriptions they imported', async () => {
+      // Phase 3: there is no live job feed, so a student with no imports sees nothing (sample postings are demo-only).
+      expect(await ExternalIntegrationService.searchJobs('std_p3_no_jobs', 'engineer', 'Bengaluru')).toEqual([]);
     });
 
     it('imports an external job description and runs multi-agent gap analysis', async () => {
@@ -244,7 +250,7 @@ describe('Unified Career System E2E Master Suite (All 8 Pages & Cross-Module Int
     });
 
     it('1-click tracks a discovered job directly into the Application Tracker', async () => {
-      const targetJob = (await ExternalIntegrationService.searchJobs())[0];
+      const targetJob = (await ExternalIntegrationService.searchJobs(studentA))[0];
       expect(targetJob).toBeDefined();
 
       const newApp = await LearningModulesService.createApplication(studentA, {
@@ -320,27 +326,30 @@ describe('Unified Career System E2E Master Suite (All 8 Pages & Cross-Module Int
       expect(leetcode).toBeDefined();
       expect(linkedin).toBeDefined();
       expect(github?.capabilities.repositories).toBe(true);
-      expect(leetcode?.capabilities.code_submissions).toBe(true);
+      // Phase 3: LeetCode has no data import here, so no capability is claimed for it.
+      expect(Object.values(leetcode!.capabilities).some(Boolean)).toBe(false);
+      expect(leetcode?.oauth_supported).toBe(false);
+      expect(linkedin?.oauth_supported).toBe(false);
     });
 
-    it('connects a platform using legitimate profile information and marks it connected', async () => {
+    it('saves a platform link as LINKED (not CONNECTED) when ownership is not verified', async () => {
+      // Phase 3: studentA has no GitHub OAuth/token connection, so a username alone is only a saved link.
       const conn = await ExternalIntegrationService.connectPlatform(studentA, 'github' as any, {
         username: 'pavan-dev',
         profile_url: 'https://github.com/pavan-dev',
       });
-
-      expect(conn).toBeDefined();
       expect(conn.provider).toBe('github');
-      expect(conn.status).toBe('CONNECTED');
+      expect(conn.status).toBe('LINKED');
+      expect(conn.scopes).toEqual([]);
       expect(conn.student_id).toBe(studentA);
-
-      const connections = await ExternalIntegrationService.listConnections(studentA);
-      expect(connections.some((c) => c.provider === 'github' && c.status === 'CONNECTED')).toBe(true);
+      await expect(ExternalIntegrationService.connectPlatform(studentA, 'leetcode' as any, { username: 'x', code: 'abc' })).rejects.toMatchObject({ statusCode: 400 });
+      await expect(ExternalIntegrationService.connectPlatform(studentA, 'leetcode' as any, { username: 'x', profile_url: 'https://evil.example/x' })).rejects.toMatchObject({ statusCode: 400 });
     });
 
     it('disconnects an external platform and updates status safely', async () => {
       const connections = await ExternalIntegrationService.listConnections(studentA);
-      const ghConn = connections.find((c) => c.provider === 'github' && c.status === 'CONNECTED');
+      const ghConn = connections.find((c) => c.provider === 'github' && c.status !== 'DISCONNECTED');
+      expect(ghConn).toBeDefined();
       if (ghConn) {
         await ExternalIntegrationService.disconnectPlatform(studentA, ghConn.id);
         const refreshed = await ExternalIntegrationService.listConnections(studentA);
@@ -393,11 +402,11 @@ describe('Unified Career System E2E Master Suite (All 8 Pages & Cross-Module Int
       }
     });
 
-    it('checks cross-platform career profile consistency (Resume vs GitHub vs LeetCode)', async () => {
+    it('profile consistency claims no score, because no comparison engine exists', async () => {
       const consistency = await ExternalIntegrationService.checkProfileConsistency(studentA);
       expect(consistency).toBeDefined();
-      expect(consistency.overall_consistency_score).toBeGreaterThanOrEqual(0);
-      expect(consistency.overall_consistency_score).toBeLessThanOrEqual(100);
+      expect(consistency.overall_consistency_score).toBeNull();
+      expect(consistency.matched_items).toEqual([]);
       expect(Array.isArray(consistency.matched_items)).toBe(true);
       expect(Array.isArray(consistency.recommendations)).toBe(true);
     });

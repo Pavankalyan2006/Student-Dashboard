@@ -36,7 +36,7 @@ import { ProfilePrivacyModal } from '../components/ProfilePrivacyModal';
 import { ProfileSyncHistoryModal } from '../components/ProfileSyncHistoryModal';
 
 const CATEGORY_TABS: Array<{ id: ExternalPlatformCategory | 'ALL'; label: string }> = [
-  { id: 'ALL', label: 'All Connected' },
+  { id: 'ALL', label: 'All' },
   { id: 'DEVELOPER_CODE_HOSTING', label: 'Code Hosting' },
   { id: 'CODING_PRACTICE', label: 'Coding Practice' },
   { id: 'PROFESSIONAL_NETWORKING', label: 'Professional' },
@@ -250,7 +250,7 @@ export const ExternalProfilesPage: React.FC<ExternalProfilesPageProps> = ({
             <Layers className="w-6 h-6" />
           </div>
           <div>
-            <span className="text-xs text-slate-400 block font-medium">Connected Profiles</span>
+            <span className="text-xs text-slate-400 block font-medium">Linked Profiles</span>
             <span className="text-xl font-extrabold text-white">{stats.total_connected}</span>
           </div>
         </div>
@@ -295,10 +295,9 @@ export const ExternalProfilesPage: React.FC<ExternalProfilesPageProps> = ({
         <div className="flex items-center gap-3">
           <Share2 className="w-4 h-4 text-indigo-400 shrink-0" />
           <span>
-            <strong>Connected Platforms Power Your Entire Workspace:</strong> Verified profiles automatically enrich your{' '}
-            <strong className="text-indigo-300">AI Resume</strong>, calculate skill match for{' '}
-            <strong className="text-indigo-300">Jobs Discovery</strong>, and guide your{' '}
-            <strong className="text-indigo-300">Career Roadmap</strong>.
+            <strong>How links are used:</strong> a saved link can be added to your{' '}
+            <strong className="text-indigo-300">Resume</strong> links. Only GitHub imports data (the repositories in the GitHub module);
+            other platforms are links only and nothing is imported from them.
           </span>
         </div>
         <span className="text-[11px] text-slate-400 shrink-0">

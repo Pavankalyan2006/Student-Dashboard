@@ -1,0 +1,12 @@
+{"width":1366,"page":"/career/applications","connected_claims":0,"shows_linked_or_unverified":false,"overflow":0,"page_errors":[],"api_5xx":[]}
+{"width":1366,"page":"/placements","connected_claims":0,"shows_linked_or_unverified":true,"overflow":0,"page_errors":[],"api_5xx":[]}
+{"width":1366,"page":"/integrations","connected_claims":0,"shows_linked_or_unverified":true,"overflow":0,"page_errors":[],"api_5xx":[]}
+{"width":1366,"page":"/profile/external","connected_claims":0,"shows_linked_or_unverified":true,"overflow":0,"page_errors":[],"api_5xx":[]}
+{"width":1366,"page":"/settings","connected_claims":0,"shows_linked_or_unverified":true,"overflow":0,"page_errors":[],"api_5xx":[]}
+{"width":1366,"page":"/jobs","connected_claims":0,"shows_linked_or_unverified":false,"overflow":0,"page_errors":[],"api_5xx":[]}
+{"width":390,"page":"/career/applications","connected_claims":0,"shows_linked_or_unverified":false,"overflow":0,"page_errors":[],"api_5xx":[]}
+{"width":390,"page":"/placements","connected_claims":0,"shows_linked_or_unverified":true,"overflow":0,"page_errors":[],"api_5xx":[]}
+{"width":390,"page":"/integrations","connected_claims":0,"shows_linked_or_unverified":true,"overflow":0,"page_errors":[],"api_5xx":[]}
+{"width":390,"page":"/profile/external","connected_claims":0,"shows_linked_or_unverified":true,"overflow":0,"page_errors":[],"api_5xx":[]}
+{"width":390,"page":"/settings","connected_claims":0,"shows_linked_or_unverified":true,"overflow":0,"page_errors":[],"api_5xx":[]}
+{"width":390,"page":"/jobs","connected_claims":0,"shows_linked_or_unverified":false,"overflow":0,"page_errors":[],"api_5xx":[]}

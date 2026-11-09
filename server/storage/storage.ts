@@ -133,6 +133,11 @@ export class StorageService {
       }
     }
 
+    // Uploads may arrive as a data URL or as bare base64. Always hand back a data URL so parsers
+    // never mistake bare base64 for the file's text (which indexed base64 gibberish for .txt/.md files).
+    if (data && !data.startsWith('data:')) {
+      data = `data:${record.mime_type || 'application/octet-stream'};base64,${data}`;
+    }
     return { record, data };
   }
 

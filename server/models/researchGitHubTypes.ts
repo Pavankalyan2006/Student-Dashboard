@@ -16,7 +16,8 @@ export type PaperProvider =
   | 'CROSSREF'
   | 'SEMANTIC_SCHOLAR'
   | 'MANUAL'
-  | 'PDF_UPLOAD';
+  | 'PDF_UPLOAD'
+  | 'CURATED';
 
 export type QuestionCategory =
   | 'PRIMARY'
@@ -74,6 +75,10 @@ export interface ResearchPaper {
   external_id?: string;
   citation_count: number;
   is_saved: boolean;
+  /** The student's own reading notes and status (Phase 3). */
+  notes?: string;
+  reading_status?: 'TO_READ' | 'READING' | 'READ';
+  updated_at?: string;
   metadata: Record<string, any>;
   created_at: string;
 }
@@ -251,6 +256,11 @@ export interface GitHubConnection {
   profile_url?: string;
   last_synced_at?: string;
   sync_error?: string;
+  /** OAUTH or PAT: GitHub verified the token and the account belongs to the student.
+   *  PUBLIC_USERNAME: only a public username was entered; ownership is not verified and no token exists. */
+  connection_type?: 'OAUTH' | 'PAT' | 'PUBLIC_USERNAME';
+  sync_status?: 'SYNCED' | 'SYNC_FAILED' | 'PERMISSION_EXPIRED';
+  last_sync_attempt_at?: string;
   expires_at?: string;
   is_connected: boolean;
   created_at: string;

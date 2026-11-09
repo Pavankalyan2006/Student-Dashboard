@@ -117,6 +117,29 @@ export class VectorStore {
   }
 
   /**
+   * Keyword path of hybrid retrieval: the student's chunks that share content words with the query,
+   * scored by the share of query words found (0.3-0.8). Used when the vector search finds too little.
+   */
+  public static keywordSearch(
+    query: string,
+    options: { studentId: string; documentId?: string; documentIds?: string[]; topK?: number }
+  ): VectorSearchResult[] {
+    const terms = [...EmbeddingService.contentTerms(query)];
+    if (!terms.length) return [];
+    const out: VectorSearchResult[] = [];
+    for (const record of this.store.values()) {
+      if (record.studentId !== options.studentId) continue;
+      if (options.documentId && record.documentId !== options.documentId) continue;
+      if (options.documentIds && options.documentIds.length > 0 && !options.documentIds.includes(record.documentId)) continue;
+      const words = EmbeddingService.contentTerms(record.content);
+      const hits = terms.filter((t) => words.has(t) || [...words].some((w) => t.length >= 5 && w.length >= 5 && w.slice(0, 5) === t.slice(0, 5))).length;
+      if (!hits) continue;
+      out.push({ chunkId: record.chunkId, documentId: record.documentId, pageNumber: record.pageNumber, content: record.content, score: 0.3 + 0.5 * (hits / terms.length), metadata: record.metadata });
+    }
+    return out.sort((a, b) => b.score - a.score).slice(0, options.topK || 5);
+  }
+
+  /**
    * Adds an individual vector record directly into the store.
    */
   public static addVector(data: {

@@ -13,6 +13,9 @@ import { InterviewAdaptationService } from './interviewAdaptationService';
 import { NotFoundError, AuthorizationError, ValidationError } from '../core/exceptions';
 import { logger } from '../core/logging';
 
+import { MockInterviewEngineService } from './mockInterviewEngineService';
+import { AppError } from '../core/exceptions';
+
 export class MockInterviewService {
   /**
    * Creates a new mock interview session and scaffolds the initial question.
@@ -151,8 +154,20 @@ export class MockInterviewService {
       throw new NotFoundError(`Question '${questionId}' not found in session '${sessionId}'`);
     }
 
-    // Evaluate answer text against expected concepts
-    const evaluation = this.evaluateAnswer(req.answer_text, question.expected_concepts, question.difficulty);
+    if (!req.answer_text || !String(req.answer_text).trim()) {
+      throw new ValidationError('Answer text cannot be empty');
+    }
+    const prior = await db.getMockInterviewAnswers(sessionId);
+    if (prior.some((a: any) => a.question_id === questionId)) {
+      throw new ValidationError('This question already has an answer.');
+    }
+    // Same evaluator as the Mock Interviews module: the AI model when configured, otherwise a labelled
+    // concept-coverage keyword check (no length bonus, no minimum score).
+    const evaluation = (await MockInterviewEngineService.evaluateAnswerSemantics(
+      session as any,
+      question as any,
+      String(req.answer_text)
+    )) as any;
 
     const answerId = `ans_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     const answer: MockInterviewAnswer = {
@@ -161,7 +176,7 @@ export class MockInterviewService {
       question_id: questionId,
       student_id: studentId,
       answer_text: req.answer_text,
-      duration_seconds: req.duration_seconds || 60,
+      duration_seconds: Number(req.duration_seconds) > 0 ? Math.min(7200, Number(req.duration_seconds)) : 0,
       evaluation,
       created_at: new Date().toISOString(),
     };
@@ -243,10 +258,11 @@ export class MockInterviewService {
       a.evaluation.missing_concepts.forEach((m) => allMissing.add(m));
     }
 
-    const avgScore = answers.length > 0 ? Math.round(totalScore / answers.length) : 70;
+    const avgScore = answers.length > 0 ? Math.round(totalScore / answers.length) : 0;
     const coveragePercentage = totalExpectedConcepts > 0
       ? Math.round((totalCoveredConcepts / totalExpectedConcepts) * 100)
-      : 80;
+      : 0;
+    const usedAi = answers.some((a: any) => a.evaluation?.method === 'AI_MODEL');
 
     const feedback: MockInterviewFeedback = {
       overall_score: avgScore,
@@ -254,37 +270,28 @@ export class MockInterviewService {
       topics_covered: Array.from(topicsCovered),
       concepts_explained_well: Array.from(allCovered).slice(0, 5),
       concepts_to_review: Array.from(allMissing).slice(0, 5),
-      communication_observations: [
-        'Answers were organized and demonstrated familiarity with key terminology.',
-        'Consider elaborating on edge cases and concrete system trade-offs when concluding explanations.',
-      ],
+      communication_observations: Array.from(
+        new Set(answers.map((a: any) => (a.evaluation?.method === 'AI_MODEL' ? a.evaluation?.clarity_feedback : '')).filter(Boolean))
+      ).slice(0, 4) as string[],
+      scoring_method: usedAi ? 'AI_MODEL' : answers.length ? 'KEYWORD_MATCH' : 'NONE',
+      scoring_definition: usedAi
+        ? 'Practice score from the AI model\'s rubric scores. AI feedback can be wrong. Not a hiring assessment.'
+        : 'Practice score from a keyword check of reference concepts. It does not judge correctness or communication. Not a hiring assessment.',
       technical_gaps: Array.from(allMissing).map((m) => `Revise foundational principles of "${m}"`),
       concept_coverage_stat: {
         covered: totalCoveredConcepts,
         total: totalExpectedConcepts,
         percentage: coveragePercentage,
       },
+      // Practice links are routes the student can open, chosen from the concepts the answers missed.
+      // (Earlier versions listed quiz and course ids that do not exist.)
       recommended_practice: {
-        quizzes: [
-          { id: 'quiz_dbms_01', title: 'DBMS Transactions & SQL Quiz', topic: 'DBMS' },
-          { id: 'quiz_os_01', title: 'Operating Systems Deadlocks & Memory Quiz', topic: 'OS' },
-        ],
-        dsa_problems: [
-          { id: 'two_pointers', title: 'Two Pointers Traversal', difficulty: 'MEDIUM' },
-        ],
-        coding_challenges: [
-          { id: 'coding_api_pool', title: 'Concurrent Connection Pooling' },
-        ],
-        courses: [
-          {
-            id: 'crs_db_04',
-            title: 'Database Systems & Distributed Queries',
-            lesson_id: 'lsn_dbms_concur',
-            lesson_title: 'Transaction Concurrency & Locking',
-          },
-        ],
-      },
-    };
+        quizzes: Array.from(allMissing).slice(0, 2).map((m) => ({ id: '', title: `Create a quiz on ${m}`, topic: m, route: `/quiz/create?topic=${encodeURIComponent(m)}` })),
+        dsa_problems: [],
+        coding_challenges: [],
+        courses: [],
+      } as any,
+    } as any;
 
     session.status = 'COMPLETED';
     session.completed_at = new Date().toISOString();
@@ -322,10 +329,8 @@ export class MockInterviewService {
     if (session.feedback_summary) {
       return session.feedback_summary;
     }
-
-    // If not completed yet, complete session or calculate current feedback
-    const { feedback } = await this.completeSession(sessionId, studentId);
-    return feedback;
+    // Reading feedback must not finish an interview that is still running.
+    throw new AppError('This interview is not finished yet, so there is no feedback.', 409, 'INTERVIEW_NOT_FINISHED');
   }
 
   /**

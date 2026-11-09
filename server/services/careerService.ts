@@ -8,12 +8,27 @@ import {
   CareerProfileData,
   CareerDashboardSummary,
 } from '../models/careerResumeTypes';
-import { NotFoundError, AuthorizationError } from '../core/exceptions';
+import { NotFoundError, AuthorizationError, ValidationError } from '../core/exceptions';
 import { logger } from '../core/logging';
 import { ResumeService } from './resumeService';
 import { PlacementService } from './placementService';
 import { LearningModulesService } from './learningModulesService';
 import { ExternalIntegrationService } from './externalIntegrationService';
+
+const normSkill = (x: string) => x.toLowerCase().replace(/\.js\b/g, 'js').replace(/[^a-z0-9+#]+/g, ' ').trim();
+
+/**
+ * True when a student skill satisfies a role requirement. A requirement like "Node.js / Python / Java / Go" is
+ * met by any one alternative; a student skill must equal an alternative or appear in it as whole words of
+ * at least 3 characters. (The earlier substring check let a skill named "C" match almost every requirement.)
+ */
+export function skillMatches(requirement: string, studentSkills: string[]): boolean {
+  const alts = requirement.split('/').map(normSkill).filter(Boolean);
+  const mine = studentSkills.map(normSkill).filter(Boolean);
+  return alts.some((a) =>
+    mine.some((m) => m === a || (m.length >= 3 && ` ${a} `.includes(` ${m} `)) || (a.length >= 3 && ` ${m} `.includes(` ${a} `)))
+  );
+}
 
 export class CareerService {
   private static careerProfiles: Map<string, CareerProfileData> = new Map();
@@ -106,30 +121,21 @@ export class CareerService {
     const projects = await db.getProjects(studentId);
     const allRoles = await db.getCareerRoles();
 
+    const mySkills = studentSkills.map((s) => s.skill_name);
+    const completedProjects = projects.filter((p: any) => p.status === 'COMPLETED').length;
     const roleMatches = allRoles.map((role) => {
-      const matchingSkills: string[] = [];
-      const missingSkills: string[] = [];
-
-      for (const req of role.skills) {
-        // Partial or exact match check
-        const hasMatch = Array.from(studentSkillNames).some(
-          (s) => req.toLowerCase().includes(s) || s.includes(req.toLowerCase())
-        );
-        if (hasMatch) {
-          matchingSkills.push(req);
-        } else {
-          missingSkills.push(req);
-        }
-      }
-
+      const matchingSkills = role.skills.filter((req) => skillMatches(req, mySkills));
+      const missingSkills = role.skills.filter((req) => !matchingSkills.includes(req));
       const matchPercentage = Math.round((matchingSkills.length / Math.max(1, role.skills.length)) * 100);
 
       const reasons: string[] = [];
       if (matchingSkills.length > 0) {
-        reasons.push(`Your profile demonstrates evidence in: ${matchingSkills.slice(0, 3).join(', ')}.`);
+        reasons.push(`Skills on your profile that match this role: ${matchingSkills.slice(0, 3).join(', ')}.`);
+      } else {
+        reasons.push('None of the skills on your profile match this role yet.');
       }
-      if (projects.length > 0) {
-        reasons.push(`You have completed ${projects.length} practical projects supporting hands-on engineering.`);
+      if (completedProjects > 0) {
+        reasons.push(`You have ${completedProjects} completed project${completedProjects === 1 ? '' : 's'}.`);
       }
 
       return {
@@ -142,18 +148,25 @@ export class CareerService {
       };
     });
 
-    // Sort by match percentage
     roleMatches.sort((a, b) => b.match_percentage - a.match_percentage);
 
     const topRole = roleMatches[0];
-    const skillsToDevelop = topRole ? topRole.skills_to_develop : [];
+    const topRoleData = topRole ? allRoles.find((r) => r.id === topRole.role_id) : undefined;
+    // Only recommend courses that exist on the platform; project ideas come from the role's own topics.
+    const courseIds: string[] = [];
+    for (const id of topRoleData?.recommended_courses || []) {
+      if (await db.getCourseById(id).catch(() => null)) courseIds.push(id);
+    }
 
     return {
       potentially_relevant_roles: roleMatches.slice(0, 5),
-      skills_to_develop: skillsToDevelop,
-      recommended_projects: ['AI Learning Platform', 'Clinical Prognosis Classifier', 'API Gateway with Rate Limiting'],
-      recommended_courses: ['crs_01j8k9m3q1', 'crs_01j8k9m3q2', 'crs_01j8k9m3q3'],
-      explanation: `Recommendations reflect current alignment with your verified coursework, coding activity, and projects. As you complete more modules, your role alignments will update dynamically.`,
+      skills_to_develop: topRole ? topRole.skills_to_develop : [],
+      recommended_projects: topRoleData?.recommended_projects || [],
+      recommended_courses: courseIds,
+      explanation:
+        studentSkills.length === 0
+          ? 'Your profile has no skills recorded yet, so every role shows 0% skill overlap. Add skills or complete assessments to see matches.'
+          : `Based on the ${studentSkills.length} skill${studentSkills.length === 1 ? '' : 's'} recorded on your profile compared with each role's listed skills.`,
       disclaimer: 'Curriculum alignments describe skill overlap with industry profiles. They do not constitute hiring or employment probability predictions.',
     };
   }
@@ -168,72 +181,43 @@ export class CareerService {
   ): Promise<CareerRoadmap> {
     const role = await this.getRole(roleId);
     const studentSkills = await db.getStudentSkills(studentId);
-    const skillMap = new Map(studentSkills.map((s) => [s.skill_name.toLowerCase(), s]));
 
     const roadmapId = `rdm_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     const now = new Date().toISOString();
 
-    // Generate tailored steps based on role and student evidence
-    const rawSteps = [
-      {
-        title: 'Core Programming Fundamentals & OOP',
-        description: 'Solidify object-oriented programming paradigms, type-safety, and modular architecture.',
-        estimated_effort: '2 Weeks',
-        source_type: 'COURSE' as const,
-        source_id: 'crs_01j8k9m3q1',
-        url: '/courses/crs_01j8k9m3q1',
-        skill_ref: 'python',
-      },
-      {
-        title: 'Data Structures & Algorithmic Problem Solving',
-        description: 'Practice trees, graphs, sorting, and two-pointer techniques in the interactive lab.',
-        estimated_effort: '3 Weeks',
-        source_type: 'DSA' as const,
-        source_id: 'dsa_topic_trees',
-        url: '/dsa',
-        skill_ref: 'data structures & algorithms',
-      },
-      {
-        title: 'Relational Database Modeling & Complex SQL',
-        description: 'Design normalized schemas, index strategies, and write multi-table joins and window queries.',
-        estimated_effort: '2 Weeks',
-        source_type: 'QUIZ' as const,
-        source_id: 'quiz_dbms_01',
-        url: '/quiz',
-        skill_ref: 'sql',
-      },
-      {
-        title: `${role.name} Specialized Framework Mastery`,
-        description: `Deep-dive into tools, frameworks, and architectural patterns required for ${role.name}.`,
-        estimated_effort: '4 Weeks',
+    // Steps come from the role's own learning path and topics, linked to platform areas that exist for every
+    // student. Earlier versions used the same six steps for every role and linked to the demo student's records.
+    const mySkills = studentSkills.map((s) => s.skill_name);
+    const courseSteps: any[] = [];
+    for (const id of role.recommended_courses || []) {
+      const course = await db.getCourseById(id).catch(() => null);
+      if (course) {
+        courseSteps.push({ title: `Course: ${(course as any).title}`, description: `Platform course recommended for ${role.name}.`, estimated_effort: 'Self-paced', source_type: 'COURSE' as const, source_id: id, url: `/courses/${id}` });
+      }
+    }
+    const rawSteps: any[] = [
+      ...(role.typical_learning_path || []).map((t, i) => ({
+        title: t,
+        description: `Learning-path stage ${i + 1} for ${role.name}.`,
+        estimated_effort: 'Self-paced',
         source_type: 'NOTES' as const,
-        source_id: 'note_seed_os_01',
-        url: '/notes',
-        skill_ref: role.skills[0]?.toLowerCase(),
-      },
-      {
-        title: 'Hands-on Production Capstone Project',
-        description: 'Build and document a full-fledged technical project in Project Builder with unit tests.',
-        estimated_effort: '4 Weeks',
-        source_type: 'PROJECT' as const,
-        source_id: 'prj_seed_01',
-        url: '/projects',
-        skill_ref: 'projects',
-      },
-      {
-        title: 'Technical Interview & Mock Evaluation',
-        description: 'Complete mock technical interviews with simulated feedback and concept coverage reports.',
-        estimated_effort: '2 Weeks',
-        source_type: 'PLACEMENT' as const,
-        source_id: role.id,
-        url: `/placements/role/${role.id}`,
-        skill_ref: 'interview',
-      },
+        source_id: `${role.id}_path_${i + 1}`,
+        url: '/courses',
+        skill_ref: role.skills[i],
+      })),
+      ...courseSteps,
+      ...(role.coding_topics?.length
+        ? [{ title: `Practice coding topics: ${role.coding_topics.slice(0, 4).join(', ')}`, description: 'Solve problems on these patterns in the DSA lab.', estimated_effort: 'Ongoing', source_type: 'DSA' as const, source_id: `${role.id}_coding`, url: '/dsa' }]
+        : []),
+      { title: `Build a project for ${role.name}`, description: `Plan and build a project that uses ${(role.technical_topics || []).slice(0, 2).join(' and ') || 'the role\'s core skills'}.`, estimated_effort: 'Self-paced', source_type: 'PROJECT' as const, source_id: `${role.id}_project`, url: '/projects' },
+      { title: 'Practise interviews for this role', description: `Mock interviews covering ${(role.interview_topics || []).slice(0, 2).join(' and ') || 'the role\'s topics'}.`, estimated_effort: 'Ongoing', source_type: 'PLACEMENT' as const, source_id: role.id, url: '/interviews' },
     ];
 
     const steps: CareerRoadmapStep[] = rawSteps.map((s, idx) => {
       // Check if student already has strong or verified evidence in this skill
-      const existing = s.skill_ref ? skillMap.get(s.skill_ref) : undefined;
+      const existing = s.skill_ref && skillMatches(s.skill_ref, mySkills)
+        ? studentSkills.find((sk) => skillMatches(s.skill_ref, [sk.skill_name]))
+        : undefined;
       const initialStatus: RoadmapStepStatus =
         existing && (existing.confidence === 'VERIFIED' || existing.confidence === 'STRONG_EVIDENCE')
           ? 'COMPLETED'
@@ -334,23 +318,20 @@ export class CareerService {
     const student = await db.getStudentById(studentId);
     const studentSkills = await db.getStudentSkills(studentId);
 
+    // Start from what the student told onboarding; leave the rest empty for them to fill in. Earlier versions
+    // invented target roles, Indian cities, industries, goals and (with no skills) Python/TypeScript/React.
+    const { OnboardingService } = await import('./onboardingService');
+    const goals: any = OnboardingService.getCareerGoalsSync(studentId);
+    const wm = goals?.work_mode_preference;
     const defaultProfile: CareerProfileData = {
       student_id: studentId,
-      target_roles: ['Software Development Engineer', 'Full Stack Developer'],
-      preferred_industries: ['Technology', 'Cloud Computing', 'Artificial Intelligence', 'FinTech'],
-      preferred_locations: ['Bengaluru', 'Hyderabad', 'Pune', 'Remote'],
-      preferred_work_arrangement: 'FLEXIBLE',
-      graduation_year: student?.semester
-        ? new Date().getFullYear() + Math.max(0, Math.ceil((8 - student.semester) / 2))
-        : 2026,
-      technical_skills: studentSkills.length > 0
-        ? studentSkills.map((s) => s.skill_name)
-        : ['Python', 'TypeScript', 'Data Structures & Algorithms', 'React'],
-      career_goals: [
-        'Secure product-based technology internship for graduation',
-        'Achieve verified competency across Core CS, System Design, and DSA',
-        'Deploy production-ready capstone portfolio project',
-      ],
+      target_roles: goals?.target_job_role ? [goals.target_job_role] : [],
+      preferred_industries: goals?.preferred_industry ? [goals.preferred_industry] : [],
+      preferred_locations: goals?.preferred_location ? [goals.preferred_location] : [],
+      preferred_work_arrangement: wm === 'REMOTE' ? 'REMOTE' : wm === 'HYBRID' ? 'HYBRID' : wm === 'ON_SITE' ? 'ONSITE' : 'FLEXIBLE',
+      graduation_year: student?.semester ? new Date().getFullYear() + Math.max(0, Math.ceil((8 - student.semester) / 2)) : undefined,
+      technical_skills: studentSkills.map((s) => s.skill_name),
+      career_goals: goals?.long_term_goal ? [goals.long_term_goal] : [],
       updated_at: new Date().toISOString(),
     };
 
@@ -366,9 +347,27 @@ export class CareerService {
     patch: Partial<CareerProfileData>
   ): Promise<CareerProfileData> {
     const current = await this.getCareerProfile(studentId);
+    // Only the profile's own fields are accepted; anything else in the request body is ignored.
+    const clean: Partial<CareerProfileData> = {};
+    const list = (k: 'target_roles' | 'preferred_industries' | 'preferred_locations' | 'technical_skills' | 'career_goals') => {
+      const v = (patch as any)?.[k];
+      if (v === undefined) return;
+      if (!Array.isArray(v) || v.some((x) => typeof x !== 'string')) throw new ValidationError(`${k} must be a list of text values`);
+      clean[k] = v.map((x: string) => x.trim()).filter(Boolean).slice(0, 30);
+    };
+    (['target_roles', 'preferred_industries', 'preferred_locations', 'technical_skills', 'career_goals'] as const).forEach(list);
+    if (patch?.preferred_work_arrangement !== undefined) {
+      if (!['REMOTE', 'HYBRID', 'ONSITE', 'FLEXIBLE'].includes(patch.preferred_work_arrangement as string)) throw new ValidationError('preferred_work_arrangement must be REMOTE, HYBRID, ONSITE or FLEXIBLE');
+      clean.preferred_work_arrangement = patch.preferred_work_arrangement;
+    }
+    if (patch?.graduation_year !== undefined) {
+      const y = Number(patch.graduation_year);
+      if (!Number.isInteger(y) || y < 2000 || y > 2100) throw new ValidationError('graduation_year must be a year');
+      clean.graduation_year = y;
+    }
     const updated: CareerProfileData = {
       ...current,
-      ...patch,
+      ...clean,
       student_id: studentId,
       updated_at: new Date().toISOString(),
     };
@@ -435,27 +434,17 @@ export class CareerService {
 
     // 2. Skill Alignment with Target Roles
     const allRoles = await db.getCareerRoles();
+    // The target role is the first role named in the student's career profile. Without one, no alignment is
+    // claimed (earlier versions silently used the first role in the catalogue).
     const primaryTargetRole = allRoles.find((r) =>
-      careerProfile.target_roles.some((tr) => r.name.toLowerCase().includes(tr.toLowerCase()) || tr.toLowerCase().includes(r.name.toLowerCase()))
-    ) || allRoles[0];
-
-    const studentSkillNames = new Set(studentSkills.map((s) => s.skill_name.toLowerCase()));
-    const matchingSkills: string[] = [];
-    const skillsToDevelop: string[] = [];
-
-    if (primaryTargetRole) {
-      for (const reqSkill of primaryTargetRole.skills) {
-        if (studentSkillNames.has(reqSkill.toLowerCase())) {
-          matchingSkills.push(reqSkill);
-        } else {
-          skillsToDevelop.push(reqSkill);
-        }
-      }
-    }
-
-    const skillsAlignedPercentage = primaryTargetRole && primaryTargetRole.skills.length > 0
+      careerProfile.target_roles.some((tr) => tr.trim() && (r.id === tr || r.name.toLowerCase().includes(tr.toLowerCase()) || tr.toLowerCase().includes(r.name.toLowerCase())))
+    );
+    const mySkills = studentSkills.map((s) => s.skill_name);
+    const matchingSkills = primaryTargetRole ? primaryTargetRole.skills.filter((req) => skillMatches(req, mySkills)) : [];
+    const skillsToDevelop = primaryTargetRole ? primaryTargetRole.skills.filter((req) => !matchingSkills.includes(req)) : [];
+    const skillsAlignedPercentage: number | null = primaryTargetRole && primaryTargetRole.skills.length > 0
       ? Math.round((matchingSkills.length / primaryTargetRole.skills.length) * 100)
-      : Math.min(100, Math.round(studentSkills.length * 12));
+      : null;
 
     // 3. Placement Preparation Progress
     const completedInterviews = interviews.filter((i) => i.status === 'COMPLETED');
@@ -463,11 +452,12 @@ export class CareerService {
     const activePlan = plans[0];
 
     const placementProgress = {
-      topics_practiced: readiness?.dimensions ? Object.keys(readiness.dimensions).length * 3 : 8,
-      total_topics: 24,
+      // No per-topic practice record exists, so no topic counts are claimed.
+      topics_practiced: null as number | null,
+      total_topics: null as number | null,
       mock_interviews_count: completedInterviews.length,
       latest_mock_score: latestInterview?.overall_score,
-      active_sprint_title: activePlan?.title || 'Comprehensive Placement Sprint',
+      active_sprint_title: activePlan?.title || null,
     };
 
     // 4. Applications & Upcoming Deadlines
@@ -483,29 +473,32 @@ export class CareerService {
       type: 'DEADLINE' | 'INTERVIEW' | 'ASSESSMENT';
     }[] = [];
 
+    const today = new Date(new Date().toDateString()).getTime();
     for (const app of applications) {
-      if (app.interview_date) {
+      if (['REJECTED', 'WITHDRAWN', 'OFFER', 'ACCEPTED'].includes(String(app.status))) continue;
+      const future = (d?: string) => !!d && new Date(d).getTime() >= today;
+      if (future(app.interview_date)) {
         upcomingDeadlines.push({
           id: `int_${app.id}`,
           title: `${app.role} Interview`,
           company: app.company_name,
-          date: app.interview_date,
+          date: app.interview_date!,
           type: 'INTERVIEW',
         });
-      } else if (app.assessment_date) {
+      } else if (future(app.assessment_date)) {
         upcomingDeadlines.push({
           id: `ass_${app.id}`,
           title: `${app.role} Online Assessment`,
           company: app.company_name,
-          date: app.assessment_date,
+          date: app.assessment_date!,
           type: 'ASSESSMENT',
         });
-      } else if (app.deadline) {
+      } else if (future(app.deadline)) {
         upcomingDeadlines.push({
           id: `dl_${app.id}`,
           title: `${app.role} Application Deadline`,
           company: app.company_name,
-          date: app.deadline,
+          date: app.deadline!,
           type: 'DEADLINE',
         });
       }
@@ -532,9 +525,9 @@ export class CareerService {
       recommendedActions.push({
         id: 'act_mock_interview',
         title: 'Conduct First AI Mock Technical Interview',
-        description: `Practice dynamic technical interview questions tailored for ${primaryTargetRole?.name || 'Software Engineering'} roles with objective feedback.`,
+        description: `Practise interview questions${primaryTargetRole ? ` for ${primaryTargetRole.name}` : ''} and review the feedback.`,
         action_label: 'Start Mock Interview',
-        target_path: '/placements/mock-interview/setup',
+        target_path: '/interviews',
         priority: 'HIGH',
         category: 'PLACEMENT',
       });
@@ -544,7 +537,7 @@ export class CareerService {
       recommendedActions.push({
         id: 'act_skill_gap',
         title: `Bridge Skill Gap: ${skillsToDevelop[0]}`,
-        description: `Strengthen ${skillsToDevelop.slice(0, 2).join(' & ')} required by ${primaryTargetRole?.name || 'top employers'}.`,
+        description: `Strengthen ${skillsToDevelop.slice(0, 2).join(' & ')} listed for ${primaryTargetRole?.name}.`,
         action_label: 'Practice Topics',
         target_path: '/placements/topics',
         priority: 'MEDIUM',
@@ -556,7 +549,7 @@ export class CareerService {
       recommendedActions.push({
         id: 'act_jobs',
         title: 'Discover & Track Engineering Roles',
-        description: 'Explore verified internship and graduate opportunities matching your branch and technical skills.',
+        description: 'Find internships and graduate roles and track the ones you apply to.',
         action_label: 'Browse Jobs',
         target_path: '/career/jobs',
         priority: 'MEDIUM',
@@ -582,7 +575,7 @@ export class CareerService {
     for (const app of applications.slice(0, 4)) {
       recentActivity.push({
         id: `act_app_${app.id}`,
-        title: `Applied to ${app.company_name}`,
+        title: app.status === 'SAVED' ? `Saved ${app.company_name}` : `Application to ${app.company_name}`,
         subtitle: `${app.role} • Status: ${app.status}`,
         timestamp: app.updated_at || app.created_at,
         category: 'APPLICATION',
@@ -606,7 +599,7 @@ export class CareerService {
         id: `act_ext_${act.id}`,
         title: act.title,
         subtitle: `${act.provider.toUpperCase()} synced activity`,
-        timestamp: act.timestamp || new Date().toISOString(),
+        timestamp: act.timestamp || (act as any).created_at,
         category: 'INTEGRATION',
         url: '/sync',
       });
@@ -627,8 +620,10 @@ export class CareerService {
         placement_prep_progress: placementProgress,
         applications_in_progress: activeApplications.length,
         upcoming_deadlines: upcomingDeadlines.slice(0, 5),
-        readiness_explanation:
-          'Career readiness indicators are calculated strictly from authentic records: verified course assessments, completed projects, active resumes, tracked application deadlines, and mock interview performance. No fabricated metrics are displayed.',
+        target_role_name: primaryTargetRole?.name || null,
+        readiness_explanation: primaryTargetRole
+          ? `Skill alignment compares the skills on your profile with the skills listed for ${primaryTargetRole.name}. Resume completeness, project, interview and application figures come from your own records.`
+          : 'Set a target role in your career profile to see skill alignment. Resume completeness, project, interview and application figures come from your own records.',
       },
       recommended_actions: recommendedActions,
       recent_activity: recentActivity.slice(0, 8),

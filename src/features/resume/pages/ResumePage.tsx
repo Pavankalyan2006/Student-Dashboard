@@ -68,10 +68,7 @@ export const ResumePage: React.FC<ResumePageProps> = ({ onNavigate }) => {
 
   const handleCreateNew = async () => {
     try {
-      const created = await resumeApi.createResume({
-        title: 'New Engineering Resume',
-        target_role: 'Software Engineer',
-      });
+      const created = await resumeApi.createResume({ title: 'New resume' });
       toast.success('New resume draft created');
       onNavigate(`/resume/${created.resume.id}/edit`);
     } catch (err: any) {

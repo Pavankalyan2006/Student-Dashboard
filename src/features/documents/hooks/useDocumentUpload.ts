@@ -112,7 +112,11 @@ export function useDocumentUpload(onSuccessCallback?: (doc: Document) => void) {
       return doc;
     },
     onSuccess: (doc) => {
-      toast.success(`"${doc.title}" uploaded! Processing started in background.`);
+      if ((doc as any).duplicate_of) {
+        toast.info(`This file is already in your documents as "${doc.title}". No copy was made.`);
+      } else {
+        toast.success(`"${doc.title}" uploaded! Processing started in background.`);
+      }
       queryClient.invalidateQueries({ queryKey: ['documents'] });
       queryClient.invalidateQueries({ queryKey: ['documentStats'] });
       queryClient.invalidateQueries({ queryKey: ['documentFolders'] });

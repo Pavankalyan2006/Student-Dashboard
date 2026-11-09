@@ -44,14 +44,11 @@ import { PlacementPlanPage } from './features/placements/pages/PlacementPlanPage
 import { TechnicalPreparationPage } from './features/placements/pages/TechnicalPreparationPage';
 import { RolePreparationPage } from './features/placements/pages/RolePreparationPage';
 import { PlacementProgressPage } from './features/placements/pages/PlacementProgressPage';
-import { MockInterviewSetupPage } from './features/placements/pages/MockInterviewSetupPage';
-import { MockInterviewSessionPage } from './features/placements/pages/MockInterviewSessionPage';
-import { MockInterviewResultPage } from './features/placements/pages/MockInterviewResultPage';
-import { MockInterviewHistoryPage } from './features/placements/pages/MockInterviewHistoryPage';
 import { MockInterviewsPage } from './features/mock-interviews/pages/MockInterviewsPage';
 // Phase 12: Resume Builder, Career Assistant & Skill Assessment Pages
 import { ResumePage } from './features/resume/pages/ResumePage';
 import { ResumeEditorPage } from './features/resume/pages/ResumeEditorPage';
+import { ResumeCreatePage } from './features/resume/pages/ResumeCreatePage';
 import { ResumePreviewPage } from './features/resume/pages/ResumePreviewPage';
 import { ResumeTailorPage } from './features/resume/pages/ResumeTailorPage';
 import { ResumeTemplatesPage } from './features/resume/pages/ResumeTemplatesPage';
@@ -101,6 +98,7 @@ import { DoubtSolverPage } from './features/doubts/pages/DoubtSolverPage';
 import { FlashcardsPage } from './features/flashcards/pages/FlashcardsPage';
 import { LabAssistantPage } from './features/labs/pages/LabAssistantPage';
 import { SqlLabPage } from './features/sql-lab/pages/SqlLabPage';
+import { GitLabPage } from './features/git-lab/pages/GitLabPage';
 import { MlLabPage } from './features/ml-lab/pages/MlLabPage';
 import { SystemDesignLabPage } from './features/system-design/pages/SystemDesignLabPage';
 import { KnowledgeBasePage } from './features/knowledge/pages/KnowledgeBasePage';
@@ -478,15 +476,10 @@ function AppContent() {
       return <ProjectCreatePage search={search} onNavigate={navigate} />;
     }
 
+    // There is no global documentation page: documentation lives inside each project (open a project,
+    // then its Documentation tab). This used to open a fixed demo project id for every student.
     if (path === '/projects/documentation' || path === '/projects/docs') {
-      return (
-        <ProjectWorkspacePage
-          projectId="proj_seed_ai_health_01"
-          activeTab="documentation"
-          initialTab="documentation"
-          onNavigate={navigate}
-        />
-      );
+      return <ProjectsPage onNavigate={navigate} />;
     }
 
     const projectTabMatch = path.match(/^\/projects\/([^/]+)\/([a-z]+)$/);
@@ -634,7 +627,7 @@ function AppContent() {
     }
 
     if (path === '/resume/create') {
-      return <ResumeEditorPage resumeId="res_seed_01" onNavigate={navigate} />;
+      return <ResumeCreatePage onNavigate={navigate} />;
     }
 
     if (path === '/resume/templates') {
@@ -733,7 +726,11 @@ function AppContent() {
     // ==========================================
     // Phase 13: GitHub Integration Routes
     // ==========================================
-    if (path === '/github' || path === '/git') {
+    if (path === '/git' || path.startsWith('/git/')) {
+      return <GitLabPage onNavigate={navigate} />;
+    }
+
+    if (path === '/github') {
       return <GitHubDashboardPage onNavigate={navigate} />;
     }
 

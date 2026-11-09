@@ -1,0 +1,15 @@
+PASS  INT skill catalogue has Python
+PASS  INT declare Python on the profile  -- 201
+PASS  INT create project  -- 201
+PASS  INT add Python to the project  -- 201
+PASS  INT resume holds the project with its technology  -- 200 found
+PASS  INT B cannot import A's project into B's resume
+PASS  INT application JD analysis sees the declared Python skill, without calling the declaration evidence  -- DEVELOPING
+PASS  INT and reports Docker as not on the profile  -- NOT_YET_ASSESSED
+PASS  INT B's analysis is not affected by A's skills
+PASS  INT imported job fit uses the profile and the project  -- 50 ["Python"] projects=1
+PASS  INT knowledge base answers from the uploaded document  -- EXTRACTIVE
+PASS  INT B gets no citation from A's document
+PASS  INT career dashboard answers for a student with records  -- 200
+
+13/13 PASS

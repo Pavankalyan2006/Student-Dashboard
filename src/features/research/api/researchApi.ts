@@ -45,6 +45,14 @@ export const researchApi = {
     return apiClient.get<ResearchPaper>(`/research/papers/${paperId}`);
   },
 
+  async updatePaperNotes(paperId: string, data: { notes?: string; reading_status?: 'TO_READ' | 'READING' | 'READ' }): Promise<ResearchPaper> {
+    return apiClient.patch<ResearchPaper>(`/research/papers/${paperId}`, data);
+  },
+
+  async deletePaper(paperId: string): Promise<{ deleted: boolean }> {
+    return apiClient.delete<{ deleted: boolean }>(`/research/papers/${paperId}`);
+  },
+
   async searchPapers(
     projectId: string,
     params: {
@@ -55,8 +63,8 @@ export const researchApi = {
       domain?: string;
       venue?: string;
     }
-  ): Promise<{ papers: ResearchPaper[]; total_found: number; provider: string }> {
-    return apiClient.post<{ papers: ResearchPaper[]; total_found: number; provider: string }>(
+  ): Promise<{ papers: ResearchPaper[]; total: number; provider: string; source?: 'LIVE' | 'CURATED'; live_error?: string; source_note?: string }> {
+    return apiClient.post<{ papers: ResearchPaper[]; total: number; provider: string; source?: 'LIVE' | 'CURATED'; live_error?: string; source_note?: string }>(
       `/research/${projectId}/papers/search`,
       params
     );

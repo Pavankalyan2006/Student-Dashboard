@@ -1,0 +1,42 @@
+PASS  MI types list  -- 12
+PASS  MI resume interview without a resume is refused (400)  -- 400
+PASS  MI DSA interview asks a coding question (was a fixed microservices question)  -- Arrays & Two Pointers
+PASS  MI create CODING session  -- 201
+PASS  MI report before finishing is 409 and does not complete the session
+PASS  MI student B cannot open the session (403)
+PASS  MI junk answer scores 0 (no length bonus or minimum)  -- score=0
+PASS  MI re-answering the same question is refused
+PASS  MI answer naming the reference concepts gets full keyword coverage  -- 100
+PASS  MI no question repeated within the interview  -- 3 distinct questions
+PASS  MI interview completes
+PASS  MI report labelled as keyword check, not a hiring assessment  -- 56
+PASS  MI report has no canned communication observations
+PASS  MI report duration comes from answer timings (no 30-min default)  -- 3
+PASS  Placement interview endpoint creates a session in the same history  -- 201
+PASS  Placement interview uses the same honest evaluator  -- 0
+PASS  Placement feedback before completion is 409
+PASS  PRJ create with repository URL and start date  -- 201
+PASS  PRJ no invented description or target users
+PASS  PRJ invalid repository URL is refused
+PASS  PRJ title is required
+PASS  PRJ PATCH ignores student_id and progress (mass assignment closed)  -- owner=true
+PASS  PRJ student B cannot read the project
+PASS  PRJ add module and two tasks
+PASS  PRJ progress computed from tasks  -- {"overall_percentage":43,"tasks_total":2,"tasks_completed":1,"modules_total":1,"
+PASS  PRJ empty architecture is not filled with a template
+PASS  PRJ AI generate-plan without a model answers 503
+PASS  PRJ AI generate-architecture without a model answers 503
+PASS  PRJ AI analyze-scope without a model answers 503
+PASS  PRJ AI analyze-risks without a model answers 503
+PASS  PRJ AI suggest-technologies without a model answers 503
+PASS  PRJ AI ask-ai without a model answers 503
+PASS  PRJ AI ideas without a model answers 503
+PASS  PRJ doc generation 503 saves nothing  -- 503
+PASS  GH OAuth start without an OAuth app answers 503 (no hard-coded client id)  -- 503
+PASS  GH callback with only a username no longer connects an account  -- 400
+PASS  GH status stays not connected
+PASS  GH invalid or unreachable PAT connects nothing  -- 400
+PASS  GH sync without a connection is 404
+PASS  GH invalid username refused  -- 400
+
+40/40 PASS

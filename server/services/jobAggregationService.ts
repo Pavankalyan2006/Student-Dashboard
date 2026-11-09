@@ -1,6 +1,7 @@
 // server/services/jobAggregationService.ts
 // Multi-Source Job Aggregation Engine with Source Adapters, Deduplication, Notification Dispatch, and Freshness Tracking
 
+import { createHash } from 'crypto';
 import https from 'https';
 import http from 'http';
 import { db } from '../db/database';
@@ -72,11 +73,15 @@ export class JobAggregationService {
   }
 
   /**
-   * Normalizes raw payload into strict JobListing
+   * Normalizes a raw payload into a JobListing. Fields the source did not supply stay empty: no default location,
+   * experience, qualification or skills are invented, and "freshers friendly" is never assumed.
    */
   public static normalizeJob(raw: RawJobPayload): JobListing {
     const pubDate = raw.publication_date || new Date().toISOString().split('T')[0];
-    const id = `job_${raw.source_id}_${Buffer.from(raw.organization + '_' + raw.title).toString('base64').replace(/[^a-zA-Z0-9]/g, '').substring(0, 16)}`;
+    // A hash of the whole identity: the old 16-character base64 prefix made "Synthetic Research Org" and
+    // "Synthetic Remote Co" (any two names sharing 12 leading characters) collide and overwrite each other.
+    const identity = raw.external_id ? `ext:${raw.external_id}` : `${raw.organization}\u0000${raw.title}`;
+    const id = `job_${raw.source_id}_${createHash('sha256').update(identity).digest('hex').slice(0, 20)}`;
 
     // Ensure valid HTTPS URLs
     let appUrl = raw.application_url || raw.source_url;
@@ -98,12 +103,12 @@ export class JobAggregationService {
       subcategory: raw.subcategory,
       employment_type: raw.employment_type || 'FULL_TIME',
       work_arrangement: raw.remote_eligible ? 'REMOTE' : 'ONSITE',
-      location: raw.location || 'Pan-India',
+      location: raw.location || '',
       country: 'India',
       remote_eligible: Boolean(raw.remote_eligible),
-      experience_label: raw.experience_label || 'Freshers Eligible (0 - 1 Years)',
-      minimum_qualification: raw.minimum_qualification || 'B.Tech / B.E. in relevant engineering discipline',
-      required_skills: raw.required_skills && raw.required_skills.length > 0 ? raw.required_skills : ['Problem Solving', 'Data Structures', 'Algorithms'],
+      experience_label: raw.experience_label,
+      minimum_qualification: raw.minimum_qualification,
+      required_skills: raw.required_skills || [],
       preferred_skills: [],
       salary_text: raw.salary_text,
       salary_min: raw.salary_min,
@@ -116,7 +121,7 @@ export class JobAggregationService {
       retrieved_at: new Date().toISOString(),
       status: 'ACTIVE',
       verification_status: raw.category === 'GOVERNMENT' ? 'OFFICIAL_GOVERNMENT_SOURCE' : 'AUTHORIZED_JOB_PROVIDER',
-      is_freshers_friendly: true,
+      is_freshers_friendly: false,
       notification_number: raw.notification_number,
       official_notification_pdf_url: raw.official_notification_pdf_url,
       age_limit_max: raw.age_limit_max,
@@ -127,146 +132,47 @@ export class JobAggregationService {
   }
 
   /**
-   * Fetches public tech jobs from Remotive API
+   * Public software jobs from the Remotive API. A listing missing its title, company or URL is skipped, and a
+   * failed request returns no jobs and the error: there is no cached or sample fallback.
    */
   public static async fetchRemotiveJobs(sourceConfig: JobSourceConfig): Promise<{ jobs: RawJobPayload[]; error?: string }> {
+    let data: any;
     try {
-      const data = await this.fetchJson('https://remotive.com/api/remote-jobs?category=software-dev&limit=10', 5000);
-      if (!data || !Array.isArray(data.jobs)) {
-        return { jobs: [] };
-      }
-      const rawList: RawJobPayload[] = data.jobs.slice(0, 8).map((j: any) => ({
+      data = await this.fetchJson('https://remotive.com/api/remote-jobs?category=software-dev&limit=10', 5000);
+    } catch (err: any) {
+      logger.warn(`Remotive API fetch failed: ${err.message}`);
+      return { jobs: [], error: `Remotive could not be reached: ${err.message}` };
+    }
+    if (!data || !Array.isArray(data.jobs)) return { jobs: [], error: 'Remotive answered without a job list' };
+    const rawList: RawJobPayload[] = data.jobs
+      .filter((j: any) => typeof j.title === 'string' && j.title.trim() && typeof j.company_name === 'string' && j.company_name.trim() && typeof j.url === 'string' && /^https:\/\//.test(j.url))
+      .slice(0, 8)
+      .map((j: any) => ({
         external_id: String(j.id),
-        title: j.title || 'Software Engineer',
-        organization: j.company_name || 'Tech Innovator',
+        title: j.title,
+        organization: j.company_name,
         source_id: sourceConfig.id,
         source_name: 'Remotive Public Tech API',
         source_type: 'PUBLIC_JOB_API',
-        source_url: j.url || 'https://remotive.com',
-        application_url: j.url || 'https://remotive.com',
-        category: 'PRIVATE',
+        source_url: j.url,
+        application_url: j.url,
+        category: 'PRIVATE' as const,
         subcategory: 'SOFTWARE_DEVELOPMENT',
-        location: j.candidate_required_location || 'Remote (Global/India)',
+        location: typeof j.candidate_required_location === 'string' ? j.candidate_required_location : '',
         remote_eligible: true,
         employment_type: 'FULL_TIME',
-        experience_label: 'Entry to Mid Level',
-        salary_text: j.salary || 'Competitive compensation',
-        description: j.description ? j.description.replace(/<[^>]*>/g, '').substring(0, 1500) : 'Exciting software engineering role.',
-        required_skills: j.tags && Array.isArray(j.tags) ? j.tags.slice(0, 6) : ['Software Development', 'Git', 'Problem Solving'],
-        publication_date: j.publication_date ? j.publication_date.split('T')[0] : new Date().toISOString().split('T')[0],
+        salary_text: typeof j.salary === 'string' && j.salary.trim() ? j.salary : undefined,
+        description: typeof j.description === 'string' ? j.description.replace(/<[^>]*>/g, '').substring(0, 1500) : '',
+        required_skills: Array.isArray(j.tags) ? j.tags.filter((t: any) => typeof t === 'string').slice(0, 6) : [],
+        publication_date: typeof j.publication_date === 'string' ? j.publication_date.split('T')[0] : undefined,
       }));
-      return { jobs: rawList };
-    } catch (err: any) {
-      logger.warn(`Remotive API fetch encountered: ${err.message}. Using cached verified remote positions.`);
-      return {
-        jobs: [
-          {
-            external_id: 'remotive_cache_01',
-            title: 'Junior Backend Engineer (Go & Cloud Services)',
-            organization: 'CrowdDev Systems',
-            source_id: sourceConfig.id,
-            source_name: 'Remotive Public Tech API',
-            source_type: 'PUBLIC_JOB_API',
-            source_url: 'https://remotive.com/remote-jobs/software-dev/backend-engineer',
-            application_url: 'https://remotive.com/remote-jobs/software-dev/backend-engineer',
-            category: 'PRIVATE',
-            subcategory: 'BACKEND_DEVELOPMENT',
-            location: 'Remote (India Eligible)',
-            remote_eligible: true,
-            experience_label: '0 - 2 Years',
-            required_skills: ['Go', 'PostgreSQL', 'Docker', 'RESTful APIs'],
-            salary_text: '₹14,00,000 - ₹20,00,000 / year',
-            description: 'Develop high-throughput REST APIs, telemetry webhooks, and containerized microservices in Go.',
-            publication_date: new Date().toISOString().split('T')[0],
-            application_deadline: new Date(Date.now() + 45 * 86400000).toISOString().split('T')[0],
-          },
-        ],
-      };
-    }
+    return { jobs: rawList };
   }
 
-  /**
-   * Fetches official Indian Government and PSU Recruitment notifications
-   */
-  public static async fetchGovtNotifications(sourceConfig: JobSourceConfig): Promise<{ jobs: RawJobPayload[]; error?: string }> {
-    // Curated high-priority authentic notifications with official links and gazetted advertisement numbers
-    const list: RawJobPayload[] = [
-      {
-        external_id: 'upsc_ese_it_2026',
-        title: 'Assistant Executive Engineer (Electronics & Telecommunication / IT)',
-        organization: 'Union Public Service Commission (UPSC ESE 2026)',
-        source_id: sourceConfig.id,
-        source_name: 'UPSC Central Examination Portal',
-        source_type: 'GOVERNMENT_PORTAL',
-        source_url: 'https://upsc.gov.in/examinations/Engineering-Services-Examination',
-        application_url: 'https://upsconline.nic.in/ora/Detail.php',
-        category: 'GOVERNMENT',
-        subcategory: 'UPSC',
-        location: 'New Delhi / Pan-India Postings',
-        experience_label: 'B.Tech Freshers (Final Year Eligible)',
-        minimum_qualification: 'B.E. / B.Tech in Electronics, Telecommunications, Computer Science, or Electrical Engineering',
-        required_skills: ['Digital Signal Processing', 'Computer Networks', 'Microprocessors', 'Control Systems', 'C Programming'],
-        salary_text: 'Pay Level 10 (7th CPC) ₹56,100/- basic + DA, HRA (Approx ₹92,000/month)',
-        description: 'UPSC conducts the Engineering Services Examination (ESE) for recruitment to Group A technical engineering services in Indian Telecommunication Service, Central Power Engineering Service, and Defence Services.',
-        publication_date: '2026-01-28',
-        application_deadline: '2026-06-25',
-        notification_number: 'Advt. No. 01/2026-ENGG',
-        official_notification_pdf_url: 'https://upsc.gov.in/sites/default/files/ExamNotification_ESE_2026_Eng.pdf',
-        age_limit_max: 30,
-        total_vacancies: 195,
-      },
-      {
-        external_id: 'ssc_je_cse_2026',
-        title: 'Junior Engineer (Information Technology & Systems Cadre)',
-        organization: 'Staff Selection Commission (SSC Central)',
-        source_id: sourceConfig.id,
-        source_name: 'Staff Selection Commission',
-        source_type: 'GOVERNMENT_PORTAL',
-        source_url: 'https://ssc.gov.in',
-        application_url: 'https://ssc.gov.in/apply',
-        category: 'GOVERNMENT',
-        subcategory: 'SSC',
-        location: 'Pan-India Central Government Offices (CPWD, MES, CWC)',
-        experience_label: 'Freshers Eligible (0 - 1 Years)',
-        minimum_qualification: 'Degree in Engineering (B.E./B.Tech) in Computer Science, IT, or Civil/Electrical from a recognized University',
-        required_skills: ['Operating Systems', 'Database Systems', 'Network Security', 'General Aptitude'],
-        salary_text: 'Level 6 (₹35,400 - ₹1,12,400) Gross approx ₹54,000/month',
-        description: 'Staff Selection Commission recruitment for Junior Engineers in central government organizations including Central Public Works Department and Military Engineer Services.',
-        publication_date: '2026-02-05',
-        application_deadline: '2026-05-20',
-        notification_number: 'SSC/HQ/JE/2026/03',
-        official_notification_pdf_url: 'https://ssc.gov.in/notice_files/Notice_JE_2026.pdf',
-        age_limit_max: 30,
-        total_vacancies: 980,
-      },
-      {
-        external_id: 'rrb_je_it_2026',
-        title: 'Junior Engineer (Information Technology) — Indian Railways',
-        organization: 'Railway Recruitment Boards (RRB Central)',
-        source_id: sourceConfig.id,
-        source_name: 'Railway Recruitment Control Board',
-        source_type: 'GOVERNMENT_PORTAL',
-        source_url: 'https://indianrailways.gov.in/railwayboard',
-        application_url: 'https://www.rrbapply.gov.in',
-        category: 'GOVERNMENT',
-        subcategory: 'RAILWAYS',
-        location: 'Railway Zonal HQs (Secunderabad, Mumbai, Chennai, Kolkata, Delhi)',
-        experience_label: '0 - 2 Years',
-        minimum_qualification: 'B.Tech / B.E. / PGDCA / B.Sc (Computer Science) / BCA from recognized institute with min 60% marks',
-        required_skills: ['Linux Administration', 'Network Routing', 'Relational Databases', 'IT Infrastructure'],
-        salary_text: 'Level 6 (7th CPC) initial pay ₹35,400 + Railway Pass, Medical & HRA',
-        description: 'Recruitment for Junior Engineer (IT) responsible for maintaining PRS (Passenger Reservation System), UTS ticketing networks, and optical fiber train control telemetry.',
-        publication_date: '2026-02-12',
-        application_deadline: '2026-05-31',
-        notification_number: 'CEN 03/2026 (RRB-JE)',
-        official_notification_pdf_url: 'https://www.rrbchennai.gov.in/downloads/CEN_03_2026_Notice.pdf',
-        age_limit_max: 33,
-        total_vacancies: 240,
-      },
-    ];
-
-    return { jobs: list };
-  }
+  /** Sources with a working adapter. Every other source is a link to an official portal and is not synced. */
+  public static readonly ADAPTERS: Record<string, (s: JobSourceConfig) => Promise<{ jobs: RawJobPayload[]; error?: string }>> = {
+    src_remotive_api: (s) => JobAggregationService.fetchRemotiveJobs(s),
+  };
 
   /**
    * Main synchronization runner across configured and enabled sources
@@ -290,16 +196,16 @@ export class JobAggregationService {
       let rawList: RawJobPayload[] = [];
       let sourceError: string | undefined;
 
+      const adapter = this.ADAPTERS[source.id];
+      if (!adapter) {
+        source.health_status = 'NOT_CONFIGURED';
+        await db.updateJobSource(source);
+        continue;
+      }
       try {
-        if (source.id === 'src_remotive_api') {
-          const res = await this.fetchRemotiveJobs(source);
-          rawList = res.jobs;
-          sourceError = res.error;
-        } else if (source.category === 'GOVERNMENT' || source.id === 'src_upsc_official' || source.id === 'src_ssc_official') {
-          const res = await this.fetchGovtNotifications(source);
-          rawList = res.jobs;
-          sourceError = res.error;
-        }
+        const res = await adapter(source);
+        rawList = res.jobs;
+        sourceError = res.error;
       } catch (err: any) {
         sourceError = err.message;
         logger.error(`Error syncing source ${source.name}:`, err);
@@ -318,7 +224,7 @@ export class JobAggregationService {
       // Update source configuration statistics
       source.last_attempted_sync = startTime;
       source.last_successful_sync = sourceError ? source.last_successful_sync : new Date().toISOString();
-      source.health_status = sourceError ? 'DEGRADED' : 'HEALTHY';
+      source.health_status = sourceError ? (rawList.length ? 'DEGRADED' : 'UNAVAILABLE') : 'HEALTHY';
       source.last_error = sourceError;
       source.records_retrieved_last_run = rawList.length;
       source.new_records_last_run = saveRes.added;
@@ -333,7 +239,7 @@ export class JobAggregationService {
         source_name: source.name,
         started_at: startTime,
         completed_at: new Date().toISOString(),
-        status: sourceError ? 'PARTIAL' : 'SUCCESS',
+        status: sourceError ? (rawList.length ? 'PARTIAL' : 'FAILED') : 'SUCCESS',
         records_retrieved: rawList.length,
         records_added: saveRes.added,
         records_updated: saveRes.updated,

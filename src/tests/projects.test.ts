@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { stubModel } from './helpers/mockAIModel';
 import { db } from '../../server/db/database';
 import { ProjectService } from '../../server/services/projectService';
 import { ProjectModuleTaskService } from '../../server/services/projectModuleTaskService';
@@ -225,97 +226,87 @@ describe('Phase 10: Project Builder & Project Documentation System', () => {
   });
 
   describe('5. AI Planning, Idea Generation & Scope Analysis', () => {
-    it('generates structured B.Tech project ideas with features and tech stacks', async () => {
-      const ideas = await ProjectPlanningService.generateProjectIdeas({
-        domain: 'AI/ML',
-        difficulty: 'INTERMEDIATE',
-        project_type: 'MAJOR_PROJECT',
-      });
+    afterEach(() => vi.restoreAllMocks());
 
-      expect(Array.isArray(ideas)).toBe(true);
-      expect(ideas.length).toBeGreaterThan(0);
-      expect(ideas[0].title).toBeDefined();
-      expect(ideas[0].problem).toBeDefined();
-      expect(ideas[0].solution).toBeDefined();
-      expect(ideas[0].features.length).toBeGreaterThan(0);
+    it('without an AI model, every AI planning endpoint answers 503 and saves nothing (no template ideas)', async () => {
+      const project = await ProjectService.createProject(studentA, { title: 'No model project', project_type: 'MINI_PROJECT', domain: 'EdTech' });
+      for (const call of [
+        () => ProjectPlanningService.generateProjectIdeas({ domain: 'AI/ML' }),
+        () => ProjectPlanningService.generateProjectPlan(project.id, studentA),
+        () => ProjectPlanningService.analyzeProjectScope(project.id, studentA),
+        () => ProjectPlanningService.analyzeProjectRisks(project.id, studentA),
+        () => ProjectPlanningService.suggestTechStack(project.id, studentA),
+        () => ProjectPlanningService.generateArchitecture(project.id, studentA),
+        () => ProjectDocumentationService.generateDocument(project.id, studentA, { document_type: 'ABSTRACT' }),
+        () => ProjectAIService.askProjectAI(project.id, studentA, 'What next?'),
+      ]) {
+        await expect(call()).rejects.toMatchObject({ statusCode: 503, code: 'AI_UNAVAILABLE' });
+      }
+      expect(await db.getProjectModules(project.id)).toEqual([]);
+      expect(await db.getProjectDocuments(project.id)).toEqual([]);
+      expect(await db.getProjectArchitecture(project.id)).toBeFalsy();
     });
 
-    it('generates a multi-phase engineering plan and applies it to project workspace', async () => {
+    it('uses the model output for ideas, and rejects malformed output with 502', async () => {
+      stubModel(() => JSON.stringify([{ title: 'Stub idea', problem: 'p', solution: 's', users: 'u', features: ['f1'], technologies: [], difficulty: 'INTERMEDIATE', estimated_scope: '8 weeks' }]));
+      const ideas = await ProjectPlanningService.generateProjectIdeas({ domain: 'AI/ML', difficulty: 'INTERMEDIATE', project_type: 'MAJOR_PROJECT' });
+      expect(ideas[0].title).toBe('Stub idea');
+      vi.restoreAllMocks();
+      stubModel(() => 'sorry, no JSON here');
+      await expect(ProjectPlanningService.generateProjectIdeas({ domain: 'AI/ML' })).rejects.toMatchObject({ statusCode: 502 });
+    });
+
+    it('applies a model-generated plan to the project workspace, and AI tasks start as TODO', async () => {
       const project = await ProjectService.createProject(studentA, {
         title: 'Automated Code Vulnerability Scanner',
         project_type: 'MAJOR_PROJECT',
         domain: 'Cyber Security',
         problem_statement: 'Static analysis tools miss contextual semantic vulnerabilities.',
       });
-
+      stubModel(() => JSON.stringify({
+        phases: [{ name: 'Phase 1', description: 'd', weeks: 2 }],
+        milestones: [{ title: 'M1', description: 'd', target_week: 2 }],
+        modules: [{ name: 'Scanner', description: 'd', purpose: 'p', priority: 'HIGH' }],
+        tasks: [{ module_name: 'Scanner', title: 'Parse AST', description: 'd', priority: 'HIGH', estimated_hours: 8 }],
+      }));
       const plan = await ProjectPlanningService.generateProjectPlan(project.id, studentA);
-      expect(plan.phases.length).toBeGreaterThan(0);
-      expect(plan.milestones.length).toBeGreaterThan(0);
-      expect(plan.modules.length).toBeGreaterThan(0);
-      expect(plan.tasks.length).toBeGreaterThan(0);
-
-      // Apply generated plan
+      expect(plan.modules).toHaveLength(1);
       const result = await ProjectPlanningService.applyGeneratedPlan(project.id, studentA, plan);
-      expect(result.modulesCreated).toBe(plan.modules.length);
-      expect(result.tasksCreated).toBe(plan.tasks.length);
-      expect(result.milestonesCreated).toBe(plan.milestones.length);
-
-      // Verify modules and tasks are in database
-      const savedModules = await db.getProjectModules(project.id);
-      expect(savedModules.length).toBe(plan.modules.length);
+      expect(result.modulesCreated).toBe(1);
+      expect(result.tasksCreated).toBe(1);
+      const tasks = await db.getProjectTasks(project.id);
+      expect(tasks.every((t: any) => t.status !== 'DONE')).toBe(true);
     });
 
-    it('analyzes project scope into MoSCoW categories', async () => {
-      const project = await ProjectService.createProject(studentA, {
-        title: 'Scope Analysis Test',
-        project_type: 'MINI_PROJECT',
-        domain: 'EdTech',
-      });
-
+    it('analyzes project scope into MoSCoW categories from the model output', async () => {
+      const project = await ProjectService.createProject(studentA, { title: 'Scope Analysis Test', project_type: 'MINI_PROJECT', domain: 'EdTech' });
+      stubModel(() => JSON.stringify({ must_have: ['a'], should_have: ['b'], could_have: [], future: [], scope_verdict: 'ok' }));
       const scope = await ProjectPlanningService.analyzeProjectScope(project.id, studentA);
-      expect(Array.isArray(scope.must_have)).toBe(true);
-      expect(Array.isArray(scope.should_have)).toBe(true);
-      expect(Array.isArray(scope.could_have)).toBe(true);
-      expect(Array.isArray(scope.future)).toBe(true);
-      expect(scope.scope_verdict).toBeDefined();
+      expect(scope.must_have).toEqual(['a']);
+      expect(scope.scope_verdict).toBe('ok');
     });
   });
 
   describe('6. Project Documentation & Academic Integrity', () => {
-    it('generates academic abstract and IEEE SRS without fabricating results', async () => {
+    afterEach(() => vi.restoreAllMocks());
+
+    it('saves an AI draft as a new document and never overwrites the student\'s own document', async () => {
       const project = await ProjectService.createProject(studentA, {
-        title: 'Intelligent Traffic Signal Timing Optimization with Deep Q-Networks',
+        title: 'Intelligent Traffic Signal Timing Optimization',
         project_type: 'MAJOR_PROJECT',
         domain: 'Smart City',
-        problem_statement: 'Fixed-timer traffic signals cause severe congestion at multi-way junctions.',
-        objectives: [
-          'Develop SUMO simulation interface with Python TraCI',
-          'Train Deep Q-Network reinforcement learning agent on flow rates',
-          'Evaluate wait-time variance reduction',
-        ],
+        problem_statement: 'Fixed-timer traffic signals cause congestion.',
       });
+      const own = await ProjectDocumentationService.saveDocument(project.id, studentA, { document_type: 'ABSTRACT', title: 'My abstract', content: 'Written by me.', status: 'DRAFT' } as any);
+      stubModel((prompt) => `Abstract draft for ${prompt.includes('Intelligent Traffic Signal') ? 'Intelligent Traffic Signal' : '?'}.`);
+      const draft = await ProjectDocumentationService.generateDocument(project.id, studentA, { document_type: 'ABSTRACT' });
+      expect(draft.id).not.toBe(own.id);
+      expect(draft.title).toMatch(/AI draft/);
+      expect(draft.content).toContain('Intelligent Traffic Signal');
+      const mine = await ProjectDocumentationService.getDocument(project.id, studentA, own.id);
+      expect(mine.content).toBe('Written by me.');
 
-      // Generate Abstract
-      const abstractDoc = await ProjectDocumentationService.generateDocument(project.id, studentA, {
-        document_type: 'ABSTRACT',
-      });
-
-      expect(abstractDoc.document_type).toBe('ABSTRACT');
-      expect(abstractDoc.content).toContain('Intelligent Traffic Signal');
-      expect(abstractDoc.content.length).toBeGreaterThan(150);
-
-      // Generate IEEE SRS
-      const srsDoc = await ProjectDocumentationService.generateDocument(project.id, studentA, {
-        document_type: 'SRS',
-      });
-
-      expect(srsDoc.document_type).toBe('SRS');
-      expect(srsDoc.content.length).toBeGreaterThan(200);
-
-      // Student B cannot read Student A's project document
-      await expect(
-        ProjectDocumentationService.getDocument(project.id, studentB, abstractDoc.id)
-      ).rejects.toThrow(/Forbidden/i);
+      await expect(ProjectDocumentationService.getDocument(project.id, studentB, draft.id)).rejects.toThrow(/Forbidden/i);
     });
   });
 

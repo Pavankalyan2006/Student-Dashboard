@@ -90,7 +90,8 @@ export type ActivityType =
   | 'MILESTONE_COMPLETED'
   | 'DOCUMENTATION_GENERATED'
   | 'ARCHITECTURE_UPDATED'
-  | 'TECH_UPDATED';
+  | 'TECH_UPDATED'
+  | 'STATUS_CHANGED';
 
 export interface Project {
   id: string;
@@ -107,6 +108,12 @@ export interface Project {
   status: ProjectStatus;
   progress_percentage: number;
   tags?: string[];
+  repository_url?: string;
+  demo_url?: string;
+  documentation_url?: string;
+  start_date?: string;
+  target_end_date?: string;
+  team_members?: string[];
   created_at: string;
   updated_at: string;
   completed_at?: string;

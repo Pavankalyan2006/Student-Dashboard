@@ -1,0 +1,8 @@
+PASS  DEMO login works  -- 200
+PASS  DEMO no external profile is CONNECTED/VERIFIED by seed  -- []
+PASS  DEMO GitHub is not connected by seed  -- false
+PASS  DEMO no seeded mock interview score  -- 0
+PASS  DEMO no seeded internship applications  -- 0
+PASS  DEMO no seeded integration connections  -- 0
+
+6/6 PASS

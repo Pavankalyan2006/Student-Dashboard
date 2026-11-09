@@ -15,7 +15,7 @@ externalIntegrationsRouter.get('/integrations/providers', async (_req: Request, 
     const providers = ExternalIntegrationRegistry.getAllProviders();
     res.json({ success: true, data: providers });
   } catch (err: any) {
-    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 500).json({ success: false, message: err.message, code: err.code });
   }
 });
 
@@ -26,7 +26,7 @@ externalIntegrationsRouter.get('/integrations/connections', requireAuth, async (
     const connections = await ExternalIntegrationService.listConnections(studentId);
     res.json({ success: true, data: connections });
   } catch (err: any) {
-    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 500).json({ success: false, message: err.message, code: err.code });
   }
 });
 
@@ -38,10 +38,19 @@ externalIntegrationsRouter.post('/integrations/connections/:provider/start', req
     if (!provider) {
       return res.status(404).json({ success: false, message: `Provider '${req.params.provider}' not found` });
     }
-    const authData = await provider.initiateAuth(studentId, req.body.redirect_uri);
-    res.json({ success: true, data: authData });
+    // Only GitHub has a real OAuth client (configured through the GitHub module). Other providers' sign-in URLs were
+    // placeholders with an invented client id.
+    if (req.params.provider !== 'github') {
+      return res.status(400).json({ success: false, code: 'OAUTH_NOT_AVAILABLE', message: `${provider.getInfo().name} sign-in is not available. Save your public profile link instead.` });
+    }
+    const { GitHubService } = await import('../../services/githubService');
+    if (!GitHubService.isOAuthConfigured()) {
+      return res.status(503).json({ success: false, code: 'OAUTH_NOT_CONFIGURED', message: 'GitHub sign-in is not configured on this server. Use the GitHub page to connect with a token, or save your public profile link.' });
+    }
+    const gh = GitHubService.initiateOAuth(studentId);
+    res.json({ success: true, data: { auth_url: gh.oauth_url, state: gh.state } });
   } catch (err: any) {
-    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 500).json({ success: false, message: err.message, code: err.code });
   }
 });
 
@@ -56,7 +65,7 @@ externalIntegrationsRouter.post('/integrations/connections/:provider/connect', r
     );
     res.status(201).json({ success: true, data: connection });
   } catch (err: any) {
-    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 500).json({ success: false, message: err.message, code: err.code });
   }
 });
 
@@ -67,7 +76,7 @@ externalIntegrationsRouter.post('/integrations/connections/:connectionId/sync', 
     const updated = await ExternalIntegrationService.syncConnection(studentId, req.params.connectionId);
     res.json({ success: true, data: updated });
   } catch (err: any) {
-    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 500).json({ success: false, message: err.message, code: err.code });
   }
 });
 
@@ -78,7 +87,7 @@ externalIntegrationsRouter.delete('/integrations/connections/:connectionId', req
     await ExternalIntegrationService.disconnectPlatform(studentId, req.params.connectionId);
     res.json({ success: true, message: 'Platform disconnected successfully' });
   } catch (err: any) {
-    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 500).json({ success: false, message: err.message, code: err.code });
   }
 });
 
@@ -89,7 +98,7 @@ externalIntegrationsRouter.get('/integrations/activity', requireAuth, async (req
     const activities = await ExternalIntegrationService.listActivities(studentId);
     res.json({ success: true, data: activities });
   } catch (err: any) {
-    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 500).json({ success: false, message: err.message, code: err.code });
   }
 });
 
@@ -100,7 +109,7 @@ externalIntegrationsRouter.get('/integrations/skills', requireAuth, async (req: 
     const skills = await ExternalIntegrationService.getAggregatedSkillEvidence(studentId);
     res.json({ success: true, data: skills });
   } catch (err: any) {
-    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 500).json({ success: false, message: err.message, code: err.code });
   }
 });
 
@@ -111,19 +120,29 @@ externalIntegrationsRouter.get('/integrations/consistency', requireAuth, async (
     const report = await ExternalIntegrationService.checkProfileConsistency(studentId);
     res.json({ success: true, data: report });
   } catch (err: any) {
-    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 500).json({ success: false, message: err.message, code: err.code });
   }
 });
 
 // 10. Search external job opportunities
-externalIntegrationsRouter.get('/integrations/jobs', async (req: Request, res: Response) => {
+externalIntegrationsRouter.get('/integrations/jobs', requireAuth, async (req: Request, res: Response) => {
   try {
-    const query = req.query.q as string;
-    const location = req.query.location as string;
-    const jobs = await ExternalIntegrationService.searchJobs(query, location);
+    const query = typeof req.query.q === 'string' ? req.query.q : undefined;
+    const location = typeof req.query.location === 'string' ? req.query.location : undefined;
+    const jobs = await ExternalIntegrationService.searchJobs(req.user!.userId, query, location);
     res.json({ success: true, data: jobs });
   } catch (err: any) {
-    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 500).json({ success: false, message: err.message, code: err.code });
+  }
+});
+
+// 10b. Compare an imported job with the student's profile
+externalIntegrationsRouter.post('/integrations/jobs/:jobId/analyze', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const result = await ExternalIntegrationService.analyzeJob(req.user!.userId, req.params.jobId);
+    res.json({ success: true, data: result });
+  } catch (err: any) {
+    res.status(err.statusCode || err.status || 500).json({ success: false, message: err.message, code: err.code });
   }
 });
 
@@ -134,6 +153,6 @@ externalIntegrationsRouter.post('/integrations/jobs/import', requireAuth, async 
     const job = await ExternalIntegrationService.importJob(studentId, req.body);
     res.status(201).json({ success: true, data: job });
   } catch (err: any) {
-    res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
+    res.status(err.statusCode || err.status || 500).json({ success: false, message: err.message, code: err.code });
   }
 });

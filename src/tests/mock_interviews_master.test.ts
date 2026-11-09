@@ -297,28 +297,24 @@ describe('AI Mock Interviews Module - Master Verification Suite', () => {
 
     it('completes session and generates comprehensive debrief report with learning modules', async () => {
       const res = await MockInterviewEngineService.createSession(studentId, {
-        category: 'TECHNICAL',
+        category: 'CODING',
         target_role: 'Software Development Engineer',
         max_questions: 2,
       });
 
-      // Submit Q1
-      await MockInterviewEngineService.submitAnswer(
-        res.session.id,
-        studentId,
-        res.initial_question.id,
-        {
-          answer_text: 'In PostgreSQL, B+ Trees store sorted keys with leaf nodes connected in a bidirectional linked list, allowing efficient range queries with O(log N) point lookup followed by sequential leaf scans.',
-        }
-      );
+      // Answer Q1 by naming its reference concepts, so the keyword check has something to find.
+      const concepts = res.initial_question.expected_concepts || [];
+      await MockInterviewEngineService.submitAnswer(res.session.id, studentId, res.initial_question.id, {
+        answer_text: `My approach covers ${concepts.join(', ')}.`,
+      });
 
-      // Finish session
       const finishRes = await MockInterviewEngineService.completeSession(res.session.id, studentId);
       expect(finishRes.session.status).toBe('COMPLETED');
-      expect(finishRes.report).toBeDefined();
       expect(finishRes.report.overall_score).toBeGreaterThan(0);
-      expect(finishRes.report.scoring_definition).toBeDefined();
-      expect(finishRes.report.recommended_learning_modules.length).toBeGreaterThanOrEqual(3);
+      expect(finishRes.report.scoring_method).toBe('KEYWORD_MATCH');
+      expect(finishRes.report.scoring_definition).toMatch(/keyword check/i);
+      expect(finishRes.report.scoring_definition).toMatch(/not a hiring assessment/i);
+      expect(finishRes.report.communication_observations).toEqual([]);
 
       const dsaRec = finishRes.report.recommended_learning_modules.find((m) => m.route_path === '/dsa');
       expect(dsaRec).toBeDefined();

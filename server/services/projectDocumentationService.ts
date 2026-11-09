@@ -1,4 +1,6 @@
 import { AIService } from '../ai/service';
+import { isModelAvailable, requireModelText, rethrowAi } from '../ai/modelOutput';
+import { AppError } from '../core/exceptions';
 import { db } from '../db/database';
 import {
   ProjectDocument,
@@ -124,34 +126,27 @@ export class ProjectDocumentationService {
     let generatedContent = '';
     let generatedTitle = `${this.getDocumentTypeLabel(req.document_type)} — ${project.title}`;
 
+    if (!isModelAvailable()) {
+      throw new AppError('Documentation generation needs the AI provider, which is not available right now. Nothing was generated or saved.', 503, 'AI_UNAVAILABLE');
+    }
     try {
       const response = await AIService.generate(
         [{ role: 'user', content: prompt }],
         'student_learning_agent',
         0.3
       );
-      if (response.text && !response.text.includes('Balanced Search Trees')) {
-        generatedContent = response.text.trim();
-      } else {
-        generatedContent = this.getFallbackDocumentContent(req.document_type, project, modules, tech);
-      }
+      generatedContent = requireModelText(response, 'Documentation generation').trim();
     } catch (err: any) {
-      logger.warn('AI documentation generation fallback triggered', { error: err.message });
-      generatedContent = this.getFallbackDocumentContent(req.document_type, project, modules, tech);
+      rethrowAi(err, 'Documentation generation');
     }
 
-    // Persist as a new or updated document
-    const existing = (await db.getProjectDocuments(projectId)).find(
-      (d) => d.document_type === req.document_type
-    );
-
+    // An AI draft is saved as a new document; it never overwrites a document the student already wrote.
     const doc = await this.saveDocument(projectId, studentId, {
-      id: existing?.id,
       document_type: req.document_type,
-      title: generatedTitle,
+      title: `${generatedTitle} (AI draft)`,
       content: generatedContent,
-      status: 'REVIEW',
-    });
+      status: 'DRAFT',
+    } as any);
 
     return doc;
   }

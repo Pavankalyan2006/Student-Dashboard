@@ -178,7 +178,9 @@ ${report.communication_observations.map((c) => `- ${c}`).join('\n')}
           <div className="flex-shrink-0 flex items-center gap-4 bg-white/10 backdrop-blur-md border border-white/20 p-5 rounded-2xl shadow-inner">
             <div className="text-center">
               <span className="text-4xl font-extrabold text-white">{report.overall_score}%</span>
-              <span className="text-[11px] text-blue-200 block font-medium mt-0.5">Overall Practice Score</span>
+              <span className="text-[11px] text-blue-200 block font-medium mt-0.5">
+                {(report as any).scoring_method === 'KEYWORD_MATCH' ? 'Practice score (keyword check)' : 'Overall Practice Score'}
+              </span>
             </div>
             <div className="h-10 w-[1px] bg-white/20" />
             <div className="text-xs space-y-1 text-blue-100">

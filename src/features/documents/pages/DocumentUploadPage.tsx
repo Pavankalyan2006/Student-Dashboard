@@ -48,9 +48,9 @@ export function DocumentUploadPage({ onNavigate }: DocumentUploadPageProps) {
             <div className="h-8 w-8 rounded-lg bg-blue-50 text-[#2563EB] flex items-center justify-center mb-2">
               <Zap className="h-4 w-4" />
             </div>
-            <h4 className="text-xs font-bold text-slate-900">Semantic AI Indexing</h4>
+            <h4 className="text-xs font-bold text-slate-900">Text indexing</h4>
             <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
-              Every page is vectorized so the AI Learning Agent can cite exact pages during revision.
+              The text of every page is indexed so answers can cite the exact page. Scanned images have no text to index.
             </p>
           </div>
 

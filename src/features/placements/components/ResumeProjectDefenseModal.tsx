@@ -1,3 +1,4 @@
+import { toast } from 'sonner';
 import React, { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { placementsApi } from '../api/placementsApi';
@@ -43,6 +44,10 @@ export const ResumeProjectDefenseModal: React.FC<Props> = ({
     mutationFn: (answer: string) => placementsApi.improveWithStar(answer),
     onSuccess: (data) => {
       setStarFeedback(data);
+    },
+    onError: (err: any) => {
+      setStarFeedback(null);
+      toast.error(err?.message || 'Could not restructure the answer.');
     },
   });
 

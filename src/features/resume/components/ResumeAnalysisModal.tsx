@@ -61,7 +61,7 @@ export const ResumeAnalysisModal: React.FC<ResumeAnalysisModalProps> = ({
           {isLoading ? (
             <div className="py-16 text-center text-slate-500">
               <Sparkles className="h-8 w-8 animate-spin mx-auto text-blue-600 mb-2" />
-              <p className="text-sm font-medium">Running ATS-style heuristic checks...</p>
+              <p className="text-sm font-medium">Running resume checks...</p>
             </div>
           ) : !analysis ? (
             <div className="py-12 text-center text-slate-500">
@@ -78,7 +78,7 @@ export const ResumeAnalysisModal: React.FC<ResumeAnalysisModalProps> = ({
                   </div>
                   <div>
                     <h3 className="text-sm font-bold text-slate-900">
-                      ATS Readability & Formatting Index
+                      Resume checklist score
                     </h3>
                     <p className="text-xs text-slate-600 mt-0.5">
                       {analysis.scoring_explanation}
@@ -100,7 +100,7 @@ export const ResumeAnalysisModal: React.FC<ResumeAnalysisModalProps> = ({
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
                       <Search className="h-3.5 w-3.5 text-blue-600" />
-                      Technical Keywords ({analysis.keyword_coverage.coverage_percentage}%)
+                      Role Keywords ({analysis.keyword_coverage.coverage_percentage === null ? 'no target role' : `${analysis.keyword_coverage.coverage_percentage}%`})
                     </span>
                   </div>
                   <div className="space-y-2 text-xs">
@@ -122,7 +122,7 @@ export const ResumeAnalysisModal: React.FC<ResumeAnalysisModalProps> = ({
                     {analysis.keyword_coverage.missing_keywords.length > 0 && (
                       <div>
                         <span className="text-[11px] font-semibold text-slate-500 block mb-1">
-                          Recommended Additions:
+                          Role skills not found (add only if you have used them):
                         </span>
                         <div className="flex flex-wrap gap-1">
                           {analysis.keyword_coverage.missing_keywords.map((kw, i) => (
@@ -176,7 +176,7 @@ export const ResumeAnalysisModal: React.FC<ResumeAnalysisModalProps> = ({
                 <div className="p-4 rounded-lg border border-amber-200 bg-amber-50/40">
                   <h4 className="text-xs font-bold text-amber-900 mb-2 flex items-center gap-1.5">
                     <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
-                    Action Verb & Phrasing Recommendations ({analysis.weak_bullet_phrasings.length})
+                    Phrasing to review ({analysis.weak_bullet_phrasings.length})
                   </h4>
                   <div className="space-y-3">
                     {analysis.weak_bullet_phrasings.map((wb, idx) => (
@@ -188,13 +188,15 @@ export const ResumeAnalysisModal: React.FC<ResumeAnalysisModalProps> = ({
                           <span className="font-semibold text-red-600">Current: </span>
                           "{wb.current}"
                         </div>
-                        <div className="text-slate-800 text-[11px]">
-                          <span className="font-semibold text-emerald-600">Suggested: </span>
-                          "{wb.suggestion}"
-                        </div>
+                        {wb.suggestion && (
+                          <div className="text-slate-800 text-[11px]">
+                            <span className="font-semibold text-emerald-600">Suggested: </span>
+                            "{wb.suggestion}"
+                          </div>
+                        )}
                         <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1">
                           <span>{wb.reason}</span>
-                          {onApplyBulletFix && (
+                          {onApplyBulletFix && wb.suggestion && (
                             <button
                               onClick={() => onApplyBulletFix(wb.current, wb.suggestion)}
                               className="px-2 py-0.5 rounded bg-blue-50 hover:bg-blue-100 text-blue-600 font-medium transition"

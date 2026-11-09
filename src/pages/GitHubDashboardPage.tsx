@@ -293,9 +293,24 @@ export const GitHubDashboardPage: React.FC<GitHubDashboardPageProps> = ({ onNavi
                     {connection.name || connection.username}
                   </h3>
                   <span className="text-xs font-mono text-slate-500">@{connection.username}</span>
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Active Connection
-                  </span>
+                  {(connection as any).connection_type === 'PUBLIC_USERNAME' ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-bold" title="Linked by username only; no token, ownership not verified">
+                      Public profile (not verified)
+                    </span>
+                  ) : (connection as any).sync_status === 'PERMISSION_EXPIRED' ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-bold">
+                      Permission expired: reconnect
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Connected ({(connection as any).connection_type === 'OAUTH' ? 'OAuth' : 'access token'})
+                    </span>
+                  )}
+                  {(connection as any).sync_status === 'SYNC_FAILED' && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-bold" title={(connection as any).sync_error}>
+                      Last sync failed
+                    </span>
+                  )}
                 </div>
 
                 {connection.bio && (
@@ -315,7 +330,7 @@ export const GitHubDashboardPage: React.FC<GitHubDashboardPageProps> = ({ onNavi
                   )}
                   {connection.followers !== undefined && (
                     <span className="flex items-center gap-1">
-                      <Users className="w-3.5 h-3.5" /> {connection.followers} followers · {connection.following} following
+                      <Users className="w-3.5 h-3.5" /> {connection.followers} followers · {connection.following ?? 0} following
                     </span>
                   )}
                 </div>

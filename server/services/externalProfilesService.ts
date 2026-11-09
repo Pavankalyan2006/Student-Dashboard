@@ -1,6 +1,7 @@
 // server/services/externalProfilesService.ts
 // Comprehensive business logic for External Profiles: validation, adapters, challenge verification, sync, privacy, and cross-module export
 
+import { githubVerification } from './platformVerification';
 import crypto from 'crypto';
 import {
   ExternalPlatformId,
@@ -120,7 +121,9 @@ export class ExternalProfilesService {
     const profileId = `prof_${platform_id}_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`;
     const now = new Date().toISOString();
 
-    const isOAuth = payload.connection_method === 'OAUTH2' && platformMeta.oauth_supported;
+    // A client cannot just claim OAuth: GitHub counts only when GitHub verified this student's account (OAuth or token).
+    const gh = platform_id === 'github' ? await githubVerification(studentId, validation.username || payload.username) : null;
+    const isOAuth = !!gh?.verified;
 
     const newProfile: StudentExternalProfile = {
       id: profileId,
@@ -131,9 +134,10 @@ export class ExternalProfilesService {
       display_name: display_name || validation.username || platformMeta.name,
       original_profile_url: profile_url,
       normalized_profile_url: validation.normalized_url,
-      connection_method: isOAuth ? 'OAUTH2' : payload.connection_method || 'PUBLIC_PROFILE_URL',
-      verification_status: isOAuth ? 'CONNECTED_OAUTH' : 'MANUALLY_ADDED',
-      connection_status: 'CONNECTED',
+      connection_method: isOAuth ? 'OAUTH2' : 'PUBLIC_PROFILE_URL',
+      verification_status: isOAuth ? (gh!.method === 'GITHUB_OAUTH' ? 'CONNECTED_OAUTH' : 'VERIFIED') : 'MANUALLY_ADDED',
+      // CONNECTED only after verification; a saved link is LINKED.
+      connection_status: isOAuth ? 'CONNECTED' : 'LINKED',
       sharing_settings: {
         use_for_resume: sharing_settings?.use_for_resume ?? true,
         use_for_career: sharing_settings?.use_for_career ?? true,
@@ -173,11 +177,23 @@ export class ExternalProfilesService {
   ): Promise<StudentExternalProfile> {
     const profile = await this.getProfileById(studentId, profileId);
 
+    const wasVerified = profile.verification_status === 'VERIFIED' || profile.verification_status === 'CONNECTED_OAUTH';
+    const unverify = () => {
+      // A different account is no longer the one that was verified.
+      if (wasVerified) {
+        profile.verification_status = 'MANUALLY_ADDED';
+        profile.connection_method = 'PUBLIC_PROFILE_URL';
+        profile.connection_status = 'LINKED';
+      }
+    };
     if (payload.display_name !== undefined) {
+      if (typeof payload.display_name !== 'string' || payload.display_name.length > 120) throw new ValidationError('display_name must be text up to 120 characters');
       profile.display_name = payload.display_name;
     }
-    if (payload.username !== undefined) {
+    if (payload.username !== undefined && payload.username !== profile.username) {
+      if (typeof payload.username !== 'string' || payload.username.length > 100) throw new ValidationError('username must be text up to 100 characters');
       profile.username = payload.username;
+      unverify();
     }
     if (payload.profile_url !== undefined && payload.profile_url !== profile.original_profile_url) {
       const validation = ExternalProfileValidator.validateProfile(profile.platform_id, payload.profile_url);
@@ -186,10 +202,7 @@ export class ExternalProfilesService {
       }
       profile.original_profile_url = payload.profile_url;
       profile.normalized_profile_url = validation.normalized_url;
-      // Changing URL resets verification status to manually added
-      if (profile.verification_status === 'VERIFIED') {
-        profile.verification_status = 'PENDING_VERIFICATION';
-      }
+      unverify();
     }
 
     if (payload.sharing_settings) {
@@ -287,6 +300,7 @@ export class ExternalProfilesService {
 
     if (result.verified) {
       profile.verification_status = 'VERIFIED';
+      profile.connection_status = 'CONNECTED';
       profile.verification_challenge_token = undefined;
       profile.verification_challenge_expires = undefined;
       profile.updated_at = new Date().toISOString();
@@ -335,8 +349,10 @@ export class ExternalProfilesService {
 
     await db.recordProfileSyncRun(syncRun);
 
+    const verified = profile.verification_status === 'VERIFIED' || profile.verification_status === 'CONNECTED_OAUTH';
     if (syncResult.status === 'SUCCESS' || syncResult.status === 'PARTIAL') {
-      profile.connection_status = 'SYNCED';
+      // Public data was read, but the account is only "connected" once ownership is verified.
+      profile.connection_status = verified ? 'SYNCED' : 'LINKED';
       profile.last_successful_sync = completedAt;
       profile.last_error_summary = undefined;
 
@@ -365,11 +381,11 @@ export class ExternalProfilesService {
       await db.saveProfileSnapshot(snapshot);
     } else if (syncResult.status === 'SKIPPED') {
       // Honest reporting: manual link saved without claiming sync succeeded
-      profile.connection_status = 'CONNECTED';
+      profile.connection_status = verified ? 'CONNECTED' : 'LINKED';
       profile.last_error_summary = syncResult.error;
     } else {
+      // A failed import does not change whether the account was verified.
       profile.connection_status = 'FAILED';
-      profile.verification_status = 'SYNC_FAILED';
       profile.last_error_summary = syncResult.error;
     }
 

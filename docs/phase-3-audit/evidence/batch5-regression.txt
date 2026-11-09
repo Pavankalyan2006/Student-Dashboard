@@ -1,0 +1,42 @@
+# Phase 3 full regression, 2026-11-07T09:45:27Z
+## tsc
+tsc: 0 errors
+## vitest
+ Test Files  60 passed (60)
+      Tests  931 passed (931)
+## vite build
+✓ built in 2.18s
+## phase3 batch1 create
+40/40 PASS
+## phase3 batch2 create
+49/49 PASS
+## phase3 batch3 create
+32/32 PASS
+## phase3 batch4 create
+43/43 PASS
+## phase2 batch1 create
+PASS 12 FAIL 0
+## phase2 batch2 create
+PASS 20 FAIL 0
+## phase2 batch5 create
+PASS 45 FAIL 0
+## api-checks (Phase 1)
+PASS 59 FAIL 0
+## phase3 batch1 verify after restart
+5/5 PASS
+## phase3 batch2 verify after restart
+12/12 PASS
+## phase3 batch3 verify after restart
+7/7 PASS
+## phase3 batch4 verify after restart
+6/6 PASS
+## phase2 batch1 verify after restart
+PASS 8 FAIL 0
+## phase2 batch2 verify after restart
+PASS 7 FAIL 0
+## phase2 batch5 verify after restart
+PASS 12 FAIL 0
+## integration
+13/13 PASS
+## demo account
+6/6 PASS

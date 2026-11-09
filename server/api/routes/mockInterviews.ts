@@ -68,8 +68,9 @@ mockInterviewsRouter.post('/sessions', requireAuth, async (req: Request, res: Re
 mockInterviewsRouter.get('/sessions', requireAuth, async (req: Request, res: Response) => {
   try {
     const studentId = req.user!.userId;
-    const analytics = await MockInterviewEngineService.getAnalytics(studentId);
-    res.json({ success: true, data: analytics.recent_sessions });
+    // Full interview history (previously only the 5 most recent sessions were returned).
+    const sessions = await MockInterviewEngineService.listSessions(studentId);
+    res.json({ success: true, data: sessions });
   } catch (err: any) {
     res.status(500).json({ success: false, message: err.message });
   }

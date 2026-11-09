@@ -31,6 +31,8 @@ export type ExternalPlatformCategory =
 
 export type ConnectionStatus =
   | 'CONNECTED'
+  /** Profile link saved by the student; ownership not verified, nothing imported. */
+  | 'LINKED'
   | 'DISCONNECTED'
   | 'SYNCING'
   | 'SYNCED'
@@ -182,7 +184,8 @@ export interface ExternalSyncJob {
 }
 
 export interface CareerConsistencyReport {
-  overall_consistency_score: number; // 0 - 100
+  /** null: no comparison engine exists, so nothing is measured. */
+  overall_consistency_score: number | null;
   matched_items: {
     title: string;
     sources: string[];

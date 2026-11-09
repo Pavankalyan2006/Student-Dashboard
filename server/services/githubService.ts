@@ -14,15 +14,22 @@ import {
 import { ProjectService } from './projectService';
 import { ResumeService } from './resumeService';
 import { AIService } from '../ai/service';
+import { isModelAvailable, parseModelJson, rethrowAi } from '../ai/modelOutput';
 import { GitHubAnalysisService } from './githubAnalysisService';
-import { NotFoundError, AuthorizationError, ValidationError } from '../core/exceptions';
+import { NotFoundError, AuthorizationError, ValidationError, AppError } from '../core/exceptions';
 import { logger } from '../core/logging';
+import { config } from '../core/config';
 
 export class GitHubService {
-  private static readonly ENCRYPTION_KEY =
-    process.env.GITHUB_TOKEN_ENCRYPTION_KEY ||
-    process.env.GITHUB_ENCRYPTION_KEY ||
-    'btech_default_secure_aes_256_mock_key_32chars!';
+  // Key for encrypting stored GitHub tokens. Falls back to the server's JWT secret (never shipped to the
+  // browser) instead of a constant published in the source code.
+  private static get ENCRYPTION_KEY(): string {
+    return process.env.GITHUB_TOKEN_ENCRYPTION_KEY || process.env.GITHUB_ENCRYPTION_KEY || config.jwtSecret;
+  }
+
+  /** Read-only scope: public profile and public repositories. Private repositories are not requested. */
+  public static readonly OAUTH_SCOPE = 'read:user';
+  private static oauthStates = new Map<string, { studentId: string; expires: number }>();
 
   /**
    * Helper to encrypt tokens with AES-256
@@ -75,10 +82,21 @@ export class GitHubService {
       headers.Authorization = `Bearer ${token}`;
     }
 
-    const res = await fetch(url, { headers });
+    let res: Response;
+    try {
+      res = await fetch(url, { headers, signal: AbortSignal.timeout(15000) });
+    } catch (err: any) {
+      throw new AppError(`GitHub could not be reached (${err?.name === 'TimeoutError' ? 'timeout' : err?.message || 'network error'}).`, 502, 'GITHUB_UNREACHABLE');
+    }
     if (!res.ok) {
-      const errorText = await res.text();
-      throw new Error(`GitHub API error ${res.status}: ${errorText}`);
+      const errorText = (await res.text()).slice(0, 300);
+      if (res.status === 401) throw new AppError('GitHub rejected the stored token (expired or revoked). Reconnect GitHub.', 401, 'GITHUB_TOKEN_INVALID');
+      if ((res.status === 403 || res.status === 429) && res.headers.get('x-ratelimit-remaining') === '0') {
+        const reset = Number(res.headers.get('x-ratelimit-reset')) * 1000;
+        throw new AppError(`GitHub API rate limit reached${reset ? `; it resets at ${new Date(reset).toISOString()}` : ''}.`, 429, 'GITHUB_RATE_LIMITED');
+      }
+      if (res.status === 404) throw new AppError('GitHub returned 404 (not found, or not visible with the granted access).', 404, 'GITHUB_NOT_FOUND');
+      throw new AppError(`GitHub API error ${res.status}: ${errorText}`, 502, 'GITHUB_API_ERROR');
     }
     return await res.json();
   }
@@ -140,135 +158,174 @@ export class GitHubService {
     };
   }
 
-  /**
-   * Initiate OAuth connection with state token
-   */
-  public static initiateOAuth(studentId: string, redirectUri?: string): { oauth_url: string; state: string } {
-    const state = crypto.randomBytes(16).toString('hex');
-    const clientId = process.env.GITHUB_CLIENT_ID || 'Ov23liNHma3Y3nAeyOVt';
-    const redirect = encodeURIComponent(
-      redirectUri || process.env.GITHUB_REDIRECT_URI || 'http://localhost:3000/api/v1/github/callback'
-    );
-    const scope = encodeURIComponent('read:user repo:status public_repo');
-
-    return {
-      oauth_url: `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirect}&scope=${scope}&state=${state}`,
-      state,
-    };
+  /** OAuth is available only when the server has its own GitHub OAuth app credentials. */
+  public static isOAuthConfigured(): boolean {
+    return Boolean(process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET);
   }
 
   /**
-   * Connect account via username or simulated OAuth
+   * Starts GitHub OAuth. The state is random, stored server-side for 10 minutes and bound to the
+   * student, so the callback can verify it (CSRF protection). Refuses when no OAuth app is configured
+   * (earlier versions used a hard-coded client id).
+   */
+  public static initiateOAuth(studentId: string, _redirectUri?: string): { oauth_url: string; state: string; scope: string } {
+    if (!this.isOAuthConfigured()) {
+      throw new AppError('GitHub OAuth is not configured on this server (GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET are not set). Use a personal access token instead.', 503, 'OAUTH_NOT_CONFIGURED');
+    }
+    const now = Date.now();
+    for (const [k, v] of this.oauthStates) if (v.expires < now) this.oauthStates.delete(k);
+    const state = crypto.randomBytes(24).toString('hex');
+    this.oauthStates.set(state, { studentId, expires: now + 10 * 60 * 1000 });
+    // The redirect URI is server configuration only; a client-supplied redirect is ignored.
+    const redirect = encodeURIComponent(process.env.GITHUB_REDIRECT_URI || `http://localhost:${config.port}/api/v1/github/callback`);
+    return {
+      oauth_url: `https://github.com/login/oauth/authorize?client_id=${encodeURIComponent(process.env.GITHUB_CLIENT_ID!)}&redirect_uri=${redirect}&scope=${encodeURIComponent(this.OAUTH_SCOPE)}&state=${state}&allow_signup=false`,
+      state,
+      scope: this.OAUTH_SCOPE,
+    };
+  }
+
+  /** Verifies and consumes an OAuth state. Returns the student it was issued to. */
+  public static consumeOAuthState(state: string | undefined): string {
+    const entry = state ? this.oauthStates.get(state) : undefined;
+    if (state) this.oauthStates.delete(state);
+    if (!entry || entry.expires < Date.now()) {
+      throw new AppError('Invalid or expired OAuth state. Start the GitHub connection again.', 400, 'OAUTH_STATE_INVALID');
+    }
+    return entry.studentId;
+  }
+
+  /** Completes OAuth: verifies the state, exchanges the code for a token on the server and connects. */
+  public static async completeOAuth(state: string | undefined, code: string | undefined) {
+    const studentId = this.consumeOAuthState(state);
+    if (!code) throw new AppError('GitHub did not return an authorization code.', 400, 'OAUTH_CODE_MISSING');
+    let tokenRes: any;
+    try {
+      const r = await fetch('https://github.com/login/oauth/access_token', {
+        method: 'POST',
+        headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'User-Agent': 'BTech-Student-AI-Platform/1.0' },
+        body: JSON.stringify({ client_id: process.env.GITHUB_CLIENT_ID, client_secret: process.env.GITHUB_CLIENT_SECRET, code }),
+        signal: AbortSignal.timeout(15000),
+      });
+      tokenRes = await r.json();
+    } catch (err: any) {
+      throw new AppError(`GitHub could not be reached to finish sign-in (${err?.message || 'network error'}).`, 502, 'GITHUB_UNREACHABLE');
+    }
+    if (!tokenRes?.access_token) {
+      throw new AppError(`GitHub did not issue a token (${tokenRes?.error || 'unknown error'}). Nothing was connected.`, 400, 'OAUTH_EXCHANGE_FAILED');
+    }
+    const user = await this.githubFetch('/user', tokenRes.access_token);
+    return { studentId, connection: await this.connectAccount(studentId, user.login, tokenRes.access_token, 'OAUTH', String(tokenRes.scope || this.OAUTH_SCOPE).split(/[ ,]+/).filter(Boolean)) };
+  }
+
+  /**
+   * Stores a GitHub connection from verified API data. With a token (OAuth or PAT) GitHub has confirmed
+   * the account; with only a username the record is a public profile and is labelled as unverified.
    */
   public static async connectAccount(
     studentId: string,
-    githubUsername: string = 'student-engineer',
-    token?: string
+    githubUsername: string,
+    token?: string,
+    connectionType?: 'OAUTH' | 'PAT' | 'PUBLIC_USERNAME',
+    scopes?: string[]
   ): Promise<Omit<GitHubConnection, 'encrypted_token'>> {
-    const student = await db.getStudentById(studentId);
     const now = new Date().toISOString();
-
-    let ghProfile: any = null;
-    let fetchedRepos: any[] = [];
-
-    // Attempt real GitHub API fetch if network is available
-    try {
-      if (token) {
-        ghProfile = await this.githubFetch('/user', token);
-      } else if (githubUsername && githubUsername !== 'student-engineer') {
-        ghProfile = await this.githubFetch(`/users/${encodeURIComponent(githubUsername)}`);
-      }
-    } catch (err: any) {
-      logger.info(`GitHub API profile lookup note: ${err.message}. Using structured profile.`);
+    const type = connectionType || (token ? 'PAT' : 'PUBLIC_USERNAME');
+    const username = String(githubUsername || '').trim();
+    if (!token && !/^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$/i.test(username)) {
+      throw new ValidationError('Enter a valid GitHub username.');
     }
 
-    try {
-      const targetUser = ghProfile?.login || githubUsername;
-      if (token) {
-        fetchedRepos = await this.githubFetch('/user/repos?per_page=30&sort=updated', token);
-      } else if (targetUser && targetUser !== 'student-engineer') {
-        fetchedRepos = await this.githubFetch(`/users/${encodeURIComponent(targetUser)}/repos?per_page=30&sort=updated`);
-      }
-    } catch (err: any) {
-      logger.info(`GitHub API repos lookup note: ${err.message}.`);
+    const ghProfile = token ? await this.githubFetch('/user', token) : await this.githubFetch(`/users/${encodeURIComponent(username)}`);
+    const login = ghProfile.login;
+    const repoList: any[] = [];
+    for (let page = 1; page <= 10; page++) {
+      const batch = token
+        ? await this.githubFetch(`/user/repos?per_page=100&page=${page}&sort=updated&affiliation=owner`, token)
+        : await this.githubFetch(`/users/${encodeURIComponent(login)}/repos?per_page=100&page=${page}&sort=updated`);
+      if (!Array.isArray(batch)) break;
+      repoList.push(...batch);
+      if (batch.length < 100) break;
     }
 
-    if (!ghProfile) {
-      // Without a verified GitHub profile there is nothing real to show, so do not store a
-      // connection with a placeholder avatar, bio and repository count.
-      throw new ValidationError(
-        `Could not verify the GitHub account '${githubUsername}' (GitHub did not respond or the user does not exist), so nothing was connected.`
-      );
-    }
-
-    const username = ghProfile?.login || githubUsername;
-    const name = ghProfile?.name || student?.name || 'Engineering Student';
-    const avatarUrl =
-      ghProfile?.avatar_url || '';
-
+    const existing = await db.getGitHubConnection(studentId);
     const conn: GitHubConnection = {
-      id: `gh_conn_${Date.now()}`,
+      id: existing?.id || `gh_conn_${Date.now()}`,
       student_id: studentId,
-      github_user_id: String(ghProfile?.id || Date.now()),
-      username,
-      name,
-      avatar_url: avatarUrl,
-      bio: ghProfile?.bio || '',
-      company: ghProfile?.company || undefined,
-      public_repos:
-        ghProfile?.public_repos !== undefined
-          ? ghProfile.public_repos
-          : fetchedRepos.length,
-      following: ghProfile?.following || 0,
-      profile_url: ghProfile?.html_url || `https://github.com/${username}`,
-      encrypted_token: this.encryptToken(token || `gho_${crypto.randomBytes(20).toString('hex')}`),
-      scopes: ['read:user', 'repo:status', 'public_repo'],
+      github_user_id: String(ghProfile.id),
+      username: login,
+      name: ghProfile.name || login,
+      avatar_url: ghProfile.avatar_url || '',
+      bio: ghProfile.bio || '',
+      company: ghProfile.company || undefined,
+      location: ghProfile.location || undefined,
+      public_repos: typeof ghProfile.public_repos === 'number' ? ghProfile.public_repos : undefined,
+      followers: typeof ghProfile.followers === 'number' ? ghProfile.followers : undefined,
+      following: typeof ghProfile.following === 'number' ? ghProfile.following : undefined,
+      profile_url: ghProfile.html_url || `https://github.com/${login}`,
+      // Only a real token is stored (encrypted). A public-username link has no token at all.
+      encrypted_token: token ? this.encryptToken(token) : '',
+      scopes: token ? scopes || [] : [],
+      connection_type: type,
+      sync_status: 'SYNCED',
+      sync_error: undefined,
       is_connected: true,
       last_synced_at: now,
-      created_at: now,
+      last_sync_attempt_at: now,
+      created_at: existing?.created_at || now,
       updated_at: now,
     };
-
     await db.saveGitHubConnection(conn);
 
-    // Save live repositories if retrieved
-    if (Array.isArray(fetchedRepos) && fetchedRepos.length > 0) {
-      for (const r of fetchedRepos) {
-        const repoRecord: GitHubRepository = {
-          id: `gh_repo_${r.id}`,
-          student_id: studentId,
-          github_connection_id: conn.id,
-          external_repo_id: String(r.id),
-          owner: r.owner?.login || username,
-          name: r.name,
-          full_name: r.full_name || `${username}/${r.name}`,
-          description: r.description || '',
-          visibility: r.private ? 'PRIVATE' : 'PUBLIC',
-          default_branch: r.default_branch || 'main',
-          language: r.language || 'Code',
-          stars: r.stargazers_count || 0,
-          forks: r.forks_count || 0,
-          open_issues_count: r.open_issues_count || 0,
-          url: r.html_url || `https://github.com/${username}/${r.name}`,
-          clone_url: r.clone_url || `https://github.com/${username}/${r.name}.git`,
-          topics: r.topics || [],
-          license: r.license?.name || undefined,
-          is_fork: Boolean(r.fork),
-          is_starred: (r.stargazers_count || 0) > 0,
-          is_featured: false,
-          analysis_status: 'NOT_ANALYZED',
-          last_synced_at: now,
-          created_at: r.created_at || now,
-          updated_at: r.updated_at || now,
-        };
-        await db.saveGitHubRepository(repoRecord);
-      }
+    // Upsert by GitHub's repository id (no duplicates), and drop repositories that no longer exist upstream.
+    const seen = new Set<string>();
+    const before = await db.getGitHubRepositories(studentId);
+    for (const r of repoList) {
+      // Ids are per student: two students linking the same public account must not overwrite each other.
+      const prev = before.find((x) => x.external_repo_id === String(r.id));
+      const id = prev?.id || `gh_repo_${studentId}_${r.id}`;
+      seen.add(id);
+      const repoRecord: GitHubRepository = {
+        ...(prev || {}),
+        id,
+        student_id: studentId,
+        github_connection_id: conn.id,
+        external_repo_id: String(r.id),
+        owner: r.owner?.login || login,
+        name: r.name,
+        full_name: r.full_name,
+        description: r.description || '',
+        visibility: r.private ? 'PRIVATE' : 'PUBLIC',
+        default_branch: r.default_branch || 'main',
+        language: r.language || '',
+        stars: r.stargazers_count || 0,
+        forks: r.forks_count || 0,
+        open_issues_count: r.open_issues_count || 0,
+        url: r.html_url,
+        clone_url: r.clone_url,
+        topics: r.topics || [],
+        license: r.license?.name || undefined,
+        is_fork: Boolean(r.fork),
+        is_starred: prev?.is_starred || false,
+        is_featured: prev?.is_featured || false,
+        analysis_status: prev?.analysis_status || 'NOT_ANALYZED',
+        last_synced_at: now,
+        created_at: r.created_at || now,
+        updated_at: r.updated_at || now,
+      } as GitHubRepository;
+      await db.saveGitHubRepository(repoRecord);
     }
-    // No repositories are invented when GitHub returns none or cannot be reached.
-
+    for (const old of before) {
+      if (!seen.has(old.id)) await db.deleteGitHubRepository?.(old.id, studentId);
+    }
 
     const { encrypted_token, ...safeConn } = conn;
     return safeConn;
+  }
+
+  /** Links a public GitHub username. Clearly not a verified connection: there is no token. */
+  public static async connectPublicUsername(studentId: string, username: string) {
+    return this.connectAccount(studentId, username, undefined, 'PUBLIC_USERNAME');
   }
 
   /**
@@ -284,9 +341,10 @@ export class GitHubService {
     }
 
     try {
-      const user = await this.githubFetch('/user', token);
-      return await this.connectAccount(studentId, user.login || customUsername, token);
+      const user = await this.githubFetch('/user', token.trim());
+      return await this.connectAccount(studentId, user.login || customUsername || '', token.trim(), 'PAT');
     } catch (err: any) {
+      if (err?.code === 'GITHUB_RATE_LIMITED' || err?.code === 'GITHUB_UNREACHABLE') throw err;
       // Do not create a connection with an invented profile when GitHub did not accept the token.
       logger.warn(`GitHub token validation failed: ${err.message}`);
       throw new ValidationError(
@@ -298,8 +356,13 @@ export class GitHubService {
   /**
    * Disconnect GitHub account
    */
+  /** Removes the connection, its stored token and the repository data that was synced from GitHub. */
   public static async disconnectAccount(studentId: string): Promise<boolean> {
-    return await db.deleteGitHubConnection(studentId);
+    const removed = await db.deleteGitHubConnection(studentId);
+    for (const r of await db.getGitHubRepositories(studentId)) {
+      await db.deleteGitHubRepository(r.id, studentId);
+    }
+    return removed;
   }
 
   /**
@@ -314,11 +377,27 @@ export class GitHubService {
       throw new NotFoundError('No connected GitHub account found for this student');
     }
 
-    const token = this.decryptToken(conn.encrypted_token);
-    const updated = await this.connectAccount(studentId, conn.username, token);
+    const token = conn.encrypted_token ? this.decryptToken(conn.encrypted_token) : '';
+    if (conn.encrypted_token && !token) {
+      await db.saveGitHubConnection({ ...conn, sync_status: 'PERMISSION_EXPIRED', sync_error: 'The stored token could not be decrypted (encryption key changed). Reconnect GitHub.', last_sync_attempt_at: new Date().toISOString() });
+      throw new AppError('The stored GitHub token cannot be used. Reconnect GitHub.', 401, 'GITHUB_TOKEN_INVALID');
+    }
+    let updated;
+    try {
+      updated = await this.connectAccount(studentId, conn.username, token || undefined, conn.connection_type || (token ? 'PAT' : 'PUBLIC_USERNAME'), conn.scopes);
+    } catch (err: any) {
+      // A failed sync is recorded as failed; the previous successful sync time is kept unchanged.
+      await db.saveGitHubConnection({
+        ...conn,
+        sync_status: err?.code === 'GITHUB_TOKEN_INVALID' ? 'PERMISSION_EXPIRED' : 'SYNC_FAILED',
+        sync_error: String(err?.message || 'Sync failed'),
+        last_sync_attempt_at: new Date().toISOString(),
+      });
+      throw err;
+    }
     const repos = await db.getGitHubRepositories(studentId);
 
-    logger.info(`Synchronized GitHub account for student ${studentId}: ${repos.length} repositories updated.`);
+    logger.info(`Synchronized GitHub account for student ${studentId}: ${repos.length} repositories.`);
     return {
       connection: updated,
       synced_repos_count: repos.length,
@@ -597,43 +676,28 @@ Rules:
 3. NEVER fabricate metrics or claim production deployments if not verified.
 4. Output strictly a JSON array of objects: [{ "bullet": string, "technologies": string[], "context": string }]`;
 
+    // Bullets come only from the model and are drafts for the student to check; without a model nothing is
+    // generated (the old fallback wrote claims such as "Architected ... with defensive error handling").
+    if (!isModelAvailable()) {
+      throw new AppError('Resume bullet generation needs the AI provider, which is not available right now. Nothing was generated.', 503, 'AI_UNAVAILABLE');
+    }
     let generatedBullets: any[] = [];
     try {
-      const response = await AIService.generate([{ role: 'user', content: prompt }]);
-
-      const parsed = JSON.parse(
-        response.text.replace(/```json/g, '').replace(/```/g, '').trim()
-      );
-      if (Array.isArray(parsed)) {
-        generatedBullets = parsed;
-      }
-    } catch (aiErr) {
-      logger.info('Falling back to rule-based grounded resume bullets for repo: ' + repo.name);
-      generatedBullets = [
-        {
-          bullet: `Architected and implemented ${repo.name} using ${repo.language}, applying modular software design principles.`,
-          technologies: [repo.language],
-          context: 'Core System Implementation',
-        },
-        {
-          bullet: `Engineered version-controlled development workflows with ${commits.length > 0 ? commits.length : 'active'} commits across ${repo.default_branch} branch.`,
-          technologies: ['Git', repo.language],
-          context: 'Development Lifecycle',
-        },
-        {
-          bullet: `Integrated ${detectedTechs.slice(0, 3).join(', ')} to deliver robust component functionality with defensive error handling.`,
-          technologies: detectedTechs.slice(0, 3),
-          context: 'Technical Stack',
-        },
-      ];
+      const response = await AIService.generate([{ role: 'user', content: prompt }], 'student_learning_agent', 0.3);
+      const parsed = parseModelJson<any>(response, 'Resume bullet generation');
+      if (!Array.isArray(parsed) || parsed.length === 0) throw new AppError('Resume bullet generation: the AI did not return bullets.', 502, 'AI_BAD_OUTPUT');
+      generatedBullets = parsed.filter((b: any) => b && typeof b.bullet === 'string');
+    } catch (err: any) {
+      rethrowAi(err, 'Resume bullet generation');
     }
 
     const bullets: GitHubResumeBullet[] = generatedBullets.map((b, i) => ({
       id: `rb_${Date.now()}_${i}`,
       bullet: b.bullet,
       context: b.context || 'Project Highlight',
-      technologies: b.technologies || detectedTechs,
-      verified: true,
+      technologies: Array.isArray(b.technologies) ? b.technologies.map(String) : detectedTechs,
+      // AI drafts are not verified facts: the student must review them before adding them to a resume.
+      verified: false,
     }));
 
     return {
@@ -663,23 +727,7 @@ Rules:
   }> {
     const repo = await this.getRepository(repoId, studentId);
 
-    // Ensure student exists in db.students if using test/synthetic ID
-    let student = await db.getStudentById(studentId);
-    if (!student) {
-      const mockStudent = {
-        id: studentId,
-        name: 'Engineering Student',
-        email: `${studentId}@btech.edu`,
-        branch: 'Computer Science and Engineering',
-        semester: 6,
-        avatar_url: `https://avatars.githubusercontent.com/u/1000?v=4`,
-        password_hash: 'mock_hash',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      await db.createStudent(mockStudent as any);
-      student = (await db.getStudentById(studentId)) || (mockStudent as any);
-    }
+    const student = await db.getStudentById(studentId);
 
     let customBullets: string[] | undefined;
     let customTitle: string | undefined;
@@ -695,8 +743,11 @@ Rules:
       resumeId = optionsOrBullets.resume_id || resumeId;
     }
 
-    // Find student's active resume or create one
+    // Find student's active resume or create one. A resume id from the request must belong to this student.
     const resumes = await ResumeService.listResumes(studentId);
+    if (resumeId && !resumes.some((r) => r.id === resumeId)) {
+      throw new NotFoundError(`Resume '${resumeId}' not found`);
+    }
     if (!resumeId) {
       if (resumes.length === 0) {
         const newResume = await ResumeService.createResume(studentId, {
@@ -711,13 +762,8 @@ Rules:
 
     const existingProjects = await db.getResumeProjects(resumeId);
 
-    const bullets =
-      customBullets && customBullets.length > 0
-        ? customBullets
-        : [
-            `Architected and implemented ${repo.name} utilizing ${repo.language} and modular design patterns.`,
-            `Engineered robust core logic adhering to clean code and defensive programming principles.`,
-          ];
+    // Only bullets the student chose are exported. Without them the repository description is used as is.
+    const bullets = (customBullets || []).map((b) => String(b).trim()).filter(Boolean).slice(0, 8);
 
     const projectTitle = customTitle || repo.name;
     const projectTech = customTech || [repo.language, ...(repo.topics || [])].filter(Boolean);
@@ -742,7 +788,7 @@ Rules:
       project_id: newProject.id,
       title: projectTitle,
       bullets_count: bullets.length,
-      message: `Exported ${projectTitle} to active resume successfully.`,
+      message: `Added ${projectTitle} to your resume${bullets.length ? ` with ${bullets.length} bullet(s)` : ' (no bullets; add them in the resume editor)'}.`,
     };
   }
 
@@ -756,52 +802,24 @@ Rules:
     const repo = await this.getRepository(repoId, studentId);
     const files = await db.getGitHubRepositoryFiles(repoId, studentId);
 
+    // Practice questions about the student's own repository. They are templates, not claims: there is no
+    // "model answer" describing what the student did, because only the student knows that.
+    const testFiles = files.filter((f) => /test|spec/i.test(f.path)).map((f) => f.path);
+    const lang = repo.language || 'the main language';
+    const mk = (n: number, question: string, category: GitHubInterviewQuestion['category'], points: string[], rel: string[]): GitHubInterviewQuestion => ({
+      id: `iq_${n}_${repoId}`,
+      question,
+      answer: `Answer from your own work on ${repo.name}. Cover: ${points.join('; ')}.`,
+      category,
+      key_points: points,
+      relevant_files: rel,
+    });
     const questions: GitHubInterviewQuestion[] = [
-      {
-        id: `iq_1_${repoId}`,
-        question: `Can you explain the high-level architecture of your ${repo.name} project?`,
-        model_answer: `In ${repo.name}, I structured the system using ${repo.language} with a clean separation of concerns. The entry points handle request routing, while business logic and data persistence reside in dedicated modules to maximize testability and maintainability.`,
-        answer: `In ${repo.name}, I structured the system using ${repo.language} with a clean separation of concerns.`,
-        category: 'ARCHITECTURE',
-        key_points: ['Modular separation', 'Dependency injection', 'Stateless request pipeline'],
-        relevant_files: files.slice(0, 2).map((f) => f.path),
-      },
-      {
-        id: `iq_2_${repoId}`,
-        question: `What were the key technical tradeoffs you made when choosing ${repo.language}?`,
-        model_answer: `I selected ${repo.language} for its strong type safety, rich ecosystem, and runtime efficiency. While it required strict schema definition upfront, it prevented runtime type errors and improved overall code reliability.`,
-        answer: `I selected ${repo.language} for its strong type safety and rich ecosystem.`,
-        category: 'TRADEOFFS',
-        key_points: ['Type safety vs velocity', 'Compile-time checks', 'Ecosystem libraries'],
-        relevant_files: ['package.json'],
-      },
-      {
-        id: `iq_3_${repoId}`,
-        question: `How did you test your codebase and verify edge cases?`,
-        model_answer: `I structured unit tests targeting boundary conditions, missing parameters, and asynchronous error handling. Code coverage focused on core transformation routines to ensure idempotency.`,
-        answer: `I structured unit tests targeting boundary conditions and error handling.`,
-        category: 'TESTING',
-        key_points: ['Unit testing suites', 'Mocking external boundaries', 'Edge case coverage'],
-        relevant_files: files.filter((f) => f.path.includes('test') || f.path.includes('spec')).map((f) => f.path),
-      },
-      {
-        id: `iq_4_${repoId}`,
-        question: `What was the most challenging technical problem you encountered in ${repo.name}?`,
-        model_answer: `Managing state consistency and handling asynchronous exceptions gracefully without crashing the server was challenging. I solved this by implementing centralized error middleware and defensive input validation.`,
-        answer: `Managing state consistency and handling asynchronous exceptions gracefully.`,
-        category: 'CHALLENGES',
-        key_points: ['Centralized exception handling', 'Defensive input validation', 'Race condition prevention'],
-        relevant_files: files.slice(0, 3).map((f) => f.path),
-      },
-      {
-        id: `iq_5_${repoId}`,
-        question: `If you had another 2 weeks, how would you scale or optimize this repository?`,
-        model_answer: `I would implement distributed caching with Redis to reduce repetitive database queries, add CI/CD pipeline automation via GitHub Actions, and containerize the service using Docker for reproducible deployments.`,
-        answer: `I would implement distributed caching with Redis and containerize with Docker.`,
-        category: 'PERFORMANCE',
-        key_points: ['Redis caching layer', 'Docker containerization', 'CI/CD pipeline automation'],
-        relevant_files: [],
-      },
+      mk(1, `Can you explain the high-level architecture of your ${repo.name} project?`, 'ARCHITECTURE', ['main components and how they talk to each other', 'where data is stored', 'which parts you wrote yourself'], files.slice(0, 3).map((f) => f.path)),
+      mk(2, `Why did you choose ${lang} for ${repo.name}, and what trade-offs did that bring?`, 'TRADEOFFS', ['alternatives you considered', 'what the choice made easier', 'what it made harder'], []),
+      mk(3, testFiles.length ? `How do the tests in ${repo.name} (for example ${testFiles[0]}) check edge cases?` : `${repo.name} has no test files in the synced tree. How would you test it?`, 'TESTING', ['which behaviour is tested', 'edge cases', 'what is not tested yet'], testFiles.slice(0, 5)),
+      mk(4, `What was the most difficult problem you solved in ${repo.name}?`, 'CHALLENGES', ['the problem', 'how you found the cause', 'how you verified the fix'], []),
+      mk(5, `If you had two more weeks, what would you improve or scale in ${repo.name}?`, 'PERFORMANCE', ['the current bottleneck or gap', 'your proposed change', 'how you would measure the result'], []),
     ];
 
     return {
@@ -947,7 +965,10 @@ Rules:
     return {
       total_count: results.length,
       items: results,
-    };
+      // This list is curated in the code, not fetched from GitHub; star counts are approximate snapshots.
+      source: 'CURATED_LIST',
+      source_note: 'Curated learning repositories. Star counts are approximate and not live GitHub data.',
+    } as any;
   }
 
   /**

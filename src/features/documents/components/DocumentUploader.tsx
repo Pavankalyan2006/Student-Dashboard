@@ -376,7 +376,7 @@ export function DocumentUploader({
                 ? 'Validating file format and safety checksums...'
                 : uploadState.status === 'uploading'
                 ? 'Uploading securely to student storage...'
-                : 'Queuing for semantic chunking and vector indexing...'}
+                : 'Queued for text extraction and indexing...'}
             </span>
           </p>
         </div>

@@ -19,8 +19,16 @@ export class PortfolioService {
       research: research || [],
       certifications: certificates || [],
       achievements: achievements || [],
-      github: { connected: true, username: 'pavan-btech', repos_count: 5 },
-      resume: { versions_count: 2, last_updated: new Date().toISOString() },
+      github: await (async () => {
+        const conn = await db.getGitHubConnection(studentId);
+        const connected = !!(conn && conn.is_connected);
+        return { connected, username: connected ? conn!.username : null, repos_count: connected ? (await db.getGitHubRepositories(studentId)).length : 0 };
+      })(),
+      resume: await (async () => {
+        const resumes = await db.getResumes(studentId);
+        const last = resumes.map((r: any) => r.updated_at).filter(Boolean).sort().at(-1) || null;
+        return { versions_count: resumes.length, last_updated: last };
+      })(),
       portfolio_items: portfolioItems || [],
     };
   }

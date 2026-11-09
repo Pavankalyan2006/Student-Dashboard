@@ -1,7 +1,6 @@
 // server/services/externalIntegrationService.ts
 // Comprehensive business logic for External Platform Connections, Data Synchronization, Skill Evidence, and Career Consistency
 
-import crypto from 'crypto';
 import {
   ExternalProviderId,
   ExternalAccountConnection,
@@ -16,209 +15,15 @@ import { ExternalIntegrationRegistry } from './externalIntegrationRegistry';
 import { GitHubService } from './githubService';
 import { NotFoundError, ValidationError, AuthorizationError } from '../core/exceptions';
 import { logger } from '../core/logging';
+import { githubVerification } from './platformVerification';
 
 export class ExternalIntegrationService {
-  private static readonly ENCRYPTION_KEY =
-    process.env.INTEGRATION_ENCRYPTION_KEY || 'btech_external_integration_aes_256_key_32chars!';
-
   // In-memory collections keyed by student_id and connection_id
   private static connections: Map<string, ExternalAccountConnection> = new Map();
   private static activities: Map<string, ExternalActivity[]> = new Map();
   private static profiles: Map<string, ExternalProfile[]> = new Map();
-  private static jobs: Map<string, ExternalJob> = new Map();
-
-  static {
-    this.seedDemoData();
-  }
-
-  private static seedDemoData() {
-    const studentId = 'std_demo_1';
-
-    // Seed default connections for demo student
-    const defaultConns: ExternalAccountConnection[] = [
-      {
-        id: 'conn_github',
-        student_id: studentId,
-        provider: 'github',
-        display_name: 'GitHub (@aaravsharma-dev)',
-        username: 'aaravsharma-dev',
-        profile_url: 'https://github.com/aaravsharma-dev',
-        status: 'CONNECTED',
-        scopes: ['read:user', 'repo:status', 'public_repo'],
-        connected_at: new Date(Date.now() - 30 * 86400000).toISOString(),
-        last_synced_at: new Date().toISOString(),
-        sync_status: 'SUCCESS',
-        created_at: new Date(Date.now() - 30 * 86400000).toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-      {
-        id: 'conn_leetcode',
-        student_id: studentId,
-        provider: 'leetcode',
-        display_name: 'LeetCode (aarav_code)',
-        username: 'aarav_code',
-        profile_url: 'https://leetcode.com/aarav_code',
-        status: 'CONNECTED',
-        scopes: ['public_profile', 'user_stats'],
-        connected_at: new Date(Date.now() - 20 * 86400000).toISOString(),
-        last_synced_at: new Date().toISOString(),
-        sync_status: 'SUCCESS',
-        created_at: new Date(Date.now() - 20 * 86400000).toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-      {
-        id: 'conn_linkedin',
-        student_id: studentId,
-        provider: 'linkedin',
-        display_name: 'LinkedIn Professional Profile',
-        username: 'aarav-sharma-btech',
-        profile_url: 'https://www.linkedin.com/in/aarav-sharma-btech',
-        status: 'CONNECTED',
-        scopes: ['r_liteprofile', 'r_emailaddress'],
-        connected_at: new Date(Date.now() - 15 * 86400000).toISOString(),
-        last_synced_at: new Date().toISOString(),
-        sync_status: 'SUCCESS',
-        created_at: new Date(Date.now() - 15 * 86400000).toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-      {
-        id: 'conn_kaggle',
-        student_id: studentId,
-        provider: 'kaggle',
-        display_name: 'Kaggle (aarav_ml)',
-        username: 'aarav_ml',
-        profile_url: 'https://www.kaggle.com/aarav_ml',
-        status: 'CONNECTED',
-        scopes: ['competitions', 'notebooks'],
-        connected_at: new Date(Date.now() - 10 * 86400000).toISOString(),
-        last_synced_at: new Date().toISOString(),
-        sync_status: 'SUCCESS',
-        created_at: new Date(Date.now() - 10 * 86400000).toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-      {
-        id: 'conn_hackerrank',
-        student_id: studentId,
-        provider: 'hackerrank',
-        display_name: 'HackerRank (aarav_sharma)',
-        username: 'aarav_sharma',
-        profile_url: 'https://www.hackerrank.com/aarav_sharma',
-        status: 'CONNECTED',
-        scopes: ['public_badges'],
-        connected_at: new Date(Date.now() - 12 * 86400000).toISOString(),
-        last_synced_at: new Date().toISOString(),
-        sync_status: 'SUCCESS',
-        created_at: new Date(Date.now() - 12 * 86400000).toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-    ];
-
-    for (const c of defaultConns) {
-      this.connections.set(c.id, c);
-    }
-
-    // Seed recent activities
-    const acts: ExternalActivity[] = [
-      {
-        id: 'act_1',
-        student_id: studentId,
-        provider: 'leetcode',
-        activity_type: 'PROBLEM_SOLVED',
-        title: 'Solved #207 Course Schedule (Graph Cycle Detection)',
-        description: 'Successfully implemented topological sort via Kahn Algorithm',
-        metrics: { difficulty: 'MEDIUM', runtime_percentile: 92.4 },
-        url: 'https://leetcode.com/problems/course-schedule',
-        timestamp: new Date().toISOString(),
-      },
-      {
-        id: 'act_2',
-        student_id: studentId,
-        provider: 'github',
-        activity_type: 'COMMIT',
-        title: 'Committed to distributed-url-shortener (main)',
-        description: 'Implemented Base62 token dispenser and Redis LRU caching layer',
-        url: 'https://github.com/aaravsharma-dev/distributed-url-shortener',
-        timestamp: new Date(Date.now() - 3600000 * 2).toISOString(),
-      },
-      {
-        id: 'act_3',
-        student_id: studentId,
-        provider: 'kaggle',
-        activity_type: 'NOTEBOOK_RUN',
-        title: 'Published notebook: Multi-Class Iris Random Forest',
-        description: 'Achieved 96.7% test accuracy and computed feature importance',
-        url: 'https://www.kaggle.com/aarav_ml/iris-random-forest',
-        timestamp: new Date(Date.now() - 3600000 * 5).toISOString(),
-      },
-      {
-        id: 'act_4',
-        student_id: studentId,
-        provider: 'hackerrank',
-        activity_type: 'PROBLEM_SOLVED',
-        title: 'Earned 5-Star Gold Badge in Problem Solving',
-        description: 'Passed advanced dynamic programming and graph challenges',
-        url: 'https://www.hackerrank.com/certificates',
-        timestamp: new Date(Date.now() - 86400000).toISOString(),
-      },
-    ];
-    this.activities.set(studentId, acts);
-
-    // Seed Sample Job Opportunities
-    const sampleJobs: ExternalJob[] = [
-      {
-        id: 'job_google_swe_intern',
-        title: 'Software Engineering Intern (Summer 2025)',
-        company_name: 'Google',
-        location: 'Bengaluru / Hyderabad',
-        is_remote: false,
-        employment_type: 'INTERNSHIP',
-        experience_level: 'INTERN',
-        salary_range: '₹1,20,000 / month',
-        source: 'linkedin',
-        job_url: 'https://careers.google.com',
-        deadline: new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0],
-        description: 'Work on distributed systems, infrastructure scaling, and web technologies in C++, Java, or Go. Experience with data structures, algorithms, and relational databases required.',
-        required_skills: ['Data Structures', 'Algorithms', 'C++', 'Java', 'Distributed Systems'],
-        preferred_skills: ['Go', 'Cloud Computing', 'SQL'],
-        posted_at: new Date(Date.now() - 2 * 86400000).toISOString(),
-      },
-      {
-        id: 'job_razorpay_sde_intern',
-        title: 'Backend Engineering Intern (Payments)',
-        company_name: 'Razorpay',
-        location: 'Bengaluru / Remote',
-        is_remote: true,
-        employment_type: 'INTERNSHIP',
-        experience_level: 'INTERN',
-        salary_range: '₹75,000 / month',
-        source: 'indeed',
-        job_url: 'https://razorpay.com/jobs',
-        deadline: new Date(Date.now() + 8 * 86400000).toISOString().split('T')[0],
-        description: 'Build robust payment APIs, webhook processing queues, and high-concurrency relational data models in Go, Node.js, and PostgreSQL.',
-        required_skills: ['REST APIs', 'PostgreSQL', 'Node.js', 'Go', 'Database Normalization'],
-        preferred_skills: ['Redis', 'Docker', 'Kafka'],
-        posted_at: new Date(Date.now() - 4 * 86400000).toISOString(),
-      },
-    ];
-    for (const j of sampleJobs) {
-      this.jobs.set(j.id, j);
-    }
-  }
-
-  /**
-   * Encrypt sensitive tokens using AES-256
-   */
-  public static encryptSecret(token: string): string {
-    const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipheriv(
-      'aes-256-cbc',
-      crypto.scryptSync(this.ENCRYPTION_KEY, 'salt', 32),
-      iv
-    );
-    let encrypted = cipher.update(token, 'utf8', 'hex');
-    encrypted += cipher.final('hex');
-    return `${iv.toString('hex')}:${encrypted}`;
-  }
+  /** Job descriptions a student imported, keyed by job id; each one belongs to one student. */
+  private static jobs: Map<string, ExternalJob & { student_id?: string }> = new Map();
 
   /**
    * List all connected external accounts for student
@@ -239,7 +44,8 @@ export class ExternalIntegrationService {
   }
 
   /**
-   * Connect or link an external platform
+   * Saves a platform link. Status is CONNECTED only when ownership is verified (GitHub OAuth or access token through the
+   * GitHub module); every other link is LINKED: saved, not verified, nothing imported. No scopes are invented.
    */
   public static async connectPlatform(
     studentId: string,
@@ -250,29 +56,57 @@ export class ExternalIntegrationService {
     if (!provider) {
       throw new ValidationError(`Unsupported external provider: '${providerId}'`);
     }
+    const info = provider.getInfo();
+    if (payload?.code !== undefined) {
+      throw new ValidationError(`${info.name} sign-in (OAuth) is not available here. Save your public profile link instead.`);
+    }
+    const username = typeof payload?.username === 'string' ? payload.username.trim() : '';
+    if (!/^[A-Za-z0-9_.-]{1,60}$/.test(username)) {
+      throw new ValidationError('Enter your username on that platform (letters, digits, "_", "-" or ".", up to 60 characters).');
+    }
+    let profileUrl: string | undefined;
+    if (payload?.profile_url) {
+      let u: URL;
+      try { u = new URL(String(payload.profile_url)); } catch { throw new ValidationError('profile_url must be a web address'); }
+      const official = new URL(info.official_url).hostname.replace(/^www\./, '');
+      if (u.protocol !== 'https:' || !(u.hostname === official || u.hostname.endsWith('.' + official))) {
+        throw new ValidationError(`profile_url must be an https link on ${official}`);
+      }
+      profileUrl = u.toString();
+    }
 
-    const connectionData = await provider.connectAccount(studentId, payload);
+    let status: ExternalAccountConnection['status'] = 'LINKED';
+    let scopes: string[] = [];
+    let displayName = `${info.name} (${username})`;
+    if (providerId === 'github') {
+      const gh = await githubVerification(studentId, username);
+      if (gh.verified) {
+        const conn = await (await import('../db/database')).db.getGitHubConnection(studentId);
+        status = 'CONNECTED';
+        scopes = conn?.scopes || [];
+        displayName = `GitHub (@${gh.username})`;
+      }
+    }
+
+    const now = new Date().toISOString();
     const connectionId = `conn_${providerId}_${studentId}`;
-
     const newConnection: ExternalAccountConnection = {
       id: connectionId,
       student_id: studentId,
       provider: providerId,
-      display_name: connectionData.display_name || `${provider.getInfo().name} Profile`,
-      username: connectionData.username || payload.username || 'student',
-      profile_url: connectionData.profile_url || payload.profile_url || provider.getInfo().official_url,
-      status: 'CONNECTED',
-      scopes: connectionData.scopes || ['public_profile'],
-      connected_at: new Date().toISOString(),
-      // Linking an account does not import anything, so no sync is claimed yet.
+      display_name: displayName,
+      username,
+      profile_url: profileUrl || '',
+      status,
+      scopes,
+      connected_at: now,
       last_synced_at: undefined,
       sync_status: 'IDLE',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      created_at: now,
+      updated_at: now,
     };
-
     this.connections.set(connectionId, newConnection);
-    logger.info(`External connection established for student ${studentId} to ${providerId}`);
+    logger.info(`External platform ${status === 'CONNECTED' ? 'connected (verified)' : 'linked (not verified)'} for student ${studentId}: ${providerId}`);
     return newConnection;
   }
 
@@ -299,17 +133,14 @@ export class ExternalIntegrationService {
       // Only GitHub has a real data source in this platform (repositories the student imported).
       // The other providers have no live API client, and their adapters return sample data, so
       // syncing them must report that nothing was imported rather than invent solved problems.
-      if (conn.provider !== 'github' && conn.student_id !== 'std_demo_1') {
+      if (conn.provider !== 'github') {
         throw new Error(
           `Live sync with ${provider.getInfo().name} is not available yet, so no data was imported. ` +
             `Your profile link is saved.`
         );
       }
 
-      const syncResult =
-        conn.provider === 'github' && conn.student_id !== 'std_demo_1'
-          ? await this.syncGitHubFromImportedRepos(studentId, conn)
-          : await provider.syncData(studentId, conn);
+      const syncResult = await this.syncGitHubFromImportedRepos(studentId, conn);
 
       // Append new activities
       const existingActs = this.activities.get(studentId) || [];
@@ -363,140 +194,35 @@ export class ExternalIntegrationService {
   /**
    * Aggregate unified skill evidence from internal and external sources
    */
-  public static async getAggregatedSkillEvidence(studentId: string): Promise<ExternalSkillEvidence[]> {
-    // The evidence below is the demo account's sample data. Other students only get evidence
-    // backed by their own records, and no external provider imports evidence yet.
-    if (studentId !== 'std_demo_1') {
-      return [];
-    }
-    const conns = await this.listConnections(studentId);
-    const connectedProviders = new Set(conns.filter((c) => c.status === 'CONNECTED' || c.status === 'SYNCED').map((c) => c.provider));
-
-    const evidenceList: ExternalSkillEvidence[] = [
-      {
-        id: 'ev_python',
-        student_id: studentId,
-        skill_name: 'Python',
-        source_provider: 'kaggle',
-        evidence_type: 'DATASET',
-        evidence_description: 'Published Multi-Class Iris Random Forest Notebook (Silver Medal) & 48 LeetCode Python submissions',
-        evidence_url: 'https://www.kaggle.com/aarav_ml',
-        verified: true,
-        confidence_score: 92,
-        recorded_at: new Date().toISOString(),
-      },
-      {
-        id: 'ev_dsa',
-        student_id: studentId,
-        skill_name: 'Data Structures & Algorithms',
-        source_provider: 'leetcode',
-        evidence_type: 'COMPETITIVE_CODING',
-        evidence_description: '184 verified problems solved (94 Medium, 18 Hard); Contest Rating 1685; 5-Star HackerRank Problem Solving Gold',
-        evidence_url: 'https://leetcode.com/aarav_code',
-        verified: true,
-        confidence_score: 88,
-        recorded_at: new Date().toISOString(),
-      },
-      {
-        id: 'ev_sql',
-        student_id: studentId,
-        skill_name: 'Relational Database Design & SQL',
-        source_provider: 'INTERNAL_LAB',
-        evidence_type: 'COURSE_COMPLETION',
-        evidence_description: 'Completed CS311 DBMS Laboratory: DDL/DML, BCNF normalization proofs, and SQL query optimizations',
-        verified: true,
-        confidence_score: 84,
-        recorded_at: new Date().toISOString(),
-      },
-      {
-        id: 'ev_golang',
-        student_id: studentId,
-        skill_name: 'Go (Golang)',
-        source_provider: 'github',
-        evidence_type: 'REPOSITORY',
-        evidence_description: 'Distributed URL Shortener Repository: Concurrency with goroutines, Redis LRU, and Base62 token generator',
-        evidence_url: 'https://github.com/aaravsharma-dev/distributed-url-shortener',
-        verified: true,
-        confidence_score: 80,
-        recorded_at: new Date().toISOString(),
-      },
-      {
-        id: 'ev_ml',
-        student_id: studentId,
-        skill_name: 'Machine Learning',
-        source_provider: 'kaggle',
-        evidence_type: 'COMPETITIVE_CODING',
-        evidence_description: 'Kaggle Notebooks Expert tier; Random Forest classifier evaluation with precision/recall/F1 metrics',
-        evidence_url: 'https://www.kaggle.com/aarav_ml',
-        verified: true,
-        confidence_score: 86,
-        recorded_at: new Date().toISOString(),
-      },
-    ];
-
-    return evidenceList;
+  public static async getAggregatedSkillEvidence(_studentId: string): Promise<ExternalSkillEvidence[]> {
+    // No external provider imports skill evidence yet, so there is none to show. (Earlier versions returned
+    // hand-written Kaggle/LeetCode evidence for the demo account.)
+    return [];
   }
 
   /**
    * Check Career Profile Consistency across Resume, GitHub, LinkedIn, and Projects
    */
-  public static async checkProfileConsistency(studentId: string): Promise<CareerConsistencyReport> {
-    if (studentId !== 'std_demo_1') {
-      // No cross-source comparison engine exists yet, so no score or matches are claimed.
-      return {
-        overall_consistency_score: 0,
-        matched_items: [],
-        recommendations: ['Profile consistency checks are not available yet.'],
-      };
-    }
+  public static async checkProfileConsistency(_studentId: string): Promise<CareerConsistencyReport> {
+    // No cross-source comparison engine exists, so no score or matches are claimed.
     return {
-      overall_consistency_score: 91,
-      matched_items: [
-        {
-          title: 'Distributed URL Shortener Project',
-          sources: ['Resume', 'GitHub', 'Project Builder'],
-          status: 'VERIFIED_MATCH',
-          details: 'Repository codebase, README architecture, and resume bullet metrics (80% read reduction with Redis) match.',
-        },
-        {
-          title: 'Machine Learning Capstone',
-          sources: ['Resume', 'Kaggle', 'ML Lab'],
-          status: 'VERIFIED_MATCH',
-          details: 'Kaggle notebook and internal ML experiment reproduce identical 96.7% test accuracy on multi-class classification.',
-        },
-        {
-          title: 'Competitive Programming Problem Count',
-          sources: ['Resume', 'LeetCode'],
-          status: 'MINOR_DISCREPANCY',
-          details: 'Resume states 150+ LeetCode problems; live LeetCode synchronization indicates 184 solved. Recommend updating resume to reflect current 184 count.',
-        },
-        {
-          title: 'Professional Headline',
-          sources: ['LinkedIn', 'Student Profile'],
-          status: 'VERIFIED_MATCH',
-          details: 'B.Tech CSE Undergraduate specialization aligns across both profiles.',
-        },
-      ],
-      recommendations: [
-        'Update resume LeetCode metrics from 150+ to 184 problems solved to capture recent consistency.',
-        'Link Kaggle Silver Medal directly in your resume project section under Iris Classification.',
-      ],
+      overall_consistency_score: null,
+      matched_items: [],
+      recommendations: ['Profile consistency checks are not available yet.'],
     };
   }
 
   /**
-   * Search available jobs across authorized feeds
+   * Searches the job descriptions this student imported. There is no live job feed: nothing is listed that the student
+   * did not add (earlier versions showed invented postings, and every student's imports, to everyone).
    */
-  public static async searchJobs(query?: string, location?: string): Promise<ExternalJob[]> {
-    const all = Array.from(this.jobs.values());
-    if (!query && !location) return all;
-
+  public static async searchJobs(studentId: string, query?: string, location?: string): Promise<ExternalJob[]> {
+    const all = Array.from(this.jobs.values()).filter((j) => j.student_id === studentId);
     const q = (query || '').toLowerCase();
     const loc = (location || '').toLowerCase();
-
     return all.filter((j) => {
-      const matchQ = !q || j.title.toLowerCase().includes(q) || j.company_name.toLowerCase().includes(q) || j.required_skills.some((s) => s.toLowerCase().includes(q));
-      const matchLoc = !loc || j.location.toLowerCase().includes(loc);
+      const matchQ = !q || j.title.toLowerCase().includes(q) || j.company_name.toLowerCase().includes(q) || j.required_skills.some((x) => x.toLowerCase().includes(q));
+      const matchLoc = !loc || (j.location || '').toLowerCase().includes(loc);
       return matchQ && matchLoc;
     });
   }
@@ -508,33 +234,83 @@ export class ExternalIntegrationService {
     studentId: string,
     data: Partial<ExternalJob> & { company?: string }
   ): Promise<ExternalJob & { company?: string }> {
-    const company = data.company_name || data.company;
-    if (!data.title || !company || !data.description) {
+    const company = String(data.company_name || data.company || '').trim();
+    const title = String(data.title || '').trim();
+    const description = String(data.description || '').trim();
+    if (!title || !company || !description) {
       throw new ValidationError('Job Title, Company Name, and Description are required');
     }
+    if (title.length > 200 || company.length > 200 || description.length > 20000) {
+      throw new ValidationError('Title and company must be at most 200 characters, description at most 20,000');
+    }
+    if (data.job_url) {
+      let u: URL;
+      try { u = new URL(String(data.job_url)); } catch { throw new ValidationError('job_url must be a web address'); }
+      if (!['http:', 'https:'].includes(u.protocol)) throw new ValidationError('job_url must start with http:// or https://');
+    }
+    // Skills are only those the student listed or catalogue skills named in the description.
+    let required = Array.isArray(data.required_skills) ? data.required_skills.map(String).filter(Boolean).slice(0, 30) : [];
+    if (!required.length) {
+      const { skillMatches } = await import('./careerService');
+      const { db } = await import('../db/database');
+      required = (await db.getSkills()).filter((sk) => skillMatches(sk.name, [description])).map((sk) => sk.name);
+    }
 
-    const jobId = `job_imp_${Date.now()}`;
+    const jobId = `job_imp_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
     const newJob: ExternalJob & { company?: string } = {
       id: jobId,
-      title: data.title,
+      title,
       company_name: company,
       company: company,
-      location: data.location || 'Bengaluru / Remote',
-      is_remote: data.is_remote ?? true,
+      location: data.location ? String(data.location).slice(0, 200) : '',
+      is_remote: typeof data.is_remote === 'boolean' ? data.is_remote : false,
       employment_type: data.employment_type || 'INTERNSHIP',
       experience_level: data.experience_level || 'INTERN',
       salary_range: data.salary_range,
       source: 'MANUAL_IMPORT',
       job_url: data.job_url,
       deadline: data.deadline,
-      description: data.description,
-      required_skills: data.required_skills || ['Software Engineering', 'Problem Solving'],
-      preferred_skills: data.preferred_skills || [],
+      description,
+      required_skills: required,
+      preferred_skills: Array.isArray(data.preferred_skills) ? data.preferred_skills.map(String).slice(0, 30) : [],
       posted_at: new Date().toISOString(),
     };
 
-    this.jobs.set(jobId, newJob as ExternalJob);
+    this.jobs.set(jobId, { ...(newJob as ExternalJob), student_id: studentId });
     logger.info(`Job description imported by student ${studentId}: ${newJob.title} at ${company}`);
     return newJob;
+  }
+
+  /**
+   * Compares an imported job's required skills with the skills on the student's profile and the student's projects.
+   * fit_score = share of the job's listed skills found on the profile; null when the job lists no skills.
+   */
+  public static async analyzeJob(studentId: string, jobId: string) {
+    const job = this.jobs.get(jobId);
+    if (!job || (job as any).student_id !== studentId) throw new NotFoundError(`Job '${jobId}' not found`);
+    const { skillMatches } = await import('./careerService');
+    const { db } = await import('../db/database');
+    const mine = (await db.getStudentSkills(studentId)).map((s) => s.skill_name);
+    const required = job.required_skills || [];
+    const matched = required.filter((r) => skillMatches(r, mine));
+    const missing = required.filter((r) => !matched.includes(r));
+    const projects = await db.getProjects(studentId);
+    const relevant = [];
+    for (const p of projects) {
+      const techs = (await db.getProjectTechnologies(p.id).catch(() => [])).map((t: any) => String(t.technology || ''));
+      const hits = required.filter((r) => skillMatches(r, techs));
+      if (hits.length) relevant.push({ title: p.title, relevance_note: `Uses ${hits.join(', ')}` });
+    }
+    return {
+      job_id: job.id,
+      title: job.title,
+      company: job.company_name,
+      fit_score: required.length ? Math.round((matched.length / required.length) * 100) : null,
+      matched_skills: matched,
+      skills_needing_practice: missing,
+      relevant_projects: relevant.slice(0, 3),
+      suggested_preparation: missing.length ? [`Skills in the posting that are not on your profile: ${missing.join(', ')}.`] : [],
+      basis: 'Skills listed on the job compared with the skills on your profile; projects matched by their recorded technologies.',
+    };
   }
 }

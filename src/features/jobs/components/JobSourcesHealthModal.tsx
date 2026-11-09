@@ -32,6 +32,7 @@ export const JobSourcesHealthModal: React.FC<JobSourcesHealthModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [syncSummary, setSyncSummary] = useState<any | null>(null);
+  const [syncError, setSyncError] = useState<string | null>(null);
 
   const fetchSourceStatus = async () => {
     try {
@@ -56,12 +57,13 @@ export const JobSourcesHealthModal: React.FC<JobSourcesHealthModalProps> = ({
   const handleManualSync = async () => {
     try {
       setSyncing(true);
+      setSyncError(null);
       const res = await jobsApi.triggerSync();
       setSyncSummary(res.data);
       await fetchSourceStatus();
       onSyncCompleted();
-    } catch {
-      // ignore
+    } catch (err: any) {
+      setSyncError(err?.response?.data?.message || err?.message || 'Sync failed');
     } finally {
       setSyncing(false);
     }
@@ -107,11 +109,21 @@ export const JobSourcesHealthModal: React.FC<JobSourcesHealthModalProps> = ({
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          {syncError && (
+            <div role="alert" className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-xs text-rose-800 dark:text-rose-200">
+              {syncError}
+            </div>
+          )}
           {syncSummary && (
             <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-xs animate-in fade-in">
               <span className="font-bold text-emerald-900 dark:text-emerald-200 block mb-1">
-                Synchronization Completed
+                Sync finished
               </span>
+              {syncSummary.sync_runs?.some((r: any) => r.errors?.length) && (
+                <span className="block mb-1 text-amber-800 dark:text-amber-300">
+                  {syncSummary.sync_runs.filter((r: any) => r.errors?.length).map((r: any) => `${r.source_name}: ${r.errors.join('; ')}`).join(' · ')}
+                </span>
+              )}
               <div className="flex items-center gap-4 text-emerald-800 dark:text-emerald-300">
                 <span>Added: <strong>{syncSummary.total_added}</strong> new listings</span>
                 <span>Updated: <strong>{syncSummary.total_updated}</strong> listings</span>
@@ -123,7 +135,7 @@ export const JobSourcesHealthModal: React.FC<JobSourcesHealthModalProps> = ({
           {/* Source List */}
           <div>
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
-              Configured Adapters ({sources.length})
+              Sources ({sources.filter((x) => x.enabled).length} with a feed, {sources.filter((x) => !x.enabled).length} link only)
             </h4>
 
             {loading ? (
@@ -147,7 +159,7 @@ export const JobSourcesHealthModal: React.FC<JobSourcesHealthModalProps> = ({
                               : 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800'
                           }`}
                         >
-                          {s.health_status}
+                          {s.health_status === 'NOT_CONFIGURED' ? (s.enabled ? 'NOT SYNCED YET' : 'LINK ONLY · NO FEED') : s.health_status}
                         </span>
                         <span className="text-[11px] font-medium text-slate-400">
                           ({s.category})
@@ -155,22 +167,23 @@ export const JobSourcesHealthModal: React.FC<JobSourcesHealthModalProps> = ({
                       </div>
 
                       <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-3">
-                        {s.base_url ? (
+                        {s.source_url ? (
                           <a
-                            href={s.base_url}
+                            href={s.source_url}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1 hover:text-indigo-600 dark:hover:text-indigo-400"
                           >
-                            {s.base_url.replace(/^https?:\/\//, '')}
+                            {s.source_url.replace(/^https?:\/\//, '')}
                             <ExternalLink className="w-3 h-3" />
                           </a>
                         ) : (
-                          <span className="text-slate-400">Direct Notification Feed</span>
+                          <span className="text-slate-400">No link</span>
                         )}
                         {s.last_successful_sync && (
                           <span>Last sync: {new Date(s.last_successful_sync).toLocaleTimeString()}</span>
                         )}
+                        {s.last_error && <span className="text-rose-600 dark:text-rose-400">{s.last_error}</span>}
                       </div>
                     </div>
 

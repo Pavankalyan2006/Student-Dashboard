@@ -175,7 +175,7 @@ export function JobDiscoveryPage({ onNavigate }: JobDiscoveryPageProps) {
     <PageContainer>
       <PageHeader
         title="Job Discovery & Gap Analysis"
-        description="Search curated career opportunities or paste any external job description to generate multi-agent skill gap reports, resume tailoring, and interview preparation plans."
+        description="Paste job descriptions you found and compare their skills with your profile. There is no live job feed; nothing is applied for on your behalf."
         badge={
           <span className="text-xs px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-medium">
             Multi-Agent Career Agent
@@ -254,7 +254,7 @@ export function JobDiscoveryPage({ onNavigate }: JobDiscoveryPageProps) {
 
       {/* Job Listings Grid */}
       {loading ? (
-        <LoadingState message="Scanning verified job openings..." />
+        <LoadingState message="Loading your imported job descriptions..." />
       ) : jobs.length === 0 ? (
         <EmptyState
           title="No jobs matching your filter"
@@ -413,7 +413,7 @@ export function JobDiscoveryPage({ onNavigate }: JobDiscoveryPageProps) {
                 <div className="py-12 text-center space-y-3">
                   <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto" />
                   <p className="text-sm text-slate-300 font-medium">
-                    CareerAgent & SkillEvidenceAgent are comparing verified GitHub repos, LeetCode stats, and Courses against job specifications...
+                    Comparing the job's skills with your profile skills and projects...
                   </p>
                 </div>
               ) : analysisResult ? (
@@ -421,9 +421,9 @@ export function JobDiscoveryPage({ onNavigate }: JobDiscoveryPageProps) {
                   {/* Match Score Banner */}
                   <div className="p-4 bg-gradient-to-r from-indigo-950/60 to-slate-900 border border-indigo-800/40 rounded-xl flex items-center justify-between">
                     <div>
-                      <div className="text-3xl font-extrabold text-emerald-400">{analysisResult.fit_score ?? analysisResult.overall_match_score}% Match</div>
+                      <div className="text-3xl font-extrabold text-emerald-400">{analysisResult.fit_score === null || analysisResult.fit_score === undefined ? 'No skills listed on this job' : `${analysisResult.fit_score}% of listed skills on your profile`}</div>
                       <p className="text-xs text-slate-300 mt-1">
-                        High alignment with your verified B.Tech projects & coding history.
+                        {(analysisResult as any).basis || 'Skills on the job compared with the skills on your profile.'}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -446,7 +446,7 @@ export function JobDiscoveryPage({ onNavigate }: JobDiscoveryPageProps) {
                     {/* Verified Evidence */}
                     <div className="p-4 bg-slate-950 rounded-xl border border-slate-800 space-y-3">
                       <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wide flex items-center gap-1.5">
-                        <CheckCircle2 className="w-4 h-4" /> Verified In Your Profile (
+                        <CheckCircle2 className="w-4 h-4" /> On Your Profile (
                         {analysisResult.matched_skills?.length || 0})
                       </h4>
                       <div className="space-y-1.5">
@@ -457,7 +457,7 @@ export function JobDiscoveryPage({ onNavigate }: JobDiscoveryPageProps) {
                           >
                             <span className="font-semibold text-slate-200">{skill}</span>
                             <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
-                              Verified
+                              On profile
                             </span>
                           </div>
                         ))}
@@ -510,7 +510,7 @@ export function JobDiscoveryPage({ onNavigate }: JobDiscoveryPageProps) {
                   {/* Suggested Prep Plan */}
                   <div className="p-4 bg-slate-950 rounded-xl border border-indigo-900/30 space-y-2">
                     <h4 className="text-xs font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
-                      <Target className="w-4 h-4" /> Recommended 7-Day Interview Prep:
+                      <Target className="w-4 h-4" /> What to work on:
                     </h4>
                     <ul className="text-xs text-slate-300 space-y-1.5 list-disc pl-4">
                       {(analysisResult.suggested_preparation || []).map((step: string, idx: number) => (
@@ -553,7 +553,7 @@ export function JobDiscoveryPage({ onNavigate }: JobDiscoveryPageProps) {
                   Import / Paste External Job Description
                 </h3>
                 <p className="text-xs text-slate-400">
-                  Import any job post from LinkedIn, Indeed, Glassdoor or careers page for instant AI analysis.
+                  Import any job post from LinkedIn, Indeed, Glassdoor or careers page to compare it with your profile.
                 </p>
               </div>
               <Button

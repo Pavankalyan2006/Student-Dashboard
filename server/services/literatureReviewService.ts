@@ -2,6 +2,8 @@ import { db } from '../db/database';
 import { LiteratureReview, LiteratureReviewSection, ResearchPaper, ResearchCitation } from '../models/researchGitHubTypes';
 import { ResearchService } from './researchService';
 import { AIService } from '../ai/service';
+import { isModelAvailable, parseModelJson, rethrowAi } from '../ai/modelOutput';
+import { AppError } from '../core/exceptions';
 import { NotFoundError } from '../core/exceptions';
 import { logger } from '../core/logging';
 
@@ -20,11 +22,8 @@ export class LiteratureReviewService {
         } = {}
   ): Promise<LiteratureReview> {
     const project = await ResearchService.getProject(projectId, studentId);
-    let papers = await ResearchService.listPapers(projectId, studentId);
-    if (papers.length === 0) {
-      // Fallback to project res_proj_01 papers or saved seed papers so reviews can always be synthesized
-      papers = await db.getResearchPapers('res_proj_01', studentId);
-    }
+    // Only the papers saved in this project are used (no fallback to papers of another project).
+    const papers = await ResearchService.listPapers(projectId, studentId);
     const citations = await ResearchService.listCitations(projectId, studentId);
 
     if (papers.length === 0) {
@@ -74,47 +73,25 @@ Output JSON only with keys:
   "section3_content": "..."
 }`;
 
+    if (!isModelAvailable()) {
+      throw new AppError('Literature review drafting needs the AI provider, which is not available right now. Nothing was generated.', 503, 'AI_UNAVAILABLE');
+    }
     let parsed: any = null;
     try {
-      const res = await AIService.generate(
-        [{ role: 'user', content: prompt }],
-        'student_learning_agent',
-        0.3
-      );
-      const cleaned = res.text.replace(/```json\s*|```/g, '').trim();
-      parsed = JSON.parse(cleaned);
+      const res = await AIService.generate([{ role: 'user', content: prompt }], 'student_learning_agent', 0.3);
+      parsed = parseModelJson<any>(res, 'Literature review drafting');
     } catch (err: any) {
-      logger.warn('AI literature review fallback triggered', { error: err.message });
+      rethrowAi(err, 'Literature review drafting');
     }
-
-    const firstPaper = papers[0];
-    const secondPaper = papers[1] || papers[0];
-
-    const cite1 = `[1] ${firstPaper.title} (${firstPaper.authors.slice(0, 2).join(', ')}, ${firstPaper.publication_year})`;
-    const cite2 = `[2] ${secondPaper.title} (${secondPaper.authors.slice(0, 2).join(', ')}, ${secondPaper.publication_year})`;
-
+    if (!parsed?.section1_content || !parsed?.section2_content || !parsed?.section3_content) {
+      throw new AppError('Literature review drafting: the AI did not return all three sections. Nothing was saved.', 502, 'AI_BAD_OUTPUT');
+    }
+    const refs = papers.map((p, i) => `[${i + 1}] ${p.title} (${p.authors.slice(0, 2).join(', ')}, ${p.publication_year || 'n.d.'})`);
+    const cited = (text: string) => refs.filter((_, i) => text.includes(`[${i + 1}]`));
     const sections: LiteratureReviewSection[] = [
-      {
-        title: '1. Introduction & Research Problem Formulation',
-        content:
-          parsed?.section1_content ||
-          `Modern software engineering and intelligent computational systems increasingly rely on non-parametric knowledge retrieval to overcome the fundamental hallucination limitations of parametric models. In the domain of "${project.topic}", ensuring reliable and mathematically verifiable outputs requires systematically combining formal algorithms with dense passage indices as established in early foundational literature.`,
-        citations: [cite1],
-      },
-      {
-        title: '2. Theoretical Foundations & Prior Art',
-        content:
-          parsed?.section2_content ||
-          `Foundational work by ${firstPaper.authors[0]} et al. (${firstPaper.publication_year}) demonstrated that dense vector retrieval over structured corpora allows dynamic updates without costly model retraining. Concurrently, advancements in approximate nearest neighbor graph topologies have reduced multi-dimensional query latencies to sub-second thresholds while preserving high recall.`,
-        citations: [cite1, cite2],
-      },
-      {
-        title: '3. Comparative Synthesis & Critical Analysis',
-        content:
-          parsed?.section3_content ||
-          `Across the surveyed literature, an evident paradigm shift has emerged: moving from static, unverified dense lookups toward active, self-reflective systems that critique passage relevance prior to token synthesis. However, existing benchmarks remain disproportionately focused on generic open-domain trivia, leaving a marked gap in undergraduate STEM equation grounding and low-latency campus edge deployments.`,
-        citations: [cite2],
-      },
+      { title: '1. Introduction & Research Problem Formulation', content: String(parsed.section1_content), citations: cited(String(parsed.section1_content)) },
+      { title: '2. Theoretical Foundations & Prior Art', content: String(parsed.section2_content), citations: cited(String(parsed.section2_content)) },
+      { title: '3. Comparative Synthesis & Critical Analysis', content: String(parsed.section3_content), citations: cited(String(parsed.section3_content)) },
     ];
 
     const review: LiteratureReview = {
@@ -126,7 +103,8 @@ Output JSON only with keys:
       sections,
       organization_style: rawStrategy.toLowerCase(),
       organization_strategy: strategy,
-      status: 'COMPLETED',
+      // An AI draft: the student must check every claim against the cited papers.
+      status: 'DRAFT' as any,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };

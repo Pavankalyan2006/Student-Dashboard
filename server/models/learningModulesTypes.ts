@@ -696,6 +696,8 @@ export interface InternshipApplication {
   contact_person?: string;
   notes: string;
   timeline: ApplicationTimelineEvent[];
+  /** The job description the student pasted, kept so the skill comparison can be re-run. */
+  job_description?: string;
   jd_analysis?: JobDescriptionSkillAnalysis;
   resume_version_name?: string;
   created_at: string;

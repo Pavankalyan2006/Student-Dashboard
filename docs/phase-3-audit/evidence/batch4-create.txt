@@ -1,0 +1,45 @@
+PASS  AP javascript: application URL refused  -- 400
+PASS  AP unknown status refused  -- 400
+PASS  AP create saved application  -- 201
+PASS  AP no invented location, deadline or notes  -- {"l":"","n":""}
+PASS  AP JD analysis lists catalogue skills named in the JD  -- Python,React,SQL,Docker
+PASS  AP new student has no evidence, readiness 0  -- 0
+PASS  AP status change adds a timeline entry  -- 200
+PASS  AP student B cannot read A's application
+PASS  AP student B cannot change A's application
+PASS  AP B's list does not contain A's application
+PASS  PL readiness answers  -- 200
+PASS  PL recommendations name their basis  -- 200
+PASS  PL question bank has at least 30 questions  -- 36
+PASS  PL empty assessment refused
+PASS  PL unknown question id refused
+PASS  PL assessment scored from real answers (wrong answer gives 0%)  -- 0% 30s
+PASS  PL assessment saved in history  -- 200
+PASS  PL AI coach without a model: 503, nothing generated  -- 503 AI_UNAVAILABLE
+PASS  PL STAR improver without a model: 503  -- 503
+PASS  CP GitHub link with a client "oauth_verified" claim is LINKED, not CONNECTED  -- 201 LINKED
+PASS  CP A sees the profile
+PASS  CP B does not see A's profile (was all saved under the demo student)  -- []
+PASS  CP B cannot read A's profile by id
+PASS  CP sync of an unverified GitHub link stays LINKED and counts only imported repositories  -- LINKED {"username":"synthetic-p3-user","imported_repositories":0,"total_stars":0,"total_forks":0,"source":"Repositories imported in the GitHub module","last_synced":"2026-11-07T09:29:22.887Z"}
+PASS  CP LeetCode link saved as LINKED  -- 201 LINKED
+PASS  CP LeetCode offers no fake verification challenge  -- 400
+PASS  CP integrations connect gives LINKED with no scopes  -- 201 LINKED
+PASS  CP integrations refuse a client-supplied OAuth code  -- 400
+PASS  CP no OAuth start for LinkedIn (no app registered)  -- 400 OAUTH_NOT_AVAILABLE
+PASS  CP LeetCode sync reports ERROR, imports nothing  -- 200 ERROR
+PASS  CP B does not see A's integration
+PASS  CP jobs list requires sign-in
+PASS  CP job import saved for A  -- 201
+PASS  CP job analysis: fit from listed skills with a stated basis  -- 200 0
+PASS  CP B cannot analyse A's job
+PASS  CP B's job list is empty of A's imports
+PASS  CP consistency claims no score  -- null
+PASS  JD no hand-written seed listings are served  -- 0
+PASS  JD only Remotive is enabled; no source claims HEALTHY before a sync  -- src_upsc_official:NOT_CONFIGURED src_ssc_official:NOT_CONFIGURED src_ibps_official:NOT_CONFIGURED src_rrb_official:NOT_CONFIGURED src_ncs_india:NOT_CONFIGURED src_psu_gate:NOT_CONFIGURED src_remotive_api:NOT_CONFIGURED src_arbeitnow_api:NOT_CONFIGURED src_greenhouse_ats:NOT_CONFIGURED src_lever_ats:NOT_CONFIGURED
+PASS  JD sync with no outbound access: FAILED run, nothing added, error reported  -- FAILED Remotive could not be reached: getaddrinfo ENOTFOUND remotive.com
+PASS  JD analyze-jd requires sign-in
+PASS  JD analysis without a model: catalogue skills only, no summary  -- ["Python","React","SQL","Docker"]
+PASS  JD stats: matching count not invented  -- 0
+
+43/43 PASS

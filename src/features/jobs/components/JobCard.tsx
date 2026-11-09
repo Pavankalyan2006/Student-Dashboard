@@ -113,7 +113,6 @@ export const JobCard: React.FC<JobCardProps> = ({
           </h3>
           <div className="flex items-center gap-1.5 mt-1 text-sm font-medium text-slate-700 dark:text-slate-300">
             <span>{job.organization}</span>
-            <ShieldCheck className="w-4 h-4 text-emerald-500 inline-shrink-0" aria-label="Verified Opportunity" />
           </div>
         </div>
 

@@ -167,15 +167,15 @@ export const JobsDiscoveryPage: React.FC<JobsDiscoveryPageProps> = ({ onNavigate
   const handleTrackApplication = async (job: JobListing, status?: string, notes?: string) => {
     try {
       await jobsApi.trackApplication(job.id, { status, notes });
-      showToast(`Tracked "${job.title}" in your Applications Tracker!`);
+      showToast(`Added "${job.title}" to your Applications Tracker. Nothing was sent to the employer.`);
       // Update local saved state
-      const saved = await jobsApi.saveJob(job.id, notes, true, status || 'APPLIED');
+      const saved = await jobsApi.saveJob(job.id, notes, true, status || 'SAVED');
       setSavedJobs((prev) => {
         const filtered = prev.filter((s) => s.job_id !== job.id);
         return [...filtered, saved];
       });
-    } catch {
-      showToast('Could not add to Application Tracker. Please check session.');
+    } catch (err: any) {
+      showToast(`Could not add to the Applications Tracker: ${err?.response?.data?.message || err?.message || 'unknown error'}`);
     }
   };
 
@@ -217,14 +217,14 @@ export const JobsDiscoveryPage: React.FC<JobsDiscoveryPageProps> = ({ onNavigate
           <div className="space-y-2 max-w-3xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-white/10 text-indigo-200 backdrop-blur-md border border-white/10">
               <Sparkles className="w-3.5 h-3.5 text-indigo-300" />
-              <span>Multi-Source Jobs & Official Notifications</span>
+              <span>Jobs from connected public feeds</span>
             </div>
             <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
               Government & Private Jobs Discovery
             </h1>
             <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
-              Explore authentic Central & State Government recruitments (UPSC, SSC, RRB, ISRO, DRDO, PSUs, State PSCs) and verified Private Tech industry roles.
-              Calculate transparent match confidence based on your academic profile and course projects.
+              Listings appear only after a real sync from a source with a working feed (currently the Remotive public API).
+              Government portals are listed in the Source Monitor as links; they have no feed here. Nothing is applied for on your behalf.
             </p>
           </div>
 
@@ -254,7 +254,7 @@ export const JobsDiscoveryPage: React.FC<JobsDiscoveryPageProps> = ({ onNavigate
             </button>
 
             <button
-              onClick={() => navigate('/placements/applications')}
+              onClick={() => navigate('/career/applications')}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md transition-all"
             >
               <Briefcase className="w-4 h-4" />
@@ -276,7 +276,7 @@ export const JobsDiscoveryPage: React.FC<JobsDiscoveryPageProps> = ({ onNavigate
               {stats.total_jobs}
             </span>
             <span className="text-[11px] text-emerald-600 font-semibold block mt-1">
-              All Verified Sources
+              From synced sources
             </span>
           </div>
 
@@ -288,7 +288,7 @@ export const JobsDiscoveryPage: React.FC<JobsDiscoveryPageProps> = ({ onNavigate
               {stats.government_jobs}
             </span>
             <span className="text-[11px] text-slate-400 block mt-1">
-              15+ Cadres & Boards
+              From synced sources
             </span>
           </div>
 
@@ -533,10 +533,12 @@ export const JobsDiscoveryPage: React.FC<JobsDiscoveryPageProps> = ({ onNavigate
           <div className="py-16 text-center rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 p-8 space-y-3">
             <Briefcase className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto" />
             <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">
-              No matching job opportunities found
+              {stats && stats.total_jobs === 0 ? 'No listings yet' : 'No matching job opportunities found'}
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
-              Try broadening your search keywords, resetting subcategory filters, or switching between Government and Private tabs.
+              {stats && stats.total_jobs === 0
+                ? 'Listings appear only after a sync from a source with a working feed. Open the Source Monitor and choose Sync Now; if the source cannot be reached, it says so there.'
+                : 'Try broadening your search keywords, resetting subcategory filters, or switching between Government and Private tabs.'}
             </p>
             <button
               onClick={() => {

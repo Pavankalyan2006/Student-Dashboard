@@ -1,0 +1,9 @@
+PASS  RAG after restart: still cites the paging document
+PASS  CR after restart: target role kept
+PASS  CR after restart: roadmap and completed step kept  -- 200
+PASS  CR after restart: dashboard alignment now measured  -- 0
+PASS  RS after restart: resume, project and skills kept  -- 200
+PASS  RS after restart: same analysis score (deterministic)  -- 43 vs 43
+PASS  RS after restart: version kept
+
+7/7 PASS

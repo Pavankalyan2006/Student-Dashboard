@@ -18,20 +18,24 @@ export function AppShell({ currentPath, onNavigate, children }: AppShellProps) {
   return (
     <div className="min-h-screen bg-[#F7F9FC] text-[#101828]">
       {/* Sidebar (Desktop + Mobile Drawer) */}
-      <Sidebar currentPath={currentPath} onNavigate={onNavigate} />
+      {/* App navigation is not printed: the resume preview prints (and saves as PDF) through the browser. */}
+      <div className="print:hidden">
+        <Sidebar currentPath={currentPath} onNavigate={onNavigate} />
+      </div>
 
       {/* Main Workspace Frame */}
       <div
         className={cn(
           'flex flex-col min-h-screen transition-all duration-300 ease-in-out',
-          sidebarCollapsed ? 'lg:pl-[72px]' : 'lg:pl-[260px]'
+          sidebarCollapsed ? 'lg:pl-[72px]' : 'lg:pl-[260px]',
+          'print:pl-0'
         )}
       >
         {/* Topbar Navigation */}
         <Topbar currentPath={currentPath} onNavigate={onNavigate} />
 
         {/* Page Viewport Content */}
-        <main className="flex-1 w-full p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 w-full p-4 sm:p-6 lg:p-8 print:p-0">
           {children}
         </main>
       </div>

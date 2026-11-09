@@ -9,6 +9,7 @@ import {
   CategoryProgressItem,
 } from '../models/placementTypes';
 import { logger } from '../core/logging';
+import { ValidationError } from '../core/exceptions';
 
 export class PlacementService {
   /**
@@ -34,7 +35,8 @@ export class PlacementService {
       : (aptitudeAttempts.length > 0
           ? Math.min(100, Math.round(aptitudeAttempts.reduce((acc, a) => acc + (a.score || 0), 0) / aptitudeAttempts.length))
           : 0);
-    const aptitudeQuestionsCount = aptitudePractice.length + aptitudeAttempts.length * 10;
+    // Practice questions answered plus aptitude quizzes taken (earlier versions counted every quiz as 10 questions).
+    const aptitudeQuestionsCount = aptitudePractice.length + aptitudeAttempts.length;
 
     // Dimension 2: Technical Concepts
     const techPractice = practiceAttempts.filter((p) => p.category !== 'APTITUDE' && p.category !== 'LOGICAL_REASONING' && p.category !== 'VERBAL');
@@ -57,16 +59,18 @@ export class PlacementService {
     const dsaScore = Math.min(100, Math.round((dsaSolved / 25) * 100));
 
     // Dimension 5: Communication
-    let communicationScore = completedSessions.length > 0
-      ? Math.round(completedSessions.reduce((acc, s) => acc + (s.overall_score || 70), 0) / completedSessions.length)
+    // Average of the scores the interview evaluator actually gave; sessions without a score are not counted as 70.
+    const scoredSessions = completedSessions.filter((s) => typeof s.overall_score === 'number');
+    const communicationScore = scoredSessions.length > 0
+      ? Math.round(scoredSessions.reduce((acc, s) => acc + (s.overall_score as number), 0) / scoredSessions.length)
       : 0;
 
     // Dimension 6: Interview Practice
-    const interviewPracticeScore = Math.min(100, completedSessions.length * 40);
+    // Targets are stated in the formula text: 3 completed mock interviews, 2 projects, 25 coding and 25 DSA problems.
+    const interviewPracticeScore = Math.min(100, Math.round((completedSessions.length / 3) * 100));
 
     // Dimension 7: Projects
-    const completedProjects = projects.filter((p) => p.status === 'COMPLETED' || p.status === 'IN_PROGRESS');
-    const projectsScore = Math.min(100, projects.length * 45);
+    const projectsScore = Math.min(100, Math.round((projects.length / 2) * 100));
 
     // Overall aggregate formula
     const overallPercentage = Math.round(
@@ -84,34 +88,54 @@ export class PlacementService {
 
     if (aptitudePractice.length > 0 && aptitudeScore < 60) {
       weakAreas.push({
-        topic: 'Quantitative Aptitude: Time, Speed & Distance',
+        topic: 'Aptitude practice accuracy',
         category: 'APTITUDE',
-        reason: 'Practice score below benchmark threshold of 60%.',
+        reason: `${aptitudeScore}% correct over ${aptitudePractice.length} aptitude practice question(s), below 60%.`,
         severity: 'HIGH',
-        recommended_action: 'Complete Time, Speed & Distance practice exercises and take the timed Aptitude Quiz.',
+        recommended_action: 'Review the explanations of the questions you missed, then practise more aptitude questions.',
       });
+    }
+
+    // Technical categories where practice accuracy is below 60% (at least 3 answers, so one slip is not a weak area).
+    const byCategory = new Map<string, { n: number; ok: number }>();
+    for (const p of techPractice) {
+      const c = byCategory.get(p.category) || { n: 0, ok: 0 };
+      c.n += 1;
+      if (p.is_correct) c.ok += 1;
+      byCategory.set(p.category, c);
+    }
+    for (const [cat, c] of byCategory) {
+      const pct = Math.round((c.ok / c.n) * 100);
+      if (c.n >= 3 && pct < 60) {
+        weakAreas.push({
+          topic: `${cat.replace(/_/g, ' ')} practice accuracy`,
+          category: cat as PlacementCategory,
+          reason: `${pct}% correct over ${c.n} practice question(s).`,
+          severity: pct < 40 ? 'HIGH' : 'MEDIUM',
+          recommended_action: `Revisit ${cat.replace(/_/g, ' ')} topics and retry the questions you missed.`,
+        });
+      }
     }
 
     if (dsaSolved < 10) {
       weakAreas.push({
-        topic: 'DSA: Two Pointers & Sliding Window',
+        topic: 'DSA problems solved',
         category: 'DSA',
-        reason: `${dsaSolved} problems solved; recommend at least 15 medium problems before campus drives.`,
-        severity: 'MEDIUM',
-        recommended_action: 'Practice 5 Two Pointer problems in the DSA Lab.',
+        reason: `${dsaSolved} DSA problem(s) solved in the DSA Lab.`,
+        severity: dsaSolved === 0 ? 'HIGH' : 'MEDIUM',
+        recommended_action: 'Solve a few easy problems in the DSA Lab, then move to medium ones.',
       });
     }
 
-    // Check if missed concepts in recent interview feedback
+    // Concepts the last mock interview's evaluator asked the student to review.
     const lastCompleted = completedSessions[0];
-    if (lastCompleted?.feedback_summary?.concepts_to_review?.length) {
-      const missed = lastCompleted.feedback_summary.concepts_to_review[0];
+    for (const missed of (lastCompleted?.feedback_summary?.concepts_to_review || []).slice(0, 2)) {
       weakAreas.push({
-        topic: `Technical Review: ${missed}`,
-        category: 'DBMS',
-        reason: `Identified as an unaddressed concept during ${lastCompleted.interview_type} mock interview.`,
-        severity: 'HIGH',
-        recommended_action: `Review lesson in DBMS course and retake interview question on ${missed}.`,
+        topic: `Review: ${missed}`,
+        category: 'PROGRAMMING',
+        reason: `Flagged for review in your ${lastCompleted.interview_type} mock interview feedback.`,
+        severity: 'MEDIUM',
+        recommended_action: `Study ${missed} and answer a question on it in your next mock interview.`,
       });
     }
 
@@ -182,38 +206,53 @@ export class PlacementService {
     return readiness.weak_areas;
   }
 
+  /**
+   * Next steps picked from the platform's own catalogues (quizzes, DSA Lab, Coding Lab, courses), skipping what the
+   * student already finished. Courses and quizzes are only suggested when they match a weak area.
+   */
   public static async getRecommendations(studentId: string) {
     const readiness = await this.getReadiness(studentId);
+    const weakWords = readiness.weak_areas
+      .flatMap((w) => [w.category, w.topic])
+      .join(' ')
+      .toLowerCase()
+      .replace(/_/g, ' ');
+    const areaTerms: Record<string, string[]> = {
+      dbms: ['dbms', 'database', 'sql'],
+      'operating systems': ['operating system', ' os '],
+      'computer networks': ['network'],
+      aptitude: ['aptitude', 'quant'],
+      oop: ['object', 'oop'],
+      dsa: ['data structure', 'algorithm'],
+    };
+    const terms = Object.entries(areaTerms).filter(([k]) => weakWords.includes(k)).flatMap(([, v]) => v);
+    const matchesWeak = (text: string) => terms.some((t) => ` ${text.toLowerCase()} `.includes(t));
+
+    const attempted = new Set((await db.getQuizAttempts(studentId)).map((a) => a.quiz_id));
+    const quizzes = (await db.getQuizzes(studentId)).filter((q) => !attempted.has(q.id) && matchesWeak(`${q.title} ${q.description || ''}`));
+
+    const dsa = await db.getDSAProgress(studentId);
+    const solvedDsa = new Set(dsa?.problems_solved || []);
+    const order: Record<string, number> = { EASY: 0, MEDIUM: 1, HARD: 2 };
+    const dsaProblems = (await db.getDSAProblems({}))
+      .filter((p: any) => !solvedDsa.has(p.id))
+      .sort((a: any, b: any) => (order[a.difficulty] ?? 3) - (order[b.difficulty] ?? 3) || (a.number ?? 0) - (b.number ?? 0));
+
+    const accepted = new Set((await db.getStudentSubmissions(studentId)).filter((s) => s.status === 'ACCEPTED').map((s) => s.problem_id));
+    const coding = (await db.getCodingProblems()).filter((p) => !accepted.has(p.id))
+      .sort((a, b) => (order[a.difficulty] ?? 3) - (order[b.difficulty] ?? 3));
+
+    const courses = terms.length ? (await db.getCourses({ limit: 200 })).items.filter((c: any) => matchesWeak(`${c.title} ${c.category || ''}`)) : [];
+
     return {
       weak_areas: readiness.weak_areas,
-      recommended_quizzes: [
-        { id: 'quiz_dbms_01', title: 'DBMS Transactions & SQL Quiz', topic: 'DBMS' },
-        { id: 'quiz_os_01', title: 'Operating Systems Deadlocks & Memory Quiz', topic: 'OS' },
-        { id: 'quiz_aptitude_01', title: 'Quantitative Aptitude Diagnostic', topic: 'Quantitative Aptitude' },
-      ],
-      recommended_dsa: [
-        { id: 'two_pointers', title: 'Two Pointers Traversal', difficulty: 'MEDIUM' },
-        { id: 'sliding_window', title: 'Sliding Window Maximum', difficulty: 'MEDIUM' },
-        { id: 'binary_search', title: 'Binary Search Edge Cases', difficulty: 'EASY' },
-      ],
-      recommended_coding: [
-        { id: 'coding_api_pool', title: 'Concurrent Connection Pooling' },
-        { id: 'coding_lru_cache', title: 'LRU Cache Eviction Policy' },
-      ],
-      recommended_courses: [
-        {
-          id: 'crs_db_04',
-          title: 'Database Systems & Distributed Queries',
-          lesson_id: 'lsn_dbms_concur',
-          lesson_title: 'Transaction Concurrency & Locking',
-        },
-        {
-          id: 'crs_os_01',
-          title: 'Operating Systems Architecture',
-          lesson_id: 'lsn_os_deadlock',
-          lesson_title: 'Deadlock Avoidance & Banker Algorithm',
-        },
-      ],
+      recommended_quizzes: quizzes.slice(0, 3).map((q) => ({ id: q.id, title: q.title, topic: (q as any).topic_id || '' })),
+      recommended_dsa: dsaProblems.slice(0, 3).map((p: any) => ({ id: p.id, title: p.title, difficulty: p.difficulty })),
+      recommended_coding: coding.slice(0, 2).map((p) => ({ id: p.id, title: p.title })),
+      recommended_courses: courses.slice(0, 2).map((c: any) => ({ id: c.id, title: c.title })),
+      basis: terms.length
+        ? 'Quizzes and courses match your weak areas; DSA and coding problems are the easiest ones you have not solved yet.'
+        : 'No weak area found yet, so only unsolved DSA and coding problems are suggested.',
     };
   }
 
@@ -283,7 +322,8 @@ export class PlacementService {
       description: string,
       count: number,
       acc: number | null,
-      masteryThreshold: number = 5
+      masteryThreshold: number = 5,
+      available?: number
     ): CategoryProgressItem => {
       let status: 'NOT_STARTED' | 'IN_PROGRESS' | 'MASTERED' = 'NOT_STARTED';
       if (count > 0) {
@@ -297,7 +337,8 @@ export class PlacementService {
         category_id: categoryId,
         name,
         icon,
-        total_available: 20,
+        // Questions in the bank for this category; for activity categories, the target count used for MASTERED.
+        total_available: available ?? masteryThreshold,
         completed_count: count,
         accuracy_percentage: count > 0 ? acc : null,
         status,
@@ -306,12 +347,18 @@ export class PlacementService {
       };
     };
 
+    const bank = await db.getPlacementQuestions();
     const getMcqCatStats = (cat: string) => {
       const atts = categoryAttempts(cat);
       const c = atts.length;
       const cor = atts.filter((a) => a.is_correct).length;
       const acc = c > 0 ? Math.round((cor / c) * 100) : null;
-      return { count: c, acc };
+      return { count: c, acc, available: bank.filter((q) => q.category === cat).length };
+    };
+    // Average of real evaluator scores only; null when no session has a score.
+    const avgScore = (list: typeof completedSessions) => {
+      const scored = list.filter((x) => typeof x.overall_score === 'number');
+      return scored.length ? Math.round(scored.reduce((a, x) => a + (x.overall_score as number), 0) / scored.length) : null;
     };
 
     const quantStats = getMcqCatStats('APTITUDE');
@@ -332,20 +379,20 @@ export class PlacementService {
     );
 
     const categoriesProgress: CategoryProgressItem[] = [
-      calcCatProgress('quant', 'Quantitative Aptitude', 'Calculator', '/placements/topics?cat=APTITUDE', 'Percentages, profit & loss, time & work, speed distance, permutations, probability', quantStats.count, quantStats.acc),
-      calcCatProgress('lr', 'Logical Reasoning', 'BrainCircuit', '/placements/topics?cat=LOGICAL_REASONING', 'Syllogisms, seating arrangements, blood relations, series, coding-decoding', lrStats.count, lrStats.acc),
-      calcCatProgress('verbal', 'Verbal Ability', 'MessageSquareText', '/placements/topics?cat=VERBAL', 'Grammar, reading comprehension, sentence completion, error detection, vocabulary', verbalStats.count, verbalStats.acc),
-      calcCatProgress('prog_fundamentals', 'Programming Fundamentals', 'Code2', '/coding', 'Variables, control flow, functions, arrays, recursion, complexity in Java/Python/C++', progStats.count, progStats.acc),
-      calcCatProgress('dsa', 'Data Structures & Algorithms', 'Binary', '/dsa', 'Arrays, linked lists, trees, graphs, heaps, dynamic programming, two pointers', dsaSolved, dsaSolved > 0 ? 80 : null, 15),
-      calcCatProgress('dbms_sql', 'SQL & DBMS', 'Database', '/sql-lab', 'ACID transactions, normalization, indexing, joins, aggregate queries, locking', dbmsStats.count, dbmsStats.acc),
-      calcCatProgress('os', 'Operating Systems', 'Cpu', '/placements/topics?cat=OPERATING_SYSTEMS', 'Deadlocks, process synchronization, paging, virtual memory, scheduling', osStats.count, osStats.acc),
-      calcCatProgress('networks', 'Computer Networks', 'Network', '/placements/topics?cat=COMPUTER_NETWORKS', 'OSI model, TCP/IP, 3-way handshake, DNS, HTTP/HTTPS, routing', cnStats.count, cnStats.acc),
-      calcCatProgress('oop', 'Object-Oriented Programming', 'Boxes', '/placements/topics?cat=OOP', 'Encapsulation, polymorphism, inheritance, abstraction, SOLID principles', oopStats.count, oopStats.acc),
-      calcCatProgress('software_eng', 'Software Engineering & Testing', 'ShieldCheck', '/placements/topics?cat=SOFTWARE_ENGINEERING', 'Agile, SDLC, testing pyramid, CI/CD, unit testing, architecture', seStats.count, seStats.acc),
-      calcCatProgress('tech_interviews', 'Technical Interviews', 'FileQuestion', '/placements/mock-interview/setup?type=TECHNICAL', 'System design basics, live problem walkthroughs, technical concept defense', technicalInterviewSessions.length, technicalInterviewSessions.length > 0 ? Math.round(technicalInterviewSessions.reduce((a, s) => a + (s.overall_score || 70), 0) / technicalInterviewSessions.length) : null, 3),
+      calcCatProgress('quant', 'Quantitative Aptitude', 'Calculator', '/placements/topics?cat=APTITUDE', 'Percentages, profit & loss, time & work, speed distance, permutations, probability', quantStats.count, quantStats.acc, 5, quantStats.available),
+      calcCatProgress('lr', 'Logical Reasoning', 'BrainCircuit', '/placements/topics?cat=LOGICAL_REASONING', 'Syllogisms, seating arrangements, blood relations, series, coding-decoding', lrStats.count, lrStats.acc, 5, lrStats.available),
+      calcCatProgress('verbal', 'Verbal Ability', 'MessageSquareText', '/placements/topics?cat=VERBAL', 'Grammar, reading comprehension, sentence completion, error detection, vocabulary', verbalStats.count, verbalStats.acc, 5, verbalStats.available),
+      calcCatProgress('prog_fundamentals', 'Programming Fundamentals', 'Code2', '/coding', 'Variables, control flow, functions, arrays, recursion, complexity in Java/Python/C++', progStats.count, progStats.acc, 5, progStats.available),
+      calcCatProgress('dsa', 'Data Structures & Algorithms', 'Binary', '/dsa', 'Arrays, linked lists, trees, graphs, heaps, dynamic programming, two pointers', dsaSolved, null, 15),
+      calcCatProgress('dbms_sql', 'SQL & DBMS', 'Database', '/sql-lab', 'ACID transactions, normalization, indexing, joins, aggregate queries, locking', dbmsStats.count, dbmsStats.acc, 5, dbmsStats.available),
+      calcCatProgress('os', 'Operating Systems', 'Cpu', '/placements/topics?cat=OPERATING_SYSTEMS', 'Deadlocks, process synchronization, paging, virtual memory, scheduling', osStats.count, osStats.acc, 5, osStats.available),
+      calcCatProgress('networks', 'Computer Networks', 'Network', '/placements/topics?cat=COMPUTER_NETWORKS', 'OSI model, TCP/IP, 3-way handshake, DNS, HTTP/HTTPS, routing', cnStats.count, cnStats.acc, 5, cnStats.available),
+      calcCatProgress('oop', 'Object-Oriented Programming', 'Boxes', '/placements/topics?cat=OOP', 'Encapsulation, polymorphism, inheritance, abstraction, SOLID principles', oopStats.count, oopStats.acc, 5, oopStats.available),
+      calcCatProgress('software_eng', 'Software Engineering & Testing', 'ShieldCheck', '/placements/topics?cat=SOFTWARE_ENGINEERING', 'Agile, SDLC, testing pyramid, CI/CD, unit testing, architecture', seStats.count, seStats.acc, 5, seStats.available),
+      calcCatProgress('tech_interviews', 'Technical Interviews', 'FileQuestion', '/placements/mock-interview/setup?type=TECHNICAL', 'System design basics, live problem walkthroughs, technical concept defense', technicalInterviewSessions.length, avgScore(technicalInterviewSessions), 3),
       calcCatProgress('coding_assessments', 'Coding Assessments', 'Terminal', '/coding', 'Timed coding test environments with automated test case evaluation', assessments.filter((a) => a.category.toLowerCase().includes('coding')).length, null, 3),
       calcCatProgress('gd', 'Group Discussions', 'Users', '/placements?tab=gd', 'Current affairs, technical debates, structured arguments, counterpoint synthesis', 0, null, 2),
-      calcCatProgress('hr_interviews', 'HR Interviews', 'UserCheck', '/placements/mock-interview/setup?type=HR', 'Behavioral STAR methodology, strengths/weaknesses, company fit, career goals', hrInterviewSessions.length, hrInterviewSessions.length > 0 ? Math.round(hrInterviewSessions.reduce((a, s) => a + (s.overall_score || 75), 0) / hrInterviewSessions.length) : null, 2),
+      calcCatProgress('hr_interviews', 'HR Interviews', 'UserCheck', '/placements/mock-interview/setup?type=HR', 'Behavioral STAR methodology, strengths/weaknesses, company fit, career goals', hrInterviewSessions.length, avgScore(hrInterviewSessions), 2),
       calcCatProgress('resume_projects', 'Resume & Project Discussions', 'Briefcase', '/resume', 'Resume completeness audit, architecture defense, technical deep-dive', resumes.length + projects.length, null, 3),
     ];
 
@@ -366,9 +413,9 @@ export class PlacementService {
       recentActivityList.push({
         id: s.id,
         type: 'MOCK_INTERVIEW',
-        title: `${s.interview_type} Mock Interview (${s.overall_score || 80}%)`,
+        title: typeof s.overall_score === 'number' ? `${s.interview_type} Mock Interview (${s.overall_score}%)` : `${s.interview_type} Mock Interview (not scored)`,
         timestamp: s.completed_at || s.created_at,
-        details: s.feedback_summary?.summary?.slice(0, 90) || 'Completed mock simulation session',
+        details: s.feedback_summary?.summary?.slice(0, 90) || 'Completed mock interview',
       });
     }
 
@@ -378,7 +425,7 @@ export class PlacementService {
         type: 'PRACTICE',
         title: `Practiced ${p.category} Question`,
         timestamp: p.created_at,
-        details: p.is_correct ? 'Answered correctly (+10 pts)' : 'Reviewed step-by-step explanation',
+        details: p.is_correct ? 'Answered correctly' : 'Answered incorrectly; explanation shown',
       });
     }
 
@@ -418,7 +465,16 @@ export class PlacementService {
     studentId: string,
     submission: PlacementAssessmentSubmission
   ): Promise<PlacementAssessmentResult> {
-    const questionIds = Object.keys(submission.answers || {});
+    const questionIds = Object.keys(submission?.answers || {});
+    if (questionIds.length === 0) throw new ValidationError('answers must include at least one question');
+    if (questionIds.length > 200) throw new ValidationError('An assessment can have at most 200 questions');
+    for (const qId of questionIds) {
+      if (!(await db.getPlacementQuestionById(qId))) throw new ValidationError(`Unknown question '${qId}'`);
+    }
+    const spent = submission.time_spent_seconds;
+    if (spent !== undefined && (typeof spent !== 'number' || !Number.isFinite(spent) || spent < 0 || spent > 6 * 3600)) {
+      throw new ValidationError('time_spent_seconds must be a number of seconds');
+    }
     let correctCount = 0;
     const detailedResults = [];
     const weakTopicsSet = new Set<string>();
@@ -460,7 +516,7 @@ export class PlacementService {
       }
     }
 
-    const totalQuestions = questionIds.length || 1;
+    const totalQuestions = questionIds.length;
     const scorePercentage = Math.round((correctCount / totalQuestions) * 100);
 
     const result: PlacementAssessmentResult = {
@@ -472,7 +528,8 @@ export class PlacementService {
       total_questions: totalQuestions,
       correct_answers: correctCount,
       score_percentage: scorePercentage,
-      time_spent_seconds: submission.time_spent_seconds || 300,
+      // 0 when the client did not report it (was an invented 300 seconds).
+      time_spent_seconds: Math.round(spent || 0),
       detailed_results: detailedResults,
       weak_topics: Array.from(weakTopicsSet),
       submitted_at: new Date().toISOString(),

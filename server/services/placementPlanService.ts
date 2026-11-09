@@ -4,7 +4,7 @@ import {
   PlacementPlanTask,
   CreatePlacementPlanRequest,
 } from '../models/placementTypes';
-import { NotFoundError, AuthorizationError } from '../core/exceptions';
+import { NotFoundError, AuthorizationError, ValidationError } from '../core/exceptions';
 import { logger } from '../core/logging';
 
 export class PlacementPlanService {
@@ -33,9 +33,12 @@ export class PlacementPlanService {
     studentId: string,
     req: CreatePlacementPlanRequest
   ): Promise<{ plan: PlacementPlan; tasks: PlacementPlanTask[] }> {
+    if (!req || typeof req.target_role_id !== 'string' || !req.target_role_id) throw new ValidationError('target_role_id is required');
     const role = await db.getPlacementRoleById(req.target_role_id);
-    const roleName = role ? role.name : 'Software Engineer';
+    if (!role) throw new NotFoundError(`Placement role '${req.target_role_id}' not found`);
+    const roleName = role.name;
     const company = req.target_company_id ? await db.getPlacementCompanyById(req.target_company_id) : null;
+    if (req.target_company_id && !company) throw new NotFoundError(`Company '${req.target_company_id}' not found`);
 
     const weeks = Math.max(1, Math.min(12, req.duration_weeks || 4));
     const now = new Date();

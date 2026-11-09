@@ -1,6 +1,7 @@
 // server/services/externalProfilesCatalog.ts
 // Platform catalog, URL validation, normalization, and SSRF security protection
 
+import { CHALLENGE_VERIFIABLE, OAUTH_PLATFORMS, SYNCABLE } from './platformVerification';
 import {
   ExternalPlatformId,
   ExternalPlatformCategory,
@@ -516,6 +517,13 @@ export const SUPPORTED_EXTERNAL_PLATFORMS: ExternalPlatformMeta[] = [
     enabled: true,
   },
 ];
+
+// Phase 3: capability flags follow what is implemented (see platformVerification.ts), not what a platform might offer.
+for (const p of SUPPORTED_EXTERNAL_PLATFORMS) {
+  p.oauth_supported = OAUTH_PLATFORMS.has(p.id);
+  p.challenge_verification_supported = CHALLENGE_VERIFIABLE.has(p.id);
+  p.sync_supported = SYNCABLE.has(p.id);
+}
 
 /**
  * Platform URL & Handle Validation Engine with SSRF Protection

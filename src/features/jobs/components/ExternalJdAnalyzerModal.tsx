@@ -30,6 +30,7 @@ export const ExternalJdAnalyzerModal: React.FC<ExternalJdAnalyzerModalProps> = (
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -39,6 +40,7 @@ export const ExternalJdAnalyzerModal: React.FC<ExternalJdAnalyzerModalProps> = (
 
     try {
       setLoading(true);
+      setError(null);
       const data = await jobsApi.analyzeExternalJd({
         title,
         organization,
@@ -46,8 +48,8 @@ export const ExternalJdAnalyzerModal: React.FC<ExternalJdAnalyzerModalProps> = (
         description,
       });
       setResult(data);
-    } catch {
-      // ignore
+    } catch (err: any) {
+      setError(err?.response?.data?.message || err?.message || 'The analysis failed.');
     } finally {
       setLoading(false);
     }
@@ -62,9 +64,9 @@ export const ExternalJdAnalyzerModal: React.FC<ExternalJdAnalyzerModalProps> = (
               <FileSearch className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white">AI Job Description Analyzer</h3>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Job Description Analyzer</h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Paste any external job description or official gazette circular to extract required skills, qualifications, and an interview preparation checklist.
+                Paste a job description. Skills are matched against the platform catalogue; a summary and checklist are added only when the AI provider is available.
               </p>
             </div>
           </div>
@@ -136,6 +138,9 @@ export const ExternalJdAnalyzerModal: React.FC<ExternalJdAnalyzerModalProps> = (
                 />
               </div>
 
+              {error && (
+                <p role="alert" className="text-xs text-rose-700 dark:text-rose-300">{error}</p>
+              )}
               <div className="flex justify-end pt-2">
                 <button
                   type="submit"
@@ -143,7 +148,7 @@ export const ExternalJdAnalyzerModal: React.FC<ExternalJdAnalyzerModalProps> = (
                   className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white shadow-md transition-all"
                 >
                   <Sparkles className="w-4 h-4" />
-                  {loading ? 'Analyzing with Gemini AI...' : 'Analyze Job Description'}
+                  {loading ? 'Analyzing...' : 'Analyze Job Description'}
                 </button>
               </div>
             </form>
@@ -151,11 +156,13 @@ export const ExternalJdAnalyzerModal: React.FC<ExternalJdAnalyzerModalProps> = (
             <div className="space-y-5 animate-in fade-in">
               <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-slate-800">
                 <div>
-                  <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300">
-                    {result.category} • {result.subcategory}
-                  </span>
+                  {result.category && (
+                    <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300">
+                      {result.category}{result.subcategory ? ` • ${result.subcategory}` : ''}
+                    </span>
+                  )}
                   <h4 className="text-base font-bold text-slate-900 dark:text-white mt-1">
-                    AI Analysis Report
+                    Analysis
                   </h4>
                 </div>
                 <button
@@ -166,7 +173,13 @@ export const ExternalJdAnalyzerModal: React.FC<ExternalJdAnalyzerModalProps> = (
                 </button>
               </div>
 
-              {/* Summary */}
+              {!result.ai_available && result.ai_message && (
+                <p className="text-xs p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-800">
+                  {result.ai_message}
+                </p>
+              )}
+              {/* Summary (AI, only when generated) */}
+              {result.summary && (
               <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60">
                 <h5 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-1 flex items-center gap-1.5">
                   <BookOpen className="w-3.5 h-3.5 text-indigo-500" /> Executive Summary
@@ -177,13 +190,18 @@ export const ExternalJdAnalyzerModal: React.FC<ExternalJdAnalyzerModalProps> = (
                 <p className="text-xs text-indigo-600 dark:text-indigo-400 font-medium mt-2">
                   {result.simplified_explanation}
                 </p>
+                <p className="text-[11px] text-slate-400 mt-2">Written by the AI provider from the text you pasted.</p>
               </div>
+              )}
 
               {/* Extracted Skills */}
               <div>
                 <h5 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-2">
-                  Extracted Core Technologies & Skills ({result.extracted_skills?.length || 0})
+                  Catalogue skills named in the text ({result.extracted_skills?.length || 0})
                 </h5>
+                {result.extracted_skills?.length === 0 && (
+                  <p className="text-xs text-slate-500">No skill from the platform catalogue is named in this text.</p>
+                )}
                 <div className="flex flex-wrap gap-1.5">
                   {result.extracted_skills?.map((s: string, idx: number) => (
                     <span
@@ -196,7 +214,8 @@ export const ExternalJdAnalyzerModal: React.FC<ExternalJdAnalyzerModalProps> = (
                 </div>
               </div>
 
-              {/* Qualification & Experience */}
+              {/* Qualification & Experience (AI, only when generated) */}
+              {result.ai_available && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                 <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60">
                   <span className="font-bold text-slate-900 dark:text-white flex items-center gap-1 mb-1">
@@ -212,6 +231,7 @@ export const ExternalJdAnalyzerModal: React.FC<ExternalJdAnalyzerModalProps> = (
                   <p className="text-slate-600 dark:text-slate-300">{result.experience_label}</p>
                 </div>
               </div>
+              )}
 
               {/* Preparation Checklist */}
               {result.preparation_checklist && (

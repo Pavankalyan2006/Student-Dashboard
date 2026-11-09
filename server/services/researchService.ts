@@ -87,29 +87,7 @@ export class ResearchService {
       await db.saveResearchQuestion(q);
     }
 
-    // Initialize proposed methodology outline
-    const methodology: ResearchMethodology = {
-      id: `meth_${Date.now()}`,
-      research_project_id: id,
-      student_id: studentId,
-      system_architecture: 'Proposed system architecture combining modular service boundaries and verifiable data flow.',
-      experimental_design: 'Comparative study across baseline implementations and proposed enhancements.',
-      dataset_plan: 'Standard open-access domain benchmarks with verified academic citations.',
-      data_collection: 'Automated data ingestion and syntax-preserving normalization.',
-      preprocessing: 'Deduplication, tokenization, and schema validation.',
-      model_selection: 'Deterministic algorithmic models or pre-trained transformer baselines.',
-      evaluation_metrics: ['Accuracy / Precision', 'Latency (ms)', 'Resource Overhead'],
-      baseline_comparison: 'Standard baseline implementations documented in peer-reviewed literature.',
-      reproducibility_checklist: [
-        'Document random seeds',
-        'Specify dependencies in requirements.txt or package.json',
-        'Provide automated evaluation scripts',
-      ],
-      is_proposed: true,
-      created_at: now,
-      updated_at: now,
-    };
-    await db.saveResearchMethodology(methodology);
+    // No methodology is pre-filled: the student writes it (the old default text read like a real plan).
 
     return project;
   }
@@ -169,26 +147,35 @@ export class ResearchService {
     paperData: Partial<ResearchPaper> & { title: string; abstract: string }
   ): Promise<ResearchPaper> {
     await this.getProject(projectId, studentId);
+    if (!paperData || typeof paperData.title !== 'string' || !paperData.title.trim()) {
+      throw new ValidationError('A paper needs a title');
+    }
     const now = new Date().toISOString();
-    const id = paperData.id || `paper_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    // Ids are always created on the server. A client-supplied id could overwrite another student's paper.
+    const existing = (await db.getResearchPapers(projectId, studentId)).find(
+      (p) => (paperData.doi && p.doi === paperData.doi) || (paperData.external_id && p.external_id === paperData.external_id)
+    );
+    if (existing) return existing; // already saved in this project: no duplicate
+    const id = `paper_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+    const provider = ['OPENALEX', 'CROSSREF', 'SEMANTIC_SCHOLAR', 'CURATED', 'PDF_UPLOAD'].includes(String(paperData.provider)) ? paperData.provider : 'MANUAL';
 
     const paper: ResearchPaper = {
       id,
       research_project_id: projectId,
       student_id: studentId,
       document_id: paperData.document_id,
-      title: paperData.title,
-      abstract: paperData.abstract,
-      authors: paperData.authors || ['Academic Contributor'],
-      publication_year: paperData.publication_year || new Date().getFullYear(),
-      venue: paperData.venue || 'Academic Proceedings',
+      title: paperData.title.trim().slice(0, 500),
+      abstract: String(paperData.abstract || '').slice(0, 10000),
+      authors: Array.isArray(paperData.authors) ? paperData.authors.map(String).slice(0, 100) : [],
+      publication_year: Number(paperData.publication_year) || 0,
+      venue: String(paperData.venue || ''),
       doi: paperData.doi,
-      url: paperData.url,
-      provider: paperData.provider || 'MANUAL',
+      url: paperData.url && /^https?:\/\//i.test(String(paperData.url)) ? String(paperData.url) : undefined,
+      provider: provider as any,
       external_id: paperData.external_id,
       citation_count: paperData.citation_count || 0,
       is_saved: true,
-      metadata: paperData.metadata || { is_peer_reviewed: false, open_access: true },
+      metadata: { ...(paperData.metadata || {}), saved_from: provider },
       created_at: now,
     };
 
@@ -197,13 +184,13 @@ export class ResearchService {
     // Also auto-generate an initial APA citation for this paper
     const authorStr = paper.authors.slice(0, 3).join(', ') + (paper.authors.length > 3 ? ', et al.' : '');
     const citation: ResearchCitation = {
-      id: `cite_${Date.now()}`,
+      id: `cite_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
       student_id: studentId,
       research_project_id: projectId,
       paper_id: paper.id,
       source_type: 'PAPER',
       citation_style: 'APA',
-      formatted_citation: `${authorStr} (${paper.publication_year}). ${paper.title}. ${paper.venue}.${paper.doi ? ` https://doi.org/${paper.doi}` : ''}`,
+      formatted_citation: `${authorStr || 'Unknown author'} (${paper.publication_year || 'n.d.'}). ${paper.title}.${paper.venue ? ` ${paper.venue}.` : ''}${paper.doi ? ` https://doi.org/${paper.doi}` : ''}`,
       bibtex: `@article{${paper.authors[0]?.split(' ').pop()?.toLowerCase() || 'paper'}${paper.publication_year},\n  title={${paper.title}},\n  author={${paper.authors.join(' and ')}},\n  journal={${paper.venue}},\n  year={${paper.publication_year}}\n}`,
       metadata: {
         title: paper.title,
@@ -217,6 +204,23 @@ export class ResearchService {
     };
     await db.saveResearchCitation(citation);
 
+    return paper;
+  }
+
+  /** Saves the student's reading notes and reading status on a paper they own. */
+  public static async updatePaperNotes(paperId: string, studentId: string, data: { notes?: unknown; reading_status?: unknown }): Promise<ResearchPaper> {
+    const paper = await this.getPaper(paperId, studentId);
+    if (data.notes !== undefined) {
+      if (typeof data.notes !== 'string') throw new ValidationError('notes must be text');
+      if (data.notes.length > 20000) throw new ValidationError('notes must be at most 20,000 characters');
+      paper.notes = data.notes;
+    }
+    if (data.reading_status !== undefined) {
+      if (!['TO_READ', 'READING', 'READ'].includes(String(data.reading_status))) throw new ValidationError('reading_status must be TO_READ, READING or READ');
+      paper.reading_status = data.reading_status as any;
+    }
+    paper.updated_at = new Date().toISOString();
+    await db.saveResearchPaper(paper);
     return paper;
   }
 
@@ -475,24 +479,24 @@ export class ResearchService {
     const questions = await this.listQuestions(projectId, studentId);
     const gaps = await this.listGaps(projectId, studentId);
 
-    return papers.map((p, idx) => {
-      const q = questions[idx % Math.max(1, questions.length)]?.question || 'Core Domain Inquiry';
-      const gap = gaps[idx % Math.max(1, gaps.length)]?.description || 'Potential evaluation boundary across edge workloads.';
-
+    // Each cell is either stored data or empty; nothing is guessed from the venue name.
+    return papers.map((p) => {
+      const linkedQ = questions.filter((q: any) => Array.isArray(q.evidence) && q.evidence.some((e: any) => (e?.paper_id || e) === p.id));
+      const linkedGap = gaps.find((g: any) => (g.supporting_paper_ids || []).includes(p.id));
       return {
         paper_id: p.id,
         paper_title: p.title,
         authors: p.authors.slice(0, 2).join(', ') + (p.authors.length > 2 ? ' et al.' : ''),
         year: p.publication_year,
-        research_question: q,
-        objective: p.abstract.substring(0, 120) + '...',
-        method: p.venue.includes('NeurIPS') || p.venue.includes('ICLR') ? 'Neural Model Fine-Tuning' : 'Empirical Benchmarking',
-        dataset: (p.metadata?.fields_of_study || ['Academic Benchmarks']).join(', '),
-        technology: (p.metadata?.fields_of_study || ['Computer Science'])[0] || 'Software Engineering',
-        findings: `Documented ${p.citation_count}+ academic citations with verifiable reproducible results.`,
-        limitations: 'Evaluated primarily under controlled laboratory distributions.',
-        research_gap: gap,
-        evidence_source: p.doi ? `DOI: ${p.doi}` : p.url || p.venue,
+        research_question: linkedQ.map((q: any) => q.question).join('; ') || 'Not linked yet',
+        objective: p.abstract ? p.abstract.substring(0, 120) + (p.abstract.length > 120 ? '...' : '') : 'No abstract saved',
+        method: 'Not recorded (run Analyze on the paper)',
+        dataset: 'Not recorded',
+        technology: (p.metadata?.fields_of_study || [])[0] || 'Not recorded',
+        findings: 'Not recorded',
+        limitations: 'Not recorded',
+        research_gap: linkedGap?.description || 'Not linked yet',
+        evidence_source: p.doi ? `DOI: ${p.doi}` : p.url || p.venue || 'No source link',
       };
     });
   }

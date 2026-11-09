@@ -1,0 +1,284 @@
+{
+  "corpus_documents": 8,
+  "summary": [
+    {
+      "kind": "lexical",
+      "queries": 16,
+      "hit_at_1": 16,
+      "hit_at_3": 16,
+      "mrr": 1,
+      "answer_cites_expected_doc": 16
+    },
+    {
+      "kind": "paraphrase",
+      "queries": 4,
+      "hit_at_1": 1,
+      "hit_at_3": 2,
+      "mrr": 0.38,
+      "answer_cites_expected_doc": 2
+    }
+  ],
+  "out_of_scope": {
+    "queries": 5,
+    "refused_no_sources": 4,
+    "details": [
+      {
+        "q": "What is photosynthesis in plants?",
+        "mode": "NO_SOURCES",
+        "citations": 0
+      },
+      {
+        "q": "Explain quantum chromodynamics",
+        "mode": "EXTRACTIVE",
+        "citations": 1
+      },
+      {
+        "q": "Who won the 2011 cricket world cup?",
+        "mode": "NO_SOURCES",
+        "citations": 0
+      },
+      {
+        "q": "How do I bake sourdough bread?",
+        "mode": "NO_SOURCES",
+        "citations": 0
+      },
+      {
+        "q": "What is the capital of Australia?",
+        "mode": "NO_SOURCES",
+        "citations": 0
+      }
+    ]
+  },
+  "isolation": {
+    "queries": 5,
+    "leaks": 0
+  },
+  "rows": [
+    {
+      "kind": "lexical",
+      "q": "What are the four Coffman conditions for deadlock?",
+      "expect": "deadlock",
+      "top": [
+        "deadlock"
+      ],
+      "rank": 1,
+      "ask_mode": "EXTRACTIVE",
+      "ask_cites_expected": true
+    },
+    {
+      "kind": "lexical",
+      "q": "How does the Banker algorithm keep the system in a safe state?",
+      "expect": "deadlock",
+      "top": [
+        "deadlock",
+        "routing"
+      ],
+      "rank": 1,
+      "ask_mode": "EXTRACTIVE",
+      "ask_cites_expected": true
+    },
+    {
+      "kind": "lexical",
+      "q": "What happens on a page fault?",
+      "expect": "paging",
+      "top": [
+        "paging"
+      ],
+      "rank": 1,
+      "ask_mode": "EXTRACTIVE",
+      "ask_cites_expected": true
+    },
+    {
+      "kind": "lexical",
+      "q": "What does the TLB cache?",
+      "expect": "paging",
+      "top": [
+        "paging",
+        "dp"
+      ],
+      "rank": 1,
+      "ask_mode": "EXTRACTIVE",
+      "ask_cites_expected": true
+    },
+    {
+      "kind": "lexical",
+      "q": "Explain round robin time quantum",
+      "expect": "scheduling",
+      "top": [
+        "scheduling"
+      ],
+      "rank": 1,
+      "ask_mode": "EXTRACTIVE",
+      "ask_cites_expected": true
+    },
+    {
+      "kind": "lexical",
+      "q": "How does aging prevent starvation in priority scheduling?",
+      "expect": "scheduling",
+      "top": [
+        "scheduling"
+      ],
+      "rank": 1,
+      "ask_mode": "EXTRACTIVE",
+      "ask_cites_expected": true
+    },
+    {
+      "kind": "lexical",
+      "q": "When is a relation in third normal form?",
+      "expect": "normalization",
+      "top": [
+        "normalization"
+      ],
+      "rank": 1,
+      "ask_mode": "EXTRACTIVE",
+      "ask_cites_expected": true
+    },
+    {
+      "kind": "lexical",
+      "q": "What does BCNF require of determinants?",
+      "expect": "normalization",
+      "top": [
+        "normalization"
+      ],
+      "rank": 1,
+      "ask_mode": "EXTRACTIVE",
+      "ask_cites_expected": true
+    },
+    {
+      "kind": "lexical",
+      "q": "What does ACID stand for?",
+      "expect": "transactions",
+      "top": [
+        "transactions"
+      ],
+      "rank": 1,
+      "ask_mode": "EXTRACTIVE",
+      "ask_cites_expected": true
+    },
+    {
+      "kind": "lexical",
+      "q": "How does two-phase locking ensure serializability?",
+      "expect": "transactions",
+      "top": [
+        "transactions"
+      ],
+      "rank": 1,
+      "ask_mode": "EXTRACTIVE",
+      "ask_cites_expected": true
+    },
+    {
+      "kind": "lexical",
+      "q": "Describe the TCP three-way handshake",
+      "expect": "tcp",
+      "top": [
+        "tcp"
+      ],
+      "rank": 1,
+      "ask_mode": "EXTRACTIVE",
+      "ask_cites_expected": true
+    },
+    {
+      "kind": "lexical",
+      "q": "What is slow start in congestion control?",
+      "expect": "tcp",
+      "top": [
+        "tcp"
+      ],
+      "rank": 1,
+      "ask_mode": "EXTRACTIVE",
+      "ask_cites_expected": true
+    },
+    {
+      "kind": "lexical",
+      "q": "Why does distance vector routing have count to infinity?",
+      "expect": "routing",
+      "top": [
+        "routing"
+      ],
+      "rank": 1,
+      "ask_mode": "EXTRACTIVE",
+      "ask_cites_expected": true
+    },
+    {
+      "kind": "lexical",
+      "q": "Which routing protocol uses Dijkstra?",
+      "expect": "routing",
+      "top": [
+        "routing",
+        "scheduling",
+        "tcp"
+      ],
+      "rank": 1,
+      "ask_mode": "EXTRACTIVE",
+      "ask_cites_expected": true
+    },
+    {
+      "kind": "lexical",
+      "q": "Difference between memoization and tabulation",
+      "expect": "dp",
+      "top": [
+        "dp"
+      ],
+      "rank": 1,
+      "ask_mode": "EXTRACTIVE",
+      "ask_cites_expected": true
+    },
+    {
+      "kind": "lexical",
+      "q": "Explain the 0/1 knapsack problem",
+      "expect": "dp",
+      "top": [
+        "dp"
+      ],
+      "rank": 1,
+      "ask_mode": "EXTRACTIVE",
+      "ask_cites_expected": true
+    },
+    {
+      "kind": "paraphrase",
+      "q": "How can two programs end up stuck waiting on each other forever?",
+      "expect": "deadlock",
+      "top": [
+        "scheduling",
+        "deadlock",
+        "routing"
+      ],
+      "rank": 2,
+      "ask_mode": "EXTRACTIVE",
+      "ask_cites_expected": true
+    },
+    {
+      "kind": "paraphrase",
+      "q": "How is a virtual address turned into a physical one quickly?",
+      "expect": "paging",
+      "top": [
+        "paging"
+      ],
+      "rank": 1,
+      "ask_mode": "EXTRACTIVE",
+      "ask_cites_expected": true
+    },
+    {
+      "kind": "paraphrase",
+      "q": "How do I avoid storing the same data twice in tables?",
+      "expect": "normalization",
+      "top": [
+        "deadlock",
+        "paging",
+        "tcp"
+      ],
+      "rank": 0,
+      "ask_mode": "EXTRACTIVE",
+      "ask_cites_expected": false
+    },
+    {
+      "kind": "paraphrase",
+      "q": "How does the sender know data arrived?",
+      "expect": "tcp",
+      "top": [],
+      "rank": 0,
+      "ask_mode": "NO_SOURCES",
+      "ask_cites_expected": false
+    }
+  ]
+}

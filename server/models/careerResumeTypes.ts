@@ -331,7 +331,7 @@ export interface ResumeAnalysisResult {
   keyword_coverage: {
     found_keywords: string[];
     missing_keywords: string[];
-    coverage_percentage: number;
+    coverage_percentage: number | null;
   };
   section_structure: {
     valid: boolean;
@@ -352,8 +352,8 @@ export interface ResumeAnalysisResult {
     suggestions: string[];
   };
   role_alignment: {
-    target_role: string;
-    alignment_percentage: number;
+    target_role: string | null;
+    alignment_percentage: number | null;
     alignment_notes: string[];
     recommendations: string[];
   };
@@ -449,17 +449,18 @@ export interface CareerDashboardSummary {
   readiness: {
     resume_completeness: number;
     resume_sections_status: { section: string; complete: boolean; details?: string }[];
-    skills_aligned_percentage: number;
+    skills_aligned_percentage: number | null;
+    target_role_name?: string | null;
     matching_skills: string[];
     skills_to_develop: string[];
     projects_count: number;
     projects_available: { id: string; title: string; domain?: string }[];
     placement_prep_progress: {
-      topics_practiced: number;
-      total_topics: number;
+      topics_practiced: number | null;
+      total_topics: number | null;
       mock_interviews_count: number;
       latest_mock_score?: number;
-      active_sprint_title?: string;
+      active_sprint_title?: string | null;
     };
     applications_in_progress: number;
     upcoming_deadlines: {

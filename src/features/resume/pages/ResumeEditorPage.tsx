@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { resumeApi } from '../api/resumeApi';
+import { projectsApi } from '../../projects/api/projectsApi';
 import { FullResumeData, ResumeProfile, ResumeEducation, ResumeSkill, ResumeProject, ResumeExperience, ResumeCertification, ResumeAchievement } from '../types/resumeTypes';
 import { ResumePreview } from '../components/ResumePreview';
 import { ResumeAIModal } from '../components/ResumeAIModal';
@@ -37,6 +38,9 @@ export const ResumeEditorPage: React.FC<ResumeEditorPageProps> = ({ resumeId, on
   const [mobileTab, setMobileTab] = useState<'editor' | 'preview'>('editor');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  // Project Builder projects owned by the student, loaded when they open the import picker.
+  const [importOptions, setImportOptions] = useState<{ id: string; title: string }[] | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
 
   // AI Modal
   const [aiModalOpen, setAiModalOpen] = useState(false);
@@ -226,7 +230,17 @@ export const ResumeEditorPage: React.FC<ResumeEditorPageProps> = ({ resumeId, on
               {sections.map((sec, idx) => (
                 <div
                   key={sec}
+                  role="button"
+                  tabIndex={0}
+                  aria-pressed={activeSection === sec}
+                  aria-label={`Edit ${sec} section`}
                   onClick={() => setActiveSection(sec)}
+                  onKeyDown={(e) => {
+                    if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
+                      e.preventDefault();
+                      setActiveSection(sec);
+                    }
+                  }}
                   className={`p-2.5 rounded-lg text-xs font-semibold flex items-center justify-between cursor-pointer transition ${
                     activeSection === sec
                       ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 border border-blue-200 dark:border-blue-900'
@@ -605,23 +619,57 @@ export const ResumeEditorPage: React.FC<ResumeEditorPageProps> = ({ resumeId, on
                   </div>
                 ))}
 
-                {/* Import from Phase 10 Project Builder */}
+                {/* Import from Project Builder: lists the student's own projects (server re-checks ownership). */}
                 <button
                   onClick={async () => {
-                    try {
-                      // Demo project import
-                      const imported = await resumeApi.importProject(resumeId, 'prj_seed_01');
-                      setData({ ...data, projects: [...projects, imported] });
-                      toast.success(`Imported verified project: ${imported.title}`);
-                    } catch (err: any) {
-                      toast.error('Failed to import project');
+                    setImportOpen((o) => !o);
+                    if (importOptions === null) {
+                      try {
+                        const list = await projectsApi.getProjects();
+                        setImportOptions(list.map((p: any) => ({ id: p.id, title: p.title })));
+                      } catch (err: any) {
+                        setImportOptions([]);
+                        toast.error(err?.message || 'Could not load your projects');
+                      }
                     }
                   }}
+                  aria-expanded={importOpen}
                   className="w-full py-2 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 text-xs font-semibold hover:bg-indigo-100 flex items-center justify-center gap-1.5"
                 >
                   <FolderGit2 className="h-4 w-4" />
                   Import from Project Builder
                 </button>
+                {importOpen && (
+                  <div className="rounded-lg border border-slate-200 dark:border-slate-800 p-2 space-y-1">
+                    {importOptions === null ? (
+                      <p className="text-[11px] text-slate-500 px-1">Loading your projects...</p>
+                    ) : importOptions.filter((o) => !projects.some((p) => p.project_id === o.id)).length === 0 ? (
+                      <p className="text-[11px] text-slate-500 px-1">
+                        {importOptions.length === 0 ? 'You have no Project Builder projects yet.' : 'All your projects are already on this resume.'}
+                      </p>
+                    ) : (
+                      importOptions
+                        .filter((o) => !projects.some((p) => p.project_id === o.id))
+                        .map((o) => (
+                          <button
+                            key={o.id}
+                            onClick={async () => {
+                              try {
+                                const imported = await resumeApi.importProject(resumeId, o.id);
+                                setData({ ...data, projects: [...projects, imported] });
+                                toast.success(`Imported project: ${imported.title}`);
+                              } catch (err: any) {
+                                toast.error(err?.message || 'Failed to import project');
+                              }
+                            }}
+                            className="w-full text-left px-2 py-1.5 rounded text-xs hover:bg-slate-100 dark:hover:bg-slate-800"
+                          >
+                            {o.title}
+                          </button>
+                        ))
+                    )}
+                  </div>
+                )}
               </div>
             )}
 

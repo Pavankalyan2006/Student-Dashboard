@@ -153,6 +153,8 @@ export interface MockInterviewAnswerEntity {
     model_answer_snippet?: string;
     follow_up_needed: boolean;
     suggested_follow_up?: string;
+    /** How the score was produced: the configured AI model, or a transparent concept-coverage check. */
+    method?: 'AI_MODEL' | 'KEYWORD_MATCH' | 'SKIPPED';
   };
   created_at: string;
 }
@@ -160,6 +162,7 @@ export interface MockInterviewAnswerEntity {
 export interface MockInterviewReport {
   overall_score: number;
   scoring_definition: string;
+  scoring_method?: 'AI_MODEL' | 'KEYWORD_MATCH' | 'NONE';
   summary: string;
   category: MockInterviewCategory;
   target_role: string;
