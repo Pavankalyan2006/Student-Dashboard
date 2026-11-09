@@ -134,5 +134,26 @@ export interface DashboardData {
   recent_documents?: DocumentCardData[];
   analytics: DashboardAnalytics;
   is_new_student: boolean;
+  /** Phase 5: academic and career context from the central student profile. */
+  student_profile?: DashboardProfileContext;
+}
+
+export interface DashboardProfileContext {
+  name?: string | null;
+  university?: string | null;
+  college?: string | null;
+  degree?: string | null;
+  branch?: string | null;
+  specialization?: string | null;
+  academic_year?: number | null;
+  semester?: number | null;
+  subjects?: string[];
+  expected_graduation_year?: number | null;
+  target_roles?: string[];
+  short_term_goals?: string[];
+  weekly_study_hours?: number | null;
+  completion_percentage: number;
+  incomplete_sections: string[];
+  onboarding_completed: boolean;
 }
 

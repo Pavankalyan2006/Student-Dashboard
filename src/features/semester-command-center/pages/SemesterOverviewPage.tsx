@@ -78,6 +78,19 @@ export function SemesterOverviewPage({ onNavigate }: SemesterOverviewPageProps) 
         onNavigate={onNavigate}
       >
         <div className="space-y-6">
+          {/* Phase 5: academic context from the central student profile */}
+          {(data as any).academic_context && (() => {
+            const ac = (data as any).academic_context as { degree?: string | null; branch?: string | null; specialization?: string | null; academic_year?: number | null; semester?: number | null; college?: string | null; academic_status?: string | null; subjects?: string[] };
+            const line = [ac.degree, ac.branch, ac.specialization, ac.academic_year ? `Year ${ac.academic_year}` : null, ac.semester ? `Semester ${ac.semester}` : null].filter(Boolean).join(' · ');
+            return (
+              <div className="rounded-xl border border-slate-700/60 bg-slate-900/40 px-4 py-3 text-sm flex flex-wrap items-center justify-between gap-2" aria-label="Academic context">
+                <span className="text-slate-200">{line || 'Academic details not set yet'}{ac.college ? ` — ${ac.college}` : ''}</span>
+                <button onClick={() => onNavigate?.('/profile/edit')} className="text-xs font-semibold text-indigo-300 hover:underline">
+                  {line ? 'Edit academic details' : 'Add academic details'}
+                </button>
+              </div>
+            );
+          })()}
           {/* 1. Six Macro Semester Health Metrics Cards (Section 22) */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
             <MetricCard

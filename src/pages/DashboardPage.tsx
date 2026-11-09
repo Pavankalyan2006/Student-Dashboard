@@ -30,6 +30,7 @@ import { ResearchGitHubWidget } from '../features/dashboard/components/ResearchG
 import { LearningModulesSummaryWidget } from '../features/dashboard/components/LearningModulesSummaryWidget';
 import { ExternalActivityWidget } from '../features/dashboard/components/ExternalActivityWidget';
 import { onboardingApi } from '../api/onboardingApi';
+import { DashboardProfileSummary } from '../features/dashboard/components/DashboardProfileSummary';
 import { Sparkles, ArrowRight } from 'lucide-react';
 
 export function DashboardPage({ onNavigate }: { onNavigate: (path: string) => void }) {
@@ -65,6 +66,7 @@ export function DashboardPage({ onNavigate }: { onNavigate: (path: string) => vo
     return (
       <PageContainer className="space-y-6">
         <DashboardWelcome student={data.student} streakDays={1} />
+        {data.student_profile && <DashboardProfileSummary profile={data.student_profile} onNavigate={onNavigate} />}
         <DashboardAIHero onNavigate={onNavigate} />
         <LearningModulesSummaryWidget onNavigate={onNavigate} />
         <DashboardOnboarding studentName={data.student.name} onNavigate={onNavigate} />
@@ -102,6 +104,9 @@ export function DashboardPage({ onNavigate }: { onNavigate: (path: string) => vo
         student={data.student}
         streakDays={data.summary.streak_days}
       />
+
+      {/* 1b. Academic profile from the central student profile (Phase 5) */}
+      {data.student_profile && <DashboardProfileSummary profile={data.student_profile} onNavigate={onNavigate} />}
 
       {/* 2. Compact Quick Actions Bar */}
       <QuickActions onNavigate={onNavigate} />

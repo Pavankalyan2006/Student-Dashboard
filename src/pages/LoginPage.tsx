@@ -65,7 +65,7 @@ export function LoginPage({
   initialMode?: 'signin' | 'signup';
   onNavigate?: (path: string) => void;
 }) {
-  const { login, register } = useAuth();
+  const { login, register, sendPasswordReset, provider } = useAuth();
   const [authMode, setAuthMode] = React.useState<'signin' | 'signup'>(initialMode);
 
   React.useEffect(() => {
@@ -300,9 +300,24 @@ export function LoginPage({
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold text-[#344054]">Password</label>
-                  <span className="text-[11px] text-blue-600 hover:underline cursor-pointer">
+                  <button
+                    type="button"
+                    className="text-[11px] text-blue-600 hover:underline cursor-pointer"
+                    onClick={async () => {
+                      if (!email.trim()) {
+                        setErrorMessage('Enter your email address first, then choose "Forgot password?".');
+                        return;
+                      }
+                      try {
+                        await sendPasswordReset(email);
+                        toast.success('If an account exists for this email, a password reset link has been sent.');
+                      } catch (err: any) {
+                        setErrorMessage(err.message);
+                      }
+                    }}
+                  >
                     Forgot password?
-                  </span>
+                  </button>
                 </div>
                 <div className="relative">
                   <Input
@@ -347,8 +362,8 @@ export function LoginPage({
                 </button>
               </div>
 
-              {/* Quick Demo Fill & 1-Click Access */}
-              <div className="mt-5 pt-4 border-t border-[#E4E7EC] flex flex-col gap-2.5">
+              {/* Quick Demo Fill & 1-Click Access (legacy sign-in only; Firebase accounts have no demo password) */}
+              {provider !== 'firebase' && <div className="mt-5 pt-4 border-t border-[#E4E7EC] flex flex-col gap-2.5">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] text-[#667085]">Instant workspace exploration:</span>
                   <button
@@ -369,196 +384,22 @@ export function LoginPage({
                   <UserCheck className="h-4 w-4 text-[#2563EB]" />
                   <span>Explore Demo Student Workspace (1-Click)</span>
                 </Button>
-              </div>
+              </div>}
             </form>
           ) : (
-            /* ===================== SIGN UP MODE ===================== */
-            <form onSubmit={handleSignUp} className="space-y-4">
-              {/* Full Name & Display Name */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-[#344054]">
-                    Full Name <span className="text-rose-500">*</span>
-                  </label>
-                  <Input
-                    type="text"
-                    value={signupName}
-                    onChange={(e) => setSignupName(e.target.value)}
-                    required
-                    icon={<User className="h-4 w-4 text-slate-400" />}
-                    placeholder="e.g. Alex Chen"
-                    className="rounded-xl"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-[#344054]">
-                    Preferred Display Name <span className="text-slate-400 font-normal">(Optional)</span>
-                  </label>
-                  <Input
-                    type="text"
-                    value={signupDisplayName}
-                    onChange={(e) => setSignupDisplayName(e.target.value)}
-                    icon={<User className="h-4 w-4 text-slate-400" />}
-                    placeholder="e.g. Alex"
-                    className="rounded-xl"
-                  />
-                </div>
-              </div>
-
-              {/* Avatar Selector */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-[#344054] flex items-center justify-between">
-                  <span>Student Avatar / Photograph</span>
-                  <span className="text-[11px] text-slate-400 font-normal">Select preset or paste URL</span>
-                </label>
-                <div className="flex items-center gap-3">
-                  <img
-                    src={signupAvatarUrl}
-                    alt="Selected Avatar"
-                    className="h-10 w-10 rounded-full object-cover ring-2 ring-blue-500 shadow-xs shrink-0"
-                    onError={(e) => {
-                      (e.target as any).src = PRESET_AVATARS[0];
-                    }}
-                  />
-                  <div className="flex items-center gap-2">
-                    {PRESET_AVATARS.map((av, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => setSignupAvatarUrl(av)}
-                        className={`h-8 w-8 rounded-full overflow-hidden border-2 transition-all cursor-pointer ${
-                          signupAvatarUrl === av ? 'border-blue-600 scale-110 shadow-xs' : 'border-transparent opacity-70 hover:opacity-100'
-                        }`}
-                      >
-                        <img src={av} alt={`Preset ${idx + 1}`} className="h-full w-full object-cover" />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Academic Email */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-[#344054]">
-                  Academic Email <span className="text-rose-500">*</span>
-                </label>
-                <Input
-                  type="email"
-                  value={signupEmail}
-                  onChange={(e) => setSignupEmail(e.target.value)}
-                  required
-                  icon={<Mail className="h-4 w-4 text-slate-400" />}
-                  placeholder="student@btech.edu"
-                  className="rounded-xl"
-                />
-              </div>
-
-              {/* Password & Confirm Password Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-[#344054]">
-                      Password <span className="text-rose-500">*</span>
-                    </label>
-                    {signupPassword.length > 0 && (
-                      <span className={`text-[10px] font-bold ${
-                        signupPassword.length < 6 ? 'text-amber-600' : signupPassword.length >= 8 ? 'text-emerald-600' : 'text-blue-600'
-                      }`}>
-                        {signupPassword.length < 6 ? 'Too short' : signupPassword.length >= 8 ? 'Strong' : 'Fair'}
-                      </span>
-                    )}
-                  </div>
-                  <div className="relative">
-                    <Input
-                      type={showSignUpPassword ? 'text' : 'password'}
-                      value={signupPassword}
-                      onChange={(e) => setSignupPassword(e.target.value)}
-                      required
-                      icon={<Lock className="h-4 w-4 text-slate-400" />}
-                      placeholder="••••••••••••"
-                      className="rounded-xl pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowSignUpPassword(!showSignUpPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
-                      aria-label={showSignUpPassword ? 'Hide password' : 'Show password'}
-                    >
-                      {showSignUpPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-[#344054]">
-                      Confirm Password <span className="text-rose-500">*</span>
-                    </label>
-                    {signupConfirmPassword.length > 0 && (
-                      <span className={`text-[10px] font-bold flex items-center gap-0.5 ${
-                        signupPassword === signupConfirmPassword ? 'text-emerald-600' : 'text-rose-600'
-                      }`}>
-                        {signupPassword === signupConfirmPassword ? (
-                          <>
-                            <Check className="h-3 w-3" /> Match
-                          </>
-                        ) : (
-                          'Mismatch'
-                        )}
-                      </span>
-                    )}
-                  </div>
-                  <div className="relative">
-                    <Input
-                      type={showSignUpConfirmPassword ? 'text' : 'password'}
-                      value={signupConfirmPassword}
-                      onChange={(e) => setSignupConfirmPassword(e.target.value)}
-                      required
-                      icon={<Lock className="h-4 w-4 text-slate-400" />}
-                      placeholder="••••••••••••"
-                      className="rounded-xl pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowSignUpConfirmPassword(!showSignUpConfirmPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
-                      aria-label={showSignUpConfirmPassword ? 'Hide password' : 'Show password'}
-                    >
-                      {showSignUpConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-3 bg-blue-50/80 border border-blue-100 rounded-xl flex items-start gap-2.5 text-xs text-blue-900">
-                <CheckCircle2 className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
-                <p className="text-[11px] leading-relaxed">
-                  <strong>Step 1 of 5: Account Registration & Identity.</strong> Next, you'll configure your degree, semester subjects, self-assessed skills, and study schedule.
-                </p>
-              </div>
-
-              <Button
-                type="submit"
-                variant="ai"
-                className="w-full py-2.5 rounded-xl font-bold text-xs"
-                isLoading={isLoading}
-              >
-                <span>Continue to Academic Profile (Step 2)</span>
-                <ArrowRight className="h-4 w-4 ml-1.5" />
+            /* Phase 5: one registration flow. Sign-up lives in the 7-step wizard at /register. */
+            <div className="space-y-3 text-sm text-[#344054]">
+              <p>New students register in seven short steps: account, academics, skills, projects, career, learning preferences and review. Progress is saved after each step.</p>
+              <Button type="button" className="w-full" onClick={() => (onNavigate ? onNavigate('/register') : (window.location.href = '/register'))}>
+                Start registration <ArrowRight className="h-4 w-4 ml-1.5" />
               </Button>
-
               <div className="text-center pt-1">
                 <span className="text-xs text-[#667085]">Already registered? </span>
-                <button
-                  type="button"
-                  onClick={() => setAuthMode('signin')}
-                  className="text-xs font-bold text-[#2563EB] hover:underline cursor-pointer"
-                >
+                <button type="button" onClick={() => setAuthMode('signin')} className="text-xs font-bold text-[#2563EB] hover:underline cursor-pointer">
                   Sign in to workspace
                 </button>
               </div>
-            </form>
+            </div>
           )}
         </CardContent>
       </Card>

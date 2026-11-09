@@ -11,6 +11,8 @@ export interface StudentProfile {
   avatar_url?: string;
   display_name?: string;
   onboarding_completed?: boolean;
+  auth_provider?: 'legacy' | 'firebase';
+  email_verified?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -35,6 +37,21 @@ export interface RegisterInput {
   roll_number?: string;
   target_role?: string;
   learning_goal?: string;
+  phone?: string;
+  accept_terms?: boolean;
+  accept_privacy?: boolean;
+}
+
+export interface AuthConfig {
+  provider: 'legacy' | 'firebase';
+  email_verification_required: boolean;
+  profile_store: 'snapshot' | 'supabase';
+}
+
+export interface FirebaseSessionResult {
+  student: StudentProfile;
+  created: boolean;
+  linked: boolean;
 }
 
 export const authApi = {
@@ -64,6 +81,17 @@ export const authApi = {
 
   getCurrentStudent: async (): Promise<{ student: StudentProfile }> => {
     return apiClient.get<{ student: StudentProfile }>('/auth/me');
+  },
+
+  getConfig: async (): Promise<AuthConfig> => apiClient.get<AuthConfig>('/auth/config'),
+
+  /** Phase 5: verifies the Firebase ID token on the server and finds or creates the student (idempotent). */
+  firebaseSession: async (
+    idToken: string,
+    extra: { full_name?: string; accept_terms?: boolean; accept_privacy?: boolean; phone?: string } = {}
+  ): Promise<FirebaseSessionResult> => {
+    apiClient.setToken(idToken);
+    return apiClient.post<FirebaseSessionResult>('/auth/firebase/session', extra);
   },
 
   refreshToken: async (refreshToken: string): Promise<{ token: string }> => {
