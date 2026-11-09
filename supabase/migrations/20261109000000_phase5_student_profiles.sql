@@ -182,6 +182,8 @@ language sql stable security definer set search_path = public as $$
   limit 1
 $$;
 revoke all on function public.current_student_id() from public;
+-- RLS policies run as the caller, so signed-in students need to be able to call the lookup.
+grant execute on function public.current_student_id() to authenticated;
 
 do $$
 declare t text;
@@ -210,10 +212,18 @@ begin
   loop
     execute format('drop policy if exists %I on public.%I', t || '_owner_select', t);
     execute format('create policy %I on public.%I for select to authenticated using (student_id = public.current_student_id())', t || '_owner_select', t);
+    -- Read-only for direct clients: every write goes through the backend, which validates it
+    -- (e.g. no default skill levels, academic consistency) and keeps profile_version in step.
     execute format('drop policy if exists %I on public.%I', t || '_owner_write', t);
-    execute format('create policy %I on public.%I for all to authenticated using (student_id = public.current_student_id()) with check (student_id = public.current_student_id())', t || '_owner_write', t);
   end loop;
 end $$;
 
--- Onboarding progress completion is server-controlled even for direct clients.
-drop policy if exists student_onboarding_progress_owner_write on public.student_onboarding_progress;
+
+-- Explicit table privileges (do not rely on project default privileges). RLS above still limits
+-- every row to its owner; anon gets nothing. The backend uses a server-only connection.
+grant usage on schema public to authenticated;
+grant select on
+  public.students, public.student_academic_profiles, public.student_subjects, public.student_skills,
+  public.student_projects, public.student_experience, public.student_certifications,
+  public.student_career_preferences, public.student_learning_preferences, public.student_onboarding_progress
+  to authenticated;

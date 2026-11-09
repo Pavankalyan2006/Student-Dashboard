@@ -226,9 +226,10 @@ export function readCanonicalProfile(studentId: string): CanonicalProfile | null
     learning_style: (learning?.learning_style as any) || null,
     difficulty: (learning?.difficulty_level as any) || null,
     learning_interests: arr(learning?.topics_of_interest),
-    weekly_study_hours: num(schedule?.weekly_study_hours),
+    // 0 is what the schedule store holds for "not entered"; it is not a real availability.
+    weekly_study_hours: pos(schedule?.weekly_study_hours),
     preferred_study_days: (arr(schedule?.available_days) as any) || [],
-    daily_study_minutes: schedule?.daily_study_hours != null ? Math.round(schedule.daily_study_hours * 60) : null,
+    daily_study_minutes: pos(schedule?.daily_study_hours) != null ? Math.round(schedule!.daily_study_hours * 60) : null,
     preferred_study_time: unset.has('preferred_study_time') ? null : (learning?.preferred_study_time as any) || null,
     revision_preference: unset.has('revision_frequency') ? null : (learning?.revision_frequency as any) || null,
     notifications: {
