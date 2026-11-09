@@ -5,7 +5,7 @@ Every row below was executed; nothing is listed that was only planned. Two kinds
 1. **HTTP and browser probes** (`scripts/audit/phase3-*.cjs`) against a running server with synthetic students A and B.
    `create` runs first, the server is restarted on the same snapshot, then `verify` reads the data back. Raw output is in
    `docs/phase-3-audit/evidence/`. TC ids below are numbered from that output.
-2. **Unit and service tests** (`src/tests/*.test.ts`, Vitest). Full run: **931/931 passed** in 60 files.
+2. **Unit and service tests** (`src/tests/*.test.ts`, Vitest). Full run: **932/932 passed** in 60 files.
 
 No AI provider is configured in this environment. AI paths are tested two ways: without a model they must answer
 503 `AI_UNAVAILABLE` and save nothing (probes), and with a stubbed model (`stubModel` in `src/tests/helpers/mockAIModel.ts`)

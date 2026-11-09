@@ -12,7 +12,7 @@ holds its detail.
 - In the end-to-end report, 7 of the 12 scenarios pass, 4 are partial and 1 is blocked. The partial and blocked ones
   need an AI provider, GitHub OAuth credentials or network access to external services, none of which this
   environment has. None was claimed as passing.
-- 90 of 97 bugs are fixed, including all 8 P0 and all 39 P1. The 7 open bugs are low severity and documented.
+- 91 of 98 bugs are fixed, including all 8 P0 and all 39 P1. The 7 open bugs are low severity and documented.
 
 ### Acceptance criteria (spec §24)
 
@@ -32,7 +32,7 @@ holds its detail.
 | Cross-module integrations work | Yes | 13/13 |
 | Responsive layouts checked | Yes | 42/42 at 390, 768 and 1366 px |
 | Security tests completed | Yes | `PHASE_3_SECURITY_REPORT.md` |
-| Automated tests run | Yes | vitest 931/931; tsc clean; build OK |
+| Automated tests run | Yes | vitest 932/932; tsc clean; build OK |
 | Critical defects fixed | Yes | P0 8/8, P1 39/39 |
 | Remaining limitations documented | Yes | Section 16 |
 
@@ -161,7 +161,7 @@ student A's data. See `PHASE_3_INTEGRATION_REPORT.md`.
 
 | Check | Result |
 |---|---|
-| `npx vitest run` | **931 passed, 0 failed** (60 files) |
+| `npx vitest run` | **932 passed, 0 failed** (60 files) |
 | `npx tsc --noEmit` | 0 errors |
 | `npx vite build` | OK; one 4.35 MB chunk (P3-089) |
 | HTTP probes (Phase 3) | 228/228 |
@@ -173,10 +173,10 @@ student A's data. See `PHASE_3_INTEGRATION_REPORT.md`.
 |---|---|---|---|
 | P0 | 8 | 8 | 0 |
 | P1 | 39 | 39 | 0 |
-| P2 | 32 | 32 | 0 |
+| P2 | 33 | 33 | 0 |
 | P3 | 16 | 11 | 5 |
 | P4 | 2 | 0 | 2 |
-| **Total** | **97** | **90** | **7** |
+| **Total** | **98** | **91** | **7** |
 
 ## 16. Remaining issues
 

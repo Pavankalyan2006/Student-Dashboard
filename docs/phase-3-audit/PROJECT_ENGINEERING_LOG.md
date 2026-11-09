@@ -84,3 +84,6 @@ Restart between `create` and `verify` to prove persistence.
   evaluation, test cases, E2E, bug tracker, integration and completion reports. Re-ran vitest 931/931 and tsc 0 on the
   final tree. 97 bugs: 90 fixed (all P0/P1/P2), 7 low-severity open and documented. Live OAuth, external APIs and AI
   generation remain BLOCKED here (no credentials or network).
+- 2026-11-09 CI on PR #5 (which has network access) failed `research_github` venue filter: live OpenAlex returned a
+  "HAL" work for venue NeurIPS (P3-098). Live results are now filtered by source name; the search unit tests run with
+  live search off and the live path is tested with a mocked response. vitest 932/932, tsc 0.

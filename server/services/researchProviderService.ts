@@ -198,16 +198,23 @@ export class ResearchProviderService {
     if (maxYear) filters.push(`to_publication_date:${Number(maxYear)}-12-31`);
     if (params.author) filters.push(`raw_author_name.search:${String(params.author).replace(/[,|]/g, ' ')}`);
     const q = [params.query, params.domain, params.venue].filter(Boolean).join(' ').trim();
+    const limit = Math.min(25, params.limit || 10);
+    const venueLower = (params.venue || '').toLowerCase().trim();
     const url = new URL('https://api.openalex.org/works');
     if (q) url.searchParams.set('search', q);
     if (filters.length) url.searchParams.set('filter', filters.join(','));
-    url.searchParams.set('per-page', String(Math.min(25, params.limit || 10)));
+    // The venue is only a search word on OpenAlex, so fetch a wider page and keep the works whose
+    // source name actually contains it (otherwise unrelated venues were returned as matches).
+    url.searchParams.set('per-page', String(venueLower ? 50 : limit));
     if (process.env.OPENALEX_MAILTO) url.searchParams.set('mailto', process.env.OPENALEX_MAILTO);
     const res = await fetch(url.toString(), { headers: { Accept: 'application/json', 'User-Agent': 'BTech-Student-AI-Platform/1.0' }, signal: AbortSignal.timeout(10000) });
     if (!res.ok) throw new Error(`OpenAlex answered ${res.status}`);
     const body: any = await res.json();
     const now = new Date().toISOString();
-    return (Array.isArray(body?.results) ? body.results : []).map((w: any, i: number) => ({
+    const works = (Array.isArray(body?.results) ? body.results : []).filter(
+      (w: any) => !venueLower || String(w?.primary_location?.source?.display_name || '').toLowerCase().includes(venueLower)
+    );
+    return works.slice(0, limit).map((w: any, i: number) => ({
       id: `paper_oa_${String(w.id || i).split('/').pop()}`,
       research_project_id: '',
       student_id: '',

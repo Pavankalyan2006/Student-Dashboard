@@ -9,10 +9,10 @@ function broken, P2 major feature partly working, P3 UI/validation/usability, P4
 |---|---|---|---|
 | P0 | 8 | 8 | 0 |
 | P1 | 39 | 39 | 0 |
-| P2 | 32 | 32 | 0 |
+| P2 | 33 | 33 | 0 |
 | P3 | 16 | 11 | 5 |
 | P4 | 2 | 0 | 2 |
-| **Total** | **97** | **90** | **7** |
+| **Total** | **98** | **91** | **7** |
 
 All P0 and P1 defects are fixed. The open items are listed under "Open" with the reason they were not changed.
 
@@ -130,3 +130,4 @@ All P0 and P1 defects are fixed. The open items are listed under "Open" with the
 | P3-093 | Resume | Export (print to PDF) | The app top bar (breadcrumb with the raw resume id, search, Ask AI, avatar) was printed into the resume PDF | P2 | Sidebar and top bar are print:hidden; main has no print padding | phase3-e2e-extra "printed PDF has no app navigation chrome" |
 | P3-094 | Connected Platforms | external-profiles routes | Errors for another student's profile (and other typed errors) answered 500 instead of 404/403 | P3 | Routes keep the error's own status and code | phase3-e2e-extra "B cannot disconnect A's profile" |
 | P3-095 | Placement Prep | createPlan | Unknown role silently became "Software Engineer"; unknown company accepted | P3 | 400 without a role, 404 for unknown role or company | phase3-e2e-extra E2E11 |
+| P3-098 | Research | ResearchProviderService.searchOpenAlex | With live OpenAlex access, a venue filter was only added to the search words, so works from other venues (e.g. "HAL") came back for "NeurIPS"; found by CI, which has network access. The unit tests also searched the live API | P2 | Live results are kept only when the source name contains the venue; search unit tests run with live search off, and the live path is tested with a mocked response | research_github "keeps only live OpenAlex works whose venue matches the venue filter" |

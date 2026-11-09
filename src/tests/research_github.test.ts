@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { stubModel } from './helpers/mockAIModel';
 import { useMockGitHubApi } from './helpers/mockGitHubApi';
 
@@ -71,6 +71,37 @@ describe('Phase 13: Research Assistant, GitHub Integration & Advanced AI Tools',
   // 2. PAPER DISCOVERY & ACADEMIC SEARCH ABSTRACTION
   // ==========================================================================
   describe('2. Paper Discovery & Academic Provider Abstraction', () => {
+    // Unit tests must not depend on the network: with live access these used to search real OpenAlex.
+    // The curated path is tested with live search off, and the live path with a mocked response.
+    const liveSetting = process.env.RESEARCH_LIVE_SEARCH;
+    beforeEach(() => {
+      process.env.RESEARCH_LIVE_SEARCH = 'off';
+    });
+    afterEach(() => {
+      if (liveSetting === undefined) delete process.env.RESEARCH_LIVE_SEARCH;
+      else process.env.RESEARCH_LIVE_SEARCH = liveSetting;
+      vi.restoreAllMocks();
+    });
+
+    it('keeps only live OpenAlex works whose venue matches the venue filter', async () => {
+      delete process.env.RESEARCH_LIVE_SEARCH;
+      const work = (id: string, venue: string) => ({
+        id: `https://openalex.org/${id}`,
+        display_name: `Paper ${id}`,
+        publication_year: 2021,
+        primary_location: { source: { display_name: venue } },
+        authorships: [{ author: { display_name: 'A. Author' } }],
+        cited_by_count: 3,
+      });
+      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+        new Response(JSON.stringify({ results: [work('W1', 'HAL (Le Centre pour la Communication Scientifique Directe)'), work('W2', 'NeurIPS 2021 Proceedings')] }), { status: 200 })
+      );
+      const res = await ResearchProviderService.searchPapers({ query: 'Neural', venue: 'NeurIPS', year_min: 2017, limit: 5 });
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+      expect(res.source).toBe('LIVE');
+      expect(res.papers.map((p) => p.external_id)).toEqual(['https://openalex.org/W2']);
+    });
+
     it('searches academic indices by query keywords without fabricating metadata', async () => {
       const searchRes = await ResearchProviderService.searchPapers({
         query: 'Transformer Attention',
