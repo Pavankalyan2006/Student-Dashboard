@@ -77,3 +77,10 @@ Restart between `create` and `verify` to prove persistence.
   (`db.retireFabricatedDemoData`, `LearningModulesService.retireSeededApplications`); `phase3-demo-account.cjs` 6/6.
   Full regression (`phase3-regression.sh`): tsc 0, vitest 931/931, vite build OK, Phase 3 batches 1-4 create and verify
   all PASS, Phase 1/2 probes 0 FAIL (`evidence/batch5-regression.txt`).
+- 2026-11-07 10:20 End-to-end fixes (afd0ce7): the printed resume PDF included the sidebar and topbar (P3-093, print
+  classes added); external-profiles routes turned the ownership 404 into a 500 (P3-094, typed errors keep their status);
+  a placement plan could be created for an empty or unknown role (P3-095, 400/404). `phase3-e2e-extra.cjs` 15/15.
+- 2026-11-09 Phase 3 documents written: inventory, component, API, database, security, external integrations, RAG
+  evaluation, test cases, E2E, bug tracker, integration and completion reports. Re-ran vitest 931/931 and tsc 0 on the
+  final tree. 97 bugs: 90 fixed (all P0/P1/P2), 7 low-severity open and documented. Live OAuth, external APIs and AI
+  generation remain BLOCKED here (no credentials or network).
