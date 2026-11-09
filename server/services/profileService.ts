@@ -9,6 +9,9 @@ import {
 } from '../models/communityProfileProgressTypes';
 import { AuthorizationError, NotFoundError, ValidationError } from '../core/exceptions';
 import { OnboardingService } from './onboardingService';
+import { StudentProfileService } from './studentProfile/studentProfileService';
+import { readCanonicalProfile } from './studentProfile/profileCache';
+import { computeCompletion } from './studentProfile/completion';
 
 export class ProfileService {
   /**
@@ -47,15 +50,20 @@ export class ProfileService {
       }
     } catch {}
 
-    if (!profile.completion_breakdown) {
+    // Phase 5: completion comes from the central profile, never from fixed values.
+    const canonical = readCanonicalProfile(targetStudentId);
+    if (canonical) {
+      const c = computeCompletion(canonical);
+      const done = (k: string) => Boolean(c.sections.find((x) => x.key === k)?.complete && (c.sections.find((x) => x.key === k)?.percentage ?? 0) > 0);
+      profile.completion_percentage = c.overall_percentage;
       profile.completion_breakdown = {
-        basic_profile: Boolean(profile.name && profile.email),
-        academic: Boolean(profile.branch && profile.semester),
-        skills: Boolean(profile.skills && profile.skills.length > 0),
-        projects: true,
-        resume: true,
+        basic_profile: Boolean(canonical.identity.full_name && canonical.identity.email),
+        academic: done('academic'),
+        skills: canonical.skills.skills.length > 0,
+        projects: canonical.experience.projects.length > 0 || canonical.experience.experience.length > 0,
+        resume: Boolean(profile.completion_breakdown?.resume),
         github: Boolean(profile.github_connected),
-        career: true,
+        career: canonical.career.target_roles.length > 0 || canonical.career.career_interests.length > 0,
       };
     }
 
@@ -76,93 +84,51 @@ export class ProfileService {
     studentId: string,
     updates: Partial<StudentProfile>
   ): Promise<StudentProfile> {
-    const updated = await db.updateStudentProfile(studentId, updates);
+    // Phase 5: identity and academic fields edited from the older profile form go through the
+    // central profile service (validated, persisted, versioned) so every module sees the change.
+    const identity: Record<string, unknown> = {};
+    if (updates.name !== undefined) identity.full_name = updates.name;
+    if (updates.avatar_url !== undefined) identity.avatar_url = updates.avatar_url;
+    if ((updates as any).display_name !== undefined) identity.display_name = (updates as any).display_name;
+    if (Object.keys(identity).length) await StudentProfileService.updateSection(studentId, 'identity', identity);
 
-    // Keep the education profile (read by the dashboard, semester centre and AI context) in step
-    // with academic fields edited on the profile page; otherwise the dashboard keeps showing the
-    // old branch/semester.
-    const semester = updates.semester !== undefined ? Number(updates.semester) : undefined;
-    const institution = (updates as any).college_name as string | undefined;
-    if (updates.branch || semester || institution) {
-      const edu = OnboardingService.getEducationProfileSync(studentId);
-      if (edu) {
-        await OnboardingService.saveEducationProfile(studentId, {
-          ...(updates.branch ? { branch: updates.branch } : {}),
-          ...(semester && semester > 0 ? { current_semester: semester, current_year: Math.ceil(semester / 2) } : {}),
-          ...(institution ? { institution } : {}),
-        });
-      }
+    const academic: Record<string, unknown> = {};
+    if (updates.branch !== undefined) academic.branch = updates.branch;
+    if (updates.semester !== undefined) {
+      const sem = Number(updates.semester);
+      academic.current_semester = sem;
+      if (Number.isInteger(sem) && sem > 0) academic.academic_year = Math.ceil(sem / 2);
     }
-    return updated;
+    if ((updates as any).college_name !== undefined) academic.college = (updates as any).college_name;
+    if (updates.graduation_year !== undefined) academic.expected_graduation_year = Number(updates.graduation_year);
+    if (Object.keys(academic).length) await StudentProfileService.updateSection(studentId, 'academic', academic);
+
+    const rest: Partial<StudentProfile> = { ...updates };
+    for (const k of ['name', 'avatar_url', 'branch', 'semester', 'college_name', 'graduation_year', 'student_id', 'id', 'email', 'completion_percentage']) {
+      delete (rest as any)[k];
+    }
+    const card = await db.updateStudentProfile(studentId, rest);
+    const canonical = readCanonicalProfile(studentId);
+    return canonical ? { ...card, completion_percentage: computeCompletion(canonical).overall_percentage } : card;
   }
 
   /**
    * Calculates granular profile completion breakdown
    */
   public static async getCompletionBreakdown(studentId: string): Promise<ProfileCompletionBreakdown> {
-    const profile = await db.getStudentProfile(studentId);
-    const privacy = await db.getStudentPrivacy(studentId);
-
-    const categories = [
-      {
-        name: 'Basic Information',
-        completed: Boolean(profile.name && profile.email && profile.avatar_url),
-        weight: 20,
-        type: 'REQUIRED' as const,
-        description: 'Full name, institutional email, and profile avatar',
-      },
-      {
-        name: 'Academic Enrollment',
-        completed: Boolean(profile.branch && profile.semester && profile.graduation_year),
-        weight: 20,
-        type: 'REQUIRED' as const,
-        description: 'Engineering branch, current semester, and graduation year',
-      },
-      {
-        name: 'Bio & Overview',
-        completed: Boolean(profile.bio && profile.bio.length >= 20),
-        weight: 15,
-        type: 'RECOMMENDED' as const,
-        description: 'Professional summary and engineering focus (min 20 chars)',
-      },
-      {
-        name: 'Technical Competencies',
-        completed: Boolean(profile.skills && profile.skills.length >= 3),
-        weight: 15,
-        type: 'RECOMMENDED' as const,
-        description: 'At least 3 verified technical skills or technologies',
-      },
-      {
-        name: 'Learning Goals',
-        completed: Boolean(profile.learning_goals && profile.learning_goals.length >= 1),
-        weight: 10,
-        type: 'RECOMMENDED' as const,
-        description: 'Academic and skill targets for current semester',
-      },
-      {
-        name: 'GitHub Telemetry',
-        completed: Boolean(profile.github_connected),
-        weight: 10,
-        type: 'OPTIONAL' as const,
-        description: 'Connect GitHub account for repository synchronization',
-      },
-      {
-        name: 'External Portfolio Links',
-        completed: Boolean(profile.portfolio_links && profile.portfolio_links.length >= 1),
-        weight: 10,
-        type: 'OPTIONAL' as const,
-        description: 'Personal domain, papers, or project demo links',
-      },
-    ];
-
-    let total = 0;
-    for (const c of categories) {
-      if (c.completed) total += c.weight;
-    }
-
+    // Phase 5: same calculation as GET /profile/me/completion, in the shape the older pages read.
+    const canonical = readCanonicalProfile(studentId);
+    if (!canonical) throw new NotFoundError('Profile not found');
+    const report = computeCompletion(canonical);
     return {
-      total_percentage: Math.min(100, total),
-      categories,
+      total_percentage: report.overall_percentage,
+      categories: report.sections.map((sec) => ({
+        name: sec.label,
+        completed: sec.percentage === 100,
+        weight: Math.round(100 / report.sections.length),
+        type: sec.items.some((i) => i.required) ? ('REQUIRED' as const) : ('RECOMMENDED' as const),
+        description: sec.missing_recommended.length ? `Missing: ${sec.missing_recommended.join(', ')}` : 'Complete',
+      })),
     };
   }
 
@@ -201,6 +167,12 @@ export class ProfileService {
     studentId: string,
     updates: Partial<StudentPreference>
   ): Promise<StudentPreference> {
+    // Phase 5: the preferred language lives in the central learning preferences; keep one value.
+    if (updates.preferred_language) {
+      const current = readCanonicalProfile(studentId);
+      const others = (current?.learning.preferred_languages || []).filter((l) => l !== updates.preferred_language);
+      await StudentProfileService.updateSection(studentId, 'learning', { preferred_languages: [updates.preferred_language, ...others] });
+    }
     return db.updateStudentPreferences(studentId, updates);
   }
 
@@ -240,7 +212,7 @@ export class ProfileService {
       bio: profile.bio,
       completion_percentage: profile.completion_percentage,
       skills_count: skills.length,
-      courses_completed_count: 2, // verified from seeded enrollment
+      courses_completed_count: Array.from(((db as any).enrollments as Map<string, any>).values()).filter((e) => e.student_id === studentId && e.status === 'COMPLETED').length,
       projects_count: projects.length,
       research_papers_count: research.length,
       certificates_count: certificates.length,

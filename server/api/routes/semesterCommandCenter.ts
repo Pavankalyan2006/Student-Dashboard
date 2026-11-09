@@ -1,6 +1,7 @@
 // server/api/routes/semesterCommandCenter.ts
 // Express routes for the Academic Semester Command Center
 
+import { StudentProfileService } from '../../services/studentProfile/studentProfileService';
 import { Router, Request, Response } from 'express';
 import { requireAuth } from '../../middleware/auth';
 import { semesterCommandCenterService } from '../../services/semesterCommandCenterService';
@@ -16,7 +17,9 @@ semesterCommandCenterRouter.get('/semester/overview', async (req: Request, res: 
   try {
     const studentId = sid(req);
     const data = semesterCommandCenterService.getOverview(studentId);
-    res.json({ success: true, data });
+    // Phase 5: the academic context shown in the header comes from the central profile.
+    const academic_context = await StudentProfileService.getModuleContext(studentId, 'semester');
+    res.json({ success: true, data: { ...data, academic_context } });
   } catch (err: any) {
     res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }

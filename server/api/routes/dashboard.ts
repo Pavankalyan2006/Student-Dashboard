@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { DashboardService } from '../../services/dashboard';
 import { requireAuth } from '../../middleware/auth';
+import { StudentProfileService } from '../../services/studentProfile/studentProfileService';
 import { ValidationError } from '../../core/exceptions';
 
 export const dashboardRouter = Router();
@@ -10,10 +11,18 @@ dashboardRouter.get('/dashboard', requireAuth, async (req, res, next) => {
   try {
     const studentId = req.user!.userId;
     const data = await DashboardService.getStudentDashboard(studentId);
+    // Phase 5: academic details, goals and completion from the central profile.
+    const { profile, completion } = await StudentProfileService.getProfile(studentId);
+    const student_profile = {
+      ...(await StudentProfileService.getModuleContext(studentId, 'dashboard')),
+      completion_percentage: completion.overall_percentage,
+      incomplete_sections: completion.incomplete_sections,
+      onboarding_completed: profile.account.onboarding.completed,
+    };
 
     res.json({
       success: true,
-      data,
+      data: { ...data, student_profile },
     });
   } catch (err) {
     next(err);

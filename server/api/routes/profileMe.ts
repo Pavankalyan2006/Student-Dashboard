@@ -4,6 +4,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { requireAuth } from '../../middleware/auth';
 import { StudentProfileService } from '../../services/studentProfile/studentProfileService';
 import { ValidationError } from '../../core/exceptions';
+import { getModuleRecommendations } from '../../services/studentProfile/recommendations';
 import type { ProfileSectionKey } from '../../services/studentProfile/types';
 
 export const profileMeRouter = Router();
@@ -58,6 +59,11 @@ for (const [path, section] of Object.entries(PATHS)) {
 profileMeRouter.get('/profile/me/context/:module', requireAuth, handle((req) =>
   StudentProfileService.getModuleContext(me(req), String(req.params.module))
 ));
+
+profileMeRouter.get('/profile/me/recommendations/:module', requireAuth, handle(async (req) => {
+  const { profile } = await StudentProfileService.getProfile(me(req));
+  return getModuleRecommendations(profile, String(req.params.module));
+}));
 
 // --- onboarding (registration steps 1-7) ---
 profileMeRouter.get('/profile/me/onboarding', requireAuth, handle(async (req) => {
