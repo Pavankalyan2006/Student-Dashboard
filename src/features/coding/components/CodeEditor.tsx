@@ -1,5 +1,6 @@
-import React, { useRef, useEffect, useState } from 'react';
-import Editor, { Monaco, OnMount, loader } from '@monaco-editor/react';
+import React, { useRef, useEffect } from 'react';
+import Editor, { Monaco, OnMount } from '@monaco-editor/react';
+import { useMonacoAvailability } from '../../../lib/monacoSetup';
 import { useCodingEditorStore } from '../stores/codingEditorStore';
 import { CodingLanguage } from '../types/coding';
 
@@ -34,28 +35,11 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({ onRun, onSave, readOnly 
 
   const editorRef = useRef<any>(null);
   const monacoRef = useRef<Monaco | null>(null);
-  // Monaco is fetched from a CDN. Without internet access to it the editor would spin forever,
-  // so after a failure or 12 s the page switches to a plain text editor that still edits,
+  // Monaco is loaded from this site's bundle on first use. If it cannot load (old browser,
+  // interrupted download) the page switches to a plain text editor that still edits,
   // runs (Ctrl+Enter) and saves (Ctrl+S) the same code.
-  const [plainEditor, setPlainEditor] = useState(false);
-  useEffect(() => {
-    let settled = false;
-    const timer = setTimeout(() => {
-      if (!settled) setPlainEditor(true);
-    }, 12000);
-    loader
-      .init()
-      .then(() => {
-        settled = true;
-        clearTimeout(timer);
-      })
-      .catch(() => {
-        settled = true;
-        clearTimeout(timer);
-        setPlainEditor(true);
-      });
-    return () => clearTimeout(timer);
-  }, []);
+  const monacoState = useMonacoAvailability();
+  const plainEditor = monacoState === 'failed';
 
   const handleEditorDidMount: OnMount = (editor, monaco) => {
     editorRef.current = editor;
@@ -94,7 +78,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({ onRun, onSave, readOnly 
     return (
       <div className="relative w-full h-full min-h-[300px] flex flex-col overflow-hidden bg-slate-900 border border-slate-700/60 rounded-lg">
         <p className="px-3 py-1.5 text-[11px] text-amber-300 bg-amber-900/30 border-b border-amber-900/50" role="status">
-          The full code editor could not be loaded (it needs internet access to cdn.jsdelivr.net). Using the plain editor; running and saving work the same.
+          The full code editor could not be loaded. Using the plain editor; running and saving work the same.
         </p>
         <div className="flex flex-1 overflow-auto font-mono" style={{ fontSize: settings.fontSize }}>
           <pre aria-hidden="true" className="select-none text-right text-slate-500 px-2 py-3 leading-6 bg-slate-950/60">
@@ -127,6 +111,14 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({ onRun, onSave, readOnly 
             className="flex-1 bg-transparent text-slate-100 px-3 py-3 leading-6 outline-none resize-none focus-visible:ring-1 focus-visible:ring-blue-500"
           />
         </div>
+      </div>
+    );
+  }
+
+  if (monacoState === 'loading') {
+    return (
+      <div className="w-full h-full min-h-[300px] flex items-center justify-center bg-slate-900 border border-slate-700/60 rounded-lg text-xs text-slate-400" role="status">
+        Loading editor…
       </div>
     );
   }

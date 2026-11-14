@@ -1816,6 +1816,7 @@ export function SqlLabPage({ onNavigate }: SqlLabPageProps) {
             <input aria-label="Database name"
               type="text"
               placeholder="e.g. library_system, hospital_db"
+              maxLength={40}
               value={newDbName}
               onChange={(e) => setNewDbName(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '_'))}
               className="w-full border border-slate-300 rounded-lg p-2.5 text-sm font-mono mb-4 focus:ring-2 focus:ring-blue-500"

@@ -1,5 +1,6 @@
 import React from 'react';
 import { DiffEditor } from '@monaco-editor/react';
+import { useMonacoAvailability } from '../../../lib/monacoSetup';
 import { useCodingEditorStore } from '../stores/codingEditorStore';
 import { Check, X, Sparkles } from 'lucide-react';
 
@@ -8,6 +9,7 @@ export const CodeDiffViewer: React.FC = () => {
   const closeDiffModal = useCodingEditorStore((s) => s.closeDiffModal);
   const language = useCodingEditorStore((s) => s.language);
   const settings = useCodingEditorStore((s) => s.editorSettings);
+  const monacoState = useMonacoAvailability();
 
   if (!diffModal.isOpen) return null;
 
@@ -65,23 +67,32 @@ export const CodeDiffViewer: React.FC = () => {
 
         {/* Diff Editor Body */}
         <div className="flex-1 w-full min-h-[350px] bg-slate-900 overflow-hidden">
-          <DiffEditor
-            height="100%"
-            language={language}
-            original={diffModal.originalCode}
-            modified={diffModal.suggestedCode}
-            theme={settings.theme}
-            options={{
-              readOnly: true,
-              fontSize: settings.fontSize,
-              renderSideBySide: true,
-              automaticLayout: true,
-              fontFamily: "'Fira Code', 'JetBrains Mono', Menlo, Consolas, monospace",
-              scrollBeyondLastLine: false,
-              wordWrap: 'on',
-              minimap: { enabled: false },
-            }}
-          />
+          {monacoState === 'ready' ? (
+            <DiffEditor
+              height="100%"
+              language={language}
+              original={diffModal.originalCode}
+              modified={diffModal.suggestedCode}
+              theme={settings.theme}
+              options={{
+                readOnly: true,
+                fontSize: settings.fontSize,
+                renderSideBySide: true,
+                automaticLayout: true,
+                fontFamily: "'Fira Code', 'JetBrains Mono', Menlo, Consolas, monospace",
+                scrollBeyondLastLine: false,
+                wordWrap: 'on',
+                minimap: { enabled: false },
+              }}
+            />
+          ) : monacoState === 'loading' ? (
+            <p className="p-6 text-xs text-slate-400" role="status">Loading comparison…</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-px h-full text-[12px] font-mono text-slate-100">
+              <pre className="p-3 overflow-auto bg-slate-950/60" aria-label="Current code">{diffModal.originalCode}</pre>
+              <pre className="p-3 overflow-auto" aria-label="Suggested code">{diffModal.suggestedCode}</pre>
+            </div>
+          )}
         </div>
 
         {/* Modal Footer Controls */}
