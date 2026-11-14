@@ -9,6 +9,9 @@ import { fileURLToPath } from 'url';
 import { logger } from '../core/logging';
 
 export const SQL_TIMEOUT_MS = Number(process.env.SQL_LAB_TIMEOUT_MS) || 3000;
+/** Extra time for the first request to a new worker: spawning it and compiling SQLite's WebAssembly
+ * can take several seconds on a cold serverless instance, and that is not the student's query. */
+export const SQL_COLD_START_MS = Number(process.env.SQL_LAB_COLD_START_MS) || 15000;
 
 function workerPath(): string {
   const candidates: string[] = [];
@@ -33,11 +36,14 @@ export class SqlEngine {
   /** Keys whose current image is loaded in the running worker. */
   private loaded = new Set<string>();
   private queue: Promise<unknown> = Promise.resolve();
+  /** True once the current worker has answered at least once (SQLite is initialised). */
+  private warm = false;
 
   private ensureWorker(): Worker {
     if (this.worker) return this.worker;
     const w = new Worker(workerPath(), { resourceLimits: { maxOldGenerationSizeMb: 256 } });
     w.on('message', (msg: WorkerReply & { id: number }) => {
+      if (this.worker === w) this.warm = true;
       const p = this.pending.get(msg.id);
       if (!p) return;
       clearTimeout(p.timer);
@@ -59,6 +65,7 @@ export class SqlEngine {
   private reset(reason: string) {
     const w = this.worker;
     this.worker = null;
+    this.warm = false;
     this.loaded.clear();
     for (const [id, p] of this.pending) {
       clearTimeout(p.timer);
@@ -78,12 +85,13 @@ export class SqlEngine {
         new Promise<WorkerReply>((resolve) => {
           const w = this.ensureWorker();
           const id = this.nextId++;
+          const limit = this.warm ? timeoutMs : timeoutMs + SQL_COLD_START_MS;
           const timer = setTimeout(() => {
             this.pending.delete(id);
             logger.warn('SQL Lab query timed out; restarting worker', { key: key.split('::')[1] });
             resolve({ ok: false, error: `Query stopped after ${timeoutMs / 1000} seconds (time limit).`, code: 'TIMEOUT' });
             this.reset('Engine restarted after a timeout.');
-          }, timeoutMs);
+          }, limit);
           this.pending.set(id, { resolve, timer });
           w.postMessage({ ...msg, id, key, image: withImage ? image ?? '' : undefined });
         });

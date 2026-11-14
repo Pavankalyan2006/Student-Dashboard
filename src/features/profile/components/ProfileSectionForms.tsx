@@ -190,7 +190,7 @@ export function IdentityForm({ profile, errors, onChange, emailVerificationRequi
   const set = (k: keyof typeof s) => (v: any) => setS((x) => ({ ...x, [k]: v }));
   return (
     <div className="space-y-4">
-      <div className="grid sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <TextField id="full_name" label="Full name" required value={s.full_name} onChange={set('full_name')} errors={errors} />
         <TextField id="display_name" label="Display name" value={s.display_name} onChange={set('display_name')} errors={errors} />
         <div>
@@ -286,7 +286,7 @@ export function AcademicForm({ profile, errors, onChange }: SectionFormProps) {
   const year = new Date().getFullYear();
   return (
     <div className="space-y-4">
-      <div className="grid sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <TextField id="college" label="College" required value={s.college} onChange={set('college')} errors={errors} />
         <TextField id="university" label="University" value={s.university} onChange={set('university')} errors={errors} />
         <SelectField id="degree" label="Degree" required value={s.degree} onChange={set('degree')} errors={errors} options={DEGREES.map((d) => ({ value: d, label: d }))} />
@@ -355,7 +355,7 @@ export function SkillsForm({ profile, errors, onChange, withInterests = true }: 
   };
   return (
     <div className="space-y-4">
-      <div className="grid sm:grid-cols-[180px_1fr_auto] gap-2 items-end">
+      <div className="grid grid-cols-1 sm:grid-cols-[180px_1fr_auto] gap-2 items-end">
         <SelectField id="skill_category" label="Category" required value={category} onChange={setCategory} options={Object.entries(SKILL_CATEGORY_LABELS).map(([value, l]) => ({ value, label: l }))} />
         <TextField id="skill_name" label="Skill" required value={draft} onChange={setDraft} placeholder="e.g. Python" />
         <Button type="button" variant="outline" onClick={() => add(draft)}>
@@ -446,7 +446,7 @@ export function ExperienceForm({ profile, errors, onChange }: SectionFormProps) 
         </div>
         {projects.map((p, i) => (
           <div key={p.id || `new-${i}`} className="rounded-lg border border-[#EAECF0] p-3 mb-3 space-y-3">
-            <div className="grid sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <TextField id={`projects[${i}].title`} label="Project name" required value={p.title} onChange={(v) => upd<Proj>(setProjects, i, 'title', v)} errors={errors} />
               <SelectField id={`projects[${i}].status`} label="Status" value={p.status} onChange={(v) => upd<Proj>(setProjects, i, 'status', v || null)} errors={errors} options={['IDEA', 'PLANNED', 'IN_PROGRESS', 'COMPLETED', 'ON_HOLD'].map((x) => ({ value: x, label: x.replace('_', ' ').toLowerCase() }))} />
             </div>
@@ -455,7 +455,7 @@ export function ExperienceForm({ profile, errors, onChange }: SectionFormProps) 
               <textarea id={`projects[${i}].description`} className={areaCls} rows={2} value={p.description || ''} onChange={(ev) => upd<Proj>(setProjects, i, 'description', ev.target.value)} />
             </div>
             <ChipList id={`projects[${i}].technologies`} label="Technologies used" values={p.technologies || []} onChange={(v) => upd<Proj>(setProjects, i, 'technologies', v)} errors={errors} />
-            <div className="grid sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <TextField id={`projects[${i}].github_url`} label="GitHub link" value={p.github_url} onChange={(v) => upd<Proj>(setProjects, i, 'github_url', v || null)} errors={errors} />
               <TextField id={`projects[${i}].demo_url`} label="Live demo link" value={p.demo_url} onChange={(v) => upd<Proj>(setProjects, i, 'demo_url', v || null)} errors={errors} />
               <TextField id={`projects[${i}].project_url`} label="Project link" value={p.project_url} onChange={(v) => upd<Proj>(setProjects, i, 'project_url', v || null)} errors={errors} />
@@ -475,7 +475,7 @@ export function ExperienceForm({ profile, errors, onChange }: SectionFormProps) 
           </Button>
         </div>
         {experience.map((x, i) => (
-          <div key={x.id || `new-${i}`} className="rounded-lg border border-[#EAECF0] p-3 mb-3 grid sm:grid-cols-2 gap-3">
+          <div key={x.id || `new-${i}`} className="rounded-lg border border-[#EAECF0] p-3 mb-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
             <SelectField id={`experience[${i}].kind`} label="Type" required value={x.kind} onChange={(v) => upd<Exp>(setExperience, i, 'kind', v)} errors={errors} options={['INTERNSHIP', 'WORK', 'RESEARCH', 'VOLUNTEER', 'OTHER'].map((k) => ({ value: k, label: k.toLowerCase() }))} />
             <TextField id={`experience[${i}].organization`} label="Organisation" required value={x.organization} onChange={(v) => upd<Exp>(setExperience, i, 'organization', v)} errors={errors} />
             <TextField id={`experience[${i}].role`} label="Role" required value={x.role} onChange={(v) => upd<Exp>(setExperience, i, 'role', v)} errors={errors} />
@@ -501,7 +501,7 @@ export function ExperienceForm({ profile, errors, onChange }: SectionFormProps) 
           </Button>
         </div>
         {certs.map((c, i) => (
-          <div key={c.id || `new-${i}`} className="rounded-lg border border-[#EAECF0] p-3 mb-3 grid sm:grid-cols-4 gap-3 items-end">
+          <div key={c.id || `new-${i}`} className="rounded-lg border border-[#EAECF0] p-3 mb-3 grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
             <TextField id={`certifications[${i}].name`} label="Name" required value={c.name} onChange={(v) => upd<Cert>(setCerts, i, 'name', v)} errors={errors} />
             <TextField id={`certifications[${i}].issuer`} label="Issuer" value={c.issuer} onChange={(v) => upd<Cert>(setCerts, i, 'issuer', v || null)} errors={errors} />
             <TextField id={`certifications[${i}].credential_url`} label="Credential link" value={c.credential_url} onChange={(v) => upd<Cert>(setCerts, i, 'credential_url', v || null)} errors={errors} />
@@ -512,7 +512,7 @@ export function ExperienceForm({ profile, errors, onChange }: SectionFormProps) 
         ))}
       </section>
 
-      <div className="grid sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <TextField id="github_url" label="GitHub profile" value={links.github_url} onChange={(v) => setLinks((l) => ({ ...l, github_url: v }))} errors={errors} placeholder="https://github.com/username" />
         <TextField id="linkedin_url" label="LinkedIn" value={links.linkedin_url} onChange={(v) => setLinks((l) => ({ ...l, linkedin_url: v }))} errors={errors} />
         <TextField id="portfolio_url" label="Portfolio" value={links.portfolio_url} onChange={(v) => setLinks((l) => ({ ...l, portfolio_url: v }))} errors={errors} />
@@ -550,7 +550,7 @@ export function CareerForm({ profile, errors, onChange }: SectionFormProps) {
     <div className="space-y-4">
       <ChipList id="target_roles" label="Target job roles" values={s.target_roles} onChange={set('target_roles')} errors={errors} suggestions={['Software Engineer', 'Backend Developer', 'Frontend Developer', 'Data Scientist', 'ML Engineer', 'DevOps Engineer']} />
       <ChipList id="career_interests" label="Career interests" values={s.career_interests} onChange={set('career_interests')} errors={errors} />
-      <div className="grid sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <ChipList id="preferred_industries" label="Preferred industries" values={s.preferred_industries} onChange={set('preferred_industries')} errors={errors} />
         <ChipList id="preferred_locations" label="Preferred work locations" values={s.preferred_locations} onChange={set('preferred_locations')} errors={errors} suggestions={['Remote', 'Bengaluru', 'Hyderabad', 'Pune', 'Chennai']} />
         <ChipList id="internship_interests" label="Internship interests" values={s.internship_interests} onChange={set('internship_interests')} errors={errors} />
@@ -562,7 +562,7 @@ export function CareerForm({ profile, errors, onChange }: SectionFormProps) {
         <label className={label} htmlFor="placement_goals">Placement goals <span className="font-normal text-[#98A2B3]">(optional)</span></label>
         <textarea id="placement_goals" className={areaCls} rows={2} value={s.placement_goals} onChange={(e) => set('placement_goals')(e.target.value)} />
       </div>
-      <div className="grid sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className={label} htmlFor="short_term_goals">Short-term goals <span className="font-normal text-[#98A2B3]">(optional)</span></label>
           <textarea id="short_term_goals" className={areaCls} rows={3} value={s.short_term_goals} onChange={(e) => set('short_term_goals')(e.target.value)} />
@@ -616,7 +616,7 @@ export function LearningForm({ profile, errors, onChange }: SectionFormProps) {
   return (
     <div className="space-y-4">
       <ChipList id="preferred_languages" label="Preferred learning languages" required values={s.preferred_languages} onChange={set('preferred_languages')} errors={errors} suggestions={['English', 'Telugu', 'Hindi', 'Tamil', 'Kannada']} />
-      <div className="grid sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <SelectField id="explanation_style" label="Explanation style" value={s.explanation_style} onChange={set('explanation_style')} errors={errors} options={opt(['QUICK_OVERVIEW', 'STANDARD', 'DEEP_DIVE', 'ELI5'])} />
         <SelectField id="learning_style" label="Learning style" value={s.learning_style} onChange={set('learning_style')} errors={errors} options={opt(['VISUAL', 'READING', 'HANDS_ON', 'VIDEO', 'DISCUSSION', 'MIXED'])} />
         <SelectField id="difficulty" label="Preferred difficulty" value={s.difficulty} onChange={set('difficulty')} errors={errors} options={opt(['FOUNDATIONAL', 'INTERMEDIATE', 'ADVANCED', 'ADAPTIVE'])} />
