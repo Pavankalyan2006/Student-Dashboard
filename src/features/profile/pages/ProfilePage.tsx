@@ -311,6 +311,8 @@ export function ProfilePage({ onNavigate }: { onNavigate: (path: string) => void
         ].map((tab) => (
           <button
             key={tab.id}
+            type="button"
+            aria-pressed={activeTab === tab.id}
             onClick={() => setActiveTab(tab.id as any)}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
               activeTab === tab.id

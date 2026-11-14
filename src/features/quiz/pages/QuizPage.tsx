@@ -230,7 +230,7 @@ export const QuizPage: React.FC<QuizPageProps> = ({ onNavigate }) => {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-              Recommended Quizzes & Topic Practice
+              Quiz Catalog & Topic Practice
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
               Foundational, GATE-level, and adaptive assessments across your active curriculum

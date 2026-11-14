@@ -1,12 +1,13 @@
 import * as React from 'react';
-import { ChevronDown, ChevronsLeft, ChevronsRight, X } from 'lucide-react';
+import { ChevronDown, ChevronsLeft, ChevronsRight, Star, X } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useUiStore } from '../../store/uiStore';
 import { useAuth } from '../../hooks/useAuth';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { BrandMark } from '../layout/BrandMark';
 import { footerSignature, initialsFor, registeredStudentName } from '../layout/studentName';
-import { NAV_SECTIONS, findActiveNavItem, findSectionForItem, type NavItem, type NavSection } from './navConfig';
+import { NAV_SECTIONS, findActiveNavItem, findSectionForItem, navItemByHref, type NavItem, type NavSection } from './navConfig';
+import { useWorkspacePrefs } from '../../store/workspacePrefsStore';
 
 export type { NavItem, NavSection } from './navConfig';
 export { NAV_SECTIONS } from './navConfig';
@@ -33,6 +34,11 @@ export function Sidebar({ currentPath, onNavigate }: { currentPath: string; onNa
   const activeSection = findSectionForItem(activeItem);
   const railMode = sidebarCollapsed && !mobileDrawerOpen;
   const studentName = registeredStudentName(student, isAuthenticated);
+  const pinnedHrefs = useWorkspacePrefs((s) => s.pinned);
+  const pinnedSection: NavSection | null = React.useMemo(() => {
+    const items = pinnedHrefs.map(navItemByHref).filter((i): i is NavItem => Boolean(i));
+    return items.length ? { id: 'pinned', title: 'Pinned', icon: Star, items } : null;
+  }, [pinnedHrefs]);
 
   // Close the mobile drawer with Escape.
   React.useEffect(() => {
@@ -112,6 +118,16 @@ export function Sidebar({ currentPath, onNavigate }: { currentPath: string; onNa
 
         {/* Groups */}
         <nav className="sidebar-scroll flex-1 overflow-y-auto overscroll-contain px-3 py-3" aria-label="Modules">
+          {pinnedSection && (
+            // Shortcuts the student pinned from the top bar. The page stays highlighted in its own group only.
+            <SidebarGroup
+              section={pinnedSection}
+              railMode={railMode}
+              open={!closedGroups.has('pinned')}
+              onToggle={() => toggleGroup('pinned')}
+              onItemClick={handleItemClick}
+            />
+          )}
           {NAV_SECTIONS.map((section) => (
             <SidebarGroup
               key={section.id}

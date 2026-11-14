@@ -13,7 +13,6 @@ import {
   ChevronRight,
   Sparkles,
   RefreshCw,
-  Lightbulb,
   Download,
   Calendar,
   CheckCircle2,
@@ -37,7 +36,6 @@ import {
 import { communityProfileApi } from '../../../api/communityProfileApi';
 import {
   LearningInsight,
-  ResourceRecommendation,
 } from '../../../../server/models/communityProfileProgressTypes';
 import { toast } from 'sonner';
 
@@ -55,7 +53,6 @@ export function ProgressDashboardPage({ onNavigate }: { onNavigate: (path: strin
   const [progress, setProgress] = React.useState<any | null>(null);
   const [insights, setInsights] = React.useState<LearningInsight[]>([]);
   const [insightsSummary, setInsightsSummary] = React.useState('');
-  const [recs, setRecs] = React.useState<ResourceRecommendation[]>([]);
   const [timeRange, setTimeRange] = React.useState<string>('all');
   const [lastRefreshed, setLastRefreshed] = React.useState<string>('Just now');
   const [loading, setLoading] = React.useState(true);
@@ -71,15 +68,14 @@ export function ProgressDashboardPage({ onNavigate }: { onNavigate: (path: strin
       if (!progress) setLoading(true);
       else setRefreshing(true);
 
-      const [progData, insightData, recData] = await Promise.all([
+      // Resource recommendations stay a backend capability; this page no longer shows a recommendations panel.
+      const [progData, insightData] = await Promise.all([
         communityProfileApi.getProgress({ timeRange: selectedRange }),
         communityProfileApi.getInsights('weekly'),
-        communityProfileApi.getRecommendations(),
       ]);
       setProgress(progData);
       setInsights(insightData?.insights || []);
       setInsightsSummary(insightData?.summary || '');
-      setRecs(recData || []);
       setLastRefreshed(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
     } catch {
       toast.error('Failed to load learning progress data');
@@ -487,8 +483,8 @@ export function ProgressDashboardPage({ onNavigate }: { onNavigate: (path: strin
         )}
       </div>
 
-      {/* 15. AI Learning Insights & Grounded Recommendations */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* 15. Observations from verified activity */}
+      <div>
         {/* Insights */}
         <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-4">
           <div className="flex items-center gap-2">
@@ -509,9 +505,11 @@ export function ProgressDashboardPage({ onNavigate }: { onNavigate: (path: strin
             </div>
           )}
 
-          <div className="space-y-2.5">
+          <div className="grid gap-2.5 md:grid-cols-2">
             {insights.length === 0 ? (
-              <p className="text-xs text-slate-400 italic">No automated observations yet.</p>
+              <p className="text-xs text-slate-500">
+                Observations appear here once you have completed lessons, quizzes or practice problems this week.
+              </p>
             ) : (
               insights.map((ins, idx) => (
                 <div
@@ -529,44 +527,6 @@ export function ProgressDashboardPage({ onNavigate }: { onNavigate: (path: strin
           </div>
         </div>
 
-        {/* Recommendations */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-4">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-lg bg-amber-50 text-amber-600">
-              <Lightbulb className="h-4 w-4" />
-            </div>
-            <div>
-              <h2 className="text-sm font-bold text-slate-900">Targeted Resource Recommendations</h2>
-              <p className="text-xs text-slate-500">
-                Anchored in actual platform courses, quizzes, and papers with explicit reasons.
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            {recs.length === 0 ? (
-              <p className="text-xs text-slate-400 italic">No recommendations available yet.</p>
-            ) : (
-              recs.map((rec) => (
-                <div
-                  key={rec.id}
-                  onClick={() => onNavigate(rec.link)}
-                  className="p-3.5 rounded-xl border border-slate-200 hover:border-blue-300 hover:bg-slate-50/60 transition-all cursor-pointer space-y-1.5 group"
-                >
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
-                      {rec.title}
-                    </h4>
-                    <span className="text-[10px] font-mono uppercase px-1.5 py-0.2 rounded bg-slate-100 text-slate-600">
-                      {rec.resource_type.replace(/_/g, ' ')}
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-slate-600 leading-relaxed">{rec.reason}</p>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
       </div>
     </div>
   );

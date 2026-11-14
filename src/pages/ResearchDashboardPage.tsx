@@ -185,7 +185,7 @@ export const ResearchDashboardPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Column: Recommended Topics & Research Activity */}
+        {/* Right Column: research shortcuts */}
         <div className="space-y-6">
           {/* Quick Shortcuts */}
           <div className="bg-white rounded-2xl p-6 border border-slate-200 space-y-4">
@@ -241,32 +241,6 @@ export const ResearchDashboardPage: React.FC = () => {
                 </div>
                 <ArrowRight className="w-4 h-4 text-slate-400" />
               </div>
-            </div>
-          </div>
-
-          {/* Recommended Research Topics */}
-          <div className="bg-white rounded-2xl p-6 border border-slate-200 space-y-4">
-            <h3 className="text-base font-bold text-slate-900">Recommended Topics for B.Tech</h3>
-            <p className="text-xs text-slate-500">Popular emerging domains aligned with your coursework:</p>
-
-            <div className="space-y-3">
-              {[
-                { title: 'Vector Retrieval & Graph Embeddings', domain: 'Artificial Intelligence' },
-                { title: 'Deterministic Zero-Knowledge Consensus', domain: 'Distributed Systems' },
-                { title: 'Resource-Constrained Model Quantization', domain: 'Edge Computing' },
-                { title: 'Automated Microservice API Mutation Testing', domain: 'Software Engineering' },
-              ].map((topic, i) => (
-                <div
-                  key={i}
-                  onClick={() => navigate(`/research/create?topic=${encodeURIComponent(topic.title)}&domain=${encodeURIComponent(topic.domain)}`)}
-                  className="p-3 rounded-xl border border-slate-100 hover:border-indigo-300 hover:bg-slate-50 transition-all cursor-pointer group"
-                >
-                  <div className="text-xs font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">
-                    {topic.title}
-                  </div>
-                  <div className="text-[11px] text-slate-400 mt-0.5">{topic.domain}</div>
-                </div>
-              ))}
             </div>
           </div>
         </div>

@@ -31,3 +31,11 @@ The walkthrough scripts in `scripts/pilot/` no longer visit `/pilot-feedback`.
 - `npx vitest run`: 64 files passed, 2 skipped; 981 tests passed, 10 skipped.
 - `npm run build`: succeeds (existing large-chunk warning unchanged).
 - Secret scan of the staged diff: no keys or passwords.
+
+## Recommendation panels removed and workspace features (2026-11-14)
+
+- Removed every student-facing recommendation panel ("Recommended for you" on 14 module pages, plus Progress,
+  Dashboard, Career, Research, Mock Interviews, Goal detail, Study Planner). Backend recommendation endpoints kept.
+- Replaced hard-coded suggestions with real figures or removed them.
+- Added: command palette with page jump and recent pages, pin pages to the sidebar, keyboard shortcuts, Focus Timer.
+- Details and sweep results: `RECOMMENDATIONS_REMOVAL_AND_FEATURES_REPORT.md`.

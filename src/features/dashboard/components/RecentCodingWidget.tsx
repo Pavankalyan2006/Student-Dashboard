@@ -53,22 +53,20 @@ export const RecentCodingWidget: React.FC<{ onNavigate: (path: string) => void }
         </div>
       </div>
 
-      {/* Recommended Problem / Quick Action */}
-      <div className="p-3 bg-blue-50/60 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/40 rounded-xl flex items-center justify-between gap-3 text-xs">
-        <div>
-          <span className="text-[10px] uppercase font-bold text-blue-600 tracking-wider block">Recommended Practice</span>
-          <h4 className="font-bold text-slate-900 dark:text-slate-100 mt-0.5">Pair with Target Sum (Two Sum)</h4>
-          <span className="text-[11px] text-slate-500">Arrays & Hashing · Easy</span>
-        </div>
-
-        <button
-          onClick={() => onNavigate('/coding/problem/prob_two_sum')}
-          className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors shrink-0"
-        >
-          <Play className="w-3 h-3 fill-current" />
-          <span>Solve</span>
-        </button>
-      </div>
+      {/* Quick action: back to the problem list (no hard-coded suggestion) */}
+      <button
+        type="button"
+        onClick={() => onNavigate('/coding')}
+        className="flex w-full items-center justify-between gap-3 rounded-xl border border-slate-200 p-3 text-left text-xs transition-colors hover:border-blue-300 hover:bg-blue-50/50"
+      >
+        <span>
+          <span className="block font-semibold text-slate-900">Continue practising</span>
+          <span className="text-[11px] text-slate-500">Open the Coding Lab problem list</span>
+        </span>
+        <span className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 font-semibold text-white">
+          <Play className="h-3 w-3 fill-current" /> Open
+        </span>
+      </button>
     </div>
   );
 };

@@ -298,7 +298,7 @@ export const CodingLabPage: React.FC<CodingLabPageProps> = ({ onNavigate }) => {
           <div>
             <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
               <BookOpen className="w-4 h-4 text-indigo-600" />
-              <span>Recommended Practice Problems</span>
+              <span>Practice Problems</span>
             </h2>
             <p className="text-xs text-slate-500">
               Curated B.Tech algorithm challenges with official public and hidden test cases.

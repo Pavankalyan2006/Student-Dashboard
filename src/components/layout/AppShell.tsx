@@ -6,6 +6,9 @@ import { useUiStore } from '../../store/uiStore';
 import { Toaster } from 'sonner';
 import { cn } from '../../lib/utils';
 import { AppFooter } from './AppFooter';
+import { useAuth } from '../../hooks/useAuth';
+import { useWorkspacePrefs } from '../../store/workspacePrefsStore';
+import { KeyboardShortcuts } from '../navigation/KeyboardShortcuts';
 
 export interface AppShellProps {
   currentPath: string;
@@ -16,6 +19,19 @@ export interface AppShellProps {
 export function AppShell({ currentPath, onNavigate, children }: AppShellProps) {
   const sidebarCollapsed = useUiStore((s) => s.sidebarCollapsed);
   const routeKey = currentPath.split(/[?#]/)[0];
+  const { student } = useAuth();
+  const loadPrefs = useWorkspacePrefs((s) => s.load);
+  const recordVisit = useWorkspacePrefs((s) => s.recordVisit);
+  const prefsOwner = useWorkspacePrefs((s) => s.studentId);
+  const studentId = student?.id ? String(student.id) : null;
+
+  // Pinned and recent pages belong to the signed-in student; switch them when the student changes.
+  React.useEffect(() => {
+    loadPrefs(studentId);
+  }, [studentId, loadPrefs]);
+  React.useEffect(() => {
+    if (studentId && prefsOwner === studentId) recordVisit(routeKey);
+  }, [routeKey, studentId, prefsOwner, recordVisit]);
 
   return (
     <div className="min-h-screen bg-canvas text-slate-900">
@@ -53,6 +69,7 @@ export function AppShell({ currentPath, onNavigate, children }: AppShellProps) {
 
       {/* Global Search Dialog (Ctrl+K) */}
       <GlobalSearch onNavigate={onNavigate} />
+      <KeyboardShortcuts onNavigate={onNavigate} />
 
       <Toaster
         position="top-right"

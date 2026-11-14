@@ -70,25 +70,6 @@ import { RepositoryDetailPage } from './pages/RepositoryDetailPage';
 // Phase 14: Community, Student Profile, Progress & Student Utilities
 import { ProfilePage } from './features/profile/pages/ProfilePage';
 import { ProfileEditPage } from './features/profile/pages/ProfileEditPage';
-import { ProfileRecommendationsPanel } from './features/profile/components/ProfileManager';
-
-/** Module landing routes that show profile-based recommendations, mapped to the recommendation module. */
-const PROFILE_RECOMMENDATION_ROUTES: Record<string, string> = {
-  '/courses': 'courses',
-  '/coding': 'coding',
-  '/coding-lab': 'coding',
-  '/dsa': 'dsa',
-  '/dsa-lab': 'dsa',
-  '/sql-lab': 'sql',
-  '/ml-lab': 'ml',
-  '/system-design': 'system_design',
-  '/gate': 'gate',
-  '/mock-interviews': 'interview',
-  '/career': 'career',
-  '/jobs': 'jobs',
-  '/placements': 'placement',
-  '/study-planner': 'planner',
-};
 import { ProfileActivityPage } from './features/profile/pages/ProfileActivityPage';
 import { ProfileAchievementsPage } from './features/profile/pages/ProfileAchievementsPage';
 import { ProfileCertificatesPage } from './features/profile/pages/ProfileCertificatesPage';
@@ -99,6 +80,7 @@ import { OnboardingPage } from './features/onboarding/pages/OnboardingPage';
 import { ProgressDashboardPage } from './features/progress/pages/ProgressDashboardPage';
 import { SubsystemProgressPage } from './features/progress/pages/SubsystemProgressPage';
 import { GoalsPage } from './features/goals/pages/GoalsPage';
+import { FocusTimerPage } from './features/focus/pages/FocusTimerPage';
 import { GoalDetailPage } from './features/goals/pages/GoalDetailPage';
 import { CommunityDashboardPage } from './features/community/pages/CommunityDashboardPage';
 import { CommunityQuestionsPage } from './features/community/pages/CommunityQuestionsPage';
@@ -842,6 +824,10 @@ function AppContent() {
     // ==========================================
     // Phase 14: Learning Goals Routes
     // ==========================================
+    if (path === '/focus' || path === '/focus-timer') {
+      return <FocusTimerPage onNavigate={navigate} />;
+    }
+
     if (path === '/goals' || path === '/goals/create' || path === '/learning-goals') {
       return <GoalsPage onNavigate={navigate} />;
     }
@@ -1103,17 +1089,8 @@ function AppContent() {
     return <NotFoundPage onNavigate={navigate} />;
   };
 
-  // Phase 5: module landing pages show recommendations driven by the central student profile.
-  const routePath = currentPath.split('?')[0].split('#')[0];
-  const recommendationModule = PROFILE_RECOMMENDATION_ROUTES[routePath];
-
   return (
     <AppShell currentPath={currentPath.split('?')[0]} onNavigate={navigate}>
-      {recommendationModule && student && (
-        <div className="mb-5">
-          <ProfileRecommendationsPanel module={recommendationModule} onNavigate={navigate} />
-        </div>
-      )}
       {renderRoute()}
     </AppShell>
   );

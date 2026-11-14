@@ -5,8 +5,6 @@ import {
   CheckCircle2,
   Calendar,
   Clock,
-  Sparkles,
-  ExternalLink,
   Trash2,
   CheckSquare,
   Square,
@@ -15,7 +13,6 @@ import {
 import { communityProfileApi } from '../../../api/communityProfileApi';
 import {
   LearningGoal,
-  ResourceRecommendation,
 } from '../../../../server/models/communityProfileProgressTypes';
 import { toast } from 'sonner';
 
@@ -27,7 +24,6 @@ export function GoalDetailPage({
   onNavigate: (path: string) => void;
 }) {
   const [goal, setGoal] = React.useState<LearningGoal | null>(null);
-  const [recs, setRecs] = React.useState<ResourceRecommendation[]>([]);
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
@@ -37,12 +33,7 @@ export function GoalDetailPage({
   const loadGoal = async () => {
     try {
       setLoading(true);
-      const [gData, recData] = await Promise.all([
-        communityProfileApi.getGoal(goalId),
-        communityProfileApi.getGoalRecommendations(goalId),
-      ]);
-      setGoal(gData);
-      setRecs(recData);
+      setGoal(await communityProfileApi.getGoal(goalId));
     } catch {
       toast.error('Failed to load goal details');
     } finally {
@@ -197,35 +188,6 @@ export function GoalDetailPage({
         </div>
       </div>
 
-      {/* Correlated Platform Recommendations */}
-      {recs.length > 0 && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-2xs space-y-4">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-blue-600" />
-            <h2 className="text-sm font-bold text-slate-900">
-              Recommended Platform Resources for this Goal
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {recs.map((rec) => (
-              <div
-                key={rec.id}
-                onClick={() => onNavigate(rec.link)}
-                className="p-3.5 rounded-xl border border-slate-200 hover:border-blue-300 hover:bg-slate-50/50 transition-all cursor-pointer space-y-1.5 group"
-              >
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
-                    {rec.title}
-                  </h4>
-                  <ExternalLink className="h-3 w-3 text-slate-400 group-hover:text-blue-600" />
-                </div>
-                <p className="text-[11px] text-slate-600 leading-relaxed">{rec.reason}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

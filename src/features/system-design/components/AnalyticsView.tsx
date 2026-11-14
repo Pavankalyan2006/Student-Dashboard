@@ -131,14 +131,13 @@ export function AnalyticsView({ analyticsData, onNavigateTab }: AnalyticsViewPro
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-3">
           <h3 className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-2">
             <AlertCircle className="w-4 h-4" />
-            Recommended Practice Concepts
+            Concepts to Strengthen
           </h3>
           <div className="space-y-1.5 text-xs text-slate-300">
-            {(progress?.weak_concepts || [
-              'Distributed Transactions (2PC vs Saga)',
-              'Consensus Protocols (Raft / Paxos)',
-              'Consistent Hashing & Ring Rebalancing'
-            ]).map((wc: string, idx: number) => (
+            {(progress?.weak_concepts || []).length === 0 && (
+              <p className="text-slate-400">Weak concepts appear here after your designs are evaluated.</p>
+            )}
+            {(progress?.weak_concepts || []).map((wc: string, idx: number) => (
               <div key={idx} className="p-2.5 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-between">
                 <span>{wc}</span>
                 <Button
