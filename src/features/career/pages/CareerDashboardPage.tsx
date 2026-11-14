@@ -433,51 +433,6 @@ export const CareerDashboardPage: React.FC<CareerDashboardPageProps> = ({ onNavi
         )}
       </div>
 
-      {/* 4. Recommended Next Actions */}
-      {summary?.recommended_actions && summary.recommended_actions.length > 0 && (
-        <div className="space-y-3">
-          <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-purple-600" />
-            Recommended Next Actions
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {summary.recommended_actions.map((act) => (
-              <div
-                key={act.id}
-                className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between space-y-3"
-              >
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <span
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                        act.priority === 'HIGH'
-                          ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/50'
-                          : act.priority === 'MEDIUM'
-                          ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/50'
-                          : 'bg-blue-50 text-blue-700 dark:bg-blue-950/50'
-                      }`}
-                    >
-                      {act.priority} PRIORITY
-                    </span>
-                    <span className="text-[10px] text-slate-400 font-semibold">{act.category}</span>
-                  </div>
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">{act.title}</h3>
-                  <p className="text-xs text-slate-500 leading-relaxed">{act.description}</p>
-                </div>
-
-                <button
-                  onClick={() => onNavigate(act.target_path)}
-                  className="w-full py-2 rounded-xl bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/40 dark:hover:bg-purple-950 text-purple-700 dark:text-purple-300 text-xs font-semibold flex items-center justify-center gap-1.5 transition"
-                >
-                  {act.action_label} <ArrowRight className="h-3 w-3" />
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* 5. Chronological Career Activity Stream & Active Learning Roadmap */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Career Activity Stream */}

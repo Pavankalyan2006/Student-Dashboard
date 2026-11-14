@@ -1,10 +1,12 @@
 import * as React from 'react';
-import { Menu, Search, ChevronRight } from 'lucide-react';
+import { Menu, Search, ChevronRight, Star } from 'lucide-react';
 import { useUiStore } from '../../store/uiStore';
 import { AskAIButton } from './AskAIButton';
 import { NotificationBell } from './NotificationBell';
 import { ProfileMenu } from './ProfileMenu';
 import { findActiveNavItem, findSectionForItem } from './navConfig';
+import { useWorkspacePrefs } from '../../store/workspacePrefsStore';
+import { cn } from '../../lib/utils';
 
 export interface TopbarProps {
   currentPath: string;
@@ -54,6 +56,10 @@ export function Topbar({ currentPath, onNavigate }: TopbarProps) {
   const { setMobileDrawerOpen, setGlobalSearchOpen } = useUiStore();
   const breadcrumbs = buildBreadcrumbs(currentPath);
   const title = breadcrumbs[breadcrumbs.length - 1]?.label ?? 'Dashboard';
+  const navItem = findActiveNavItem(currentPath);
+  const pinned = useWorkspacePrefs((s) => (navItem ? s.pinned.includes(navItem.href) : false));
+  const canPin = useWorkspacePrefs((s) => Boolean(s.studentId));
+  const togglePin = useWorkspacePrefs((s) => s.togglePin);
 
   return (
     <header className="print:hidden sticky top-0 z-30 flex h-16 w-full items-center gap-3 border-b border-slate-200/80 bg-white/85 px-4 backdrop-blur-xl supports-[backdrop-filter]:bg-white/75 sm:px-6 lg:px-8">
@@ -90,9 +96,24 @@ export function Topbar({ currentPath, onNavigate }: TopbarProps) {
               </React.Fragment>
             ))}
           </nav>
-          <p className="truncate font-display text-[15px] font-semibold leading-tight tracking-tight text-slate-900" aria-current="page">
-            {title}
-          </p>
+          <div className="flex min-w-0 items-center gap-1">
+            <p className="truncate font-display text-[15px] font-semibold leading-tight tracking-tight text-slate-900" aria-current="page">
+              {title}
+            </p>
+            {navItem && canPin && (
+              <button
+                type="button"
+                onClick={() => togglePin(navItem.href)}
+                aria-pressed={pinned}
+                aria-label={pinned ? `Unpin ${navItem.name} from the sidebar` : `Pin ${navItem.name} to the sidebar`}
+                title={pinned ? 'Unpin from sidebar' : 'Pin to sidebar'}
+                data-testid="pin-page"
+                className="shrink-0 rounded-md p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-amber-500"
+              >
+                <Star className={cn('h-3.5 w-3.5', pinned && 'fill-amber-400 text-amber-500')} />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 

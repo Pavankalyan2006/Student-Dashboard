@@ -9,7 +9,6 @@ import { CourseProgress } from '../features/dashboard/components/CourseProgress'
 import { OverallProgress } from '../features/dashboard/components/OverallProgress';
 import { LearningStreak } from '../features/dashboard/components/LearningStreak';
 import { TodaysPlan } from '../features/dashboard/components/TodaysPlan';
-import { RecommendedLearning } from '../features/dashboard/components/RecommendedLearning';
 import { WeakAreas } from '../features/dashboard/components/WeakAreas';
 import { Strengths } from '../features/dashboard/components/Strengths';
 import { RecentActivity } from '../features/dashboard/components/RecentActivity';
@@ -132,10 +131,9 @@ export function DashboardPage({ onNavigate }: { onNavigate: (path: string) => vo
       {/* AI tutor entry point */}
       <DashboardAIHero onNavigate={onNavigate} />
 
-      {/* Recommendations, focus areas and projects */}
+      {/* Projects and focus areas */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="min-w-0 space-y-6 lg:col-span-2">
-          <RecommendedLearning recommendations={data.recommendations} onNavigate={onNavigate} />
           <ActiveProjects projects={data.projects} onNavigate={onNavigate} />
         </div>
         <div className="min-w-0 space-y-6">

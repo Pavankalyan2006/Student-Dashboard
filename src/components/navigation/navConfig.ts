@@ -22,6 +22,7 @@ import {
   Settings,
   User,
   Target,
+  Timer,
   MessageSquare,
   Share2,
   Bell,
@@ -176,6 +177,7 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { name: 'Student Profile', href: '/profile', icon: User },
       { name: 'Learning Goals', href: '/goals', icon: Target },
+      { name: 'Focus Timer', href: '/focus', icon: Timer, match: ['/focus-timer'] },
       { name: 'Connected Platforms', href: '/integrations', icon: Link2 },
       { name: 'External Profiles', href: '/profile/external', icon: ExternalLink },
     ],
@@ -216,4 +218,37 @@ export function findActiveNavItem(path: string): NavItem | undefined {
 export function findSectionForItem(item: NavItem | undefined): NavSection | undefined {
   if (!item) return undefined;
   return NAV_SECTIONS.find((s) => s.items.includes(item));
+}
+
+export interface NavPageMatch {
+  item: NavItem;
+  section: NavSection;
+  score: number;
+}
+
+/**
+ * Finds sidebar pages for the command palette. Matches the page name, its group name and the words in
+ * its URL; a name that starts with the query ranks first. Pure and synchronous, so it needs no request.
+ */
+export function searchNavPages(query: string, limit = 6): NavPageMatch[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+  const out: NavPageMatch[] = [];
+  for (const section of NAV_SECTIONS) {
+    for (const item of section.items) {
+      const name = item.name.toLowerCase();
+      const words = `${name} ${section.title.toLowerCase()} ${item.href.replace(/[/-]/g, ' ')}`;
+      let score = 0;
+      if (name.startsWith(q)) score = 3;
+      else if (name.split(/\s+/).some((w) => w.startsWith(q))) score = 2;
+      else if (words.includes(q)) score = 1;
+      if (score) out.push({ item, section, score });
+    }
+  }
+  return out.sort((a, b) => b.score - a.score || a.item.name.localeCompare(b.item.name)).slice(0, limit);
+}
+
+/** The nav item whose href is exactly this path, if any. */
+export function navItemByHref(href: string): NavItem | undefined {
+  return ALL_NAV_ITEMS.find((i) => i.href === href);
 }

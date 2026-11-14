@@ -646,7 +646,7 @@ ${interviewQuestions.slice(0, 5).map((q, idx) => `### Q${idx + 1}: ${q.question}
             {/* Quick Revision Summary */}
             <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="font-bold text-sm text-slate-900">Recommended Practice Plan</h3>
+                <h3 className="font-bold text-sm text-slate-900">Practice Plan</h3>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
                   Ready to practice
                 </span>

@@ -74,3 +74,37 @@ describe('Footer shows the signed-in student, never a phase label', () => {
     expect(footer).not.toMatch(/localStorage\.getItem|sessionStorage\.getItem/);
   });
 });
+
+describe('"Recommended for you" panels are removed from pages', () => {
+  it('App no longer injects a recommendation panel above module pages', () => {
+    const app = src('App.tsx');
+    expect(app).not.toMatch(/ProfileRecommendationsPanel|PROFILE_RECOMMENDATION_ROUTES/);
+  });
+
+  it('no page or component renders a "Recommended for you" panel', () => {
+    expect(src('features/profile/components/ProfileManager.tsx')).not.toMatch(/Recommended for you|profile-recs-/);
+  });
+
+  it('removes the other recommendation panels and hard-coded suggestions from pages', () => {
+    const checks: [string, RegExp][] = [
+      ['features/progress/pages/ProgressDashboardPage.tsx', /Targeted Resource Recommendations|getRecommendations\(/],
+      ['pages/DashboardPage.tsx', /RecommendedLearning/],
+      ['features/dashboard/components/RecentCodingWidget.tsx', /Recommended Practice|prob_two_sum/],
+      ['features/dashboard/components/CareerResumeWidget.tsx', /Recommended Next Skill|'System Design & APIs'/],
+      ['features/career/pages/CareerDashboardPage.tsx', /Recommended Next Actions/],
+      ['pages/ResearchDashboardPage.tsx', /Recommended Topics/],
+      ['features/mock-interviews/components/MockInterviewDashboard.tsx', /Recommended Next Step|Practice Recommended Round/],
+      ['features/goals/pages/GoalDetailPage.tsx', /getGoalRecommendations|Recommended Platform Resources/],
+      ['features/study-planner/pages/StudyPlannerPage.tsx', /AI Recommendation|Focus on Normalization|ai_recommendation/],
+      ['features/system-design/components/AnalyticsView.tsx', /Recommended Practice Concepts|Consensus Protocols \(Raft/],
+    ];
+    for (const [file, re] of checks) expect(src(file), file).not.toMatch(re);
+    expect(existsSync(path.resolve(__dirname, '../features/dashboard/components/RecommendedLearning.tsx'))).toBe(false);
+  });
+
+  it('keeps the backend recommendation endpoint and its client for internal use', () => {
+    const route = readFileSync(path.resolve(__dirname, '../../server/api/routes/profileMe.ts'), 'utf8');
+    expect(route).toMatch(/\/profile\/me\/recommendations\/:module/);
+    expect(src('features/profile/api/profileMeApi.ts')).toMatch(/recommendations/);
+  });
+});

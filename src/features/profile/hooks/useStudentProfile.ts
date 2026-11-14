@@ -44,13 +44,3 @@ export function useUpdateProfileSection() {
     onSuccess: applyProfileUpdate,
   });
 }
-
-export function useProfileRecommendations(module: string) {
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  return useQuery({
-    queryKey: ['profile-recommendations', module],
-    queryFn: () => profileMeApi.recommendations(module),
-    enabled: isAuthenticated,
-    staleTime: 60_000,
-  });
-}

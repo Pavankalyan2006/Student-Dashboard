@@ -53,9 +53,8 @@ export const CareerResumeWidget: React.FC<CareerResumeWidgetProps> = ({ onNaviga
 
   if (isLoading) return null;
 
-  // Recommended next skill to develop
-  const nextSkillCandidate = skills.find((s) => s.confidence === 'LIMITED_EVIDENCE' || s.confidence === 'DEVELOPING_EVIDENCE');
-  const nextSkillName = nextSkillCandidate ? nextSkillCandidate.skill_name : 'System Design & APIs';
+  // Skills still building evidence, counted from the student's own skill records.
+  const developing = skills.filter((s) => s.confidence === 'LIMITED_EVIDENCE' || s.confidence === 'DEVELOPING_EVIDENCE').length;
 
   return (
     <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
@@ -126,13 +125,13 @@ export const CareerResumeWidget: React.FC<CareerResumeWidgetProps> = ({ onNaviga
         </div>
       )}
 
-      {/* 3. Skill Development & Recommended Next Skill */}
+      {/* 3. Skill evidence summary */}
       <div className="pt-1 flex items-center justify-between text-xs">
         <div>
-          <span className="text-[11px] text-slate-500 block">Recommended Next Skill:</span>
+          <span className="text-[11px] text-slate-500 block">Skills tracked</span>
           <span className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
             <Target className="h-3.5 w-3.5 text-emerald-600" />
-            {nextSkillName}
+            {skills.length} skill{skills.length === 1 ? '' : 's'}{developing > 0 ? ` · ${developing} still building evidence` : ''}
           </span>
         </div>
         <button

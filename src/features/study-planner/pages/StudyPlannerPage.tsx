@@ -16,9 +16,9 @@ import {
   Check,
   ChevronRight,
   TrendingUp,
-  BrainCircuit,
   MessageSquare,
   FastForward,
+  Timer,
 } from 'lucide-react';
 import { PageContainer, PageHeader, PageSection, LoadingState, EmptyState } from '../../../components/layout/PageComponents';
 import { Button } from '../../../components/ui/button';
@@ -28,6 +28,12 @@ import { toast } from 'sonner';
 
 interface StudyPlannerPageProps {
   onNavigate?: (path: string) => void;
+}
+
+/** Minutes as "2 h 15 min" for the planner summary. */
+function formatPlanned(m: number): string {
+  if (m < 60) return `${m} min`;
+  return m % 60 ? `${Math.floor(m / 60)} h ${m % 60} min` : `${m / 60} h`;
 }
 
 export function StudyPlannerPage({ onNavigate }: StudyPlannerPageProps) {
@@ -220,18 +226,22 @@ export function StudyPlannerPage({ onNavigate }: StudyPlannerPageProps) {
           </div>
         </div>
 
-        <div className="p-4 rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-between">
+        <button
+          type="button"
+          onClick={() => onNavigate?.('/focus')}
+          className="p-4 rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-between text-left transition-colors hover:border-blue-300"
+        >
           <div>
-            <p className="text-xs font-medium text-slate-600">AI Recommendation</p>
-            <h3 className="text-xs font-bold text-slate-900 mt-1 line-clamp-2">
-              Focus on Normalization & B+ Trees
+            <p className="text-xs font-medium text-slate-600">Planned Time Today</p>
+            <h3 className="text-2xl font-bold text-slate-900 mt-1">
+              {formatPlanned(todayTasks.filter((t) => t.status !== 'COMPLETED' && t.status !== 'SKIPPED').reduce((n, t) => n + (t.duration_minutes || 0), 0))}
             </h3>
-            <p className="text-xs text-purple-600 mt-0.5">Weakness recovery</p>
+            <p className="text-xs text-blue-600 mt-0.5">Start a focus session</p>
           </div>
-          <div className="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600">
-            <BrainCircuit className="w-6 h-6" />
+          <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
+            <Timer className="w-6 h-6" />
           </div>
-        </div>
+        </button>
       </div>
 
       {/* Navigation Tabs */}
@@ -411,12 +421,6 @@ export function StudyPlannerPage({ onNavigate }: StudyPlannerPageProps) {
                         {task.title}
                       </h3>
                       {task.notes && <p className="text-xs text-slate-600">{task.notes}</p>}
-                      {task.ai_recommendation && (
-                        <div className="inline-flex items-center gap-1.5 text-xs text-purple-700 bg-purple-50 px-2 py-1 rounded-md mt-1">
-                          <Sparkles className="w-3.5 h-3.5 text-purple-600 shrink-0" />
-                          <span>{task.ai_recommendation}</span>
-                        </div>
-                      )}
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2 shrink-0">
