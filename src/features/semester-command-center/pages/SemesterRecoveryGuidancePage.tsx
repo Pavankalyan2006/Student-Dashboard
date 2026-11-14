@@ -85,13 +85,13 @@ export function SemesterRecoveryGuidancePage({
       <SemesterCommandCenterLayout currentTab="recovery" config={config} onNavigate={onNavigate}>
         <div className="space-y-6">
           {/* Sub-Tabs Switcher */}
-          <div className="flex border-b border-slate-800 gap-6">
+          <div className="flex border-b border-slate-200 gap-6">
             <button
               onClick={() => setActiveTab('recovery')}
               className={`pb-3 text-sm font-medium transition-colors border-b-2 flex items-center gap-2 ${
                 activeTab === 'recovery'
-                  ? 'border-indigo-500 text-indigo-400 font-semibold'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
+                  ? 'border-indigo-500 text-indigo-600 font-semibold'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
               }`}
             >
               <RotateCcw className="w-4 h-4" />
@@ -102,8 +102,8 @@ export function SemesterRecoveryGuidancePage({
               onClick={() => setActiveTab('daily')}
               className={`pb-3 text-sm font-medium transition-colors border-b-2 flex items-center gap-2 ${
                 activeTab === 'daily'
-                  ? 'border-indigo-500 text-indigo-400 font-semibold'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
+                  ? 'border-indigo-500 text-indigo-600 font-semibold'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
               }`}
             >
               <Flame className="w-4 h-4" />
@@ -114,8 +114,8 @@ export function SemesterRecoveryGuidancePage({
               onClick={() => setActiveTab('weekly')}
               className={`pb-3 text-sm font-medium transition-colors border-b-2 flex items-center gap-2 ${
                 activeTab === 'weekly'
-                  ? 'border-indigo-500 text-indigo-400 font-semibold'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
+                  ? 'border-indigo-500 text-indigo-600 font-semibold'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
               }`}
             >
               <TrendingUp className="w-4 h-4" />
@@ -126,13 +126,13 @@ export function SemesterRecoveryGuidancePage({
           {/* TAB 1: ACADEMIC RECOVERY ENGINE (Section 18) */}
           {activeTab === 'recovery' && (
             <div className="space-y-6">
-              <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-between">
+              <div className="p-4 bg-white border border-slate-200 rounded-xl flex items-center justify-between">
                 <div>
-                  <h3 className="text-base font-bold text-white flex items-center gap-2">
-                    <RotateCcw className="w-4 h-4 text-amber-400" />
+                  <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                    <RotateCcw className="w-4 h-4 text-amber-600" />
                     Intelligent Academic Recovery Engine
                   </h3>
-                  <p className="text-xs text-slate-400 mt-0.5">
+                  <p className="text-xs text-slate-500 mt-0.5">
                     If you miss a study block or score low on a test, the engine safely redistributes recovery sessions over multiple days to prevent burnout.
                   </p>
                 </div>
@@ -145,16 +145,16 @@ export function SemesterRecoveryGuidancePage({
                 />
               ) : (
                 recoveryPlans.map((plan) => (
-                  <div key={plan.id} className="p-5 bg-slate-900 border border-amber-900/40 rounded-xl space-y-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+                  <div key={plan.id} className="p-5 bg-white border border-amber-200 rounded-xl space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
                       <div>
                         <div className="flex items-center gap-2">
-                          <h4 className="text-base font-bold text-white">{plan.missed_item_title}</h4>
-                          <span className="text-[10px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 font-bold border border-amber-500/20">
+                          <h4 className="text-base font-bold text-slate-900">{plan.missed_item_title}</h4>
+                          <span className="text-[10px] px-2 py-0.5 rounded bg-amber-50 text-amber-600 font-bold border border-amber-200">
                             {plan.urgency} Urgency
                           </span>
                         </div>
-                        <p className="text-xs text-slate-400 mt-0.5">
+                        <p className="text-xs text-slate-500 mt-0.5">
                           Logged on {plan.missed_date} • Type: {(plan.missed_item_type || 'ACADEMIC').replace(/_/g, ' ')}
                         </p>
                       </div>
@@ -170,11 +170,11 @@ export function SemesterRecoveryGuidancePage({
                     </div>
 
                     {/* AI Recommendations */}
-                    <div className="p-3 bg-slate-950 rounded-lg border border-slate-800 space-y-1">
-                      <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wide">
+                    <div className="p-3 bg-white rounded-lg border border-slate-200 space-y-1">
+                      <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-wide">
                         AI Recovery Rationale:
                       </span>
-                      <ul className="text-xs text-slate-300 space-y-1 list-disc pl-4">
+                      <ul className="text-xs text-slate-700 space-y-1 list-disc pl-4">
                         {plan.recommendations.map((rec, idx) => (
                           <li key={idx}>{rec}</li>
                         ))}
@@ -183,18 +183,18 @@ export function SemesterRecoveryGuidancePage({
 
                     {/* Schedule Adjustments Breakdown */}
                     <div className="space-y-2">
-                      <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider block">
+                      <span className="text-xs font-semibold text-slate-700 uppercase tracking-wider block">
                         Distributed Recovery Timetable:
                       </span>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2.5">
                         {plan.schedule_adjustments.map((adj, idx) => (
-                          <div key={idx} className="p-3 bg-slate-950 rounded-lg border border-slate-800 space-y-1.5 text-xs">
+                          <div key={idx} className="p-3 bg-white rounded-lg border border-slate-200 space-y-1.5 text-xs">
                             <div className="flex items-center justify-between">
-                              <span className="font-bold text-indigo-400">{adj.day}</span>
-                              <span className="text-[10px] font-mono text-slate-400">{adj.duration_minutes} mins</span>
+                              <span className="font-bold text-indigo-600">{adj.day}</span>
+                              <span className="text-[10px] font-mono text-slate-500">{adj.duration_minutes} mins</span>
                             </div>
-                            <p className="text-slate-200 font-medium line-clamp-2">{adj.task}</p>
-                            <span className="text-[9px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 font-mono inline-block">
+                            <p className="text-slate-800 font-medium line-clamp-2">{adj.task}</p>
+                            <span className="text-[9px] px-1.5 py-0.2 rounded bg-slate-50 text-slate-500 font-mono inline-block">
                               {adj.type}
                             </span>
                           </div>
@@ -210,14 +210,14 @@ export function SemesterRecoveryGuidancePage({
           {/* TAB 2: DAILY GUIDANCE (Section 19) */}
           {activeTab === 'daily' && (
             <div className="space-y-6">
-              <div className="p-5 bg-slate-900 border border-slate-800 rounded-xl space-y-5">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="p-5 bg-white border border-slate-200 rounded-xl space-y-5">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-3">
                   <div>
-                    <h3 className="text-base font-bold text-white flex items-center gap-2">
-                      <Flame className="w-5 h-5 text-amber-400" />
+                    <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                      <Flame className="w-5 h-5 text-amber-600" />
                       Today's Daily Academic Guidance ({todayGuidance.date})
                     </h3>
-                    <p className="text-xs text-slate-400 mt-0.5">
+                    <p className="text-xs text-slate-500 mt-0.5">
                       Synthesized priorities taking into account upcoming slip tests, topic dependencies, and spaced repetition.
                     </p>
                   </div>
@@ -225,27 +225,27 @@ export function SemesterRecoveryGuidancePage({
 
                 {/* Primary & Secondary Focus */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 bg-slate-950 rounded-xl border border-indigo-900/40 space-y-2">
-                    <span className="text-xs font-bold text-indigo-400 uppercase tracking-wide">
+                  <div className="p-4 bg-white rounded-xl border border-indigo-200 space-y-2">
+                    <span className="text-xs font-bold text-indigo-600 uppercase tracking-wide">
                       Primary Academic Target ({todayGuidance.primary_focus.estimated_minutes} mins)
                     </span>
-                    <h4 className="text-base font-bold text-white">{todayGuidance.primary_focus.subject_name}</h4>
-                    <p className="text-xs text-slate-300">{todayGuidance.primary_focus.unit_name}</p>
+                    <h4 className="text-base font-bold text-slate-900">{todayGuidance.primary_focus.subject_name}</h4>
+                    <p className="text-xs text-slate-700">{todayGuidance.primary_focus.unit_name}</p>
                     <div className="flex flex-wrap gap-1.5 pt-1">
                       {todayGuidance.primary_focus.target_topics.map((t, idx) => (
-                        <span key={idx} className="text-xs bg-slate-900 border border-slate-800 text-slate-200 px-2 py-0.5 rounded">
+                        <span key={idx} className="text-xs bg-white border border-slate-200 text-slate-800 px-2 py-0.5 rounded">
                           {t}
                         </span>
                       ))}
                     </div>
                   </div>
 
-                  <div className="p-4 bg-slate-950 rounded-xl border border-slate-800 space-y-2">
-                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">
+                  <div className="p-4 bg-white rounded-xl border border-slate-200 space-y-2">
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">
                       Secondary Focus ({todayGuidance.secondary_focus.estimated_minutes} mins)
                     </span>
-                    <h4 className="text-base font-bold text-white">{todayGuidance.secondary_focus.subject_name}</h4>
-                    <p className="text-xs text-slate-300">{todayGuidance.secondary_focus.task_description}</p>
+                    <h4 className="text-base font-bold text-slate-900">{todayGuidance.secondary_focus.subject_name}</h4>
+                    <p className="text-xs text-slate-700">{todayGuidance.secondary_focus.task_description}</p>
                   </div>
                 </div>
 
@@ -253,27 +253,27 @@ export function SemesterRecoveryGuidancePage({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div
                     onClick={() => onNavigate && onNavigate(todayGuidance.quick_practice.action_url)}
-                    className="p-4 bg-indigo-950/20 border border-indigo-800/40 rounded-xl flex items-center justify-between cursor-pointer hover:bg-indigo-950/40 transition-colors"
+                    className="p-4 bg-indigo-50 border border-indigo-200 rounded-xl flex items-center justify-between cursor-pointer hover:bg-indigo-50 transition-colors"
                   >
                     <div className="space-y-1">
-                      <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wide">
+                      <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-wide">
                         Quick Practice Sandbox
                       </span>
-                      <p className="text-sm font-bold text-white">{todayGuidance.quick_practice.title}</p>
+                      <p className="text-sm font-bold text-slate-900">{todayGuidance.quick_practice.title}</p>
                     </div>
-                    <ArrowRight className="w-5 h-5 text-indigo-400" />
+                    <ArrowRight className="w-5 h-5 text-indigo-600" />
                   </div>
 
-                  <div className="p-4 bg-slate-950 rounded-xl border border-slate-800 space-y-2 text-xs">
-                    <span className="font-bold text-slate-400 uppercase tracking-wide block">
+                  <div className="p-4 bg-white rounded-xl border border-slate-200 space-y-2 text-xs">
+                    <span className="font-bold text-slate-500 uppercase tracking-wide block">
                       Spaced Repetition Revision Due:
                     </span>
                     {todayGuidance.revision_due.map((rev, idx) => (
-                      <div key={idx} className="flex items-center justify-between p-2 rounded bg-slate-900 border border-slate-800">
-                        <span className="text-slate-200 font-medium">
+                      <div key={idx} className="flex items-center justify-between p-2 rounded bg-white border border-slate-200">
+                        <span className="text-slate-800 font-medium">
                           {rev.subject_name} - {rev.unit_name}
                         </span>
-                        <span className="text-[10px] text-purple-400">{rev.reason}</span>
+                        <span className="text-[10px] text-purple-600">{rev.reason}</span>
                       </div>
                     ))}
                   </div>
@@ -285,14 +285,14 @@ export function SemesterRecoveryGuidancePage({
           {/* TAB 3: WEEKLY REVIEW (Section 20) */}
           {activeTab === 'weekly' && (
             <div className="space-y-6">
-              <div className="p-5 bg-slate-900 border border-slate-800 rounded-xl space-y-5">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="p-5 bg-white border border-slate-200 rounded-xl space-y-5">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-3">
                   <div>
-                    <h3 className="text-base font-bold text-white flex items-center gap-2">
-                      <TrendingUp className="w-5 h-5 text-emerald-400" />
+                    <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                      <TrendingUp className="w-5 h-5 text-emerald-600" />
                       Weekly Academic Review (Week {weeklyReview.week_number})
                     </h3>
-                    <p className="text-xs text-slate-400 mt-0.5">
+                    <p className="text-xs text-slate-500 mt-0.5">
                       {weeklyReview.start_date} to {weeklyReview.end_date} • {weeklyReview.study_hours_completed} of{' '}
                       {weeklyReview.study_hours_target} hours completed
                     </p>
@@ -302,16 +302,16 @@ export function SemesterRecoveryGuidancePage({
                 {/* Progress Deltas */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {weeklyReview.subject_deltas.map((d, idx) => (
-                    <div key={idx} className="p-3.5 bg-slate-950 rounded-xl border border-slate-800 space-y-1">
-                      <span className="text-xs text-slate-400 font-medium">{d.subject_name}</span>
-                      <div className="text-xl font-bold text-emerald-400">+{d.progress_delta_percent}%</div>
+                    <div key={idx} className="p-3.5 bg-white rounded-xl border border-slate-200 space-y-1">
+                      <span className="text-xs text-slate-500 font-medium">{d.subject_name}</span>
+                      <div className="text-xl font-bold text-emerald-600">+{d.progress_delta_percent}%</div>
                       <span
                         className={`text-[9px] px-1.5 py-0.2 rounded font-mono ${
                           d.status === 'AHEAD'
-                            ? 'bg-emerald-500/10 text-emerald-400'
+                            ? 'bg-emerald-50 text-emerald-600'
                             : d.status === 'ON_TRACK'
-                            ? 'bg-indigo-500/10 text-indigo-400'
-                            : 'bg-amber-500/10 text-amber-400'
+                            ? 'bg-indigo-50 text-indigo-600'
+                            : 'bg-amber-50 text-amber-600'
                         }`}
                       >
                         {d.status}
@@ -322,22 +322,22 @@ export function SemesterRecoveryGuidancePage({
 
                 {/* Strong vs Attention Needed */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                  <div className="p-4 bg-slate-950 rounded-xl border border-emerald-900/30 space-y-2">
-                    <span className="font-bold text-emerald-400 uppercase tracking-wide flex items-center gap-1.5">
+                  <div className="p-4 bg-white rounded-xl border border-emerald-200 space-y-2">
+                    <span className="font-bold text-emerald-600 uppercase tracking-wide flex items-center gap-1.5">
                       <CheckCircle2 className="w-4 h-4" /> Strong Topics Mastered This Week:
                     </span>
-                    <ul className="text-slate-300 space-y-1 list-disc pl-4">
+                    <ul className="text-slate-700 space-y-1 list-disc pl-4">
                       {weeklyReview.strong_topics.map((t, idx) => (
                         <li key={idx}>{t}</li>
                       ))}
                     </ul>
                   </div>
 
-                  <div className="p-4 bg-slate-950 rounded-xl border border-amber-900/30 space-y-2">
-                    <span className="font-bold text-amber-400 uppercase tracking-wide flex items-center gap-1.5">
+                  <div className="p-4 bg-white rounded-xl border border-amber-200 space-y-2">
+                    <span className="font-bold text-amber-600 uppercase tracking-wide flex items-center gap-1.5">
                       <AlertCircle className="w-4 h-4" /> Topics Needing Attention Next Week:
                     </span>
-                    <ul className="text-slate-300 space-y-1 list-disc pl-4">
+                    <ul className="text-slate-700 space-y-1 list-disc pl-4">
                       {weeklyReview.needs_attention.map((t, idx) => (
                         <li key={idx}>{t}</li>
                       ))}
@@ -346,11 +346,11 @@ export function SemesterRecoveryGuidancePage({
                 </div>
 
                 {/* Next Week Priorities */}
-                <div className="p-4 bg-slate-950 rounded-xl border border-indigo-900/40 space-y-2">
-                  <span className="text-xs font-bold text-indigo-400 uppercase tracking-wide">
+                <div className="p-4 bg-white rounded-xl border border-indigo-200 space-y-2">
+                  <span className="text-xs font-bold text-indigo-600 uppercase tracking-wide">
                     Next Week Academic Priorities:
                   </span>
-                  <ul className="text-xs text-slate-200 space-y-1.5 list-disc pl-4">
+                  <ul className="text-xs text-slate-800 space-y-1.5 list-disc pl-4">
                     {weeklyReview.next_week_priorities.map((item, idx) => (
                       <li key={idx}>{item}</li>
                     ))}

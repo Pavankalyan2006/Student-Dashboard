@@ -92,18 +92,18 @@ export function CommunityDashboardPage({ onNavigate }: { onNavigate: (path: stri
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
       {/* Community Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E4E7EC] pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-[#2563EB] border border-blue-200">
+            <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-600 border border-blue-200">
               Student-Only Peer Hub
             </span>
-            <span className="text-xs text-[#667085]">Strictly Moderated · Privacy Enforced</span>
+            <span className="text-xs text-slate-500">Strictly Moderated · Privacy Enforced</span>
           </div>
-          <h1 className="text-xl sm:text-2xl font-bold text-[#101828] mt-1">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1">
             B.Tech Peer Learning Community
           </h1>
-          <p className="text-xs text-[#667085]">
+          <p className="text-xs text-slate-500">
             Collaborate on engineering projects, ask conceptual questions, discuss academic papers, and share open technical resources.
           </p>
         </div>
@@ -112,7 +112,7 @@ export function CommunityDashboardPage({ onNavigate }: { onNavigate: (path: stri
         <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
           <button
             onClick={() => onNavigate('/community/questions?create=true')}
-            className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] rounded-xl transition-colors shadow-2xs cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors shadow-2xs cursor-pointer"
           >
             <HelpCircle className="h-4 w-4" />
             <span>Ask Question</span>
@@ -120,7 +120,7 @@ export function CommunityDashboardPage({ onNavigate }: { onNavigate: (path: stri
 
           <button
             onClick={() => onNavigate('/community/discussions?create=true')}
-            className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-[#344054] bg-white border border-[#E4E7EC] hover:bg-slate-50 rounded-xl transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer"
           >
             <MessageSquare className="h-4 w-4" />
             <span>Start Discussion</span>
@@ -141,15 +141,15 @@ export function CommunityDashboardPage({ onNavigate }: { onNavigate: (path: stri
             }
           }}
           placeholder="Search questions, discussions, or projects across the community (press Enter to explore)..."
-          className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-[#D0D5DD] bg-white focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+          className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-600"
         />
       </div>
 
       {/* Followed Topics Carousel */}
       <div className="space-y-2">
         <div className="flex items-center justify-between text-xs">
-          <span className="font-bold text-[#101828]">Academic & Technical Topics</span>
-          <span className="text-[11px] text-[#667085]">Follow topics to personalize your feed</span>
+          <span className="font-bold text-slate-900">Academic & Technical Topics</span>
+          <span className="text-[11px] text-slate-500">Follow topics to personalize your feed</span>
         </div>
 
         <div className="flex items-center gap-2 overflow-x-auto pb-2">
@@ -160,8 +160,8 @@ export function CommunityDashboardPage({ onNavigate }: { onNavigate: (path: stri
                 key={t.id}
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-medium whitespace-nowrap transition-all ${
                   isFollowed
-                    ? 'bg-blue-50/70 border-blue-200 text-[#2563EB]'
-                    : 'bg-white border-[#E4E7EC] text-[#475467] hover:bg-slate-50'
+                    ? 'bg-blue-50/70 border-blue-200 text-blue-600'
+                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                 }`}
               >
                 <button
@@ -191,15 +191,15 @@ export function CommunityDashboardPage({ onNavigate }: { onNavigate: (path: stri
         {/* Left Column: Questions & Discussions */}
         <div className="lg:col-span-2 space-y-6">
           {/* Recent Q&A Section */}
-          <div className="bg-white rounded-2xl border border-[#E4E7EC] p-5 shadow-2xs space-y-4">
+          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <HelpCircle className="h-4 w-4 text-[#2563EB]" />
-                <h2 className="text-sm font-bold text-[#101828]">Recent Questions</h2>
+                <HelpCircle className="h-4 w-4 text-blue-600" />
+                <h2 className="text-sm font-bold text-slate-900">Recent Questions</h2>
               </div>
               <button
                 onClick={() => onNavigate('/community/questions')}
-                className="text-xs text-[#2563EB] hover:underline font-semibold cursor-pointer"
+                className="text-xs text-blue-600 hover:underline font-semibold cursor-pointer"
               >
                 View all questions →
               </button>
@@ -220,7 +220,7 @@ export function CommunityDashboardPage({ onNavigate }: { onNavigate: (path: stri
                   className="py-3.5 hover:bg-slate-50/70 transition-colors cursor-pointer group space-y-1.5"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <h3 className="text-xs font-bold text-[#101828] group-hover:text-[#2563EB] transition-colors leading-snug">
+                    <h3 className="text-xs font-bold text-slate-900 group-hover:text-blue-600 transition-colors leading-snug">
                       {q.title}
                     </h3>
                     {q.is_accepted_answer && (
@@ -231,11 +231,11 @@ export function CommunityDashboardPage({ onNavigate }: { onNavigate: (path: stri
                     )}
                   </div>
 
-                  <p className="text-[11px] text-[#475467] line-clamp-2 leading-relaxed">
+                  <p className="text-[11px] text-slate-600 line-clamp-2 leading-relaxed">
                     {q.description}
                   </p>
 
-                  <div className="flex flex-wrap items-center justify-between gap-1 text-[10px] text-[#667085] pt-1">
+                  <div className="flex flex-wrap items-center justify-between gap-1 text-[10px] text-slate-500 pt-1">
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-slate-700">{q.author_name}</span>
                       <span>·</span>
@@ -256,15 +256,15 @@ export function CommunityDashboardPage({ onNavigate }: { onNavigate: (path: stri
           </div>
 
           {/* Trending Discussions Section */}
-          <div className="bg-white rounded-2xl border border-[#E4E7EC] p-5 shadow-2xs space-y-4">
+          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <MessageSquare className="h-4 w-4 text-[#7C3AED]" />
-                <h2 className="text-sm font-bold text-[#101828]">Trending Technical Discussions</h2>
+                <MessageSquare className="h-4 w-4 text-violet-600" />
+                <h2 className="text-sm font-bold text-slate-900">Trending Technical Discussions</h2>
               </div>
               <button
                 onClick={() => onNavigate('/community/discussions')}
-                className="text-xs text-[#2563EB] hover:underline font-semibold cursor-pointer"
+                className="text-xs text-blue-600 hover:underline font-semibold cursor-pointer"
               >
                 View all discussions →
               </button>
@@ -288,12 +288,12 @@ export function CommunityDashboardPage({ onNavigate }: { onNavigate: (path: stri
                     <span className="text-[10px] font-bold uppercase tracking-wider text-purple-700 bg-purple-50 px-2 py-0.2 rounded">
                       {d.category}
                     </span>
-                    <span className="text-[10px] text-[#667085]">{d.reply_count} replies</span>
+                    <span className="text-[10px] text-slate-500">{d.reply_count} replies</span>
                   </div>
-                  <h3 className="text-xs font-bold text-[#101828] group-hover:text-[#2563EB] transition-colors">
+                  <h3 className="text-xs font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
                     {d.title}
                   </h3>
-                  <p className="text-[11px] text-[#475467] line-clamp-1">{d.content}</p>
+                  <p className="text-[11px] text-slate-600 line-clamp-1">{d.content}</p>
                 </div>
               ))}
             </div>
@@ -303,15 +303,15 @@ export function CommunityDashboardPage({ onNavigate }: { onNavigate: (path: stri
         {/* Right Column: Project Showcase & Shared Resources */}
         <div className="space-y-6">
           {/* Project Showcase */}
-          <div className="bg-white rounded-2xl border border-[#E4E7EC] p-5 shadow-2xs space-y-4">
+          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Hammer className="h-4 w-4 text-amber-500" />
-                <h2 className="text-sm font-bold text-[#101828]">Project Showcase</h2>
+                <h2 className="text-sm font-bold text-slate-900">Project Showcase</h2>
               </div>
               <button
                 onClick={() => onNavigate('/community/projects')}
-                className="text-xs text-[#2563EB] hover:underline font-semibold cursor-pointer"
+                className="text-xs text-blue-600 hover:underline font-semibold cursor-pointer"
               >
                 All →
               </button>
@@ -324,10 +324,10 @@ export function CommunityDashboardPage({ onNavigate }: { onNavigate: (path: stri
                   onClick={() => onNavigate(`/community/projects/${p.id}`)}
                   className="p-3.5 rounded-xl border border-slate-200 hover:border-blue-300 hover:bg-slate-50/50 transition-all cursor-pointer space-y-2 group"
                 >
-                  <h4 className="text-xs font-bold text-[#101828] group-hover:text-[#2563EB] transition-colors">
+                  <h4 className="text-xs font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
                     {p.title}
                   </h4>
-                  <p className="text-[11px] text-[#475467] line-clamp-2 leading-relaxed">
+                  <p className="text-[11px] text-slate-600 line-clamp-2 leading-relaxed">
                     {p.description}
                   </p>
                   <div className="flex flex-wrap gap-1 pt-1">
@@ -343,15 +343,15 @@ export function CommunityDashboardPage({ onNavigate }: { onNavigate: (path: stri
           </div>
 
           {/* Shared Learning Resources */}
-          <div className="bg-white rounded-2xl border border-[#E4E7EC] p-5 shadow-2xs space-y-4">
+          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Share2 className="h-4 w-4 text-emerald-600" />
-                <h2 className="text-sm font-bold text-[#101828]">Shared Resources</h2>
+                <h2 className="text-sm font-bold text-slate-900">Shared Resources</h2>
               </div>
               <button
                 onClick={() => onNavigate('/community/resources')}
-                className="text-xs text-[#2563EB] hover:underline font-semibold cursor-pointer"
+                className="text-xs text-blue-600 hover:underline font-semibold cursor-pointer"
               >
                 All →
               </button>
@@ -364,11 +364,11 @@ export function CommunityDashboardPage({ onNavigate }: { onNavigate: (path: stri
                   onClick={() => window.open(r.url, '_blank')}
                   className="p-3 rounded-xl border border-slate-200 hover:bg-slate-50/50 cursor-pointer space-y-1 transition-colors"
                 >
-                  <span className="text-[10px] font-mono uppercase text-[#2563EB] font-semibold">
+                  <span className="text-[10px] font-mono uppercase text-blue-600 font-semibold">
                     {r.category}
                   </span>
-                  <h4 className="text-xs font-bold text-[#101828] truncate">{r.title}</h4>
-                  <p className="text-[11px] text-[#667085] line-clamp-1">{r.description}</p>
+                  <h4 className="text-xs font-bold text-slate-900 truncate">{r.title}</h4>
+                  <p className="text-[11px] text-slate-500 line-clamp-1">{r.description}</p>
                 </div>
               ))}
             </div>

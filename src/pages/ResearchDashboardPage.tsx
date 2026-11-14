@@ -25,7 +25,7 @@ export const ResearchDashboardPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 p-6 md:p-8 space-y-8">
       {/* Hero Section */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-8 text-white shadow-xl">
+      <div className="relative overflow-hidden rounded-2xl hero-brand p-8 text-white">
         <div className="relative z-10 max-w-3xl space-y-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-semibold border border-indigo-500/30">
             <Sparkles className="w-3.5 h-3.5" />

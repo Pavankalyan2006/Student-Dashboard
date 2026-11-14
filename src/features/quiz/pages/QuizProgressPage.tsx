@@ -182,9 +182,9 @@ export const QuizProgressPage: React.FC<QuizProgressPageProps> = ({ onNavigate }
                 <YAxis domain={[0, 100]} fontSize={11} />
                 <Tooltip
                   formatter={(val: any) => [`${val}%`, 'Accuracy']}
-                  contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px', color: '#fff', fontSize: '12px' }}
+                  contentStyle={{ backgroundColor: '#121829', borderColor: '#363F52', borderRadius: '8px', color: '#fff', fontSize: '12px' }}
                 />
-                <Bar dataKey="accuracy" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="accuracy" fill="#5E6EEF" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -205,7 +205,7 @@ export const QuizProgressPage: React.FC<QuizProgressPageProps> = ({ onNavigate }
                   <YAxis domain={[0, 100]} fontSize={11} />
                   <Tooltip
                     formatter={(val: any) => [`${val}%`, 'Score']}
-                    contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px', color: '#fff', fontSize: '12px' }}
+                    contentStyle={{ backgroundColor: '#121829', borderColor: '#363F52', borderRadius: '8px', color: '#fff', fontSize: '12px' }}
                   />
                   <Line type="monotone" dataKey="score" stroke="#8b5cf6" strokeWidth={2.5} dot={{ r: 4 }} activeDot={{ r: 6 }} />
                 </LineChart>

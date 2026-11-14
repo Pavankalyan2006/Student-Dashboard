@@ -75,135 +75,98 @@ export function DashboardPage({ onNavigate }: { onNavigate: (path: string) => vo
   }
 
   return (
-    <PageContainer className="space-y-6">
-      {/* 0. Onboarding Personalization Action Banner */}
+    <PageContainer className="space-y-6 lg:space-y-8">
+      {/* Onboarding reminder: compact, not a full-width hero */}
       {onboardingStatus && !onboardingStatus.is_complete && (
-        <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl p-5 text-white shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-amber-300" />
-              <span className="text-xs font-bold uppercase tracking-wider text-blue-100">Profile Setup & Personalization</span>
+        <div className="flex flex-col gap-3 rounded-xl border border-blue-200/70 bg-blue-50/60 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-blue-600 ring-1 ring-inset ring-blue-200">
+              <Sparkles className="h-4 w-4" />
+            </span>
+            <div>
+              <p className="text-sm font-semibold text-slate-900">Finish setting up your workspace</p>
+              <p className="text-[13px] text-slate-600">
+                Add your syllabus, exam dates, skills and career goals so the AI tutor and labs are tuned to you.
+              </p>
             </div>
-            <h3 className="text-lg font-bold">Personalize your B.Tech AI Learning Platform</h3>
-            <p className="text-xs text-blue-100 max-w-xl">
-              Configure your curriculum syllabus, internal exam dates, learning modality, self-assessed skills, and career targets to personalize every AI Tutor and lab.
-            </p>
           </div>
           <button
+            type="button"
             onClick={() => onNavigate('/onboarding')}
-            className="px-5 py-2.5 rounded-xl bg-white text-blue-700 font-bold text-xs hover:bg-blue-50 transition-all shrink-0 flex items-center gap-1.5 shadow-sm"
+            className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-lg bg-blue-600 px-3.5 py-2 text-[13px] font-semibold text-white hover:bg-blue-700 sm:self-center"
           >
-            <span>Complete Onboarding Setup</span>
+            Complete setup
             <ArrowRight className="h-4 w-4" />
           </button>
         </div>
       )}
 
-      {/* 1. Personalized Welcome Header */}
-      <DashboardWelcome
-        student={data.student}
-        streakDays={data.summary.streak_days}
-      />
-
-      {/* 1b. Academic profile from the central student profile (Phase 5) */}
+      {/* Welcome and academic summary */}
+      <DashboardWelcome student={data.student} streakDays={data.summary.streak_days} />
       {data.student_profile && <DashboardProfileSummary profile={data.student_profile} onNavigate={onNavigate} />}
 
-      {/* 2. Compact Quick Actions Bar */}
-      <QuickActions onNavigate={onNavigate} />
-
-      {/* 3. 10 AI Learning Modules Live Summary Grid */}
-      <LearningModulesSummaryWidget onNavigate={onNavigate} />
-
-      {/* 4. Personalized AI Learning Hero */}
-      <DashboardAIHero onNavigate={onNavigate} />
-
-      {/* 5. Continue Active Learning */}
+      {/* Pick up where you left off */}
       <ContinueLearning item={data.continue_learning} onNavigate={onNavigate} />
 
-      {/* 5. Main 2-Column Responsive Workspace Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left / Primary Work Area (2 Cols on desktop) */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Today's Tasks Checklist */}
+      <QuickActions onNavigate={onNavigate} />
+
+      {/* Main workspace: today's work on the left, progress and schedule on the right */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="min-w-0 space-y-6 lg:col-span-2">
           <TodaysPlan
             tasks={data.today_plan}
             onToggleTask={toggleTodayTask}
             onNavigate={onNavigate}
           />
-
-          {/* Active Courses Progress */}
-          <CourseProgress
-            courses={data.course_progress}
-            onNavigate={onNavigate}
-          />
-
-          {/* Contextual Recommendations */}
-          <RecommendedLearning
-            recommendations={data.recommendations}
-            onNavigate={onNavigate}
-          />
-
-          {/* Active Engineering Projects */}
-          <ActiveProjects
-            projects={data.projects}
-            onNavigate={onNavigate}
-          />
-
-          {/* Learning Analytics Chart */}
+          <CourseProgress courses={data.course_progress} onNavigate={onNavigate} />
           <LearningAnalytics analytics={data.analytics} />
         </div>
-
-        {/* Right Rail (1 Col on desktop) */}
-        <div className="space-y-6">
-          {/* Overall Academic Competency */}
+        <div className="min-w-0 space-y-6">
           <OverallProgress summary={data.summary} />
-
-          {/* Habit & Streak */}
-          <LearningStreak
-            streakDays={data.summary.streak_days}
-            longestStreak={data.summary.longest_streak}
-          />
-
-          {/* Target Improvement Areas */}
-          <WeakAreas areas={data.weak_areas} onNavigate={onNavigate} />
-
-          {/* Strengths */}
-          <Strengths strengths={data.strengths} />
-
-          {/* Upcoming Deadlines & Exams */}
+          <LearningStreak streakDays={data.summary.streak_days} longestStreak={data.summary.longest_streak} />
           <UpcomingItems items={data.upcoming_items} onNavigate={onNavigate} />
-
-          {/* Recent Activity Timeline */}
           <RecentActivity activities={data.recent_activity} onNavigate={onNavigate} />
-
-          {/* Recent Coding Activity & Sandbox Widget */}
-          <RecentCodingWidget onNavigate={onNavigate} />
-
-          {/* DSA & Algorithm Visualizer Widget */}
-          <DSAProgressWidget onNavigate={onNavigate} />
-
-          {/* AI Quiz & Adaptive Assessment Widget */}
-          <QuizProgressWidget onNavigate={onNavigate} />
-
-          {/* Placement Prep & AI Mock Interview Widget */}
-          <PlacementProgressWidget onNavigate={onNavigate} />
-
-          {/* Resume, Career Roadmap & Skill Assessment Widget */}
-          <CareerResumeWidget onNavigate={onNavigate} />
-
-          {/* Research Assistant & GitHub Code Intelligence Widget */}
-          <ResearchGitHubWidget onNavigate={onNavigate} />
-
-          {/* External Platform & Social Activity Telemetry (Section 33) */}
-          <ExternalActivityWidget onNavigate={onNavigate} />
-
-          {/* Recent Uploaded / Read Documents */}
-          <RecentDocuments documents={data.recent_documents} onNavigate={onNavigate} />
-
-          {/* Pinned Bookmarks */}
-          <RecentBookmarks bookmarks={data.bookmarks} onNavigate={onNavigate} />
         </div>
       </div>
+
+      {/* AI tutor entry point */}
+      <DashboardAIHero onNavigate={onNavigate} />
+
+      {/* Recommendations, focus areas and projects */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="min-w-0 space-y-6 lg:col-span-2">
+          <RecommendedLearning recommendations={data.recommendations} onNavigate={onNavigate} />
+          <ActiveProjects projects={data.projects} onNavigate={onNavigate} />
+        </div>
+        <div className="min-w-0 space-y-6">
+          <WeakAreas areas={data.weak_areas} onNavigate={onNavigate} />
+          <Strengths strengths={data.strengths} />
+        </div>
+      </div>
+
+      {/* Every learning module at a glance */}
+      <LearningModulesSummaryWidget onNavigate={onNavigate} />
+
+      {/* Module activity, in an even grid instead of one long rail */}
+      <section className="space-y-4" aria-labelledby="module-activity-heading">
+        <div>
+          <h2 id="module-activity-heading" className="font-display text-[17px] font-semibold tracking-tight text-slate-900">
+            Labs, career and research
+          </h2>
+          <p className="text-[13px] text-slate-500">Live numbers from each module you use.</p>
+        </div>
+        <div className="grid grid-cols-1 items-start gap-6 md:grid-cols-2 xl:grid-cols-3">
+          <RecentCodingWidget onNavigate={onNavigate} />
+          <DSAProgressWidget onNavigate={onNavigate} />
+          <QuizProgressWidget onNavigate={onNavigate} />
+          <PlacementProgressWidget onNavigate={onNavigate} />
+          <CareerResumeWidget onNavigate={onNavigate} />
+          <ResearchGitHubWidget onNavigate={onNavigate} />
+          <ExternalActivityWidget onNavigate={onNavigate} />
+          <RecentDocuments documents={data.recent_documents} onNavigate={onNavigate} />
+          <RecentBookmarks bookmarks={data.bookmarks} onNavigate={onNavigate} />
+        </div>
+      </section>
     </PageContainer>
   );
 }

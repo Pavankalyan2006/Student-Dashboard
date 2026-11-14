@@ -73,17 +73,17 @@ export function DocumentViewer({
   }, [pages, inDocSearch]);
 
   return (
-    <div className={cn('flex h-full w-full bg-[#F8FAFC] overflow-hidden', className)}>
+    <div className={cn('flex h-full w-full bg-slate-50 overflow-hidden', className)}>
       {/* Left Navigation Sidebar: Pages Thumbnails & Search */}
-      <div className="w-56 shrink-0 border-r border-[#E4E7EC] bg-white flex flex-col hidden md:flex">
+      <div className="w-56 shrink-0 border-r border-slate-200 bg-white flex flex-col hidden md:flex">
         {/* Sidebar tabs */}
-        <div className="flex items-center border-b border-[#E4E7EC] p-1 bg-slate-50/60">
+        <div className="flex items-center border-b border-slate-200 p-1 bg-slate-50/60">
           <button
             onClick={() => setSidebarTab('pages')}
             className={cn(
               'flex-1 py-1.5 text-[11px] font-medium rounded-md transition-colors cursor-pointer text-center',
               sidebarTab === 'pages'
-                ? 'bg-white text-[#2563EB] shadow-2xs font-semibold'
+                ? 'bg-white text-blue-600 shadow-2xs font-semibold'
                 : 'text-slate-500 hover:text-slate-900'
             )}
           >
@@ -94,7 +94,7 @@ export function DocumentViewer({
             className={cn(
               'flex-1 py-1.5 text-[11px] font-medium rounded-md transition-colors cursor-pointer text-center',
               sidebarTab === 'search'
-                ? 'bg-white text-[#2563EB] shadow-2xs font-semibold'
+                ? 'bg-white text-blue-600 shadow-2xs font-semibold'
                 : 'text-slate-500 hover:text-slate-900'
             )}
           >
@@ -117,8 +117,8 @@ export function DocumentViewer({
                     className={cn(
                       'group flex items-start gap-2 p-2 rounded-lg border text-left cursor-pointer transition-all',
                       isCurrent
-                        ? 'border-[#2563EB] bg-blue-50/50 shadow-2xs'
-                        : 'border-[#E4E7EC] bg-white hover:bg-slate-50'
+                        ? 'border-blue-600 bg-blue-50/50 shadow-2xs'
+                        : 'border-slate-200 bg-white hover:bg-slate-50'
                     )}
                   >
                     <button
@@ -126,11 +126,11 @@ export function DocumentViewer({
                         e.stopPropagation();
                         togglePageSelection(p.page_number);
                       }}
-                      className="mt-0.5 text-slate-400 hover:text-[#2563EB] cursor-pointer"
+                      className="mt-0.5 text-slate-400 hover:text-blue-600 cursor-pointer"
                       title={isSelected ? 'Deselect page' : 'Select page for AI'}
                     >
                       {isSelected ? (
-                        <CheckSquare className="h-3.5 w-3.5 text-[#2563EB]" />
+                        <CheckSquare className="h-3.5 w-3.5 text-blue-600" />
                       ) : (
                         <Square className="h-3.5 w-3.5" />
                       )}
@@ -141,7 +141,7 @@ export function DocumentViewer({
                         <span
                           className={cn(
                             'font-semibold',
-                            isCurrent ? 'text-[#2563EB]' : 'text-slate-800'
+                            isCurrent ? 'text-blue-600' : 'text-slate-800'
                           )}
                         >
                           Page {p.page_number}
@@ -221,7 +221,7 @@ export function DocumentViewer({
               onClick={() => onAskAboutPage?.(activePage?.page_number || currentPage)}
               className="h-7 text-xs gap-1 border-blue-200 text-blue-700 hover:bg-blue-100/60 bg-white"
             >
-              <Sparkles className="h-3 w-3 text-[#2563EB]" />
+              <Sparkles className="h-3 w-3 text-blue-600" />
               <span>Ask about this page</span>
             </Button>
 
@@ -248,9 +248,9 @@ export function DocumentViewer({
         </div>
 
         {/* Scrollable Page Sheet Canvas */}
-        <div className="flex-1 overflow-auto p-4 sm:p-8 flex justify-center bg-[#F1F5F9]">
+        <div className="flex-1 overflow-auto p-4 sm:p-8 flex justify-center bg-slate-100">
           <div
-            className="w-full max-w-3xl min-h-[680px] bg-white rounded-xl border border-[#E4E7EC] shadow-md p-8 sm:p-12 flex flex-col justify-between transition-transform duration-150 origin-top overflow-hidden break-words"
+            className="w-full max-w-3xl min-h-[680px] bg-white rounded-xl border border-slate-200 shadow-md p-8 sm:p-12 flex flex-col justify-between transition-transform duration-150 origin-top overflow-hidden break-words"
             style={{ transform: `scale(${zoom / 100})` }}
           >
             {/* Header info */}

@@ -96,7 +96,7 @@ export const PlacementCompaniesPage: React.FC<Props> = ({ companyId, onNavigate 
   );
 
   return (
-    <div className="min-h-screen bg-[#F7F9FC] p-6 lg:p-10">
+    <div className="min-h-screen bg-slate-50 p-6 lg:p-10">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Navigation & Header */}
         <div>
@@ -109,7 +109,7 @@ export const PlacementCompaniesPage: React.FC<Props> = ({ companyId, onNavigate 
           </button>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-extrabold text-[#0B1530] tracking-tight">
+              <h1 className="text-3xl font-extrabold text-navy-900 tracking-tight">
                 Company-Specific Preparation
               </h1>
               <p className="text-gray-600 mt-1">
@@ -216,7 +216,7 @@ export const PlacementCompaniesPage: React.FC<Props> = ({ companyId, onNavigate 
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <h2 className="text-2xl font-bold text-[#0B1530]">{selectedCompany.name}</h2>
+                          <h2 className="text-2xl font-bold text-navy-900">{selectedCompany.name}</h2>
                           {selectedCompany.website && (
                             <a
                               href={selectedCompany.website}

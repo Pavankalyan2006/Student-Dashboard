@@ -71,37 +71,37 @@ export function NotesEditor({ note, onClose }: NotesEditorProps) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white rounded-xl border border-[#E4E7EC] shadow-sm overflow-hidden">
+    <div className="flex flex-col h-full bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
       {/* Editor Header */}
-      <div className="p-4 bg-slate-50 border-b border-[#E4E7EC] flex flex-wrap items-center justify-between gap-3">
+      <div className="p-4 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
         <div className="flex-1 min-w-[280px]">
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full text-base font-semibold text-[#101828] bg-transparent border-b border-transparent hover:border-[#D0D5DD] focus:border-[#2563EB] focus:outline-none px-1 py-0.5 transition"
+            className="w-full text-base font-semibold text-slate-900 bg-transparent border-b border-transparent hover:border-slate-300 focus:border-blue-600 focus:outline-none px-1 py-0.5 transition"
             placeholder="Note Title"
           />
           <div className="flex items-center gap-2 mt-1">
-            <span className="text-[11px] text-[#475467] font-medium">Tags:</span>
+            <span className="text-[11px] text-slate-600 font-medium">Tags:</span>
             <input
               type="text"
               value={tagsInput}
               onChange={(e) => setTagsInput(e.target.value)}
               placeholder="DBMS, Gate, Exam..."
-              className="text-[11px] text-[#344054] bg-white border border-[#D0D5DD] rounded px-2 py-0.5 w-64 focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+              className="text-[11px] text-slate-700 bg-white border border-slate-300 rounded px-2 py-0.5 w-64 focus:outline-none focus:ring-1 focus:ring-blue-600"
             />
           </div>
         </div>
 
         {/* View Mode & Actions */}
         <div className="flex items-center gap-2">
-          <div className="flex rounded-lg border border-[#D0D5DD] p-0.5 bg-white">
+          <div className="flex rounded-lg border border-slate-300 p-0.5 bg-white">
             <button
               type="button"
               onClick={() => setViewMode('edit')}
               className={`p-1.5 rounded text-xs transition ${
-                viewMode === 'edit' ? 'bg-[#2563EB] text-white' : 'text-[#475467] hover:text-[#101828]'
+                viewMode === 'edit' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:text-slate-900'
               }`}
               title="Edit Only"
             >
@@ -111,7 +111,7 @@ export function NotesEditor({ note, onClose }: NotesEditorProps) {
               type="button"
               onClick={() => setViewMode('split')}
               className={`p-1.5 rounded text-xs transition ${
-                viewMode === 'split' ? 'bg-[#2563EB] text-white' : 'text-[#475467] hover:text-[#101828]'
+                viewMode === 'split' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:text-slate-900'
               }`}
               title="Split View"
             >
@@ -121,7 +121,7 @@ export function NotesEditor({ note, onClose }: NotesEditorProps) {
               type="button"
               onClick={() => setViewMode('preview')}
               className={`p-1.5 rounded text-xs transition ${
-                viewMode === 'preview' ? 'bg-[#2563EB] text-white' : 'text-[#475467] hover:text-[#101828]'
+                viewMode === 'preview' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:text-slate-900'
               }`}
               title="Preview Only"
             >
@@ -133,7 +133,7 @@ export function NotesEditor({ note, onClose }: NotesEditorProps) {
             variant="outline"
             size="sm"
             onClick={onClose}
-            className="text-xs text-[#475467]"
+            className="text-xs text-slate-600"
           >
             Cancel
           </Button>
@@ -142,7 +142,7 @@ export function NotesEditor({ note, onClose }: NotesEditorProps) {
             size="sm"
             onClick={handleSave}
             disabled={updateMutation.isPending || !title.trim() || !content.trim()}
-            className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs h-8 px-3 font-medium flex items-center gap-1.5 shadow-xs"
+            className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-8 px-3 font-medium flex items-center gap-1.5 shadow-xs"
           >
             <Save className="h-3.5 w-3.5" />
             {updateMutation.isPending ? 'Saving...' : 'Save Version'}
@@ -152,11 +152,11 @@ export function NotesEditor({ note, onClose }: NotesEditorProps) {
 
       {/* Formatting Toolbar (shown when in edit or split mode) */}
       {viewMode !== 'preview' && (
-        <div className="px-4 py-2 border-b border-[#F2F4F7] bg-white flex items-center gap-1 overflow-x-auto text-xs text-[#475467]">
+        <div className="px-4 py-2 border-b border-slate-100 bg-white flex items-center gap-1 overflow-x-auto text-xs text-slate-600">
           <button
             type="button"
             onClick={() => insertSnippet('### ', '')}
-            className="p-1 hover:bg-[#F2F4F7] rounded flex items-center gap-1"
+            className="p-1 hover:bg-slate-100 rounded flex items-center gap-1"
             title="Heading"
           >
             <Heading className="h-3.5 w-3.5" />
@@ -165,16 +165,16 @@ export function NotesEditor({ note, onClose }: NotesEditorProps) {
           <button
             type="button"
             onClick={() => insertSnippet('**', '**')}
-            className="p-1 hover:bg-[#F2F4F7] rounded flex items-center gap-1"
+            className="p-1 hover:bg-slate-100 rounded flex items-center gap-1"
             title="Bold"
           >
             <Bold className="h-3.5 w-3.5" />
           </button>
-          <div className="h-4 w-px bg-[#E4E7EC] mx-1" />
+          <div className="h-4 w-px bg-slate-200 mx-1" />
           <button
             type="button"
             onClick={() => insertSnippet('$', '$')}
-            className="p-1 hover:bg-blue-50 text-[#2563EB] rounded flex items-center gap-1 font-mono text-xs font-semibold"
+            className="p-1 hover:bg-blue-50 text-blue-600 rounded flex items-center gap-1 font-mono text-xs font-semibold"
             title="Inline KaTeX Formula"
           >
             <Sigma className="h-3.5 w-3.5" />
@@ -183,16 +183,16 @@ export function NotesEditor({ note, onClose }: NotesEditorProps) {
           <button
             type="button"
             onClick={() => insertSnippet('\n$$\n', '\n$$\n')}
-            className="p-1 hover:bg-blue-50 text-[#2563EB] rounded flex items-center gap-1 font-mono text-[11px] font-semibold"
+            className="p-1 hover:bg-blue-50 text-blue-600 rounded flex items-center gap-1 font-mono text-[11px] font-semibold"
             title="Block Formula"
           >
             $$Block$$
           </button>
-          <div className="h-4 w-px bg-[#E4E7EC] mx-1" />
+          <div className="h-4 w-px bg-slate-200 mx-1" />
           <button
             type="button"
             onClick={() => insertSnippet('\n```cpp\n', '\n```\n')}
-            className="p-1 hover:bg-[#F2F4F7] rounded flex items-center gap-1"
+            className="p-1 hover:bg-slate-100 rounded flex items-center gap-1"
             title="Code Block"
           >
             <Code className="h-3.5 w-3.5" />
@@ -201,7 +201,7 @@ export function NotesEditor({ note, onClose }: NotesEditorProps) {
           <button
             type="button"
             onClick={() => insertSnippet('- ', '')}
-            className="p-1 hover:bg-[#F2F4F7] rounded flex items-center gap-1"
+            className="p-1 hover:bg-slate-100 rounded flex items-center gap-1"
             title="Bullet List"
           >
             <List className="h-3.5 w-3.5" />
@@ -213,7 +213,7 @@ export function NotesEditor({ note, onClose }: NotesEditorProps) {
                 '\n| Property | Value | Notes |\n|---|---|---|\n| Item 1 | Value 1 | Details |\n| Item 2 | Value 2 | Details |\n'
               )
             }
-            className="p-1 hover:bg-[#F2F4F7] rounded flex items-center gap-1"
+            className="p-1 hover:bg-slate-100 rounded flex items-center gap-1"
             title="Table"
           >
             <TableIcon className="h-3.5 w-3.5" />
@@ -225,12 +225,12 @@ export function NotesEditor({ note, onClose }: NotesEditorProps) {
       {/* Editor Body */}
       <div className="flex-1 grid overflow-hidden min-h-[450px]" style={{ gridTemplateColumns: viewMode === 'split' ? '1fr 1fr' : '1fr' }}>
         {viewMode !== 'preview' && (
-          <div className="p-4 border-r border-[#E4E7EC] flex flex-col h-full bg-[#FAFAFA]">
+          <div className="p-4 border-r border-slate-200 flex flex-col h-full bg-[#FAFAFA]">
             <textarea
               ref={textareaRef}
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              className="w-full flex-1 p-3 text-xs font-mono leading-relaxed bg-white border border-[#D0D5DD] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563EB] resize-none"
+              className="w-full flex-1 p-3 text-xs font-mono leading-relaxed bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 resize-none"
               placeholder="Write academic notes in Markdown with KaTeX math notation ($...$, $$...$$)..."
             />
           </div>

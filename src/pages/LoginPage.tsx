@@ -198,12 +198,12 @@ export function LoginPage({
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-[#F7F9FC] px-4 py-12">
+    <div className="min-h-screen flex flex-col justify-center items-center bg-slate-50 px-4 py-12">
       {/* Return to Public Website */}
       {onNavigate && (
         <button
           onClick={() => onNavigate('/')}
-          className="mb-4 text-xs font-semibold text-[#475467] hover:text-[#2563EB] flex items-center gap-1.5 transition-colors cursor-pointer"
+          className="mb-4 text-xs font-semibold text-slate-600 hover:text-blue-600 flex items-center gap-1.5 transition-colors cursor-pointer"
         >
           <span>← Back to Public Website</span>
         </button>
@@ -214,27 +214,27 @@ export function LoginPage({
         onClick={() => onNavigate && onNavigate('/')}
         className="flex items-center gap-3 mb-6 cursor-pointer"
       >
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[#2563EB] to-[#4F46E5] text-white shadow-lg">
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-lg">
           <Sparkles className="h-6 w-6" />
         </div>
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-[#101828]">B.Tech AI Learning Platform</h1>
-          <p className="text-xs text-[#667085]">Personalized Academic Operating System for Engineering Students</p>
+          <h1 className="text-xl font-bold tracking-tight text-slate-900">B.Tech AI Learning Platform</h1>
+          <p className="text-xs text-slate-500">Personalized Academic Operating System for Engineering Students</p>
         </div>
       </div>
 
       {/* Main Auth Card */}
-      <Card className="w-full max-w-lg shadow-xl border border-[#E4E7EC] bg-white rounded-2xl">
+      <Card className="w-full max-w-lg shadow-xl border border-slate-200 bg-white rounded-2xl">
         <CardHeader className="space-y-2 pb-4 pt-6 px-6 sm:px-8 border-b border-slate-100">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-lg font-bold text-[#101828]">
+            <CardTitle className="text-lg font-bold text-slate-900">
               {authMode === 'signin' ? 'Sign in to your Workspace' : 'Create your Student Workspace'}
             </CardTitle>
             <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200/60">
               B.Tech Student
             </span>
           </div>
-          <CardDescription className="text-xs text-[#667085]">
+          <CardDescription className="text-xs text-slate-500">
             {authMode === 'signin'
               ? 'Access your semester syllabus, AI Tutor, coding lab, and personalized study roadmaps.'
               : 'Enter your academic details to generate tailored courses, exam guides, and AI learning contexts.'}
@@ -250,8 +250,8 @@ export function LoginPage({
               }}
               className={`py-2 rounded-lg transition-all cursor-pointer text-center ${
                 authMode === 'signin'
-                  ? 'bg-white text-[#101828] shadow-sm font-bold'
-                  : 'text-[#667085] hover:text-[#101828]'
+                  ? 'bg-white text-slate-900 shadow-sm font-bold'
+                  : 'text-slate-500 hover:text-slate-900'
               }`}
             >
               Sign In
@@ -264,8 +264,8 @@ export function LoginPage({
               }}
               className={`py-2 rounded-lg transition-all cursor-pointer text-center ${
                 authMode === 'signup'
-                  ? 'bg-white text-[#101828] shadow-sm font-bold'
-                  : 'text-[#667085] hover:text-[#101828]'
+                  ? 'bg-white text-slate-900 shadow-sm font-bold'
+                  : 'text-slate-500 hover:text-slate-900'
               }`}
             >
               Create Account (Sign Up)
@@ -285,7 +285,7 @@ export function LoginPage({
           {authMode === 'signin' ? (
             <form onSubmit={handleSignIn} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-[#344054]">Academic Email</label>
+                <label className="text-xs font-bold text-slate-700">Academic Email</label>
                 <Input
                   type="email"
                   value={email}
@@ -299,7 +299,7 @@ export function LoginPage({
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-[#344054]">Password</label>
+                  <label className="text-xs font-bold text-slate-700">Password</label>
                   <button
                     type="button"
                     className="text-[11px] text-blue-600 hover:underline cursor-pointer"
@@ -352,20 +352,20 @@ export function LoginPage({
 
               {/* Quick Switch to Sign Up */}
               <div className="text-center pt-2">
-                <span className="text-xs text-[#667085]">New student? </span>
+                <span className="text-xs text-slate-500">New student? </span>
                 <button
                   type="button"
                   onClick={() => setAuthMode('signup')}
-                  className="text-xs font-bold text-[#2563EB] hover:underline cursor-pointer"
+                  className="text-xs font-bold text-blue-600 hover:underline cursor-pointer"
                 >
                   Create an account
                 </button>
               </div>
 
               {/* Quick Demo Fill & 1-Click Access (legacy sign-in only; Firebase accounts have no demo password) */}
-              {provider !== 'firebase' && <div className="mt-5 pt-4 border-t border-[#E4E7EC] flex flex-col gap-2.5">
+              {provider !== 'firebase' && <div className="mt-5 pt-4 border-t border-slate-200 flex flex-col gap-2.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] text-[#667085]">Instant workspace exploration:</span>
+                  <span className="text-[11px] text-slate-500">Instant workspace exploration:</span>
                   <button
                     type="button"
                     onClick={handleQuickFill}
@@ -379,23 +379,23 @@ export function LoginPage({
                   variant="outline"
                   onClick={handleQuickDemoSignIn}
                   disabled={isLoading}
-                  className="w-full py-2 border-blue-200 bg-blue-50/60 hover:bg-blue-100 text-[#2563EB] text-xs font-bold rounded-xl gap-1.5 transition-colors cursor-pointer"
+                  className="w-full py-2 border-blue-200 bg-blue-50/60 hover:bg-blue-100 text-blue-600 text-xs font-bold rounded-xl gap-1.5 transition-colors cursor-pointer"
                 >
-                  <UserCheck className="h-4 w-4 text-[#2563EB]" />
+                  <UserCheck className="h-4 w-4 text-blue-600" />
                   <span>Explore Demo Student Workspace (1-Click)</span>
                 </Button>
               </div>}
             </form>
           ) : (
             /* Phase 5: one registration flow. Sign-up lives in the 7-step wizard at /register. */
-            <div className="space-y-3 text-sm text-[#344054]">
+            <div className="space-y-3 text-sm text-slate-700">
               <p>New students register in seven short steps: account, academics, skills, projects, career, learning preferences and review. Progress is saved after each step.</p>
               <Button type="button" className="w-full" onClick={() => (onNavigate ? onNavigate('/register') : (window.location.href = '/register'))}>
                 Start registration <ArrowRight className="h-4 w-4 ml-1.5" />
               </Button>
               <div className="text-center pt-1">
-                <span className="text-xs text-[#667085]">Already registered? </span>
-                <button type="button" onClick={() => setAuthMode('signin')} className="text-xs font-bold text-[#2563EB] hover:underline cursor-pointer">
+                <span className="text-xs text-slate-500">Already registered? </span>
+                <button type="button" onClick={() => setAuthMode('signin')} className="text-xs font-bold text-blue-600 hover:underline cursor-pointer">
                   Sign in to workspace
                 </button>
               </div>
@@ -405,7 +405,7 @@ export function LoginPage({
       </Card>
 
       {/* Footer */}
-      <div className="mt-8 text-center text-xs text-[#667085] space-y-1">
+      <div className="mt-8 text-center text-xs text-slate-500 space-y-1">
         <p className="font-medium">B.Tech Student AI Learning Platform</p>
         <p className="text-[11px] text-slate-400">
           Personalized syllabus tracking, AI Tutor, DSA & Coding labs, Viva prep, and Career guidance.

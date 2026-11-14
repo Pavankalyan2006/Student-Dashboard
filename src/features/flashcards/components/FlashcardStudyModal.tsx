@@ -182,12 +182,12 @@ export const FlashcardStudyModal: React.FC<FlashcardStudyModalProps> = ({
               <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded">
                 {deck.subject}
               </span>
-              <h2 className="text-sm font-bold text-[#101828] truncate max-w-xs md:max-w-md">
+              <h2 className="text-sm font-bold text-slate-900 truncate max-w-xs md:max-w-md">
                 {deck.title}
               </h2>
             </div>
             {!showSummary && cards.length > 0 && (
-              <p className="text-[11px] text-[#475467] mt-0.5">
+              <p className="text-[11px] text-slate-600 mt-0.5">
                 Card {currentIndex + 1} of {cards.length}
               </p>
             )}
@@ -240,8 +240,8 @@ export const FlashcardStudyModal: React.FC<FlashcardStudyModalProps> = ({
               </div>
 
               <div>
-                <h3 className="text-2xl font-extrabold text-[#101828]">Review Round Completed!</h3>
-                <p className="text-xs text-[#475467] mt-1">
+                <h3 className="text-2xl font-extrabold text-slate-900">Review Round Completed!</h3>
+                <p className="text-xs text-slate-600 mt-1">
                   Active recall intervals have been updated in your personalized SuperMemo-2 schedule.
                 </p>
               </div>
@@ -266,7 +266,7 @@ export const FlashcardStudyModal: React.FC<FlashcardStudyModalProps> = ({
                 </div>
               </div>
 
-              <div className="text-xs text-[#667085] flex items-center justify-center gap-4">
+              <div className="text-xs text-slate-500 flex items-center justify-center gap-4">
                 <span>Total Cards: {reviewedCards.length}</span>
                 <span>•</span>
                 <span>Time Spent: {timeFormatted}</span>
@@ -294,7 +294,7 @@ export const FlashcardStudyModal: React.FC<FlashcardStudyModalProps> = ({
 
                 <Button
                   onClick={onClose}
-                  className="w-full sm:w-auto text-xs font-bold bg-[#2563EB] hover:bg-[#1D4ED8] text-white px-6"
+                  className="w-full sm:w-auto text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white px-6"
                 >
                   <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
                   Return to Library
@@ -315,7 +315,7 @@ export const FlashcardStudyModal: React.FC<FlashcardStudyModalProps> = ({
                 className={`min-h-[290px] p-7 rounded-3xl border cursor-pointer select-none transition-all duration-300 flex flex-col justify-between shadow-lg relative group ${
                   isFlipped
                     ? 'bg-gradient-to-br from-purple-50/70 via-white to-blue-50/70 border-purple-300 ring-2 ring-purple-100'
-                    : 'bg-white border-[#E4E7EC] hover:border-blue-400 hover:shadow-xl'
+                    : 'bg-white border-slate-200 hover:border-blue-400 hover:shadow-xl'
                 }`}
               >
                 {/* Card Top Meta */}
@@ -360,7 +360,7 @@ export const FlashcardStudyModal: React.FC<FlashcardStudyModalProps> = ({
                 <div className="my-auto py-6 text-center">
                   {!isFlipped ? (
                     <div className="space-y-3">
-                      <h3 className="text-xl md:text-2xl font-bold text-[#101828] leading-relaxed px-4">
+                      <h3 className="text-xl md:text-2xl font-bold text-slate-900 leading-relaxed px-4">
                         {currentCard.front}
                       </h3>
                       {currentCard.source_title && (
@@ -375,12 +375,12 @@ export const FlashcardStudyModal: React.FC<FlashcardStudyModalProps> = ({
                       <p className="text-[10px] uppercase font-bold tracking-wider text-purple-700">
                         Explanation & Key Invariants
                       </p>
-                      <div className="text-base font-medium text-[#101828] leading-relaxed whitespace-pre-line bg-white/70 p-4 rounded-xl border border-purple-100">
+                      <div className="text-base font-medium text-slate-900 leading-relaxed whitespace-pre-line bg-white/70 p-4 rounded-xl border border-purple-100">
                         {currentCard.back}
                       </div>
 
                       {currentCard.example && (
-                        <div className="text-xs text-[#475467] bg-gray-50 p-2.5 rounded-lg border border-gray-100">
+                        <div className="text-xs text-slate-600 bg-gray-50 p-2.5 rounded-lg border border-gray-100">
                           <span className="font-bold text-gray-700">Example / Note: </span>
                           {currentCard.example}
                         </div>
@@ -390,7 +390,7 @@ export const FlashcardStudyModal: React.FC<FlashcardStudyModalProps> = ({
                 </div>
 
                 {/* Card Footer Hint */}
-                <div className="flex items-center justify-between text-xs text-[#667085] border-t border-gray-100 pt-3">
+                <div className="flex items-center justify-between text-xs text-slate-500 border-t border-gray-100 pt-3">
                   <span className="text-[11px]">
                     State: <strong className="text-blue-600 font-semibold">{currentCard.state}</strong>
                     {currentCard.review_count > 0 && ` (${currentCard.review_count} reviews)`}
@@ -404,7 +404,7 @@ export const FlashcardStudyModal: React.FC<FlashcardStudyModalProps> = ({
               {/* Bottom Controls / Ratings */}
               {isFlipped ? (
                 <div className="space-y-2 animate-in fade-in slide-in-from-bottom-2">
-                  <p className="text-xs font-semibold text-center text-[#475467]">
+                  <p className="text-xs font-semibold text-center text-slate-600">
                     How well did you recall this concept?
                   </p>
                   <div className="grid grid-cols-4 gap-2">
@@ -465,7 +465,7 @@ export const FlashcardStudyModal: React.FC<FlashcardStudyModalProps> = ({
 
                   <Button
                     onClick={() => setIsFlipped(true)}
-                    className="flex-1 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-semibold py-2.5 shadow-sm"
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-2.5 shadow-sm"
                   >
                     <RotateCw className="w-3.5 h-3.5 mr-1.5" />
                     Reveal Answer
@@ -493,7 +493,7 @@ export const FlashcardStudyModal: React.FC<FlashcardStudyModalProps> = ({
           ) : (
             <div className="text-center py-12 space-y-3">
               <AlertCircle className="w-10 h-10 text-gray-400 mx-auto" />
-              <p className="text-sm font-semibold text-[#101828]">No cards available to study</p>
+              <p className="text-sm font-semibold text-slate-900">No cards available to study</p>
               <Button onClick={onClose} size="sm" variant="outline">
                 Back to Decks
               </Button>

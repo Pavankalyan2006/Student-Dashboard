@@ -72,7 +72,7 @@ export function AdminLayout({ currentPath, onNavigate, children }: AdminLayoutPr
   if (!isSuperAdmin) {
     return (
       <div className="min-h-screen bg-[#060D1E] text-slate-100 flex items-center justify-center p-6">
-        <div className="max-w-md w-full bg-[#0D1836] border border-rose-900/50 rounded-2xl p-8 text-center shadow-2xl">
+        <div className="max-w-md w-full bg-navy-900 border border-rose-900/50 rounded-2xl p-8 text-center shadow-2xl">
           <div className="inline-flex p-4 rounded-2xl bg-rose-950/60 border border-rose-800/50 text-rose-400 mb-4">
             <ShieldAlert className="h-10 w-10 animate-pulse" />
           </div>
@@ -94,13 +94,13 @@ export function AdminLayout({ currentPath, onNavigate, children }: AdminLayoutPr
   }
 
   return (
-    <div className="min-h-screen bg-[#070E20] text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-navy-950 text-slate-100 flex flex-col font-sans">
       {/* Admin Topbar */}
-      <header className="h-16 border-b border-[#1A284D] bg-[#0A132C]/90 backdrop-blur-md sticky top-0 z-40 px-4 lg:px-6 flex items-center justify-between">
+      <header className="h-16 border-b border-navy-700 bg-navy-950/90 backdrop-blur-md sticky top-0 z-40 px-4 lg:px-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-[#132247]"
+            className="lg:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-navy-800"
           >
             {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
@@ -132,7 +132,7 @@ export function AdminLayout({ currentPath, onNavigate, children }: AdminLayoutPr
           {/* Switch to Student Portal */}
           <button
             onClick={() => onNavigate('/dashboard')}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#14234B] hover:bg-[#1C3168] border border-[#243973] text-xs font-medium text-slate-200 transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-navy-800 hover:bg-navy-700 border border-[#243973] text-xs font-medium text-slate-200 transition-colors cursor-pointer"
             title="Switch back to student learning mode"
           >
             <ArrowLeft className="h-3.5 w-3.5 text-indigo-400" />
@@ -140,11 +140,11 @@ export function AdminLayout({ currentPath, onNavigate, children }: AdminLayoutPr
           </button>
 
           {/* Admin Avatar */}
-          <div className="flex items-center gap-2 pl-2 border-l border-[#1A284D]">
+          <div className="flex items-center gap-2 pl-2 border-l border-navy-700">
             <img
               src={student?.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Admin'}
               alt={student?.name || 'Super Admin'}
-              className="h-8 w-8 rounded-full bg-[#14234B] border border-amber-500/40"
+              className="h-8 w-8 rounded-full bg-navy-800 border border-amber-500/40"
             />
             <div className="hidden lg:block text-left">
               <p className="text-xs font-semibold text-slate-200 leading-none">{student?.name || 'Administrator'}</p>
@@ -167,7 +167,7 @@ export function AdminLayout({ currentPath, onNavigate, children }: AdminLayoutPr
 
       <div className="flex-1 flex overflow-hidden">
         {/* Admin Sidebar (Desktop) */}
-        <aside className="hidden lg:flex w-64 flex-col border-r border-[#1A284D] bg-[#0A132C]/60 shrink-0">
+        <aside className="hidden lg:flex w-64 flex-col border-r border-navy-700 bg-navy-950/60 shrink-0">
           <div className="p-4 space-y-1 overflow-y-auto flex-1">
             <div className="px-3 pb-2 pt-1 text-[10px] font-bold tracking-wider text-slate-500 uppercase select-none">
               Platform Administration
@@ -183,7 +183,7 @@ export function AdminLayout({ currentPath, onNavigate, children }: AdminLayoutPr
                     'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium transition-all text-left cursor-pointer',
                     active
                       ? 'bg-amber-500/15 text-amber-200 border border-amber-500/30 shadow-sm shadow-amber-950/40 font-semibold'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-[#121F42]'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-navy-800'
                   )}
                 >
                   <Icon className={cn('h-4 w-4 shrink-0', active ? 'text-amber-400' : 'text-slate-400')} />
@@ -199,7 +199,7 @@ export function AdminLayout({ currentPath, onNavigate, children }: AdminLayoutPr
           </div>
 
           {/* Sidebar Footer */}
-          <div className="p-4 border-t border-[#1A284D] bg-[#081024]">
+          <div className="p-4 border-t border-navy-700 bg-navy-950">
             <div className="flex items-center justify-between text-[11px] text-slate-400">
               <span className="flex items-center gap-1.5">
                 <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
@@ -212,8 +212,8 @@ export function AdminLayout({ currentPath, onNavigate, children }: AdminLayoutPr
 
         {/* Mobile Navigation Drawer */}
         {mobileMenuOpen && (
-          <div className="fixed inset-0 z-50 lg:hidden flex flex-col bg-[#070E20]/95 backdrop-blur-md">
-            <div className="p-4 border-b border-[#1A284D] flex items-center justify-between">
+          <div className="fixed inset-0 z-50 lg:hidden flex flex-col bg-navy-950/95 backdrop-blur-md">
+            <div className="p-4 border-b border-navy-700 flex items-center justify-between">
               <span className="font-bold text-sm text-amber-400">Admin Navigation</span>
               <button
                 onClick={() => setMobileMenuOpen(false)}
@@ -234,7 +234,7 @@ export function AdminLayout({ currentPath, onNavigate, children }: AdminLayoutPr
                       'w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all text-left',
                       active
                         ? 'bg-amber-500/20 text-amber-200 border border-amber-500/40 font-semibold'
-                        : 'text-slate-400 hover:text-slate-200 hover:bg-[#121F42]'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-navy-800'
                     )}
                   >
                     <Icon className="h-5 w-5 text-amber-400" />
@@ -247,7 +247,7 @@ export function AdminLayout({ currentPath, onNavigate, children }: AdminLayoutPr
         )}
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto bg-[#070E20]">
+        <main className="flex-1 overflow-y-auto bg-navy-950">
           <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">{children}</div>
         </main>
       </div>

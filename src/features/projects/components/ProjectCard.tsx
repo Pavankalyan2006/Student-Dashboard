@@ -38,7 +38,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onOpen }) => 
   });
 
   return (
-    <div className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-[#2563EB]/50 dark:hover:border-blue-500/50 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between">
+    <div className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-600/50 dark:hover:border-blue-500/50 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between">
       <div>
         {/* Header Badges */}
         <div className="flex items-center justify-between gap-2 mb-3">
@@ -53,7 +53,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onOpen }) => 
         {/* Project Title */}
         <h3
           onClick={() => onOpen(project.id, 'overview')}
-          className="font-bold text-slate-900 dark:text-slate-100 text-base group-hover:text-[#2563EB] dark:group-hover:text-blue-400 cursor-pointer transition-colors line-clamp-1 mb-1.5"
+          className="font-bold text-slate-900 dark:text-slate-100 text-base group-hover:text-blue-600 dark:group-hover:text-blue-400 cursor-pointer transition-colors line-clamp-1 mb-1.5"
         >
           {project.title}
         </h3>

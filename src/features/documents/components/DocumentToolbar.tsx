@@ -59,7 +59,7 @@ export function DocumentToolbar({ title, onBack, onGenerateQuiz, className }: Do
   return (
     <div
       className={cn(
-        'flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 bg-white border-b border-[#E4E7EC] text-xs shadow-2xs',
+        'flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 bg-white border-b border-slate-200 text-xs shadow-2xs',
         className
       )}
     >
@@ -77,8 +77,8 @@ export function DocumentToolbar({ title, onBack, onGenerateQuiz, className }: Do
           </Button>
         )}
         <div className="flex items-center gap-2 truncate">
-          <BookOpen className="h-4 w-4 text-[#2563EB] shrink-0" />
-          <h2 className="font-semibold text-[#101828] truncate text-xs sm:text-sm" title={title}>
+          <BookOpen className="h-4 w-4 text-blue-600 shrink-0" />
+          <h2 className="font-semibold text-slate-900 truncate text-xs sm:text-sm" title={title}>
             {title}
           </h2>
         </div>
@@ -87,7 +87,7 @@ export function DocumentToolbar({ title, onBack, onGenerateQuiz, className }: Do
       {/* Center: Page Controls & Zoom */}
       <div className="flex items-center gap-2 shrink-0">
         {/* Page navigator */}
-        <div className="flex items-center rounded-lg border border-[#E4E7EC] bg-slate-50/50 p-0.5">
+        <div className="flex items-center rounded-lg border border-slate-200 bg-slate-50/50 p-0.5">
           <button
             disabled={currentPage <= 1}
             onClick={() => setCurrentPage(currentPage - 1)}
@@ -122,7 +122,7 @@ export function DocumentToolbar({ title, onBack, onGenerateQuiz, className }: Do
         </div>
 
         {/* Zoom controls */}
-        <div className="hidden sm:flex items-center rounded-lg border border-[#E4E7EC] bg-slate-50/50 p-0.5">
+        <div className="hidden sm:flex items-center rounded-lg border border-slate-200 bg-slate-50/50 p-0.5">
           <button
             onClick={zoomOut}
             className="p-1 rounded text-slate-500 hover:text-slate-900 cursor-pointer"
@@ -163,8 +163,8 @@ export function DocumentToolbar({ title, onBack, onGenerateQuiz, className }: Do
           className={cn(
             'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer',
             rightPanel === 'chat'
-              ? 'bg-[#2563EB] text-white shadow-xs'
-              : 'text-[#475467] hover:bg-slate-100 hover:text-[#101828]'
+              ? 'bg-blue-600 text-white shadow-xs'
+              : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
           )}
         >
           <Sparkles className="h-3.5 w-3.5" />
@@ -176,8 +176,8 @@ export function DocumentToolbar({ title, onBack, onGenerateQuiz, className }: Do
           className={cn(
             'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer',
             rightPanel === 'summary'
-              ? 'bg-[#2563EB] text-white shadow-xs'
-              : 'text-[#475467] hover:bg-slate-100 hover:text-[#101828]'
+              ? 'bg-blue-600 text-white shadow-xs'
+              : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
           )}
         >
           <FileText className="h-3.5 w-3.5" />
@@ -189,8 +189,8 @@ export function DocumentToolbar({ title, onBack, onGenerateQuiz, className }: Do
           className={cn(
             'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer',
             rightPanel === 'notes'
-              ? 'bg-[#2563EB] text-white shadow-xs'
-              : 'text-[#475467] hover:bg-slate-100 hover:text-[#101828]'
+              ? 'bg-blue-600 text-white shadow-xs'
+              : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
           )}
         >
           <FilePenLine className="h-3.5 w-3.5" />

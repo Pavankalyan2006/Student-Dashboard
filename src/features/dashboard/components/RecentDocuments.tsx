@@ -14,20 +14,20 @@ export function RecentDocuments({
   const items = documents || [];
 
   return (
-    <Card className="border border-[#E4E7EC] bg-white shadow-2xs">
+    <Card className="border border-slate-200 bg-white shadow-2xs">
       <CardHeader className="flex flex-row items-center justify-between pb-3">
         <div className="flex items-center gap-2">
           <div className="p-1.5 rounded-lg bg-indigo-50 border border-indigo-100">
             <Files className="h-4 w-4 text-indigo-600" />
           </div>
           <div>
-            <CardTitle className="text-sm font-bold text-[#101828]">Recent Documents</CardTitle>
-            <p className="text-xs text-[#667085]">AI-indexed textbooks, lecture slides & notes</p>
+            <CardTitle className="text-sm font-bold text-slate-900">Recent Documents</CardTitle>
+            <p className="text-xs text-slate-500">AI-indexed textbooks, lecture slides & notes</p>
           </div>
         </div>
         <button
           onClick={() => onNavigate('/documents')}
-          className="text-xs font-semibold text-[#2563EB] hover:text-[#1D4ED8] flex items-center gap-1 cursor-pointer"
+          className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 cursor-pointer"
         >
           View all
           <ArrowRight className="h-3 w-3" />
@@ -36,11 +36,11 @@ export function RecentDocuments({
 
       <CardContent className="space-y-2">
         {items.length === 0 ? (
-          <div className="py-6 text-center text-xs text-[#667085] space-y-2">
+          <div className="py-6 text-center text-xs text-slate-500 space-y-2">
             <p>No documents uploaded yet.</p>
             <button
               onClick={() => onNavigate('/documents/upload')}
-              className="inline-flex items-center gap-1 text-xs font-semibold text-[#2563EB] hover:underline"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:underline"
             >
               Upload your first document
             </button>
@@ -58,11 +58,11 @@ export function RecentDocuments({
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <h5 className="text-xs font-semibold text-[#101828] group-hover:text-[#2563EB] transition-colors truncate">
+                    <h5 className="text-xs font-semibold text-slate-900 group-hover:text-blue-600 transition-colors truncate">
                       {doc.title}
                     </h5>
                   </div>
-                  <div className="flex items-center gap-2 text-[11px] text-[#667085] mt-0.5">
+                  <div className="flex items-center gap-2 text-[11px] text-slate-500 mt-0.5">
                     {doc.page_count ? <span>{doc.page_count} pages</span> : null}
                     <span>•</span>
                     <span className="flex items-center gap-1">
@@ -78,7 +78,7 @@ export function RecentDocuments({
 
               <div className="flex items-center gap-2 shrink-0">
                 <DocumentStatusBadge status={doc.status} />
-                <ArrowRight className="h-3.5 w-3.5 text-slate-300 group-hover:text-[#2563EB] group-hover:translate-x-0.5 transition-all" />
+                <ArrowRight className="h-3.5 w-3.5 text-slate-300 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
               </div>
             </div>
           ))

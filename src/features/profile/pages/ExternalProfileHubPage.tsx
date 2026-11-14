@@ -152,7 +152,7 @@ export function ExternalProfileHubPage({ onNavigate }: ExternalProfileHubPagePro
         title="External Profile Hub"
         description="Your linked professional and coding profiles. Profiles show as verified only after a check (GitHub sign-in or token, or a code on your profile)."
         badge={
-          <span className="text-xs px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-medium">
+          <span className="text-xs px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-200 font-medium">
             Multi-Platform Sync
           </span>
         }
@@ -162,9 +162,9 @@ export function ExternalProfileHubPage({ onNavigate }: ExternalProfileHubPagePro
               variant="outline"
               size="sm"
               onClick={copyProfileShare}
-              className="border-slate-700 hover:bg-slate-800 text-slate-300"
+              className="border-slate-200 hover:bg-slate-50 text-slate-700"
             >
-              {copiedProfile ? <Check className="w-4 h-4 mr-1 text-emerald-400" /> : <Share2 className="w-4 h-4 mr-1" />}
+              {copiedProfile ? <Check className="w-4 h-4 mr-1 text-emerald-600" /> : <Share2 className="w-4 h-4 mr-1" />}
               Share Hub
             </Button>
             <Button
@@ -180,13 +180,13 @@ export function ExternalProfileHubPage({ onNavigate }: ExternalProfileHubPagePro
       />
 
       {/* Tabs */}
-      <div className="flex border-b border-slate-800 mb-6 gap-6 overflow-x-auto">
+      <div className="flex border-b border-slate-200 mb-6 gap-6 overflow-x-auto">
         <button
           onClick={() => setActiveTab('profiles')}
           className={`pb-3 text-sm font-medium transition-colors border-b-2 flex items-center gap-2 ${
             activeTab === 'profiles'
-              ? 'border-indigo-500 text-indigo-400 font-semibold'
-              : 'border-transparent text-slate-400 hover:text-slate-200'
+              ? 'border-indigo-500 text-indigo-600 font-semibold'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
           <ExternalLink className="w-4 h-4" />
@@ -196,8 +196,8 @@ export function ExternalProfileHubPage({ onNavigate }: ExternalProfileHubPagePro
           onClick={() => setActiveTab('consistency')}
           className={`pb-3 text-sm font-medium transition-colors border-b-2 flex items-center gap-2 ${
             activeTab === 'consistency'
-              ? 'border-indigo-500 text-indigo-400 font-semibold'
-              : 'border-transparent text-slate-400 hover:text-slate-200'
+              ? 'border-indigo-500 text-indigo-600 font-semibold'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
           <ShieldCheck className="w-4 h-4" />
@@ -207,8 +207,8 @@ export function ExternalProfileHubPage({ onNavigate }: ExternalProfileHubPagePro
           onClick={() => setActiveTab('skills')}
           className={`pb-3 text-sm font-medium transition-colors border-b-2 flex items-center gap-2 ${
             activeTab === 'skills'
-              ? 'border-indigo-500 text-indigo-400 font-semibold'
-              : 'border-transparent text-slate-400 hover:text-slate-200'
+              ? 'border-indigo-500 text-indigo-600 font-semibold'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
           <Award className="w-4 h-4" />
@@ -218,8 +218,8 @@ export function ExternalProfileHubPage({ onNavigate }: ExternalProfileHubPagePro
           onClick={() => setActiveTab('builder')}
           className={`pb-3 text-sm font-medium transition-colors border-b-2 flex items-center gap-2 ${
             activeTab === 'builder'
-              ? 'border-indigo-500 text-indigo-400 font-semibold'
-              : 'border-transparent text-slate-400 hover:text-slate-200'
+              ? 'border-indigo-500 text-indigo-600 font-semibold'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
           <FileText className="w-4 h-4" />
@@ -236,29 +236,29 @@ export function ExternalProfileHubPage({ onNavigate }: ExternalProfileHubPagePro
       {activeTab === 'consistency' && (
         <div className="space-y-6">
           {/* Consistency Score Card */}
-          <div className="p-6 bg-slate-900 border border-slate-800 rounded-xl relative overflow-hidden">
+          <div className="p-6 bg-white border border-slate-200 rounded-xl relative overflow-hidden">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
               <div>
-                <div className="flex items-center gap-2 text-indigo-400 text-xs font-semibold uppercase tracking-wider mb-1">
+                <div className="flex items-center gap-2 text-indigo-600 text-xs font-semibold uppercase tracking-wider mb-1">
                   <ShieldCheck className="w-4 h-4" /> Cross-Platform Verification
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-2">Career Profile Consistency Review</h3>
-                <p className="text-sm text-slate-400 max-w-2xl">
+                <h3 className="text-2xl font-bold text-slate-900 mb-2">Career Profile Consistency Review</h3>
+                <p className="text-sm text-slate-500 max-w-2xl">
                   Compares claims on your resume with your linked profiles. No automatic cross-check is available yet, so
                   nothing is scored here.
                 </p>
               </div>
 
-              <div className="flex items-center gap-4 bg-slate-950/80 p-4 rounded-xl border border-slate-800">
+              <div className="flex items-center gap-4 bg-white p-4 rounded-xl border border-slate-200">
                 <div className="text-center">
-                  <div className="text-4xl font-extrabold text-emerald-400">{consistency?.verified_matches?.length || consistency?.items_to_review?.length ? `${consistency?.consistency_score ?? 0}%` : '—'}</div>
-                  <div className="text-xs text-slate-400 mt-0.5">Consistency Score</div>
+                  <div className="text-4xl font-extrabold text-emerald-600">{consistency?.verified_matches?.length || consistency?.items_to_review?.length ? `${consistency?.consistency_score ?? 0}%` : '—'}</div>
+                  <div className="text-xs text-slate-500 mt-0.5">Consistency Score</div>
                 </div>
-                <div className="h-10 w-px bg-slate-800" />
+                <div className="h-10 w-px bg-slate-50" />
                 <div className="text-xs space-y-1">
-                  <div className="text-emerald-400 font-medium">✓ {consistency?.verified_matches?.length ?? 0} Verified Claims</div>
-                  <div className="text-amber-400 font-medium">⚠ {consistency?.items_to_review?.length ?? 0} Items for Review</div>
-                  <div className="text-slate-400 font-medium">ℹ {consistency?.discrepancies?.length ?? 0} Optional Polish</div>
+                  <div className="text-emerald-600 font-medium">✓ {consistency?.verified_matches?.length ?? 0} Verified Claims</div>
+                  <div className="text-amber-600 font-medium">⚠ {consistency?.items_to_review?.length ?? 0} Items for Review</div>
+                  <div className="text-slate-500 font-medium">ℹ {consistency?.discrepancies?.length ?? 0} Optional Polish</div>
                 </div>
               </div>
             </div>
@@ -266,23 +266,23 @@ export function ExternalProfileHubPage({ onNavigate }: ExternalProfileHubPagePro
 
           {/* Verified Matches */}
           <div className="space-y-3">
-            <h4 className="text-sm font-semibold text-white flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            <h4 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
               Verified Multi-Platform Matches ({consistency?.verified_matches?.length || 0})
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {consistency?.verified_matches?.map((match, i) => (
-                <div key={i} className="p-4 bg-slate-900/60 border border-emerald-900/40 rounded-xl space-y-2">
+                <div key={i} className="p-4 bg-white border border-emerald-200 rounded-xl space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-emerald-400 uppercase tracking-wide">{match.field}</span>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <span className="text-xs font-bold text-emerald-600 uppercase tracking-wide">{match.field}</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200">
                       Verified
                     </span>
                   </div>
-                  <p className="text-sm text-slate-200 font-medium">{match.evidence_summary}</p>
+                  <p className="text-sm text-slate-800 font-medium">{match.evidence_summary}</p>
                   <div className="flex flex-wrap gap-1.5 pt-1">
                     {match.sources.map((src: string, idx: number) => (
-                      <span key={idx} className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded">
+                      <span key={idx} className="text-[10px] bg-slate-50 text-slate-700 px-2 py-0.5 rounded">
                         {src}
                       </span>
                     ))}
@@ -294,21 +294,21 @@ export function ExternalProfileHubPage({ onNavigate }: ExternalProfileHubPagePro
 
           {/* Items to Review */}
           <div className="space-y-3">
-            <h4 className="text-sm font-semibold text-white flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-amber-400" />
+            <h4 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-amber-600" />
               Recommendations & Review Needed ({consistency?.items_to_review?.length || 0})
             </h4>
             <div className="space-y-3">
               {consistency?.items_to_review?.map((item, i) => (
-                <div key={i} className="p-4 bg-slate-900/80 border border-amber-900/40 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div key={i} className="p-4 bg-white border border-amber-200 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-amber-400 uppercase tracking-wide">{item.claim}</span>
-                      <span className="text-[10px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                      <span className="text-xs font-bold text-amber-600 uppercase tracking-wide">{item.claim}</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded bg-amber-50 text-amber-600 border border-amber-200">
                         Attention Suggested
                       </span>
                     </div>
-                    <p className="text-xs text-slate-300">{item.review_prompt}</p>
+                    <p className="text-xs text-slate-700">{item.review_prompt}</p>
                     <p className="text-xs text-slate-500">
                       <strong>AI Suggestion:</strong> {item.suggested_action}
                     </p>
@@ -318,7 +318,7 @@ export function ExternalProfileHubPage({ onNavigate }: ExternalProfileHubPagePro
                     onClick={() => {
                       toast.success('Consistency note dismissed/resolved.');
                     }}
-                    className="border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs shrink-0"
+                    className="border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-800 text-xs shrink-0"
                   >
                     Mark Resolved
                   </Button>
@@ -332,10 +332,10 @@ export function ExternalProfileHubPage({ onNavigate }: ExternalProfileHubPagePro
       {/* TAB 3: UNIFIED SKILL EVIDENCE (Section 18) */}
       {activeTab === 'skills' && (
         <div className="space-y-6">
-          <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="p-4 bg-white border border-slate-200 rounded-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div>
-              <h3 className="text-base font-semibold text-white">Skill Evidence Aggregator</h3>
-              <p className="text-xs text-slate-400">
+              <h3 className="text-base font-semibold text-slate-900">Skill Evidence Aggregator</h3>
+              <p className="text-xs text-slate-500">
                 Combines signals from internal Courses, Labs, Quizzes, GitHub repos, and external coding platforms without inflating unverified ratings.
               </p>
             </div>
@@ -351,33 +351,33 @@ export function ExternalProfileHubPage({ onNavigate }: ExternalProfileHubPagePro
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {skills.map((skill) => (
-              <div key={skill.skill_name} className="p-4 bg-slate-900/60 border border-slate-800 rounded-xl space-y-3">
+              <div key={skill.skill_name} className="p-4 bg-white border border-slate-200 rounded-xl space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold text-white text-sm">{skill.skill_name}</span>
+                  <span className="font-semibold text-slate-900 text-sm">{skill.skill_name}</span>
                   <span className={`text-[10px] px-2 py-0.5 rounded font-medium ${
                     skill.proficiency === 'ADVANCED'
-                      ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20'
+                      ? 'bg-purple-50 text-purple-600 border border-purple-200'
                       : skill.proficiency === 'INTERMEDIATE'
-                      ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
-                      : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                      ? 'bg-indigo-50 text-indigo-600 border border-indigo-200'
+                      : 'bg-emerald-50 text-emerald-600 border border-emerald-200'
                   }`}>
                     {skill.proficiency}
                   </span>
                 </div>
 
                 <div className="space-y-1">
-                  <div className="text-[11px] text-slate-400">Verified Evidence ({skill.evidence_sources?.length || 0}):</div>
+                  <div className="text-[11px] text-slate-500">Verified Evidence ({skill.evidence_sources?.length || 0}):</div>
                   <div className="space-y-1">
                     {(skill.evidence_sources || []).map((ev: any, idx: number) => (
-                      <div key={idx} className="flex items-center justify-between text-xs bg-slate-950 p-1.5 rounded border border-slate-800/80">
-                        <span className="text-slate-300 truncate mr-2">{ev.description || ev.name}</span>
+                      <div key={idx} className="flex items-center justify-between text-xs bg-white p-1.5 rounded border border-slate-200">
+                        <span className="text-slate-700 truncate mr-2">{ev.description || ev.name}</span>
                         <span className="text-[10px] text-slate-500 shrink-0 font-mono">{ev.source || ev.type || 'Verified'}</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-2 border-t border-slate-800/80 text-[11px] text-slate-500">
+                <div className="flex items-center justify-between pt-2 border-t border-slate-200 text-[11px] text-slate-500">
                   <span>Confidence: {(skill.confidence_score * 100).toFixed(0)}%</span>
                   <span>Synced {skill.last_updated ? new Date(skill.last_updated).toLocaleDateString() : 'Recently'}</span>
                 </div>
@@ -390,11 +390,11 @@ export function ExternalProfileHubPage({ onNavigate }: ExternalProfileHubPagePro
       {/* TAB 4: SOCIAL PROFILE BUILDER (Section 24) */}
       {activeTab === 'builder' && (
         <div className="space-y-6">
-          <div className="p-6 bg-slate-900 border border-slate-800 rounded-xl space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+          <div className="p-6 bg-white border border-slate-200 rounded-xl space-y-6">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-4">
               <div>
-                <h3 className="text-lg font-bold text-white">Internal Professional Profile Builder</h3>
-                <p className="text-xs text-slate-400">
+                <h3 className="text-lg font-bold text-slate-900">Internal Professional Profile Builder</h3>
+                <p className="text-xs text-slate-500">
                   Maintain your master academic & technical identity. Easily export verified data to Resume, Portfolio, or Job applications.
                 </p>
               </div>
@@ -411,50 +411,50 @@ export function ExternalProfileHubPage({ onNavigate }: ExternalProfileHubPagePro
 
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Professional Headline</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Professional Headline</label>
                 <input
                   type="text"
                   value={profProfile.headline}
                   onChange={(e) => setProfProfile({ ...profProfile, headline: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:border-indigo-500"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">About / Bio</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">About / Bio</label>
                 <textarea
                   rows={3}
                   value={profProfile.about}
                   onChange={(e) => setProfProfile({ ...profProfile, about: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:border-indigo-500"
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Career Interests</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Career Interests</label>
                   <input
                     type="text"
                     value={profProfile.careerInterests}
                     onChange={(e) => setProfProfile({ ...profProfile, careerInterests: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500"
+                    className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:border-indigo-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Preferred Job Locations</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Preferred Job Locations</label>
                   <input
                     type="text"
                     value={profProfile.preferredLocations}
                     onChange={(e) => setProfProfile({ ...profProfile, preferredLocations: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500"
+                    className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:border-indigo-500"
                   />
                 </div>
               </div>
             </div>
 
             {/* Quick Export Actions */}
-            <div className="pt-4 border-t border-slate-800">
-              <h4 className="text-xs font-semibold text-slate-400 mb-3 uppercase tracking-wider">
+            <div className="pt-4 border-t border-slate-200">
+              <h4 className="text-xs font-semibold text-slate-500 mb-3 uppercase tracking-wider">
                 Export Verified Profile Data To:
               </h4>
               <div className="flex flex-wrap gap-3">
@@ -462,27 +462,27 @@ export function ExternalProfileHubPage({ onNavigate }: ExternalProfileHubPagePro
                   variant="outline"
                   size="sm"
                   onClick={() => onNavigate && onNavigate('/resume/create')}
-                  className="border-slate-700 hover:bg-slate-800 text-slate-300"
+                  className="border-slate-200 hover:bg-slate-50 text-slate-700"
                 >
-                  <FileText className="w-4 h-4 mr-1.5 text-indigo-400" />
+                  <FileText className="w-4 h-4 mr-1.5 text-indigo-600" />
                   Export to Resume Builder
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => onNavigate && onNavigate('/career/roadmap')}
-                  className="border-slate-700 hover:bg-slate-800 text-slate-300"
+                  className="border-slate-200 hover:bg-slate-50 text-slate-700"
                 >
-                  <TrendingUp className="w-4 h-4 mr-1.5 text-emerald-400" />
+                  <TrendingUp className="w-4 h-4 mr-1.5 text-emerald-600" />
                   Sync to Career Roadmap
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => onNavigate && onNavigate('/placements')}
-                  className="border-slate-700 hover:bg-slate-800 text-slate-300"
+                  className="border-slate-200 hover:bg-slate-50 text-slate-700"
                 >
-                  <Award className="w-4 h-4 mr-1.5 text-amber-400" />
+                  <Award className="w-4 h-4 mr-1.5 text-amber-600" />
                   Push to Placement Preparation
                 </Button>
               </div>
@@ -513,26 +513,26 @@ function ProfileCard({
   const isConnected = !!connection && connection.status !== 'DISCONNECTED';
 
   return (
-    <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl flex flex-col justify-between hover:border-slate-700 transition-colors">
+    <div className="p-4 bg-white border border-slate-200 rounded-xl flex flex-col justify-between hover:border-slate-200 transition-colors">
       <div>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3">
             <span className="text-2xl">{provider.icon}</span>
             <div>
-              <h4 className="text-sm font-semibold text-white flex items-center gap-1.5">
+              <h4 className="text-sm font-semibold text-slate-900 flex items-center gap-1.5">
                 {provider.display_name}
-                {isVerified && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
+                {isVerified && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
               </h4>
-              <p className="text-xs text-slate-400">{provider.category}</p>
+              <p className="text-xs text-slate-500">{provider.category}</p>
             </div>
           </div>
           <span
             className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
               isVerified
-                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                ? 'bg-emerald-50 text-emerald-600 border border-emerald-200'
                 : isConnected
-                ? 'bg-sky-500/10 text-sky-300 border border-sky-500/20'
-                : 'bg-slate-800 text-slate-400 border border-slate-700'
+                ? 'bg-sky-50 text-sky-700 border border-sky-200'
+                : 'bg-slate-50 text-slate-500 border border-slate-200'
             }`}
           >
             {isVerified ? 'Connected' : isConnected ? 'Linked (not verified)' : 'Not Linked'}
@@ -540,23 +540,23 @@ function ProfileCard({
         </div>
 
         {isConnected && connection ? (
-          <div className="space-y-1.5 mb-3 bg-slate-950 p-2 rounded-lg border border-slate-800 text-xs">
-            <div className="flex items-center justify-between text-slate-300">
+          <div className="space-y-1.5 mb-3 bg-white p-2 rounded-lg border border-slate-200 text-xs">
+            <div className="flex items-center justify-between text-slate-700">
               <span className="text-slate-500">Account:</span>
-              <span className="font-mono text-indigo-400">{connection.username || connection.display_name}</span>
+              <span className="font-mono text-indigo-600">{connection.username || connection.display_name}</span>
             </div>
-            <div className="flex items-center justify-between text-slate-400">
+            <div className="flex items-center justify-between text-slate-500">
               <span className="text-slate-500">Last Synced:</span>
               <span>{connection.last_synced_at ? new Date(connection.last_synced_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Never'}</span>
             </div>
             {connection.profile_url && (
-              <div className="flex items-center justify-between text-slate-400 truncate">
+              <div className="flex items-center justify-between text-slate-500 truncate">
                 <span className="text-slate-500">Profile:</span>
                 <a
                   href={connection.profile_url}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-xs text-indigo-400 hover:underline flex items-center gap-1"
+                  className="text-xs text-indigo-600 hover:underline flex items-center gap-1"
                 >
                   Visit <ExternalLink className="w-3 h-3" />
                 </a>
@@ -564,11 +564,11 @@ function ProfileCard({
             )}
           </div>
         ) : (
-          <p className="text-xs text-slate-400 mb-3">{provider.description}</p>
+          <p className="text-xs text-slate-500 mb-3">{provider.description}</p>
         )}
       </div>
 
-      <div className="flex items-center gap-2 pt-2 border-t border-slate-800">
+      <div className="flex items-center gap-2 pt-2 border-t border-slate-200">
         {isConnected ? (
           <>
             <Button
@@ -576,7 +576,7 @@ function ProfileCard({
               size="sm"
               disabled={isSyncing}
               onClick={onSync}
-              className="flex-1 text-xs border-slate-700 hover:bg-slate-800 text-slate-300"
+              className="flex-1 text-xs border-slate-200 hover:bg-slate-50 text-slate-700"
             >
               <RefreshCw className={`w-3.5 h-3.5 mr-1 ${isSyncing ? 'animate-spin text-indigo-400' : ''}`} />
               {isSyncing ? 'Syncing...' : 'Sync'}
@@ -585,7 +585,7 @@ function ProfileCard({
               variant="outline"
               size="sm"
               onClick={onConnect}
-              className="text-xs border-slate-700 hover:bg-slate-800 text-slate-300"
+              className="text-xs border-slate-200 hover:bg-slate-50 text-slate-700"
             >
               Manage
             </Button>

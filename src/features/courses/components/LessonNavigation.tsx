@@ -35,9 +35,9 @@ export function LessonNavigation({
   const progressPct = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
 
   return (
-    <div className="flex flex-col h-full bg-white border-r border-[#E4E7EC] overflow-hidden text-xs">
+    <div className="flex flex-col h-full bg-white border-r border-slate-200 overflow-hidden text-xs">
       {/* Top Header */}
-      <div className="p-4 border-b border-[#E4E7EC] space-y-3 shrink-0">
+      <div className="p-4 border-b border-slate-200 space-y-3 shrink-0">
         <div className="flex items-center justify-between">
           <button
             onClick={onBackToCourse}
@@ -57,7 +57,7 @@ export function LessonNavigation({
         </div>
 
         <div>
-          <span className="font-mono text-[10px] font-bold text-[#2563EB] bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
+          <span className="font-mono text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
             {courseCode}
           </span>
           <h2 className="text-sm font-bold text-slate-900 mt-1 line-clamp-1">{courseTitle}</h2>
@@ -71,7 +71,7 @@ export function LessonNavigation({
           </div>
           <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
             <div
-              className="h-full bg-[#2563EB] rounded-full transition-all duration-300"
+              className="h-full bg-blue-600 rounded-full transition-all duration-300"
               style={{ width: `${progressPct}%` }}
             />
           </div>
@@ -116,7 +116,7 @@ export function LessonNavigation({
                         }}
                         className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-left transition-all cursor-pointer ${
                           isCurrent
-                            ? 'bg-blue-50/80 text-[#2563EB] font-bold border border-blue-200/80 shadow-2xs'
+                            ? 'bg-blue-50/80 text-blue-600 font-bold border border-blue-200/80 shadow-2xs'
                             : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900 border border-transparent'
                         }`}
                       >
@@ -124,7 +124,7 @@ export function LessonNavigation({
                           {lesson.is_completed ? (
                             <CheckCircle2 className="h-4 w-4 text-emerald-600 fill-emerald-100 shrink-0" />
                           ) : isCurrent ? (
-                            <Play className="h-3.5 w-3.5 fill-[#2563EB] text-[#2563EB] shrink-0" />
+                            <Play className="h-3.5 w-3.5 fill-blue-600 text-blue-600 shrink-0" />
                           ) : (
                             <Circle className="h-3.5 w-3.5 text-slate-300 shrink-0" />
                           )}

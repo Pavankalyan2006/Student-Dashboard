@@ -78,7 +78,7 @@ export function AdminDashboardPage({ onNavigate }: { onNavigate: (path: string) 
         <button
           onClick={handleRefresh}
           disabled={isRefreshing}
-          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#14234B] hover:bg-[#1C3168] border border-[#233870] text-xs font-medium text-slate-200 transition-colors cursor-pointer self-start sm:self-auto"
+          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-navy-800 hover:bg-navy-700 border border-navy-600 text-xs font-medium text-slate-200 transition-colors cursor-pointer self-start sm:self-auto"
         >
           <RefreshCw className={cn('h-3.5 w-3.5', isRefreshing && 'animate-spin text-amber-400')} />
           Refresh Metrics
@@ -90,7 +90,7 @@ export function AdminDashboardPage({ onNavigate }: { onNavigate: (path: string) 
         {/* Student Accounts */}
         <div
           onClick={() => onNavigate('/admin/students')}
-          className="p-5 rounded-2xl bg-[#0D1836] border border-[#1A284D] hover:border-amber-500/40 transition-all cursor-pointer group"
+          className="p-5 rounded-2xl bg-navy-900 border border-navy-700 hover:border-amber-500/40 transition-all cursor-pointer group"
         >
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Students</span>
@@ -109,7 +109,7 @@ export function AdminDashboardPage({ onNavigate }: { onNavigate: (path: string) 
         {/* AI Workloads */}
         <div
           onClick={() => onNavigate('/admin/ai')}
-          className="p-5 rounded-2xl bg-[#0D1836] border border-[#1A284D] hover:border-amber-500/40 transition-all cursor-pointer group"
+          className="p-5 rounded-2xl bg-navy-900 border border-navy-700 hover:border-amber-500/40 transition-all cursor-pointer group"
         >
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">AI Operations</span>
@@ -127,7 +127,7 @@ export function AdminDashboardPage({ onNavigate }: { onNavigate: (path: string) 
         {/* Learning Activity */}
         <div
           onClick={() => onNavigate('/admin/content')}
-          className="p-5 rounded-2xl bg-[#0D1836] border border-[#1A284D] hover:border-amber-500/40 transition-all cursor-pointer group"
+          className="p-5 rounded-2xl bg-navy-900 border border-navy-700 hover:border-amber-500/40 transition-all cursor-pointer group"
         >
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Academics</span>
@@ -144,7 +144,7 @@ export function AdminDashboardPage({ onNavigate }: { onNavigate: (path: string) 
         {/* System Health */}
         <div
           onClick={() => onNavigate('/admin/system')}
-          className="p-5 rounded-2xl bg-[#0D1836] border border-[#1A284D] hover:border-amber-500/40 transition-all cursor-pointer group"
+          className="p-5 rounded-2xl bg-navy-900 border border-navy-700 hover:border-amber-500/40 transition-all cursor-pointer group"
         >
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">System State</span>
@@ -164,7 +164,7 @@ export function AdminDashboardPage({ onNavigate }: { onNavigate: (path: string) 
 
       {/* Secondary Metrics Summary */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="p-4 rounded-xl bg-[#0A132C] border border-[#1A284D] flex items-center gap-3">
+        <div className="p-4 rounded-xl bg-navy-950 border border-navy-700 flex items-center gap-3">
           <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-400">
             <Code2 className="h-4 w-4" />
           </div>
@@ -174,7 +174,7 @@ export function AdminDashboardPage({ onNavigate }: { onNavigate: (path: string) 
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-[#0A132C] border border-[#1A284D] flex items-center gap-3">
+        <div className="p-4 rounded-xl bg-navy-950 border border-navy-700 flex items-center gap-3">
           <div className="p-2 rounded-lg bg-amber-500/10 text-amber-400">
             <Sparkles className="h-4 w-4" />
           </div>
@@ -184,7 +184,7 @@ export function AdminDashboardPage({ onNavigate }: { onNavigate: (path: string) 
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-[#0A132C] border border-[#1A284D] flex items-center gap-3">
+        <div className="p-4 rounded-xl bg-navy-950 border border-navy-700 flex items-center gap-3">
           <div className="p-2 rounded-lg bg-cyan-500/10 text-cyan-400">
             <FolderGit2 className="h-4 w-4" />
           </div>
@@ -194,7 +194,7 @@ export function AdminDashboardPage({ onNavigate }: { onNavigate: (path: string) 
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-[#0A132C] border border-[#1A284D] flex items-center gap-3">
+        <div className="p-4 rounded-xl bg-navy-950 border border-navy-700 flex items-center gap-3">
           <div className="p-2 rounded-lg bg-rose-500/10 text-rose-400">
             <FileText className="h-4 w-4" />
           </div>
@@ -213,7 +213,7 @@ export function AdminDashboardPage({ onNavigate }: { onNavigate: (path: string) 
           
           <button
             onClick={() => onNavigate('/admin/students')}
-            className="w-full p-4 rounded-xl bg-[#0D1836] border border-[#1A284D] hover:border-amber-500/40 text-left transition-all cursor-pointer flex items-center justify-between"
+            className="w-full p-4 rounded-xl bg-navy-900 border border-navy-700 hover:border-amber-500/40 text-left transition-all cursor-pointer flex items-center justify-between"
           >
             <div>
               <p className="text-sm font-semibold text-white">Student Account Management</p>
@@ -224,7 +224,7 @@ export function AdminDashboardPage({ onNavigate }: { onNavigate: (path: string) 
 
           <button
             onClick={() => onNavigate('/admin/ai')}
-            className="w-full p-4 rounded-xl bg-[#0D1836] border border-[#1A284D] hover:border-amber-500/40 text-left transition-all cursor-pointer flex items-center justify-between"
+            className="w-full p-4 rounded-xl bg-navy-900 border border-navy-700 hover:border-amber-500/40 text-left transition-all cursor-pointer flex items-center justify-between"
           >
             <div>
               <p className="text-sm font-semibold text-white">AI Models & Tool Safety</p>
@@ -235,7 +235,7 @@ export function AdminDashboardPage({ onNavigate }: { onNavigate: (path: string) 
 
           <button
             onClick={() => onNavigate('/admin/jobs')}
-            className="w-full p-4 rounded-xl bg-[#0D1836] border border-[#1A284D] hover:border-amber-500/40 text-left transition-all cursor-pointer flex items-center justify-between"
+            className="w-full p-4 rounded-xl bg-navy-900 border border-navy-700 hover:border-amber-500/40 text-left transition-all cursor-pointer flex items-center justify-between"
           >
             <div>
               <p className="text-sm font-semibold text-white">Background Job Pipeline</p>
@@ -246,7 +246,7 @@ export function AdminDashboardPage({ onNavigate }: { onNavigate: (path: string) 
 
           <button
             onClick={() => onNavigate('/admin/settings')}
-            className="w-full p-4 rounded-xl bg-[#0D1836] border border-[#1A284D] hover:border-amber-500/40 text-left transition-all cursor-pointer flex items-center justify-between"
+            className="w-full p-4 rounded-xl bg-navy-900 border border-navy-700 hover:border-amber-500/40 text-left transition-all cursor-pointer flex items-center justify-between"
           >
             <div>
               <p className="text-sm font-semibold text-white">Feature Flags & Maintenance</p>
@@ -257,7 +257,7 @@ export function AdminDashboardPage({ onNavigate }: { onNavigate: (path: string) 
         </div>
 
         {/* Audit Trail Preview */}
-        <div className="lg:col-span-2 p-5 rounded-2xl bg-[#0D1836] border border-[#1A284D]">
+        <div className="lg:col-span-2 p-5 rounded-2xl bg-navy-900 border border-navy-700">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-sm font-semibold text-white">Administrative Audit Trail</h2>
@@ -275,12 +275,12 @@ export function AdminDashboardPage({ onNavigate }: { onNavigate: (path: string) 
               recentLogs.map((log) => (
                 <div
                   key={log.id}
-                  className="p-3 rounded-xl bg-[#0A132C] border border-[#182649] flex items-start justify-between gap-3 text-xs"
+                  className="p-3 rounded-xl bg-navy-950 border border-navy-700 flex items-start justify-between gap-3 text-xs"
                 >
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-amber-300">{log.action}</span>
-                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-[#132247] text-slate-300">
+                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-navy-800 text-slate-300">
                         {log.target_type}: {log.target_id}
                       </span>
                     </div>

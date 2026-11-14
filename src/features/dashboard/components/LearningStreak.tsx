@@ -18,19 +18,19 @@ export function LearningStreak({
   });
 
   return (
-    <Card className="border border-[#E4E7EC] bg-white flex flex-col justify-between">
+    <Card className="border border-slate-200 bg-white flex flex-col justify-between">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-bold text-[#101828]">Learning Habit</CardTitle>
+          <CardTitle className="text-sm font-bold text-slate-900">Learning Habit</CardTitle>
           <Flame className="h-4 w-4 text-amber-500 fill-amber-500" />
         </div>
-        <p className="text-xs text-[#667085]">Daily active study consistency</p>
+        <p className="text-xs text-slate-500">Daily active study consistency</p>
       </CardHeader>
 
       <CardContent className="space-y-4">
         {/* Big number */}
         <div className="flex items-baseline gap-2">
-          <span className="text-3xl font-extrabold text-[#101828] tabular-nums">{streakDays}</span>
+          <span className="text-3xl font-extrabold text-slate-900 tabular-nums">{streakDays}</span>
           <span className="text-xs font-semibold text-amber-700">Days Active Streak</span>
         </div>
 
@@ -53,7 +53,7 @@ export function LearningStreak({
         </div>
 
         {/* Footer milestone */}
-        <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-[#667085]">
+        <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
           <span className="flex items-center gap-1">
             <Trophy className="h-3.5 w-3.5 text-amber-500" />
             <span>Longest Streak: {longestStreak} days</span>

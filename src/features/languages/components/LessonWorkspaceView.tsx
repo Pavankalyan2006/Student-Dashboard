@@ -71,23 +71,23 @@ export function LessonWorkspaceView({
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Top Navigation */}
-      <div className="flex items-center justify-between gap-4 border-b border-slate-800 pb-4">
+      <div className="flex items-center justify-between gap-4 border-b border-slate-200 pb-4">
         <button
           onClick={onBack}
-          className="flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors"
+          className="flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" /> Back to Dashboard
         </button>
 
         <div className="flex items-center gap-3">
-          <span className="text-xs px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-mono">
+          <span className="text-xs px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-200 font-mono">
             {lesson.level}
           </span>
-          <span className="text-xs text-slate-400 flex items-center gap-1 font-mono">
+          <span className="text-xs text-slate-500 flex items-center gap-1 font-mono">
             <Clock className="w-3.5 h-3.5" /> {lesson.estimated_duration_min} mins
           </span>
           {isCompleted && (
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium flex items-center gap-1">
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 font-medium flex items-center gap-1">
               <CheckCircle2 className="w-3.5 h-3.5" /> Completed
             </span>
           )}
@@ -98,21 +98,21 @@ export function LessonWorkspaceView({
       <div>
         <div className="flex items-center gap-2 mb-1">
           <span className="text-xl">{language.flag_emoji}</span>
-          <span className="text-xs font-medium text-indigo-400 uppercase tracking-wider">{language.name} Foundation</span>
+          <span className="text-xs font-medium text-indigo-600 uppercase tracking-wider">{language.name} Foundation</span>
         </div>
-        <h2 className="text-2xl font-bold text-white tracking-tight">{lesson.title}</h2>
+        <h2 className="text-2xl font-bold text-slate-900 tracking-tight">{lesson.title}</h2>
       </div>
 
       {/* Learning Objectives Checklist */}
       {lesson.objectives && lesson.objectives.length > 0 && (
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-          <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
-            <Award className="w-3.5 h-3.5 text-indigo-400" /> Learning Objectives
+        <div className="p-4 rounded-xl bg-white border border-slate-200">
+          <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+            <Award className="w-3.5 h-3.5 text-indigo-600" /> Learning Objectives
           </h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {lesson.objectives.map((obj, i) => (
-              <div key={i} className="flex items-start gap-2 text-xs text-slate-300">
-                <CheckCircle2 className="w-3.5 h-3.5 text-indigo-400 shrink-0 mt-0.5" />
+              <div key={i} className="flex items-start gap-2 text-xs text-slate-700">
+                <CheckCircle2 className="w-3.5 h-3.5 text-indigo-600 shrink-0 mt-0.5" />
                 <span>{obj}</span>
               </div>
             ))}
@@ -121,7 +121,7 @@ export function LessonWorkspaceView({
       )}
 
       {/* Lesson Navigation Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-800">
+      <div className="flex items-center gap-2 border-b border-slate-200">
         {[
           { key: 'lesson', label: 'Lesson Content', icon: BookOpen },
           { key: 'grammar', label: 'Grammar Notes', icon: FileText },
@@ -136,8 +136,8 @@ export function LessonWorkspaceView({
               onClick={() => setActiveTab(tab.key as any)}
               className={`flex items-center gap-2 px-4 py-2.5 text-xs font-medium border-b-2 transition-all ${
                 isActive
-                  ? 'border-indigo-500 text-white font-semibold'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
+                  ? 'border-indigo-500 text-slate-900 font-semibold'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
               }`}
             >
               <Icon className="w-3.5 h-3.5" />
@@ -151,29 +151,29 @@ export function LessonWorkspaceView({
       {activeTab === 'lesson' && (
         <div className="space-y-6 animate-in fade-in">
           {/* Detailed Explanation */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-            <h3 className="text-sm font-semibold text-white mb-2">Lesson Overview & Context</h3>
-            <p className="text-xs text-slate-300 leading-relaxed">{lesson.explanation}</p>
+          <div className="bg-white border border-slate-200 rounded-2xl p-6">
+            <h3 className="text-sm font-semibold text-slate-900 mb-2">Lesson Overview & Context</h3>
+            <p className="text-xs text-slate-700 leading-relaxed">{lesson.explanation}</p>
           </div>
 
           {/* Native Script Examples */}
           <div>
-            <h3 className="text-sm font-semibold text-white mb-3">Key Phrases & Examples</h3>
+            <h3 className="text-sm font-semibold text-slate-900 mb-3">Key Phrases & Examples</h3>
             <div className="space-y-3">
               {lesson.native_script_examples.map((ex, i) => (
                 <div
                   key={i}
-                  className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex items-center justify-between gap-4"
+                  className="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between gap-4"
                   dir={language.direction}
                 >
                   <div className="space-y-1">
-                    <div className="text-base font-semibold text-white">{ex.target}</div>
+                    <div className="text-base font-semibold text-slate-900">{ex.target}</div>
                     {ex.transliteration && (
-                      <div className="text-xs text-indigo-400 font-mono" dir="ltr">
+                      <div className="text-xs text-indigo-600 font-mono" dir="ltr">
                         /{ex.transliteration}/
                       </div>
                     )}
-                    <div className="text-xs text-slate-400" dir="ltr">
+                    <div className="text-xs text-slate-500" dir="ltr">
                       "{ex.translation}"
                     </div>
                     {ex.breakdown && (
@@ -185,7 +185,7 @@ export function LessonWorkspaceView({
 
                   <button
                     onClick={() => playSpeech(ex.target)}
-                    className="p-2.5 rounded-xl bg-slate-800 text-slate-400 hover:text-white hover:bg-indigo-600 transition-colors shrink-0"
+                    className="p-2.5 rounded-xl bg-slate-50 text-slate-500 hover:text-white hover:bg-indigo-600 transition-colors shrink-0"
                     title="Listen to pronunciation"
                     dir="ltr"
                   >
@@ -202,22 +202,22 @@ export function LessonWorkspaceView({
       {activeTab === 'grammar' && (
         <div className="space-y-4 animate-in fade-in">
           {lesson.grammar_notes.map((g, i) => (
-            <div key={i} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
-              <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                <FileText className="w-4 h-4 text-purple-400" /> {g.concept}
+            <div key={i} className="bg-white border border-slate-200 rounded-2xl p-5 space-y-3">
+              <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <FileText className="w-4 h-4 text-purple-600" /> {g.concept}
               </h4>
-              <p className="text-xs text-slate-300 leading-relaxed bg-slate-950/60 p-3 rounded-xl border border-slate-800">
+              <p className="text-xs text-slate-700 leading-relaxed bg-white p-3 rounded-xl border border-slate-200">
                 {g.rule}
               </p>
-              <div className="text-xs font-mono text-indigo-400 bg-indigo-950/20 px-3 py-1.5 rounded-lg border border-indigo-500/20">
+              <div className="text-xs font-mono text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-200">
                 Pattern: {g.pattern}
               </div>
 
               {/* Positive Examples */}
               <div className="space-y-1 pt-1">
-                <span className="text-[11px] font-semibold text-emerald-400 uppercase tracking-wider">Correct Examples:</span>
+                <span className="text-[11px] font-semibold text-emerald-600 uppercase tracking-wider">Correct Examples:</span>
                 {g.positive_examples.map((pe, idx) => (
-                  <div key={idx} className="text-xs text-slate-300 pl-2 border-l-2 border-emerald-500">
+                  <div key={idx} className="text-xs text-slate-700 pl-2 border-l-2 border-emerald-500">
                     {pe}
                   </div>
                 ))}
@@ -226,9 +226,9 @@ export function LessonWorkspaceView({
               {/* Common Mistakes */}
               {g.common_mistakes && g.common_mistakes.length > 0 && (
                 <div className="space-y-1 pt-1">
-                  <span className="text-[11px] font-semibold text-amber-400 uppercase tracking-wider">Common Pitfalls:</span>
+                  <span className="text-[11px] font-semibold text-amber-600 uppercase tracking-wider">Common Pitfalls:</span>
                   {g.common_mistakes.map((cm, idx) => (
-                    <div key={idx} className="text-xs text-slate-400 pl-2 border-l-2 border-amber-500">
+                    <div key={idx} className="text-xs text-slate-500 pl-2 border-l-2 border-amber-500">
                       {cm}
                     </div>
                   ))}
@@ -246,25 +246,25 @@ export function LessonWorkspaceView({
             {lesson.vocabulary.map((v) => (
               <div
                 key={v.id}
-                className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex items-start justify-between gap-3"
+                className="bg-white border border-slate-200 rounded-xl p-4 flex items-start justify-between gap-3"
               >
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-base font-bold text-white">{v.word}</span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">
+                    <span className="text-base font-bold text-slate-900">{v.word}</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-50 text-slate-500">
                       {v.part_of_speech}
                     </span>
                   </div>
                   {v.transliteration && (
-                    <div className="text-xs text-indigo-400 font-mono mt-0.5">/{v.transliteration}/</div>
+                    <div className="text-xs text-indigo-600 font-mono mt-0.5">/{v.transliteration}/</div>
                   )}
-                  <div className="text-xs text-slate-300 font-medium mt-1">{v.translation}</div>
+                  <div className="text-xs text-slate-700 font-medium mt-1">{v.translation}</div>
                   <div className="text-[11px] text-slate-500 mt-1 italic">"{v.example_sentence}"</div>
                 </div>
 
                 <button
                   onClick={() => playSpeech(v.word)}
-                  className="p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white hover:bg-indigo-600 transition-colors shrink-0"
+                  className="p-2 rounded-lg bg-slate-50 text-slate-500 hover:text-white hover:bg-indigo-600 transition-colors shrink-0"
                   title="Pronounce"
                 >
                   <Volume2 className="w-4 h-4" />
@@ -284,15 +284,15 @@ export function LessonWorkspaceView({
             const isCorrect = studentChoice === ex.correct_answer;
 
             return (
-              <div key={ex.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+              <div key={ex.id} className="bg-white border border-slate-200 rounded-2xl p-5 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">
+                  <span className="text-xs px-2 py-0.5 rounded bg-slate-50 text-slate-500 font-mono">
                     {ex.type}
                   </span>
                   {isEvaluated && (
                     <span
                       className={`text-xs font-semibold ${
-                        isCorrect ? 'text-emerald-400' : 'text-rose-400'
+                        isCorrect ? 'text-emerald-600' : 'text-rose-600'
                       }`}
                     >
                       {isCorrect ? '✓ Correct' : '✗ Incorrect'}
@@ -300,7 +300,7 @@ export function LessonWorkspaceView({
                   )}
                 </div>
 
-                <h4 className="text-sm font-semibold text-white">{ex.prompt}</h4>
+                <h4 className="text-sm font-semibold text-slate-900">{ex.prompt}</h4>
 
                 {/* Multiple Choice Options */}
                 {ex.options && (
@@ -315,9 +315,9 @@ export function LessonWorkspaceView({
                           className={`p-3 rounded-xl border text-left text-xs font-medium transition-all ${
                             isOptionSelected
                               ? isCorrect
-                                ? 'border-emerald-500 bg-emerald-950/30 text-white'
-                                : 'border-rose-500 bg-rose-950/30 text-white'
-                              : 'border-slate-800 bg-slate-800/40 text-slate-300 hover:border-slate-700'
+                                ? 'border-emerald-500 bg-emerald-50 text-slate-900'
+                                : 'border-rose-500 bg-rose-50 text-slate-900'
+                              : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-200'
                           }`}
                         >
                           {opt}
@@ -329,8 +329,8 @@ export function LessonWorkspaceView({
 
                 {/* Explanation */}
                 {isEvaluated && (
-                  <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 text-xs text-slate-300 leading-relaxed">
-                    <strong className="text-indigo-400">Explanation:</strong> {ex.explanation}
+                  <div className="p-3 rounded-xl bg-white border border-slate-200 text-xs text-slate-700 leading-relaxed">
+                    <strong className="text-indigo-600">Explanation:</strong> {ex.explanation}
                   </div>
                 )}
               </div>
@@ -340,24 +340,24 @@ export function LessonWorkspaceView({
       )}
 
       {/* Student Personal Notes Scratchpad */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-2">
-        <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-          <Save className="w-3.5 h-3.5 text-indigo-400" /> Student Notes & Key Takeaways
+      <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-2">
+        <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+          <Save className="w-3.5 h-3.5 text-indigo-600" /> Student Notes & Key Takeaways
         </label>
         <textarea
           rows={3}
           value={studentNotes}
           onChange={(e) => setStudentNotes(e.target.value)}
           placeholder="Jot down memory hooks, tricky pronunciations, or grammar doubts..."
-          className="w-full p-3 rounded-xl bg-slate-800/80 border border-slate-700 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+          className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500"
         />
       </div>
 
       {/* Complete Lesson Action */}
-      <div className="flex items-center justify-between border-t border-slate-800 pt-4">
+      <div className="flex items-center justify-between border-t border-slate-200 pt-4">
         <button
           onClick={onBack}
-          className="px-4 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+          className="px-4 py-2 rounded-xl text-xs font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-colors"
         >
           Return to Dashboard
         </button>

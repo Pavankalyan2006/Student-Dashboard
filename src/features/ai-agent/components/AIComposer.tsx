@@ -98,7 +98,7 @@ export function AIComposer({
   };
 
   return (
-    <div className="border-t border-[#E4E7EC] bg-white p-3 space-y-2.5">
+    <div className="border-t border-slate-200 bg-white p-3 space-y-2.5">
       {/* AI Mode Selector */}
       <div className="flex items-center justify-between gap-2 overflow-x-auto pb-0.5">
         <div className="flex items-center gap-1.5">
@@ -112,7 +112,7 @@ export function AIComposer({
               onClick={() => handleModeSelect(m.id)}
               className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-all shrink-0 cursor-pointer ${
                 selectedMode === m.id
-                  ? 'bg-[#2563EB] text-white shadow-xs'
+                  ? 'bg-blue-600 text-white shadow-xs'
                   : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
               }`}
             >
@@ -142,7 +142,7 @@ export function AIComposer({
       )}
 
       {/* Input container */}
-      <div className="relative flex items-end gap-2 p-2 rounded-2xl border border-[#E4E7EC] bg-slate-50/70 focus-within:bg-white focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100 transition-all shadow-inner">
+      <div className="relative flex items-end gap-2 p-2 rounded-2xl border border-slate-200 bg-slate-50/70 focus-within:bg-white focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100 transition-all shadow-inner">
         <textarea
           ref={textareaRef}
           value={input}

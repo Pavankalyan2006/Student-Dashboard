@@ -97,7 +97,7 @@ export const CodingLabPage: React.FC<CodingLabPageProps> = ({ onNavigate }) => {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
       {/* Header Section */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-800 text-white p-8 shadow-xl">
+      <div className="relative overflow-hidden rounded-2xl hero-brand text-white p-8">
         <div className="relative z-10 max-w-2xl">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-md rounded-full text-xs font-semibold mb-3 border border-white/20">
             <Sparkles className="w-3.5 h-3.5 text-amber-300" />

@@ -69,8 +69,8 @@ export const KnowledgeCollectionsGrid: React.FC<KnowledgeCollectionsGridProps> =
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-bold text-white">Collections & Folders</h2>
-          <p className="text-xs text-slate-400">
+          <h2 className="text-lg font-bold text-slate-900">Collections & Folders</h2>
+          <p className="text-xs text-slate-500">
             {collections.length} {collections.length === 1 ? 'collection' : 'collections'} organized by subject and semester
           </p>
         </div>
@@ -91,8 +91,8 @@ export const KnowledgeCollectionsGrid: React.FC<KnowledgeCollectionsGridProps> =
               key={col.id}
               className={`group relative rounded-2xl p-5 border transition-all duration-200 cursor-pointer flex flex-col justify-between ${
                 isSelected
-                  ? 'bg-slate-800/90 border-indigo-500 shadow-lg shadow-indigo-500/10'
-                  : 'bg-slate-900/80 hover:bg-slate-800/50 border-slate-800 hover:border-slate-700 shadow-sm'
+                  ? 'bg-slate-50 border-indigo-500 shadow-lg shadow-indigo-500/10'
+                  : 'bg-white hover:bg-slate-50 border-slate-200 hover:border-slate-200 shadow-sm'
               }`}
               onClick={() => onSelectCollection(col)}
             >
@@ -101,17 +101,17 @@ export const KnowledgeCollectionsGrid: React.FC<KnowledgeCollectionsGridProps> =
                 <div className="flex items-start justify-between mb-3.5">
                   <div className="flex items-center gap-3">
                     <div
-                      className="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-md"
-                      style={{ backgroundColor: col.color || '#3B82F6' }}
+                      className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-900 shadow-md"
+                      style={{ backgroundColor: col.color || '#5E6EEF' }}
                     >
                       <Folder className="w-5 h-5" />
                     </div>
                     <div>
-                      <span className="text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-md bg-slate-800 border border-slate-700 text-slate-300">
+                      <span className="text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-md bg-slate-50 border border-slate-200 text-slate-700">
                         {getCategoryLabel(col.category)}
                       </span>
                       {col.semester && (
-                        <span className="ml-1.5 text-[10px] font-medium text-indigo-400">
+                        <span className="ml-1.5 text-[10px] font-medium text-indigo-600">
                           Sem {col.semester}
                         </span>
                       )}
@@ -123,14 +123,14 @@ export const KnowledgeCollectionsGrid: React.FC<KnowledgeCollectionsGridProps> =
                     <button
                       onClick={() => onEditCollection(col)}
                       title="Edit Collection"
-                      className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                      className="p-1 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition"
                     >
                       <Edit2 className="w-3.5 h-3.5" />
                     </button>
                     <button
                       onClick={() => onDeleteCollection(col)}
                       title="Delete Collection"
-                      className="p-1 rounded-lg text-slate-400 hover:text-red-400 hover:bg-slate-800 transition"
+                      className="p-1 rounded-lg text-slate-500 hover:text-red-600 hover:bg-slate-50 transition"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -138,10 +138,10 @@ export const KnowledgeCollectionsGrid: React.FC<KnowledgeCollectionsGridProps> =
                 </div>
 
                 {/* Collection Name & Description */}
-                <h3 className="text-base font-bold text-white group-hover:text-indigo-300 transition line-clamp-1 mb-1">
+                <h3 className="text-base font-bold text-slate-900 group-hover:text-indigo-700 transition line-clamp-1 mb-1">
                   {col.name}
                 </h3>
-                <p className="text-xs text-slate-400 line-clamp-2 mb-3 min-h-[32px]">
+                <p className="text-xs text-slate-500 line-clamp-2 mb-3 min-h-[32px]">
                   {col.description || (col.subject ? `Curated notes and resources for ${col.subject}` : 'Academic repository')}
                 </p>
 
@@ -151,7 +151,7 @@ export const KnowledgeCollectionsGrid: React.FC<KnowledgeCollectionsGridProps> =
                     {col.tags.slice(0, 3).map((tag) => (
                       <span
                         key={tag}
-                        className="text-[10px] px-2 py-0.5 rounded bg-slate-800/80 text-slate-400 border border-slate-700/50"
+                        className="text-[10px] px-2 py-0.5 rounded bg-slate-50 text-slate-500 border border-slate-200"
                       >
                         #{tag}
                       </span>
@@ -164,10 +164,10 @@ export const KnowledgeCollectionsGrid: React.FC<KnowledgeCollectionsGridProps> =
               </div>
 
               {/* Footer Meta */}
-              <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+              <div className="pt-3 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
                 <div className="flex items-center gap-3">
-                  <span className="flex items-center gap-1 font-medium text-slate-300">
-                    <FileText className="w-3.5 h-3.5 text-indigo-400" />
+                  <span className="flex items-center gap-1 font-medium text-slate-700">
+                    <FileText className="w-3.5 h-3.5 text-indigo-600" />
                     {col.document_count || 0} {col.document_count === 1 ? 'doc' : 'docs'}
                   </span>
                   <span className="text-[11px] text-slate-500">
@@ -175,7 +175,7 @@ export const KnowledgeCollectionsGrid: React.FC<KnowledgeCollectionsGridProps> =
                   </span>
                 </div>
 
-                <div className="text-[11px] text-indigo-400 font-semibold group-hover:translate-x-0.5 transition flex items-center gap-1">
+                <div className="text-[11px] text-indigo-600 font-semibold group-hover:translate-x-0.5 transition flex items-center gap-1">
                   <span>Explore</span>
                   <span>→</span>
                 </div>

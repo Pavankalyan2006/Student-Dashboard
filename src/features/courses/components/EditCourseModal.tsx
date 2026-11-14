@@ -92,7 +92,7 @@ export function EditCourseModal({ course, open, onOpenChange, onUpdated }: EditC
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto p-6">
         <DialogHeader>
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center text-[#2563EB]">
+            <div className="h-8 w-8 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600">
               <Pencil className="h-4 w-4" />
             </div>
             <div>

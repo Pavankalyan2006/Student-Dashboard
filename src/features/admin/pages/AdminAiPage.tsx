@@ -130,7 +130,7 @@ export function AdminAiPage() {
 
         <button
           onClick={loadData}
-          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#14234B] hover:bg-[#1C3168] border border-[#233870] text-xs font-medium text-slate-200 transition-colors self-start sm:self-auto cursor-pointer"
+          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-navy-800 hover:bg-navy-700 border border-navy-600 text-xs font-medium text-slate-200 transition-colors self-start sm:self-auto cursor-pointer"
         >
           <RefreshCw className={cn('h-3.5 w-3.5', isLoading && 'animate-spin')} />
           Refresh AI State
@@ -138,7 +138,7 @@ export function AdminAiPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-[#1A284D] pb-3 overflow-x-auto text-xs">
+      <div className="flex items-center gap-2 border-b border-navy-700 pb-3 overflow-x-auto text-xs">
         <button
           onClick={() => setActiveTab('providers')}
           className={cn(
@@ -203,7 +203,7 @@ export function AdminAiPage() {
             {providers.map((p) => (
               <div
                 key={p.id}
-                className="p-5 rounded-2xl bg-[#0D1836] border border-[#1A284D] space-y-4"
+                className="p-5 rounded-2xl bg-navy-900 border border-navy-700 space-y-4"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
@@ -232,7 +232,7 @@ export function AdminAiPage() {
                   </button>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 pt-2 border-t border-[#182649] text-xs">
+                <div className="grid grid-cols-3 gap-2 pt-2 border-t border-navy-700 text-xs">
                   <div>
                     <span className="text-slate-500 text-[10px] uppercase">Status</span>
                     <p className="font-semibold text-emerald-400">{p.health_status}</p>
@@ -247,7 +247,7 @@ export function AdminAiPage() {
                   </div>
                 </div>
 
-                <div className="p-2.5 rounded-xl bg-[#081024] text-[11px] text-slate-400 flex items-center justify-between">
+                <div className="p-2.5 rounded-xl bg-navy-950 text-[11px] text-slate-400 flex items-center justify-between">
                   <span>API Key Storage:</span>
                   <span className="text-emerald-400 font-mono">ENCRYPTED_VAULT_ACTIVE</span>
                 </div>
@@ -259,10 +259,10 @@ export function AdminAiPage() {
 
       {/* Tab: Models */}
       {activeTab === 'models' && (
-        <div className="rounded-2xl bg-[#0D1836] border border-[#1A284D] overflow-hidden">
+        <div className="rounded-2xl bg-navy-900 border border-navy-700 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-[#0A132C] border-b border-[#1A284D] text-slate-400 uppercase tracking-wider text-[10px]">
+              <thead className="bg-navy-950 border-b border-navy-700 text-slate-400 uppercase tracking-wider text-[10px]">
                 <tr>
                   <th className="py-3 px-4">Model Specialization</th>
                   <th className="py-3 px-4">Model ID</th>
@@ -272,9 +272,9 @@ export function AdminAiPage() {
                   <th className="py-3 px-4 text-right">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#162345]">
+              <tbody className="divide-y divide-navy-800">
                 {models.map((m) => (
-                  <tr key={m.id} className="hover:bg-[#111E42]/50">
+                  <tr key={m.id} className="hover:bg-navy-800/50">
                     <td className="py-3 px-4 font-semibold text-white">{m.model_name}</td>
                     <td className="py-3 px-4 font-mono text-[11px] text-cyan-300">{m.model_id}</td>
                     <td className="py-3 px-4">
@@ -298,7 +298,7 @@ export function AdminAiPage() {
       {/* Tab: Tool Registry */}
       {activeTab === 'tools' && (
         <div className="space-y-4">
-          <div className="p-4 rounded-xl bg-[#0A132C] border border-[#1A284D] flex items-center justify-between text-xs">
+          <div className="p-4 rounded-xl bg-navy-950 border border-navy-700 flex items-center justify-between text-xs">
             <p className="text-slate-300">
               <ShieldCheck className="h-4 w-4 inline mr-1.5 text-amber-400" />
               Administrative Tool Registry Controls: Disable tools immediately during runtime anomalies.
@@ -313,8 +313,8 @@ export function AdminAiPage() {
                 className={cn(
                   'p-4 rounded-2xl border transition-all space-y-3',
                   t.is_enabled
-                    ? 'bg-[#0D1836] border-[#1A284D]'
-                    : 'bg-[#0A1024]/70 border-rose-900/40 opacity-70'
+                    ? 'bg-navy-900 border-navy-700'
+                    : 'bg-navy-950/70 border-rose-900/40 opacity-70'
                 )}
               >
                 <div className="flex items-start justify-between gap-3">
@@ -341,7 +341,7 @@ export function AdminAiPage() {
                   </button>
                 </div>
 
-                <div className="pt-2 border-t border-[#182649] flex items-center justify-between text-[11px] text-slate-500">
+                <div className="pt-2 border-t border-navy-700 flex items-center justify-between text-[11px] text-slate-500">
                   <span>Timeout: <strong className="text-slate-300">{t.timeoutMs}ms</strong></span>
                   <span>Confirmation: <strong className="text-slate-300">{t.requires_confirmation ? 'Required' : 'None'}</strong></span>
                   <span>Roles: <strong className="text-slate-300">{t.permissions.join(', ')}</strong></span>
@@ -357,21 +357,21 @@ export function AdminAiPage() {
         <div className="space-y-6">
           {/* Quick Metrics */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="p-4 rounded-xl bg-[#0D1836] border border-[#1A284D]">
+            <div className="p-4 rounded-xl bg-navy-900 border border-navy-700">
               <span className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Specialized Domain Agents</span>
               <p className="text-2xl font-bold text-indigo-400 mt-1">{agents.length || 28}</p>
             </div>
-            <div className="p-4 rounded-xl bg-[#0D1836] border border-[#1A284D]">
+            <div className="p-4 rounded-xl bg-navy-900 border border-navy-700">
               <span className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Total Workflows Run</span>
               <p className="text-2xl font-bold text-white mt-1">{workflowsData?.stats?.total || 0}</p>
             </div>
-            <div className="p-4 rounded-xl bg-[#0D1836] border border-[#1A284D]">
+            <div className="p-4 rounded-xl bg-navy-900 border border-navy-700">
               <span className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Workflow Success Rate</span>
               <p className="text-2xl font-bold text-emerald-400 mt-1">
                 {workflowsData?.stats?.total ? Math.round((workflowsData.stats.completed / workflowsData.stats.total) * 100) : 100}%
               </p>
             </div>
-            <div className="p-4 rounded-xl bg-[#0D1836] border border-[#1A284D]">
+            <div className="p-4 rounded-xl bg-navy-900 border border-navy-700">
               <span className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Average Workflow Latency</span>
               <p className="text-2xl font-bold text-cyan-400 mt-1">{workflowsData?.stats?.averageDurationMs || 0}ms</p>
             </div>
@@ -394,8 +394,8 @@ export function AdminAiPage() {
                   className={cn(
                     'p-4 rounded-2xl border transition-all space-y-3',
                     ag.enabled
-                      ? 'bg-[#0D1836] border-[#1A284D]'
-                      : 'bg-[#0A1024]/70 border-rose-900/40 opacity-70'
+                      ? 'bg-navy-900 border-navy-700'
+                      : 'bg-navy-950/70 border-rose-900/40 opacity-70'
                   )}
                 >
                   <div className="flex items-start justify-between gap-3">
@@ -431,13 +431,13 @@ export function AdminAiPage() {
                   {/* Capabilities chips */}
                   <div className="flex flex-wrap gap-1">
                     {ag.capabilities?.map((cap: string) => (
-                      <span key={cap} className="px-1.5 py-0.5 rounded text-[10px] bg-[#14234B] text-slate-300 border border-[#233870]">
+                      <span key={cap} className="px-1.5 py-0.5 rounded text-[10px] bg-navy-800 text-slate-300 border border-navy-600">
                         {cap}
                       </span>
                     ))}
                   </div>
 
-                  <div className="pt-2 border-t border-[#182649] flex items-center justify-between text-[11px] text-slate-500">
+                  <div className="pt-2 border-t border-navy-700 flex items-center justify-between text-[11px] text-slate-500">
                     <span>Requests: <strong className="text-slate-300">{ag.metric?.totalRequests || 0}</strong></span>
                     <span>Success Rate: <strong className="text-emerald-400">{ag.metric?.successRate || 100}%</strong></span>
                     <span>Timeout: <strong className="text-slate-300">{ag.timeoutMs}ms</strong></span>
@@ -450,9 +450,9 @@ export function AdminAiPage() {
 
           {/* Recent Workflows Observability */}
           {workflowsData?.workflows && workflowsData.workflows.length > 0 && (
-            <div className="p-5 rounded-2xl bg-[#0D1836] border border-[#1A284D] space-y-3">
+            <div className="p-5 rounded-2xl bg-navy-900 border border-navy-700 space-y-3">
               <h3 className="font-bold text-white text-sm">Recent Multi-Agent Workflows</h3>
-              <div className="divide-y divide-[#182649] text-xs">
+              <div className="divide-y divide-navy-700 text-xs">
                 {workflowsData.workflows.slice(0, 10).map((wf: any) => (
                   <div key={wf.id} className="py-2.5 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
@@ -483,25 +483,25 @@ export function AdminAiPage() {
       {activeTab === 'usage' && usage && (
         <div className="space-y-6">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="p-4 rounded-xl bg-[#0D1836] border border-[#1A284D]">
+            <div className="p-4 rounded-xl bg-navy-900 border border-navy-700">
               <span className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Total Requests</span>
               <p className="text-2xl font-bold text-white mt-1">{usage.total_requests}</p>
             </div>
-            <div className="p-4 rounded-xl bg-[#0D1836] border border-[#1A284D]">
+            <div className="p-4 rounded-xl bg-navy-900 border border-navy-700">
               <span className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Success Rate</span>
               <p className="text-2xl font-bold text-emerald-400 mt-1">{usage.success_rate}%</p>
             </div>
-            <div className="p-4 rounded-xl bg-[#0D1836] border border-[#1A284D]">
+            <div className="p-4 rounded-xl bg-navy-900 border border-navy-700">
               <span className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Estimated Tokens</span>
               <p className="text-2xl font-bold text-cyan-400 mt-1">{(usage.estimated_tokens_used / 1000).toFixed(0)}k</p>
             </div>
-            <div className="p-4 rounded-xl bg-[#0D1836] border border-[#1A284D]">
+            <div className="p-4 rounded-xl bg-navy-900 border border-navy-700">
               <span className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Estimated Cost</span>
               <p className="text-2xl font-bold text-amber-400 mt-1">${usage.estimated_cost_usd}</p>
             </div>
           </div>
 
-          <div className="p-5 rounded-2xl bg-[#0D1836] border border-[#1A284D] space-y-3">
+          <div className="p-5 rounded-2xl bg-navy-900 border border-navy-700 space-y-3">
             <h3 className="font-bold text-white text-sm">Model Volume Distribution</h3>
             <div className="space-y-2">
               {usage.model_distribution?.map((m: any) => (
@@ -510,7 +510,7 @@ export function AdminAiPage() {
                     <span className="text-slate-300 font-mono">{m.model}</span>
                     <span className="text-slate-400">{m.count} requests</span>
                   </div>
-                  <div className="h-2 rounded-full bg-[#081024] overflow-hidden">
+                  <div className="h-2 rounded-full bg-navy-950 overflow-hidden">
                     <div
                       className="h-full bg-amber-500 rounded-full"
                       style={{ width: `${Math.min(100, (m.count / (usage.total_requests || 1)) * 100)}%` }}

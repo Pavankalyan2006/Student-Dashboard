@@ -135,57 +135,57 @@ export const GateQuestionPracticeModal: React.FC<GateQuestionPracticeModalProps>
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-3xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-50 backdrop-blur-xs p-4">
+      <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-3xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
         {/* Modal Header */}
-        <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/70">
+        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-white">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
               [{question.paper_code}] {question.subject}
             </span>
 
-            <span className="px-2 py-0.5 rounded-md text-[11px] font-mono font-bold bg-slate-800 text-slate-200">
+            <span className="px-2 py-0.5 rounded-md text-[11px] font-mono font-bold bg-slate-50 text-slate-800">
               {question.question_type}
             </span>
 
-            <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+            <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
               +{question.marks} {question.marks === 1 ? 'Mark' : 'Marks'}
             </span>
 
             {question.negative_marks > 0 ? (
-              <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-rose-500/10 text-rose-300 border border-rose-500/20">
+              <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
                 -{question.negative_marks} Neg
               </span>
             ) : (
-              <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-800 text-slate-400">
+              <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-50 text-slate-500">
                 No Neg Marking
               </span>
             )}
 
             {question.is_pyq && (
-              <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+              <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
                 Official PYQ {question.year}
               </span>
             )}
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 px-3 py-1 bg-slate-900 border border-slate-800 rounded-lg text-xs font-mono text-slate-200">
-              <Clock className="w-3.5 h-3.5 text-indigo-400" />
+            <div className="flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-200 rounded-lg text-xs font-mono text-slate-800">
+              <Clock className="w-3.5 h-3.5 text-indigo-600" />
               {formatTimer(timeSpent)}
             </div>
 
             <button
               onClick={handleBookmark}
               title="Bookmark Question"
-              className="p-1.5 text-slate-400 hover:text-amber-400 rounded-lg hover:bg-slate-800 transition-colors"
+              className="p-1.5 text-slate-500 hover:text-amber-600 rounded-lg hover:bg-slate-50 transition-colors"
             >
               <Bookmark className="w-4 h-4" />
             </button>
 
             <button
               onClick={onClose}
-              className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
+              className="p-1.5 text-slate-500 hover:text-slate-900 rounded-lg hover:bg-slate-50 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -195,13 +195,13 @@ export const GateQuestionPracticeModal: React.FC<GateQuestionPracticeModalProps>
         {/* Modal Scrollable Body */}
         <div className="p-6 overflow-y-auto space-y-6 text-sm flex-1">
           {/* Question Statement */}
-          <div className="p-5 bg-slate-950/80 border border-slate-800/80 rounded-xl leading-relaxed text-slate-100 font-sans whitespace-pre-line text-sm">
+          <div className="p-5 bg-white border border-slate-200 rounded-xl leading-relaxed text-slate-900 font-sans whitespace-pre-line text-sm">
             {question.question_statement}
           </div>
 
           {/* Diagram image if provided */}
           {question.diagram_url && (
-            <div className="text-center p-3 bg-slate-950 rounded-xl border border-slate-800">
+            <div className="text-center p-3 bg-white rounded-xl border border-slate-200">
               <img
                 src={question.diagram_url}
                 alt="Question Diagram"
@@ -212,7 +212,7 @@ export const GateQuestionPracticeModal: React.FC<GateQuestionPracticeModalProps>
 
           {/* Answer Input Controls */}
           <div className="space-y-3">
-            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
+            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
               {question.question_type === 'MCQ' && 'Select One Correct Option (Single Choice):'}
               {question.question_type === 'MSQ' && 'Select All Correct Options (Multiple Select, No Negative Marking):'}
               {question.question_type === 'NAT' && 'Enter Numerical Answer (Within Decimal Tolerance):'}
@@ -227,10 +227,10 @@ export const GateQuestionPracticeModal: React.FC<GateQuestionPracticeModalProps>
                   const isCorrectAnswer = isSubmitted && evaluationResult.correct_answer === opt.id;
                   const isWrongSelected = isSubmitted && isSelected && !evaluationResult.is_correct;
 
-                  let borderClass = 'border-slate-800 bg-slate-950/60 hover:border-slate-700';
-                  if (isSelected) borderClass = 'border-indigo-500 bg-indigo-500/10 text-white';
-                  if (isCorrectAnswer) borderClass = 'border-emerald-500 bg-emerald-500/15 text-white ring-1 ring-emerald-500';
-                  if (isWrongSelected) borderClass = 'border-rose-500 bg-rose-500/15 text-white ring-1 ring-rose-500';
+                  let borderClass = 'border-slate-200 bg-white hover:border-slate-200';
+                  if (isSelected) borderClass = 'border-indigo-500 bg-indigo-50 text-slate-900';
+                  if (isCorrectAnswer) borderClass = 'border-emerald-500 bg-emerald-50 text-slate-900 ring-1 ring-emerald-500';
+                  if (isWrongSelected) borderClass = 'border-rose-500 bg-rose-50 text-slate-900 ring-1 ring-rose-500';
 
                   return (
                     <div
@@ -244,12 +244,12 @@ export const GateQuestionPracticeModal: React.FC<GateQuestionPracticeModalProps>
                         className={`w-6 h-6 rounded-md flex items-center justify-center font-bold text-xs shrink-0 ${
                           isSelected
                             ? 'bg-indigo-600 text-white'
-                            : 'bg-slate-800 text-slate-300'
+                            : 'bg-slate-50 text-slate-700'
                         }`}
                       >
                         {opt.id}
                       </span>
-                      <span className="text-xs text-slate-200 mt-0.5 leading-normal">{opt.text}</span>
+                      <span className="text-xs text-slate-800 mt-0.5 leading-normal">{opt.text}</span>
                     </div>
                   );
                 })}
@@ -268,9 +268,9 @@ export const GateQuestionPracticeModal: React.FC<GateQuestionPracticeModalProps>
                     : [evaluationResult?.correct_answer];
                   const shouldBeChecked = isSubmitted && correctArr.includes(opt.id);
 
-                  let borderClass = 'border-slate-800 bg-slate-950/60 hover:border-slate-700';
-                  if (isChecked) borderClass = 'border-indigo-500 bg-indigo-500/10 text-white';
-                  if (shouldBeChecked) borderClass = 'border-emerald-500 bg-emerald-500/15 text-white ring-1 ring-emerald-500';
+                  let borderClass = 'border-slate-200 bg-white hover:border-slate-200';
+                  if (isChecked) borderClass = 'border-indigo-500 bg-indigo-50 text-slate-900';
+                  if (shouldBeChecked) borderClass = 'border-emerald-500 bg-emerald-50 text-slate-900 ring-1 ring-emerald-500';
 
                   return (
                     <div
@@ -284,13 +284,13 @@ export const GateQuestionPracticeModal: React.FC<GateQuestionPracticeModalProps>
                         className={`w-5 h-5 rounded-md border flex items-center justify-center font-bold text-xs shrink-0 ${
                           isChecked
                             ? 'bg-indigo-600 border-indigo-600 text-white'
-                            : 'bg-slate-800 border-slate-700 text-slate-300'
+                            : 'bg-slate-50 border-slate-200 text-slate-700'
                         }`}
                       >
                         {isChecked && <CheckCircle2 className="w-3.5 h-3.5" />}
                       </div>
-                      <span className="font-bold text-xs text-indigo-300 mr-1">{opt.id}:</span>
-                      <span className="text-xs text-slate-200 leading-normal">{opt.text}</span>
+                      <span className="font-bold text-xs text-indigo-700 mr-1">{opt.id}:</span>
+                      <span className="text-xs text-slate-800 leading-normal">{opt.text}</span>
                     </div>
                   );
                 })}
@@ -306,9 +306,9 @@ export const GateQuestionPracticeModal: React.FC<GateQuestionPracticeModalProps>
                   value={selectedAnswer}
                   onChange={(e) => setSelectedAnswer(e.target.value)}
                   placeholder="Enter integer or real decimal value (e.g. 15 or 16.24)..."
-                  className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-sm font-mono text-white placeholder-slate-500 focus:outline-hidden focus:border-indigo-500 disabled:opacity-70"
+                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-mono text-slate-900 placeholder-slate-400 focus:outline-hidden focus:border-indigo-500 disabled:opacity-70"
                 />
-                <span className="text-[11px] text-slate-400 block">
+                <span className="text-[11px] text-slate-500 block">
                   Virtual calculator is allowed during GATE. Values within official decimal tolerance range will be accepted.
                 </span>
               </div>
@@ -317,8 +317,8 @@ export const GateQuestionPracticeModal: React.FC<GateQuestionPracticeModalProps>
 
           {/* Hint Disclosure */}
           {showHint && question.hint && (
-            <div className="p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-xl text-xs text-amber-200 flex items-start gap-2">
-              <HelpCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+            <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-700 flex items-start gap-2">
+              <HelpCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
               <div>
                 <span className="font-bold block mb-0.5">Professor Hint:</span>
                 {question.hint}
@@ -331,22 +331,22 @@ export const GateQuestionPracticeModal: React.FC<GateQuestionPracticeModalProps>
             <div
               className={`p-5 rounded-2xl border space-y-4 ${
                 evaluationResult.is_correct
-                  ? 'bg-emerald-950/20 border-emerald-500/40'
-                  : 'bg-rose-950/20 border-rose-500/40'
+                  ? 'bg-emerald-50 border-emerald-200'
+                  : 'bg-rose-50 border-rose-200'
               }`}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                   {evaluationResult.is_correct ? (
-                    <CheckCircle2 className="w-6 h-6 text-emerald-400" />
+                    <CheckCircle2 className="w-6 h-6 text-emerald-600" />
                   ) : (
-                    <XCircle className="w-6 h-6 text-rose-400" />
+                    <XCircle className="w-6 h-6 text-rose-600" />
                   )}
                   <div>
-                    <h4 className="font-bold text-sm text-white">
+                    <h4 className="font-bold text-sm text-slate-900">
                       {evaluationResult.is_correct ? 'Correct Solution!' : 'Incorrect Answer'}
                     </h4>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-slate-500">
                       {evaluationResult.is_correct
                         ? `Scored +${evaluationResult.marks_awarded} Marks`
                         : evaluationResult.negative_deducted > 0
@@ -357,8 +357,8 @@ export const GateQuestionPracticeModal: React.FC<GateQuestionPracticeModalProps>
                 </div>
 
                 <div className="text-right">
-                  <span className="text-[10px] text-slate-400 block uppercase font-mono">Official Answer Key</span>
-                  <span className="text-sm font-bold font-mono text-emerald-300">
+                  <span className="text-[10px] text-slate-500 block uppercase font-mono">Official Answer Key</span>
+                  <span className="text-sm font-bold font-mono text-emerald-700">
                     {typeof evaluationResult.correct_answer === 'object' && 'min' in evaluationResult.correct_answer
                       ? `[${evaluationResult.correct_answer.min} to ${evaluationResult.correct_answer.max}]`
                       : Array.isArray(evaluationResult.correct_answer)
@@ -369,25 +369,25 @@ export const GateQuestionPracticeModal: React.FC<GateQuestionPracticeModalProps>
               </div>
 
               {/* Detailed Explanation */}
-              <div className="p-4 bg-slate-950/80 border border-slate-800 rounded-xl space-y-2 text-xs text-slate-200">
-                <div className="font-bold text-slate-100 flex items-center gap-1.5 text-xs">
-                  <BookOpen className="w-4 h-4 text-indigo-400" />
+              <div className="p-4 bg-white border border-slate-200 rounded-xl space-y-2 text-xs text-slate-800">
+                <div className="font-bold text-slate-900 flex items-center gap-1.5 text-xs">
+                  <BookOpen className="w-4 h-4 text-indigo-600" />
                   Authoritative Step-by-Step Explanation:
                 </div>
-                <div className="leading-relaxed whitespace-pre-line text-slate-300 font-sans">
+                <div className="leading-relaxed whitespace-pre-line text-slate-700 font-sans">
                   {evaluationResult.explanation}
                 </div>
               </div>
 
               <div className="flex items-center justify-between pt-2">
-                <span className="text-[11px] text-slate-400 font-mono">
+                <span className="text-[11px] text-slate-500 font-mono">
                   Source: {question.source_attribution}
                 </span>
 
                 {onAskAiTutor && (
                   <button
                     onClick={() => onAskAiTutor(question)}
-                    className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold flex items-center gap-1 cursor-pointer"
+                    className="text-xs text-indigo-600 hover:text-indigo-700 font-semibold flex items-center gap-1 cursor-pointer"
                   >
                     <Sparkles className="w-3.5 h-3.5" />
                     Ask AI Tutor for deeper derivation
@@ -399,14 +399,14 @@ export const GateQuestionPracticeModal: React.FC<GateQuestionPracticeModalProps>
         </div>
 
         {/* Modal Footer */}
-        <div className="px-6 py-3 border-t border-slate-800 bg-slate-950/80 flex items-center justify-between">
+        <div className="px-6 py-3 border-t border-slate-200 bg-white flex items-center justify-between">
           <div className="flex items-center gap-2">
             {!showHint && question.hint && !evaluationResult && (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setShowHint(true)}
-                className="border-slate-800 text-slate-400 hover:text-amber-300 text-xs h-8"
+                className="border-slate-200 text-slate-500 hover:text-amber-700 text-xs h-8"
               >
                 <HelpCircle className="w-3.5 h-3.5 mr-1" />
                 Show Hint
@@ -418,7 +418,7 @@ export const GateQuestionPracticeModal: React.FC<GateQuestionPracticeModalProps>
                 variant="outline"
                 size="sm"
                 onClick={() => setSelectedAnswer(question.question_type === 'MSQ' ? [] : '')}
-                className="border-slate-800 text-slate-400 text-xs h-8"
+                className="border-slate-200 text-slate-500 text-xs h-8"
               >
                 <RotateCcw className="w-3.5 h-3.5 mr-1" />
                 Clear

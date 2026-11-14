@@ -50,17 +50,17 @@ export function DashboardOnboarding({
   ];
 
   return (
-    <Card className="border border-[#E4E7EC] bg-white p-6 sm:p-8 space-y-6 shadow-sm">
+    <Card className="border border-slate-200 bg-white p-6 sm:p-8 space-y-6 shadow-sm">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
         <div className="space-y-1.5">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-50 text-[#2563EB] text-xs font-semibold border border-blue-200">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-600 text-xs font-semibold border border-blue-200">
             <Sparkles className="h-3.5 w-3.5" />
             <span>Welcome Onboarding</span>
           </div>
-          <h2 className="text-xl sm:text-2xl font-bold text-[#101828]">
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
             Welcome to your B.Tech AI Learning Platform, {studentName}!
           </h2>
-          <p className="text-xs sm:text-sm text-[#475467] max-w-2xl leading-relaxed">
+          <p className="text-xs sm:text-sm text-slate-600 max-w-2xl leading-relaxed">
             Your personal learning command center is ready. Follow these initial steps to calibrate your curriculum roadmap and AI tutor.
           </p>
         </div>
@@ -84,21 +84,21 @@ export function DashboardOnboarding({
             <div
               key={st.num}
               onClick={() => onNavigate(st.path)}
-              className="p-4 rounded-xl border border-[#E4E7EC] bg-slate-50/50 hover:bg-white hover:border-[#2563EB] transition-all cursor-pointer flex flex-col justify-between space-y-3 group"
+              className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white hover:border-blue-600 transition-all cursor-pointer flex flex-col justify-between space-y-3 group"
             >
               <div className="flex items-start gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-[#2563EB] font-bold text-xs shrink-0">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600 font-bold text-xs shrink-0">
                   {st.num}
                 </div>
                 <div className="space-y-1">
-                  <h4 className="text-sm font-bold text-[#101828] group-hover:text-[#2563EB] transition-colors">
+                  <h4 className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
                     {st.title}
                   </h4>
-                  <p className="text-xs text-[#475467] leading-relaxed">{st.desc}</p>
+                  <p className="text-xs text-slate-600 leading-relaxed">{st.desc}</p>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-2 border-t border-slate-200/60 text-xs font-semibold text-[#2563EB]">
+              <div className="flex items-center justify-between pt-2 border-t border-slate-200/60 text-xs font-semibold text-blue-600">
                 <span>{st.action}</span>
                 <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
               </div>

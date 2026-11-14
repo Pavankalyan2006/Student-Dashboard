@@ -72,25 +72,25 @@ export const KnowledgeResourcesTab: React.FC<KnowledgeResourcesTabProps> = ({
   const getIcon = (type: string) => {
     switch (type) {
       case 'VIDEO':
-        return <Video className="w-4 h-4 text-red-400" />;
+        return <Video className="w-4 h-4 text-red-600" />;
       case 'CODE_REPO':
-        return <FileCode className="w-4 h-4 text-emerald-400" />;
+        return <FileCode className="w-4 h-4 text-emerald-600" />;
       case 'PAPER':
-        return <FileText className="w-4 h-4 text-indigo-400" />;
+        return <FileText className="w-4 h-4 text-indigo-600" />;
       default:
-        return <Link className="w-4 h-4 text-cyan-400" />;
+        return <Link className="w-4 h-4 text-cyan-600" />;
     }
   };
 
   return (
     <div className="space-y-4 max-w-4xl mx-auto">
       {/* Controls Bar */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
+      <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
         <div className="flex items-center gap-2">
           <select
             value={filterCollectionId}
             onChange={(e) => setFilterCollectionId(e.target.value)}
-            className="px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 text-xs focus:outline-none focus:border-indigo-500"
+            className="px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 text-xs focus:outline-none focus:border-indigo-500"
           >
             <option value="">All Collections ({collections.length})</option>
             {collections.map((c) => (
@@ -112,9 +112,9 @@ export const KnowledgeResourcesTab: React.FC<KnowledgeResourcesTabProps> = ({
 
       {/* Resources List */}
       {filteredResources.length === 0 ? (
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center text-slate-400">
+        <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center text-slate-500">
           <Link className="w-8 h-8 text-slate-600 mx-auto mb-2" />
-          <p className="text-sm font-semibold text-white">No external resources added</p>
+          <p className="text-sm font-semibold text-slate-900">No external resources added</p>
           <p className="text-xs text-slate-500 mt-1">
             Bookmark relevant YouTube lecture series, arXiv research papers, and GitHub code repositories.
           </p>
@@ -126,10 +126,10 @@ export const KnowledgeResourcesTab: React.FC<KnowledgeResourcesTabProps> = ({
             return (
               <div
                 key={res.id}
-                className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 flex items-center justify-between gap-4 transition shadow-sm"
+                className="p-4 rounded-xl bg-white border border-slate-200 hover:border-slate-200 flex items-center justify-between gap-4 transition shadow-sm"
               >
                 <div className="flex items-start gap-3 min-w-0 flex-1">
-                  <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center shrink-0 mt-0.5">
+                  <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center shrink-0 mt-0.5">
                     {getIcon(res.type)}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -138,22 +138,22 @@ export const KnowledgeResourcesTab: React.FC<KnowledgeResourcesTabProps> = ({
                         href={res.url}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-sm font-bold text-white hover:text-indigo-400 transition flex items-center gap-1 truncate"
+                        className="text-sm font-bold text-slate-900 hover:text-indigo-600 transition flex items-center gap-1 truncate"
                       >
                         <span>{res.title}</span>
                         <ExternalLink className="w-3 h-3 text-slate-500" />
                       </a>
                       {col && (
                         <span
-                          className="text-[10px] font-medium px-2 py-0.5 rounded text-white"
-                          style={{ backgroundColor: col.color || '#4F46E5' }}
+                          className="text-[10px] font-medium px-2 py-0.5 rounded text-slate-900"
+                          style={{ backgroundColor: col.color || '#574FDD' }}
                         >
                           {col.name}
                         </span>
                       )}
                     </div>
                     {res.description && (
-                      <p className="text-xs text-slate-400 mt-0.5 line-clamp-1">{res.description}</p>
+                      <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">{res.description}</p>
                     )}
                     <span className="text-[11px] text-slate-500 truncate block mt-0.5">
                       {res.url}
@@ -164,7 +164,7 @@ export const KnowledgeResourcesTab: React.FC<KnowledgeResourcesTabProps> = ({
                 <button
                   onClick={() => onDeleteResource(res.id)}
                   title="Delete resource"
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-slate-800 transition shrink-0"
+                  className="p-1.5 rounded-lg text-slate-500 hover:text-red-600 hover:bg-slate-50 transition shrink-0"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -176,13 +176,13 @@ export const KnowledgeResourcesTab: React.FC<KnowledgeResourcesTabProps> = ({
 
       {/* Add Resource Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg shadow-2xl p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="text-base font-bold text-white">Add External Reference Resource</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white backdrop-blur-sm animate-fade-in">
+          <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg shadow-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+              <h3 className="text-base font-bold text-slate-900">Add External Reference Resource</h3>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-white"
+                className="text-slate-500 hover:text-slate-900"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -190,7 +190,7 @@ export const KnowledgeResourcesTab: React.FC<KnowledgeResourcesTabProps> = ({
 
             <form onSubmit={handleSubmit} className="space-y-3.5">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
                   Title
                 </label>
                 <input
@@ -198,13 +198,13 @@ export const KnowledgeResourcesTab: React.FC<KnowledgeResourcesTabProps> = ({
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. MIT 6.006 Lecture 1 on YouTube"
-                  className="w-full px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs focus:outline-none focus:border-indigo-500"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
                   URL
                 </label>
                 <input
@@ -212,20 +212,20 @@ export const KnowledgeResourcesTab: React.FC<KnowledgeResourcesTabProps> = ({
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
                   placeholder="https://..."
-                  className="w-full px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs focus:outline-none focus:border-indigo-500"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
                     Resource Type
                   </label>
                   <select
                     value={type}
                     onChange={(e) => setType(e.target.value as any)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs focus:outline-none focus:border-indigo-500"
                   >
                     <option value="LINK">Documentation / Article</option>
                     <option value="VIDEO">Video / Lecture</option>
@@ -235,13 +235,13 @@ export const KnowledgeResourcesTab: React.FC<KnowledgeResourcesTabProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
                     Attach to Collection
                   </label>
                   <select
                     value={collectionId}
                     onChange={(e) => setCollectionId(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs focus:outline-none focus:border-indigo-500"
                   >
                     <option value="">None (General)</option>
                     {collections.map((c) => (
@@ -254,7 +254,7 @@ export const KnowledgeResourcesTab: React.FC<KnowledgeResourcesTabProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
                   Description
                 </label>
                 <textarea
@@ -262,15 +262,15 @@ export const KnowledgeResourcesTab: React.FC<KnowledgeResourcesTabProps> = ({
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Why is this resource valuable?..."
-                  className="w-full px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:border-indigo-500 resize-none"
+                  className="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs focus:outline-none focus:border-indigo-500 resize-none"
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-2 border-t border-slate-800">
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 text-xs text-slate-400 hover:text-white"
+                  className="px-4 py-2 text-xs text-slate-500 hover:text-slate-900"
                 >
                   Cancel
                 </button>

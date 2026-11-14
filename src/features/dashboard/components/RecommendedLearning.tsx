@@ -21,20 +21,20 @@ export function RecommendedLearning({
   };
 
   return (
-    <Card className="border border-[#E4E7EC] bg-white">
+    <Card className="border border-slate-200 bg-white">
       <CardHeader className="flex flex-row items-center justify-between pb-3">
         <div className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-[#4F46E5]" />
+          <Sparkles className="h-4 w-4 text-indigo-600" />
           <div>
-            <CardTitle className="text-sm sm:text-base font-bold text-[#101828]">Recommended Next Steps</CardTitle>
-            <p className="text-xs text-[#667085]">Contextual suggestions tailored to your recent progress</p>
+            <CardTitle className="text-sm sm:text-base font-bold text-slate-900">Recommended Next Steps</CardTitle>
+            <p className="text-xs text-slate-500">Contextual suggestions tailored to your recent progress</p>
           </div>
         </div>
       </CardHeader>
 
       <CardContent className="space-y-3">
         {recommendations.length === 0 ? (
-          <div className="py-6 text-center text-xs text-[#667085]">
+          <div className="py-6 text-center text-xs text-slate-500">
             No pending recommendations. Complete a lesson to generate personalized next steps.
           </div>
         ) : (
@@ -42,7 +42,7 @@ export function RecommendedLearning({
             {recommendations.map((rec) => (
               <div
                 key={rec.id}
-                className="group p-3.5 rounded-xl border border-[#E4E7EC] bg-slate-50/50 hover:bg-white hover:border-indigo-200 transition-all flex flex-col justify-between shadow-2xs"
+                className="group p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white hover:border-indigo-200 transition-all flex flex-col justify-between shadow-2xs"
               >
                 <div>
                   <div className="flex items-center justify-between gap-2 mb-1.5">
@@ -54,15 +54,15 @@ export function RecommendedLearning({
                     </span>
                   </div>
 
-                  <h4 className="text-xs sm:text-sm font-bold text-[#101828] group-hover:text-[#4F46E5] transition-colors line-clamp-1">
+                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors line-clamp-1">
                     {rec.title}
                   </h4>
-                  <p className="text-[11px] text-[#475467] mt-1 leading-relaxed line-clamp-2">
+                  <p className="text-[11px] text-slate-600 mt-1 leading-relaxed line-clamp-2">
                     {rec.reason}
                   </p>
                 </div>
 
-                <div className="mt-3 pt-2.5 border-t border-slate-200/60 flex items-center justify-between text-[11px] text-[#667085]">
+                <div className="mt-3 pt-2.5 border-t border-slate-200/60 flex items-center justify-between text-[11px] text-slate-500">
                   <span className="flex items-center gap-1">
                     <Clock className="h-3 w-3" />
                     <span>{rec.estimated_time}</span>

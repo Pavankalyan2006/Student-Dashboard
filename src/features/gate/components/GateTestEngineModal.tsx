@@ -239,15 +239,15 @@ export const GateTestEngineModal: React.FC<GateTestEngineModalProps> = ({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-slate-950 text-slate-100 select-none">
+    <div className="fixed inset-0 z-50 flex flex-col bg-white text-slate-900 select-none">
       {/* Official Top Bar */}
-      <header className="h-14 bg-slate-900 border-b border-slate-800 px-6 flex items-center justify-between">
+      <header className="h-14 bg-white border-b border-slate-200 px-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <span className="font-extrabold text-sm text-indigo-400 font-mono tracking-tight">
+          <span className="font-extrabold text-sm text-indigo-600 font-mono tracking-tight">
             GATE SIMULATOR
           </span>
           <span className="text-slate-600">•</span>
-          <span className="font-semibold text-xs text-white truncate max-w-md">{test.title}</span>
+          <span className="font-semibold text-xs text-slate-900 truncate max-w-md">{test.title}</span>
         </div>
 
         <div className="flex items-center gap-4">
@@ -257,7 +257,7 @@ export const GateTestEngineModal: React.FC<GateTestEngineModalProps> = ({
             className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors cursor-pointer flex items-center gap-1.5 ${
               showCalculator
                 ? 'bg-indigo-600 border-indigo-500 text-white'
-                : 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white'
+                : 'bg-slate-50 border-slate-200 text-slate-700 hover:text-slate-900'
             }`}
           >
             <Calculator className="w-3.5 h-3.5" />
@@ -265,8 +265,8 @@ export const GateTestEngineModal: React.FC<GateTestEngineModalProps> = ({
           </button>
 
           {/* Time Remaining */}
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-sm font-mono font-bold text-amber-400">
-            <Clock className="w-4 h-4 text-amber-400" />
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm font-mono font-bold text-amber-600">
+            <Clock className="w-4 h-4 text-amber-600" />
             <span>Time Left: {formatTimer(remainingSeconds)}</span>
           </div>
 
@@ -285,41 +285,41 @@ export const GateTestEngineModal: React.FC<GateTestEngineModalProps> = ({
         {/* Left: Question View & Answer Area */}
         <div className="flex-1 flex flex-col overflow-y-auto p-6 space-y-6">
           {/* Question Header */}
-          <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-200">
             <div className="flex items-center gap-2">
-              <span className="text-base font-extrabold text-white">
+              <span className="text-base font-extrabold text-slate-900">
                 Question {currentIdx + 1} of {questions.length}
               </span>
-              <span className="px-2 py-0.5 rounded-md text-[11px] font-mono font-bold bg-slate-800 text-slate-300">
+              <span className="px-2 py-0.5 rounded-md text-[11px] font-mono font-bold bg-slate-50 text-slate-700">
                 {currentQ.question_type}
               </span>
-              <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-500/10 text-emerald-300">
+              <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-50 text-emerald-700">
                 +{currentQ.marks} {currentQ.marks === 1 ? 'Mark' : 'Marks'}
               </span>
               {currentQ.negative_marks > 0 ? (
-                <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-rose-500/10 text-rose-300">
+                <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-rose-50 text-rose-700">
                   -{currentQ.negative_marks} Neg
                 </span>
               ) : (
-                <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-800 text-slate-400">
+                <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-50 text-slate-500">
                   No Negative Marks
                 </span>
               )}
             </div>
 
-            <span className="text-xs text-indigo-400 font-semibold font-mono">
+            <span className="text-xs text-indigo-600 font-semibold font-mono">
               Section: {currentQ.subject}
             </span>
           </div>
 
           {/* Question Statement */}
-          <div className="p-5 bg-slate-900 border border-slate-800 rounded-2xl text-sm text-slate-100 font-sans leading-relaxed whitespace-pre-line">
+          <div className="p-5 bg-white border border-slate-200 rounded-2xl text-sm text-slate-900 font-sans leading-relaxed whitespace-pre-line">
             {currentQ.question_statement}
           </div>
 
           {/* Diagram if available */}
           {currentQ.diagram_url && (
-            <div className="p-3 bg-slate-900 rounded-xl border border-slate-800 text-center">
+            <div className="p-3 bg-white rounded-xl border border-slate-200 text-center">
               <img src={currentQ.diagram_url} alt="Exam Diagram" className="max-h-56 mx-auto rounded-lg" />
             </div>
           )}
@@ -337,18 +337,18 @@ export const GateTestEngineModal: React.FC<GateTestEngineModalProps> = ({
                       onClick={() => handleSelectOption(opt.id)}
                       className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-start gap-3 ${
                         isSelected
-                          ? 'border-indigo-500 bg-indigo-500/10 text-white ring-1 ring-indigo-500'
-                          : 'border-slate-800 bg-slate-900 text-slate-200 hover:border-slate-700'
+                          ? 'border-indigo-500 bg-indigo-50 text-slate-900 ring-1 ring-indigo-500'
+                          : 'border-slate-200 bg-white text-slate-800 hover:border-slate-200'
                       }`}
                     >
                       <span
                         className={`w-6 h-6 rounded-md flex items-center justify-center font-bold text-xs shrink-0 ${
-                          isSelected ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400'
+                          isSelected ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-500'
                         }`}
                       >
                         {opt.id}
                       </span>
-                      <span className="text-xs text-slate-200 leading-normal mt-0.5">{opt.text}</span>
+                      <span className="text-xs text-slate-800 leading-normal mt-0.5">{opt.text}</span>
                     </div>
                   );
                 })}
@@ -366,19 +366,19 @@ export const GateTestEngineModal: React.FC<GateTestEngineModalProps> = ({
                       onClick={() => handleSelectOption(opt.id)}
                       className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-start gap-3 ${
                         isChecked
-                          ? 'border-indigo-500 bg-indigo-500/10 text-white ring-1 ring-indigo-500'
-                          : 'border-slate-800 bg-slate-900 text-slate-200 hover:border-slate-700'
+                          ? 'border-indigo-500 bg-indigo-50 text-slate-900 ring-1 ring-indigo-500'
+                          : 'border-slate-200 bg-white text-slate-800 hover:border-slate-200'
                       }`}
                     >
                       <div
                         className={`w-5 h-5 rounded-md border flex items-center justify-center font-bold text-xs shrink-0 ${
-                          isChecked ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-slate-800 border-slate-700 text-slate-400'
+                          isChecked ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-slate-50 border-slate-200 text-slate-500'
                         }`}
                       >
                         {isChecked && <CheckCircle2 className="w-3.5 h-3.5" />}
                       </div>
-                      <span className="font-bold text-xs text-indigo-300 mr-1">{opt.id}:</span>
-                      <span className="text-xs text-slate-200 leading-normal">{opt.text}</span>
+                      <span className="font-bold text-xs text-indigo-700 mr-1">{opt.id}:</span>
+                      <span className="text-xs text-slate-800 leading-normal">{opt.text}</span>
                     </div>
                   );
                 })}
@@ -393,20 +393,20 @@ export const GateTestEngineModal: React.FC<GateTestEngineModalProps> = ({
                   value={currentAnswerData.answer || ''}
                   onChange={(e) => handleNatInputChange(e.target.value)}
                   placeholder="Enter numeric response (use virtual calc for decimals)..."
-                  className="w-full max-w-md px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-base font-mono text-white focus:outline-hidden focus:border-indigo-500"
+                  className="w-full max-w-md px-4 py-3 bg-white border border-slate-200 rounded-xl text-base font-mono text-slate-900 focus:outline-hidden focus:border-indigo-500"
                 />
               </div>
             )}
           </div>
 
           {/* Action Footer Buttons */}
-          <div className="pt-6 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3 mt-auto">
+          <div className="pt-6 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 mt-auto">
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleMarkForReviewAndNext}
-                className="border-purple-500/40 text-purple-300 hover:bg-purple-500/10 text-xs h-9"
+                className="border-purple-200 text-purple-700 hover:bg-purple-50 text-xs h-9"
               >
                 Mark for Review & Next
               </Button>
@@ -414,7 +414,7 @@ export const GateTestEngineModal: React.FC<GateTestEngineModalProps> = ({
                 variant="outline"
                 size="sm"
                 onClick={handleClearResponse}
-                className="border-slate-800 text-slate-400 hover:text-white text-xs h-9"
+                className="border-slate-200 text-slate-500 hover:text-slate-900 text-xs h-9"
               >
                 Clear Response
               </Button>
@@ -426,7 +426,7 @@ export const GateTestEngineModal: React.FC<GateTestEngineModalProps> = ({
                 size="sm"
                 disabled={currentIdx === 0}
                 onClick={() => setCurrentIdx((prev) => prev - 1)}
-                className="border-slate-800 text-slate-300 text-xs h-9"
+                className="border-slate-200 text-slate-700 text-xs h-9"
               >
                 <ChevronLeft className="w-4 h-4 mr-1" /> Previous
               </Button>
@@ -444,17 +444,17 @@ export const GateTestEngineModal: React.FC<GateTestEngineModalProps> = ({
         </div>
 
         {/* Right: Question Palette Sidebar */}
-        <div className="w-80 bg-slate-900 border-l border-slate-800 p-5 flex flex-col space-y-5 shrink-0 overflow-y-auto">
+        <div className="w-80 bg-white border-l border-slate-200 p-5 flex flex-col space-y-5 shrink-0 overflow-y-auto">
           {/* Palette Legend */}
-          <div className="space-y-2 text-[11px] font-semibold border-b border-slate-800 pb-4">
+          <div className="space-y-2 text-[11px] font-semibold border-b border-slate-200 pb-4">
             <div className="flex items-center justify-between">
-              <span className="flex items-center gap-2 text-slate-300">
+              <span className="flex items-center gap-2 text-slate-700">
                 <span className="w-4 h-4 rounded-sm bg-emerald-500 text-white font-mono text-[9px] flex items-center justify-center font-bold">
                   {countAnswered}
                 </span>
                 Answered
               </span>
-              <span className="flex items-center gap-2 text-slate-300">
+              <span className="flex items-center gap-2 text-slate-700">
                 <span className="w-4 h-4 rounded-sm bg-rose-500 text-white font-mono text-[9px] flex items-center justify-center font-bold">
                   {countNotAnswered}
                 </span>
@@ -463,14 +463,14 @@ export const GateTestEngineModal: React.FC<GateTestEngineModalProps> = ({
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="flex items-center gap-2 text-slate-300">
+              <span className="flex items-center gap-2 text-slate-700">
                 <span className="w-4 h-4 rounded-sm bg-purple-600 text-white font-mono text-[9px] flex items-center justify-center font-bold">
                   {countMarked}
                 </span>
                 Marked for Review
               </span>
-              <span className="flex items-center gap-2 text-slate-300">
-                <span className="w-4 h-4 rounded-sm bg-slate-700 text-slate-300 font-mono text-[9px] flex items-center justify-center font-bold">
+              <span className="flex items-center gap-2 text-slate-700">
+                <span className="w-4 h-4 rounded-sm bg-slate-100 text-slate-700 font-mono text-[9px] flex items-center justify-center font-bold">
                   {countNotVisited}
                 </span>
                 Not Visited
@@ -478,7 +478,7 @@ export const GateTestEngineModal: React.FC<GateTestEngineModalProps> = ({
             </div>
 
             <div className="pt-1">
-              <span className="flex items-center gap-2 text-slate-300">
+              <span className="flex items-center gap-2 text-slate-700">
                 <span className="w-4 h-4 rounded-sm bg-purple-600 border-2 border-emerald-400 text-white font-mono text-[9px] flex items-center justify-center font-bold">
                   {countAnsweredAndMarked}
                 </span>
@@ -489,13 +489,13 @@ export const GateTestEngineModal: React.FC<GateTestEngineModalProps> = ({
 
           {/* Question Grid Buttons */}
           <div className="space-y-2 flex-1">
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Choose a Question</h4>
+            <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Choose a Question</h4>
             <div className="grid grid-cols-5 gap-2 pt-1">
               {questions.map((q, idx) => {
                 const s = answers[q.id]?.status || 'NOT_VISITED';
                 const isCurrent = idx === currentIdx;
 
-                let bgClass = 'bg-slate-800 text-slate-300 border-slate-700';
+                let bgClass = 'bg-slate-50 text-slate-700 border-slate-200';
                 if (s === 'ANSWERED') bgClass = 'bg-emerald-600 text-white border-emerald-500';
                 if (s === 'UNANSWERED') bgClass = 'bg-rose-600 text-white border-rose-500';
                 if (s === 'MARKED_FOR_REVIEW') bgClass = 'bg-purple-600 text-white border-purple-500';
@@ -520,18 +520,18 @@ export const GateTestEngineModal: React.FC<GateTestEngineModalProps> = ({
 
       {/* Floating Scientific Calculator Modal */}
       {showCalculator && (
-        <div className="fixed bottom-16 right-6 w-72 bg-slate-900 border border-indigo-500/40 rounded-2xl shadow-2xl p-4 z-50 text-xs space-y-3">
-          <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-            <span className="font-bold text-slate-200 flex items-center gap-1.5">
-              <Calculator className="w-4 h-4 text-indigo-400" />
+        <div className="fixed bottom-16 right-6 w-72 bg-white border border-indigo-200 rounded-2xl shadow-2xl p-4 z-50 text-xs space-y-3">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+            <span className="font-bold text-slate-800 flex items-center gap-1.5">
+              <Calculator className="w-4 h-4 text-indigo-600" />
               GATE Scientific Calculator
             </span>
-            <button onClick={() => setShowCalculator(false)} className="text-slate-400 hover:text-white">
+            <button onClick={() => setShowCalculator(false)} className="text-slate-500 hover:text-slate-900">
               <X className="w-4 h-4" />
             </button>
           </div>
 
-          <div className="p-2.5 bg-slate-950 border border-slate-800 rounded-lg text-right font-mono text-sm font-bold text-emerald-400 truncate">
+          <div className="p-2.5 bg-white border border-slate-200 rounded-lg text-right font-mono text-sm font-bold text-emerald-600 truncate">
             {calcInput || '0'}
           </div>
 
@@ -550,7 +550,7 @@ export const GateTestEngineModal: React.FC<GateTestEngineModalProps> = ({
                   else if (k === 'ln') setCalcInput((p) => p + 'Math.log(');
                   else setCalcInput((p) => p + k);
                 }}
-                className="p-2 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer"
+                className="p-2 rounded-md bg-slate-50 hover:bg-slate-100 text-slate-800 cursor-pointer"
               >
                 {k}
               </button>
@@ -577,33 +577,33 @@ export const GateTestEngineModal: React.FC<GateTestEngineModalProps> = ({
 
       {/* Submit Confirmation Dialog */}
       {showSubmitConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xs p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 space-y-5 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-50 backdrop-blur-xs p-4">
+          <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-md p-6 space-y-5 shadow-2xl">
             <div>
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-amber-400" />
+              <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-amber-600" />
                 Confirm Exam Submission
               </h3>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-slate-500 mt-1">
                 Are you sure you want to end this examination? Once submitted, answers cannot be modified.
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 text-xs font-semibold p-4 bg-slate-950 rounded-xl border border-slate-800">
-              <div className="text-slate-400">Total Questions:</div>
-              <div className="text-white text-right">{questions.length}</div>
+            <div className="grid grid-cols-2 gap-2 text-xs font-semibold p-4 bg-white rounded-xl border border-slate-200">
+              <div className="text-slate-500">Total Questions:</div>
+              <div className="text-slate-900 text-right">{questions.length}</div>
 
-              <div className="text-emerald-400">Answered:</div>
-              <div className="text-emerald-300 text-right">{countAnswered + countAnsweredAndMarked}</div>
+              <div className="text-emerald-600">Answered:</div>
+              <div className="text-emerald-700 text-right">{countAnswered + countAnsweredAndMarked}</div>
 
-              <div className="text-rose-400">Unanswered / Not Visited:</div>
-              <div className="text-rose-300 text-right">{countNotAnswered + countNotVisited}</div>
+              <div className="text-rose-600">Unanswered / Not Visited:</div>
+              <div className="text-rose-700 text-right">{countNotAnswered + countNotVisited}</div>
 
-              <div className="text-purple-400">Marked for Review:</div>
-              <div className="text-purple-300 text-right">{countMarked}</div>
+              <div className="text-purple-600">Marked for Review:</div>
+              <div className="text-purple-700 text-right">{countMarked}</div>
 
-              <div className="text-amber-400">Time Left:</div>
-              <div className="text-amber-300 text-right">{formatTimer(remainingSeconds)}</div>
+              <div className="text-amber-600">Time Left:</div>
+              <div className="text-amber-700 text-right">{formatTimer(remainingSeconds)}</div>
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-2">
@@ -611,7 +611,7 @@ export const GateTestEngineModal: React.FC<GateTestEngineModalProps> = ({
                 variant="outline"
                 size="sm"
                 onClick={() => setShowSubmitConfirm(false)}
-                className="border-slate-800 text-slate-300 text-xs"
+                className="border-slate-200 text-slate-700 text-xs"
               >
                 Back to Exam
               </Button>

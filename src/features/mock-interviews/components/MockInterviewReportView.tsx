@@ -156,7 +156,7 @@ ${report.communication_observations.map((c) => `- ${c}`).join('\n')}
       </div>
 
       {/* Header Banner */}
-      <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white rounded-3xl p-8 shadow-xl relative overflow-hidden">
+      <div className="hero-brand text-white rounded-3xl p-8 relative overflow-hidden">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
             <div className="flex items-center gap-2">

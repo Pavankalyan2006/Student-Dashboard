@@ -49,7 +49,7 @@ export function CourseLearningPage({
 
   if (isLoadingCourse || (activeLessonId && isLoadingLesson)) {
     return (
-      <div className="h-[calc(100vh-4.5rem)] flex items-center justify-center bg-white rounded-2xl border border-[#E4E7EC]">
+      <div className="h-[calc(100vh-4.5rem)] flex items-center justify-center bg-white rounded-2xl border border-slate-200">
         <LoadingState message="Preparing your lesson environment..." />
       </div>
     );
@@ -57,7 +57,7 @@ export function CourseLearningPage({
 
   if (isCourseError || !course) {
     return (
-      <div className="h-[calc(100vh-4.5rem)] p-6 bg-white rounded-2xl border border-[#E4E7EC]">
+      <div className="h-[calc(100vh-4.5rem)] p-6 bg-white rounded-2xl border border-slate-200">
         <ErrorState
           title="Course not found"
           message="Unable to load the requested course."
@@ -69,7 +69,7 @@ export function CourseLearningPage({
 
   if (!activeLessonId || !lesson) {
     return (
-      <div className="h-[calc(100vh-4.5rem)] p-6 bg-white rounded-2xl border border-[#E4E7EC]">
+      <div className="h-[calc(100vh-4.5rem)] p-6 bg-white rounded-2xl border border-slate-200">
         <ErrorState
           title="Lesson not found"
           message="No active lesson could be found for this module."
@@ -80,7 +80,7 @@ export function CourseLearningPage({
   }
 
   return (
-    <div className="h-[calc(100vh-4.5rem)] flex rounded-2xl border border-[#E4E7EC] bg-white overflow-hidden shadow-xs relative">
+    <div className="h-[calc(100vh-4.5rem)] flex rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-xs relative">
       {/* 1. Left Sidebar: Lesson Navigation (280px on desktop) */}
       <div className="hidden md:block w-72 shrink-0 h-full">
         <LessonNavigation
@@ -109,7 +109,7 @@ export function CourseLearningPage({
             onClick={() => setMobileAiOpen(true)}
             className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 border border-indigo-200 text-xs font-semibold text-indigo-700"
           >
-            <Sparkles className="h-3.5 w-3.5 text-[#4F46E5]" />
+            <Sparkles className="h-3.5 w-3.5 text-indigo-600" />
             <span>AI Actions</span>
           </button>
         </div>

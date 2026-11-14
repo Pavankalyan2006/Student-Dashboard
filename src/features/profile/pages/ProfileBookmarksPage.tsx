@@ -76,23 +76,23 @@ export function ProfileBookmarksPage({ onNavigate }: { onNavigate: (path: string
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E4E7EC] pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
         <div className="flex items-center gap-3">
           <button
             onClick={() => onNavigate('/profile')}
-            className="p-2 text-[#475467] hover:text-[#101828] hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+            className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div>
-            <h1 className="text-xl font-bold text-[#101828]">Saved Bookmarks</h1>
-            <p className="text-xs text-[#667085]">
+            <h1 className="text-xl font-bold text-slate-900">Saved Bookmarks</h1>
+            <p className="text-xs text-slate-500">
               Unified student bookmarks across courses, research papers, coding exercises, and community posts.
             </p>
           </div>
         </div>
 
-        <div className="text-xs font-semibold text-[#475467] bg-slate-100 px-3 py-1.5 rounded-lg self-start sm:self-auto">
+        <div className="text-xs font-semibold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg self-start sm:self-auto">
           {bookmarks.length} Bookmarks Saved
         </div>
       </div>
@@ -106,7 +106,7 @@ export function ProfileBookmarksPage({ onNavigate }: { onNavigate: (path: string
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search bookmarks by title, personal note, or tag..."
-            className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-[#D0D5DD] bg-white focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+            className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-600"
           />
         </div>
 
@@ -118,8 +118,8 @@ export function ProfileBookmarksPage({ onNavigate }: { onNavigate: (path: string
               onClick={() => setSelectedCategory(cat)}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
                 selectedCategory === cat
-                  ? 'bg-[#2563EB] text-white shadow-2xs'
-                  : 'bg-white border border-[#E4E7EC] text-[#475467] hover:bg-slate-50'
+                  ? 'bg-blue-600 text-white shadow-2xs'
+                  : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
               }`}
             >
               {cat === 'ALL' ? 'All Bookmarks' : cat}
@@ -136,7 +136,7 @@ export function ProfileBookmarksPage({ onNavigate }: { onNavigate: (path: string
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="p-12 text-center text-xs text-[#667085] bg-white rounded-2xl border border-[#E4E7EC] space-y-2">
+        <div className="p-12 text-center text-xs text-slate-500 bg-white rounded-2xl border border-slate-200 space-y-2">
           <Bookmark className="h-8 w-8 mx-auto text-slate-300" />
           <p className="font-semibold text-slate-700">No bookmarks found</p>
           <p className="text-[11px] text-slate-500">
@@ -148,7 +148,7 @@ export function ProfileBookmarksPage({ onNavigate }: { onNavigate: (path: string
           {filtered.map((item) => (
             <div
               key={item.id}
-              className="bg-white rounded-xl border border-[#E4E7EC] p-4 shadow-2xs flex flex-col justify-between space-y-3 hover:border-blue-300 transition-all"
+              className="bg-white rounded-xl border border-slate-200 p-4 shadow-2xs flex flex-col justify-between space-y-3 hover:border-blue-300 transition-all"
             >
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
@@ -156,7 +156,7 @@ export function ProfileBookmarksPage({ onNavigate }: { onNavigate: (path: string
                     <div className="p-1.5 rounded-lg bg-slate-100">
                       {getResourceIcon(item.resource_type || item.entity_type || item.category || 'ITEM')}
                     </div>
-                    <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-slate-100 text-[#475467]">
+                    <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">
                       {(item.resource_type || item.entity_type || item.category || 'ITEM').replace(/_/g, ' ')}
                     </span>
                   </div>
@@ -170,10 +170,10 @@ export function ProfileBookmarksPage({ onNavigate }: { onNavigate: (path: string
                   </button>
                 </div>
 
-                <h3 className="text-xs font-bold text-[#101828] leading-snug">{item.title}</h3>
+                <h3 className="text-xs font-bold text-slate-900 leading-snug">{item.title}</h3>
 
                 {item.notes && (
-                  <p className="text-[11px] text-[#475467] bg-slate-50 p-2 rounded-lg border border-slate-100 italic">
+                  <p className="text-[11px] text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-100 italic">
                     "{item.notes}"
                   </p>
                 )}
@@ -181,7 +181,7 @@ export function ProfileBookmarksPage({ onNavigate }: { onNavigate: (path: string
 
               <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
                 {item.label ? (
-                  <span className="flex items-center gap-1 text-[10px] font-medium text-[#2563EB] bg-blue-50 px-2 py-0.5 rounded">
+                  <span className="flex items-center gap-1 text-[10px] font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
                     <Tag className="h-2.5 w-2.5" />
                     <span>{item.label}</span>
                   </span>
@@ -191,7 +191,7 @@ export function ProfileBookmarksPage({ onNavigate }: { onNavigate: (path: string
 
                 <button
                   onClick={() => onNavigate(item.url)}
-                  className="flex items-center gap-1 text-[11px] font-semibold text-[#2563EB] hover:underline cursor-pointer"
+                  className="flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:underline cursor-pointer"
                 >
                   <span>Open Resource</span>
                   <ExternalLink className="h-3 w-3" />

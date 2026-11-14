@@ -61,7 +61,7 @@ export function AdminSettingsPage() {
 
         <button
           onClick={loadFlags}
-          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#14234B] hover:bg-[#1C3168] border border-[#233870] text-xs font-medium text-slate-200 transition-colors self-start sm:self-auto cursor-pointer"
+          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-navy-800 hover:bg-navy-700 border border-navy-600 text-xs font-medium text-slate-200 transition-colors self-start sm:self-auto cursor-pointer"
         >
           <RefreshCw className={cn('h-3.5 w-3.5', isLoading && 'animate-spin')} />
           Reload Configuration
@@ -79,7 +79,7 @@ export function AdminSettingsPage() {
                 'p-5 rounded-2xl border transition-all space-y-3',
                 isMaintenance && flag.is_enabled
                   ? 'bg-rose-950/30 border-rose-800'
-                  : 'bg-[#0D1836] border-[#1A284D]'
+                  : 'bg-navy-900 border-navy-700'
               )}
             >
               <div className="flex items-start justify-between gap-3">
@@ -107,7 +107,7 @@ export function AdminSettingsPage() {
                 </button>
               </div>
 
-              <div className="pt-2 border-t border-[#182649] flex items-center justify-between text-[11px] text-slate-400">
+              <div className="pt-2 border-t border-navy-700 flex items-center justify-between text-[11px] text-slate-400">
                 <span className="flex items-center gap-1.5">
                   <Lock className="h-3 w-3 text-cyan-400" />
                   Server Enforced: <strong>{flag.is_server_enforced ? 'Yes' : 'No'}</strong>

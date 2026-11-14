@@ -54,7 +54,7 @@ export const ScheduleInterviewModal: React.FC<Props> = ({ isOpen, onClose, onSch
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white p-5 flex items-center justify-between">
+        <div className="hero-brand text-white p-5 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <Calendar className="w-5 h-5 text-blue-300" />
             <h3 className="font-bold text-base">Schedule Practice Session</h3>

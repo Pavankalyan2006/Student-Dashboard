@@ -12,18 +12,18 @@ export function ActiveProjects({
   onNavigate: (path: string) => void;
 }) {
   return (
-    <Card className="border border-[#E4E7EC] bg-white">
+    <Card className="border border-slate-200 bg-white">
       <CardHeader className="flex flex-row items-center justify-between pb-3">
         <div className="flex items-center gap-2">
-          <FolderKanban className="h-4 w-4 text-[#7C3AED]" />
+          <FolderKanban className="h-4 w-4 text-violet-600" />
           <div>
-            <CardTitle className="text-sm font-bold text-[#101828]">Active Capstone Projects</CardTitle>
-            <p className="text-xs text-[#667085]">Engineering milestones &amp; system architecture</p>
+            <CardTitle className="text-sm font-bold text-slate-900">Active Capstone Projects</CardTitle>
+            <p className="text-xs text-slate-500">Engineering milestones &amp; system architecture</p>
           </div>
         </div>
         <button
           onClick={() => onNavigate('/projects')}
-          className="text-xs font-semibold text-[#7C3AED] hover:underline flex items-center gap-1 cursor-pointer"
+          className="text-xs font-semibold text-violet-600 hover:underline flex items-center gap-1 cursor-pointer"
         >
           <span>View All</span>
           <ArrowRight className="h-3 w-3" />
@@ -32,7 +32,7 @@ export function ActiveProjects({
 
       <CardContent className="space-y-3">
         {projects.length === 0 ? (
-          <div className="py-6 text-center text-xs text-[#667085] space-y-2">
+          <div className="py-6 text-center text-xs text-slate-500 space-y-2">
             <p>No active capstone projects initiated.</p>
             <Button variant="outline" size="sm" onClick={() => onNavigate('/projects')}>
               Create Project Blueprint
@@ -42,23 +42,23 @@ export function ActiveProjects({
           projects.map((proj) => (
             <div
               key={proj.id}
-              className="p-3.5 rounded-xl border border-[#E4E7EC] bg-slate-50/40 hover:bg-white hover:border-purple-200 transition-all space-y-2.5 shadow-2xs"
+              className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/40 hover:bg-white hover:border-purple-200 transition-all space-y-2.5 shadow-2xs"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="space-y-1 min-w-0">
-                  <h4 className="text-xs sm:text-sm font-bold text-[#101828] truncate">{proj.title}</h4>
-                  <div className="text-[11px] text-[#475467]">
+                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 truncate">{proj.title}</h4>
+                  <div className="text-[11px] text-slate-600">
                     <span className="font-semibold text-slate-700">Milestone:</span> {proj.current_milestone}
                   </div>
                 </div>
-                <span className="text-xs font-bold text-[#7C3AED] bg-purple-50 px-2 py-0.5 rounded border border-purple-200 tabular-nums shrink-0">
+                <span className="text-xs font-bold text-violet-600 bg-purple-50 px-2 py-0.5 rounded border border-purple-200 tabular-nums shrink-0">
                   {proj.progress}%
                 </span>
               </div>
 
               <div className="w-full h-1.5 rounded-full bg-slate-200 overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-[#4F46E5] to-[#7C3AED] rounded-full transition-all duration-500"
+                  className="h-full bg-gradient-to-r from-indigo-600 to-violet-600 rounded-full transition-all duration-500"
                   style={{ width: `${proj.progress}%` }}
                 />
               </div>

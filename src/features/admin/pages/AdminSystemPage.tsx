@@ -58,7 +58,7 @@ export function AdminSystemPage() {
 
         <button
           onClick={loadData}
-          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#14234B] hover:bg-[#1C3168] border border-[#233870] text-xs font-medium text-slate-200 transition-colors self-start sm:self-auto cursor-pointer"
+          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-navy-800 hover:bg-navy-700 border border-navy-600 text-xs font-medium text-slate-200 transition-colors self-start sm:self-auto cursor-pointer"
         >
           <RefreshCw className={cn('h-3.5 w-3.5', isLoading && 'animate-spin')} />
           Run Health Probes
@@ -67,7 +67,7 @@ export function AdminSystemPage() {
 
       {/* Component Probes Grid */}
       {health && (
-        <div className="p-6 rounded-2xl bg-[#0D1836] border border-[#1A284D] space-y-4">
+        <div className="p-6 rounded-2xl bg-navy-900 border border-navy-700 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="font-bold text-white text-base flex items-center gap-2">
               <Server className="h-5 w-5 text-amber-400" />
@@ -82,7 +82,7 @@ export function AdminSystemPage() {
             {health.components.map((comp) => (
               <div
                 key={comp.name}
-                className="p-3.5 rounded-xl bg-[#081024] border border-[#182649] flex items-center justify-between gap-3"
+                className="p-3.5 rounded-xl bg-navy-950 border border-navy-700 flex items-center justify-between gap-3"
               >
                 <div>
                   <p className="text-xs font-semibold text-white truncate max-w-[170px]">{comp.name}</p>
@@ -98,22 +98,22 @@ export function AdminSystemPage() {
       {/* Real-time System Metrics */}
       {metrics && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="p-4 rounded-xl bg-[#0D1836] border border-[#1A284D]">
+          <div className="p-4 rounded-xl bg-navy-900 border border-navy-700">
             <span className="text-[10px] uppercase font-semibold text-slate-400">Total HTTP Requests</span>
             <p className="text-2xl font-bold text-white mt-1">{metrics.request_count}</p>
             <p className="text-[11px] text-slate-500 mt-0.5">Error Rate: {metrics.error_rate_percentage}%</p>
           </div>
-          <div className="p-4 rounded-xl bg-[#0D1836] border border-[#1A284D]">
+          <div className="p-4 rounded-xl bg-navy-900 border border-navy-700">
             <span className="text-[10px] uppercase font-semibold text-slate-400">API Mean Latency</span>
             <p className="text-2xl font-bold text-cyan-400 mt-1">{metrics.avg_api_latency_ms}ms</p>
             <p className="text-[11px] text-slate-500 mt-0.5">DB Latency: {metrics.db_latency_ms}ms</p>
           </div>
-          <div className="p-4 rounded-xl bg-[#0D1836] border border-[#1A284D]">
+          <div className="p-4 rounded-xl bg-navy-900 border border-navy-700">
             <span className="text-[10px] uppercase font-semibold text-slate-400">Cache Hit Ratio</span>
             <p className="text-2xl font-bold text-emerald-400 mt-1">{metrics.cache_hit_rate_percentage}%</p>
             <p className="text-[11px] text-slate-500 mt-0.5">Redis L1/L2</p>
           </div>
-          <div className="p-4 rounded-xl bg-[#0D1836] border border-[#1A284D]">
+          <div className="p-4 rounded-xl bg-navy-900 border border-navy-700">
             <span className="text-[10px] uppercase font-semibold text-slate-400">Queue Depth</span>
             <p className="text-2xl font-bold text-amber-400 mt-1">{metrics.queue_depth}</p>
             <p className="text-[11px] text-slate-500 mt-0.5">Active Jobs: {metrics.active_jobs_count}</p>
@@ -122,7 +122,7 @@ export function AdminSystemPage() {
       )}
 
       {/* Structured Logs Terminal */}
-      <div className="p-6 rounded-2xl bg-[#0D1836] border border-[#1A284D] space-y-4">
+      <div className="p-6 rounded-2xl bg-navy-900 border border-navy-700 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <Terminal className="h-5 w-5 text-indigo-400" />
@@ -138,7 +138,7 @@ export function AdminSystemPage() {
                   'px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer',
                   logLevel === lvl
                     ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 font-semibold'
-                    : 'bg-[#081024] text-slate-400 hover:text-white border border-[#182649]'
+                    : 'bg-navy-950 text-slate-400 hover:text-white border border-navy-700'
                 )}
               >
                 {lvl ? lvl.toUpperCase() : 'ALL'}

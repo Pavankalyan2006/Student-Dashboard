@@ -88,7 +88,7 @@ export function CoursesPage({ onNavigate }: { onNavigate: (path: string) => void
           title="Courses"
           description="Explore over 100 structured engineering courses, track modular progress, and access AI-assisted curricula."
           badge={
-            <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg bg-blue-50 text-[#2563EB] border border-blue-200">
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg bg-blue-50 text-blue-600 border border-blue-200">
               <GraduationCap className="h-3.5 w-3.5" />
               <span>
                 B.Tech {studentBranch} · Year {studentYear} · Sem {studentSem} ({academicYearStr})
@@ -141,7 +141,7 @@ export function CoursesPage({ onNavigate }: { onNavigate: (path: string) => void
         >
           <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
             <span>Enrolled Subjects</span>
-            <BookOpen className="h-3.5 w-3.5 text-[#2563EB]" />
+            <BookOpen className="h-3.5 w-3.5 text-blue-600" />
           </div>
           <div className="text-xl font-bold text-slate-900 tabular-nums">
             {enrolledCourses.length}
@@ -241,10 +241,10 @@ export function CoursesPage({ onNavigate }: { onNavigate: (path: string) => void
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Compass className="h-4 w-4 text-[#2563EB]" />
-                    <h2 className="text-base font-bold text-[#101828]">Continue Learning</h2>
+                    <Compass className="h-4 w-4 text-blue-600" />
+                    <h2 className="text-base font-bold text-slate-900">Continue Learning</h2>
                   </div>
-                  <span className="text-xs text-[#667085] font-medium">
+                  <span className="text-xs text-slate-500 font-medium">
                     {enrolledCourses.length} Enrolled in Workspace
                   </span>
                 </div>
@@ -277,8 +277,8 @@ export function CoursesPage({ onNavigate }: { onNavigate: (path: string) => void
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <BookOpen className="h-4 w-4 text-[#2563EB]" />
-                <h2 className="text-base font-bold text-[#101828]">
+                <BookOpen className="h-4 w-4 text-blue-600" />
+                <h2 className="text-base font-bold text-slate-900">
                   {filters.search
                     ? `Search Results for "${filters.search}"`
                     : filters.status === 'ARCHIVED'
@@ -286,7 +286,7 @@ export function CoursesPage({ onNavigate }: { onNavigate: (path: string) => void
                     : 'Engineering Curriculum Courses'}
                 </h2>
               </div>
-              <span className="text-xs text-[#667085] tabular-nums font-medium">
+              <span className="text-xs text-slate-500 tabular-nums font-medium">
                 Showing {courses.length} of {total} courses
               </span>
             </div>

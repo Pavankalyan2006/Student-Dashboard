@@ -138,16 +138,16 @@ export function AssistantChatFoundation({
   };
 
   return (
-    <div className={`flex flex-col h-full bg-white rounded-xl border border-[#E4E7EC] overflow-hidden ${className || ''}`}>
+    <div className={`flex flex-col h-full bg-white rounded-xl border border-slate-200 overflow-hidden ${className || ''}`}>
       {/* Top status bar */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-[#E4E7EC] bg-slate-50/60">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-slate-50/60">
         <div className="flex items-center gap-2">
-          <div className="flex h-6 w-6 items-center justify-center rounded-md bg-[#2563EB] text-white">
+          <div className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-600 text-white">
             <Sparkles className="h-3.5 w-3.5" />
           </div>
           <div>
-            <h4 className="text-xs font-semibold text-[#101828]">B.Tech AI Learning Assistant</h4>
-            <p className="text-[11px] text-[#667085]">AI Provider & Tool Registry Architecture (Phase 1)</p>
+            <h4 className="text-xs font-semibold text-slate-900">B.Tech AI Learning Assistant</h4>
+            <p className="text-[11px] text-slate-500">AI Provider & Tool Registry Architecture (Phase 1)</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -156,7 +156,7 @@ export function AssistantChatFoundation({
               variant="ghost"
               size="sm"
               onClick={() => setMessages([])}
-              className="h-7 text-xs text-[#667085]"
+              className="h-7 text-xs text-slate-500"
             >
               Clear
             </Button>
@@ -211,7 +211,7 @@ export function AssistantChatFoundation({
       </div>
 
       {/* Input composer */}
-      <div className="p-3 border-t border-[#E4E7EC] bg-white">
+      <div className="p-3 border-t border-slate-200 bg-white">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -231,7 +231,7 @@ export function AssistantChatFoundation({
               }}
               placeholder="Ask a coursework question, algorithm complexity, or engineering concept..."
               rows={2}
-              className="w-full resize-none rounded-lg border border-[#E4E7EC] px-3 py-2 text-xs text-[#101828] placeholder:text-[#98A2B3] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]"
+              className="w-full resize-none rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
             />
             <div className="absolute right-2 bottom-2 flex items-center gap-1">
               <button
@@ -267,7 +267,7 @@ export function AssistantChatFoundation({
             </Button>
           )}
         </form>
-        <div className="flex items-center justify-between mt-2 px-1 text-[11px] text-[#667085]">
+        <div className="flex items-center justify-between mt-2 px-1 text-[11px] text-slate-500">
           <span>Press Enter to send, Shift+Enter for new line</span>
           <span className="font-mono text-[10px]">ai_stream: v1_ready</span>
         </div>

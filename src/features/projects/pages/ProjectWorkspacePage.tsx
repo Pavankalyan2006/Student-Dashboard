@@ -137,7 +137,7 @@ export const ProjectWorkspacePage: React.FC<ProjectWorkspacePageProps> = ({
     return (
       <div className="p-8 max-w-7xl mx-auto flex items-center justify-center min-h-[50vh]">
         <div className="flex flex-col items-center gap-2">
-          <RefreshCw className="w-8 h-8 animate-spin text-[#2563EB]" />
+          <RefreshCw className="w-8 h-8 animate-spin text-blue-600" />
           <p className="text-xs text-slate-500">Loading project workspace...</p>
         </div>
       </div>
@@ -260,7 +260,7 @@ export const ProjectWorkspacePage: React.FC<ProjectWorkspacePageProps> = ({
                 }}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
                   isActive
-                    ? 'bg-[#2563EB] text-white shadow-2xs'
+                    ? 'bg-blue-600 text-white shadow-2xs'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
@@ -683,7 +683,7 @@ export const ProjectWorkspacePage: React.FC<ProjectWorkspacePageProps> = ({
 
             <button
               onClick={() => setShowNewTaskModal(true)}
-              className="px-4 py-2 bg-[#2563EB] hover:bg-blue-700 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs"
             >
               <Plus className="w-4 h-4" />
               <span>Add Task</span>
@@ -779,7 +779,7 @@ export const ProjectWorkspacePage: React.FC<ProjectWorkspacePageProps> = ({
                       setNewTaskTitle('');
                       setNewTaskDesc('');
                     }}
-                    className="px-4 py-1.5 bg-[#2563EB] hover:bg-blue-700 text-white rounded-lg text-xs font-semibold"
+                    className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold"
                   >
                     Save Task
                   </button>
@@ -869,7 +869,7 @@ export const ProjectWorkspacePage: React.FC<ProjectWorkspacePageProps> = ({
                 onClick={() => setSelectedDocType(type)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap cursor-pointer transition-all ${
                   selectedDocType === type
-                    ? 'bg-white dark:bg-slate-900 text-[#2563EB] shadow-xs'
+                    ? 'bg-white dark:bg-slate-900 text-blue-600 shadow-xs'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
                 }`}
               >
@@ -923,7 +923,7 @@ export const ProjectWorkspacePage: React.FC<ProjectWorkspacePageProps> = ({
                 setActiveTab('documentation');
                 onNavigate(`/projects/${projectId}/documentation`);
               }}
-              className="px-3.5 py-1.5 bg-blue-50 text-[#2563EB] border border-blue-200 rounded-xl text-xs font-semibold cursor-pointer"
+              className="px-3.5 py-1.5 bg-blue-50 text-blue-600 border border-blue-200 rounded-xl text-xs font-semibold cursor-pointer"
             >
               Generate Test Matrix
             </button>
@@ -1040,7 +1040,7 @@ export const ProjectWorkspacePage: React.FC<ProjectWorkspacePageProps> = ({
                   <div
                     className={`max-w-2xl p-4 rounded-2xl text-xs leading-relaxed ${
                       msg.role === 'user'
-                        ? 'bg-[#2563EB] text-white rounded-br-none'
+                        ? 'bg-blue-600 text-white rounded-br-none'
                         : 'bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-bl-none text-slate-800 dark:text-slate-200'
                     }`}
                   >

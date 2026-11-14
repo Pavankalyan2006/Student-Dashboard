@@ -164,9 +164,9 @@ export const FlashcardDeckDetailModal: React.FC<FlashcardDeckDetailModalProps> =
               <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded">
                 {deck.subject}
               </span>
-              <h2 className="text-xl font-bold text-[#101828] truncate">{deck.title}</h2>
+              <h2 className="text-xl font-bold text-slate-900 truncate">{deck.title}</h2>
             </div>
-            <p className="text-xs text-[#475467] mt-1 line-clamp-1">{deck.description}</p>
+            <p className="text-xs text-slate-600 mt-1 line-clamp-1">{deck.description}</p>
           </div>
 
           <div className="flex items-center gap-2">
@@ -174,7 +174,7 @@ export const FlashcardDeckDetailModal: React.FC<FlashcardDeckDetailModalProps> =
               size="sm"
               onClick={() => onStudy(deck)}
               disabled={deck.total_cards === 0}
-              className="text-xs font-semibold bg-[#2563EB] hover:bg-[#1D4ED8] text-white gap-1.5 shadow-sm"
+              className="text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white gap-1.5 shadow-sm"
             >
               <Play className="w-3.5 h-3.5 fill-current" />
               Start Study
@@ -184,7 +184,7 @@ export const FlashcardDeckDetailModal: React.FC<FlashcardDeckDetailModalProps> =
               size="sm"
               variant="outline"
               onClick={handleOpenAddCard}
-              className="text-xs font-semibold text-[#344054] border-[#D0D5DD] gap-1 hover:bg-gray-50"
+              className="text-xs font-semibold text-slate-700 border-slate-300 gap-1 hover:bg-gray-50"
             >
               <Plus className="w-3.5 h-3.5" />
               Add Card
@@ -205,7 +205,7 @@ export const FlashcardDeckDetailModal: React.FC<FlashcardDeckDetailModalProps> =
           {isEditing && (
             <div className="p-5 rounded-2xl border border-blue-200 bg-blue-50/40 space-y-4 animate-in slide-in-from-top-2">
               <div className="flex items-center justify-between">
-                <h4 className="text-sm font-bold text-[#101828]">
+                <h4 className="text-sm font-bold text-slate-900">
                   {editingCardId ? 'Edit Flashcard' : 'Add New Flashcard'}
                 </h4>
                 <button
@@ -218,7 +218,7 @@ export const FlashcardDeckDetailModal: React.FC<FlashcardDeckDetailModalProps> =
 
               <form onSubmit={handleSaveCard} className="space-y-3">
                 <div>
-                  <label className="block text-xs font-semibold text-[#344054] mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
                     Front / Prompt / Question
                   </label>
                   <textarea
@@ -226,13 +226,13 @@ export const FlashcardDeckDetailModal: React.FC<FlashcardDeckDetailModalProps> =
                     onChange={(e) => setCardFront(e.target.value)}
                     placeholder="Enter the concept question, formula, or active recall prompt..."
                     rows={2}
-                    className="w-full px-3 py-2 text-xs border border-[#D0D5DD] rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-[#344054] mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
                     Back / Answer / Explanation
                   </label>
                   <textarea
@@ -240,19 +240,19 @@ export const FlashcardDeckDetailModal: React.FC<FlashcardDeckDetailModalProps> =
                     onChange={(e) => setCardBack(e.target.value)}
                     placeholder="Enter the concise answer, key invariants, and theoretical explanation..."
                     rows={3}
-                    className="w-full px-3 py-2 text-xs border border-[#D0D5DD] rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                     required
                   />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-[#344054] mb-1">Card Type</label>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Card Type</label>
                     <select
                       aria-label="Card type"
                       value={cardType}
                       onChange={(e) => setCardType(e.target.value as FlashcardType)}
-                      className="w-full px-3 py-2 text-xs border border-[#D0D5DD] rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="CONCEPT">Concept</option>
                       <option value="DEFINITION">Definition</option>
@@ -264,22 +264,22 @@ export const FlashcardDeckDetailModal: React.FC<FlashcardDeckDetailModalProps> =
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-[#344054] mb-1">Subtopic</label>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Subtopic</label>
                     <input
                       type="text"
                       value={cardTopic}
                       onChange={(e) => setCardTopic(e.target.value)}
                       placeholder={deck.subject}
-                      className="w-full px-3 py-2 text-xs border border-[#D0D5DD] rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-[#344054] mb-1">Difficulty</label>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Difficulty</label>
                     <select
                       value={cardDifficulty}
                       onChange={(e) => setCardDifficulty(e.target.value as any)}
-                      className="w-full px-3 py-2 text-xs border border-[#D0D5DD] rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="EASY">Easy</option>
                       <option value="MEDIUM">Medium</option>
@@ -297,7 +297,7 @@ export const FlashcardDeckDetailModal: React.FC<FlashcardDeckDetailModalProps> =
                       onChange={(e) => setResetSchedule(e.target.checked)}
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
-                    <label htmlFor="resetSchedule" className="text-xs text-[#475467]">
+                    <label htmlFor="resetSchedule" className="text-xs text-slate-600">
                       Reset SM-2 spaced repetition schedule (restart learning curve)
                     </label>
                   </div>
@@ -317,7 +317,7 @@ export const FlashcardDeckDetailModal: React.FC<FlashcardDeckDetailModalProps> =
                     type="submit"
                     size="sm"
                     disabled={isSaving}
-                    className="text-xs bg-[#2563EB] hover:bg-[#1D4ED8] text-white"
+                    className="text-xs bg-blue-600 hover:bg-blue-700 text-white"
                   >
                     {isSaving ? 'Saving...' : editingCardId ? 'Save Changes' : 'Add to Deck'}
                   </Button>
@@ -335,7 +335,7 @@ export const FlashcardDeckDetailModal: React.FC<FlashcardDeckDetailModalProps> =
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search cards in this deck..."
-                className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-[#D0D5DD] bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
@@ -346,8 +346,8 @@ export const FlashcardDeckDetailModal: React.FC<FlashcardDeckDetailModalProps> =
                   onClick={() => setFilterState(st)}
                   className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors ${
                     filterState === st
-                      ? 'bg-[#2563EB] text-white'
-                      : 'bg-gray-100 text-[#475467] hover:bg-gray-200'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 text-slate-600 hover:bg-gray-200'
                   }`}
                 >
                   {st.charAt(0) + st.slice(1).toLowerCase()}
@@ -389,8 +389,8 @@ export const FlashcardDeckDetailModal: React.FC<FlashcardDeckDetailModalProps> =
                         </span>
                       </div>
 
-                      <h4 className="text-sm font-bold text-[#101828] pt-1">{card.front}</h4>
-                      <p className="text-xs text-[#475467] whitespace-pre-line bg-gray-50/60 p-3 rounded-xl border border-gray-100">
+                      <h4 className="text-sm font-bold text-slate-900 pt-1">{card.front}</h4>
+                      <p className="text-xs text-slate-600 whitespace-pre-line bg-gray-50/60 p-3 rounded-xl border border-gray-100">
                         {card.back}
                       </p>
                     </div>
@@ -429,8 +429,8 @@ export const FlashcardDeckDetailModal: React.FC<FlashcardDeckDetailModalProps> =
           ) : (
             <div className="text-center py-12 space-y-3 border-2 border-dashed border-gray-200 rounded-2xl">
               <Layers className="w-10 h-10 text-gray-300 mx-auto" />
-              <p className="text-sm font-bold text-[#101828]">No flashcards found</p>
-              <p className="text-xs text-[#667085]">
+              <p className="text-sm font-bold text-slate-900">No flashcards found</p>
+              <p className="text-xs text-slate-500">
                 {search ? 'Try adjusting your search or filters.' : 'Click "Add Card" to add concepts to this deck.'}
               </p>
             </div>

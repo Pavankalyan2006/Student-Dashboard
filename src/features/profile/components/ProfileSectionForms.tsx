@@ -15,17 +15,17 @@ export function fieldErrorsFrom(err: any): FieldErrors {
   return m ? { [m[1]]: m[2] } : {};
 }
 
-const label = 'block text-xs font-semibold text-[#344054] mb-1';
+const label = 'block text-xs font-semibold text-slate-700 mb-1';
 const inputCls =
-  'w-full h-9 rounded-lg border border-[#E4E7EC] bg-white px-3 text-sm text-[#101828] focus:outline-none focus:ring-2 focus:ring-[#2563EB]';
+  'w-full h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600';
 const areaCls =
-  'w-full rounded-lg border border-[#E4E7EC] bg-white px-3 py-2 text-sm text-[#101828] focus:outline-none focus:ring-2 focus:ring-[#2563EB]';
+  'w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600';
 
 export function FieldError({ errors, name }: { errors: FieldErrors; name: string }) {
   const msg = errors[name];
   if (!msg) return null;
   return (
-    <p role="alert" className="mt-1 text-xs text-[#DC2626] flex items-center gap-1">
+    <p role="alert" className="mt-1 text-xs text-red-600 flex items-center gap-1">
       <AlertCircle className="w-3 h-3" /> {msg}
     </p>
   );
@@ -45,7 +45,7 @@ export function TextField(props: {
   return (
     <div>
       <label htmlFor={props.id} className={label}>
-        {props.label} {props.required ? <span className="text-[#DC2626]">*</span> : <span className="font-normal text-[#98A2B3]">(optional)</span>}
+        {props.label} {props.required ? <span className="text-red-600">*</span> : <span className="font-normal text-slate-400">(optional)</span>}
       </label>
       <input
         id={props.id}
@@ -56,7 +56,7 @@ export function TextField(props: {
         aria-invalid={Boolean(props.errors?.[props.id])}
         onChange={(e) => props.onChange(e.target.value)}
       />
-      {props.hint && <p className="mt-1 text-[11px] text-[#667085]">{props.hint}</p>}
+      {props.hint && <p className="mt-1 text-[11px] text-slate-500">{props.hint}</p>}
       <FieldError errors={props.errors || {}} name={props.id} />
     </div>
   );
@@ -74,7 +74,7 @@ export function SelectField(props: {
   return (
     <div>
       <label htmlFor={props.id} className={label}>
-        {props.label} {props.required ? <span className="text-[#DC2626]">*</span> : <span className="font-normal text-[#98A2B3]">(optional)</span>}
+        {props.label} {props.required ? <span className="text-red-600">*</span> : <span className="font-normal text-slate-400">(optional)</span>}
       </label>
       <select id={props.id} className={inputCls} value={props.value ?? ''} onChange={(e) => props.onChange(e.target.value)}>
         <option value="">Select…</option>
@@ -110,7 +110,7 @@ export function ChipList(props: {
   return (
     <div>
       <label htmlFor={props.id} className={label}>
-        {props.label} {props.required ? <span className="text-[#DC2626]">*</span> : <span className="font-normal text-[#98A2B3]">(optional)</span>}
+        {props.label} {props.required ? <span className="text-red-600">*</span> : <span className="font-normal text-slate-400">(optional)</span>}
       </label>
       <div className="flex gap-2">
         <input
@@ -136,7 +136,7 @@ export function ChipList(props: {
             .filter((s) => !props.values.some((v) => v.toLowerCase() === s.toLowerCase()))
             .slice(0, 8)
             .map((s) => (
-              <button key={s} type="button" onClick={() => add(s)} className="text-[11px] px-2 py-0.5 rounded-full border border-dashed border-[#D0D5DD] text-[#475467] hover:bg-[#F2F4F7]">
+              <button key={s} type="button" onClick={() => add(s)} className="text-[11px] px-2 py-0.5 rounded-full border border-dashed border-slate-300 text-slate-600 hover:bg-slate-100">
                 + {s}
               </button>
             ))}
@@ -144,7 +144,7 @@ export function ChipList(props: {
       )}
       <div className="mt-2 flex flex-wrap gap-1.5">
         {props.values.map((v) => (
-          <span key={v} className="inline-flex items-center gap-1 rounded-full bg-[#EFF4FF] text-[#1D4ED8] text-xs px-2.5 py-1">
+          <span key={v} className="inline-flex items-center gap-1 rounded-full bg-blue-50 text-blue-700 text-xs px-2.5 py-1">
             {v}
             <button type="button" aria-label={`Remove ${v}`} onClick={() => props.onChange(props.values.filter((x) => x !== v))}>
               <X className="w-3 h-3" />
@@ -195,12 +195,12 @@ export function IdentityForm({ profile, errors, onChange, emailVerificationRequi
         <TextField id="display_name" label="Display name" value={s.display_name} onChange={set('display_name')} errors={errors} />
         <div>
           <span className={label}>Email</span>
-          <div className="min-h-9 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-[#344054]">
+          <div className="min-h-9 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-slate-700">
             <span className="min-w-0 break-all">{profile.identity.email}</span>
             {profile.identity.email_verified ? (
-              <span className="inline-flex items-center gap-1 text-xs text-[#027A48]"><CheckCircle2 className="w-3 h-3" /> verified</span>
+              <span className="inline-flex items-center gap-1 text-xs text-emerald-700"><CheckCircle2 className="w-3 h-3" /> verified</span>
             ) : (
-              <span className="text-xs text-[#B54708]">not verified{emailVerificationRequired ? ' (required)' : ''}</span>
+              <span className="text-xs text-amber-700">not verified{emailVerificationRequired ? ' (required)' : ''}</span>
             )}
           </div>
         </div>
@@ -208,14 +208,14 @@ export function IdentityForm({ profile, errors, onChange, emailVerificationRequi
         <TextField id="avatar_url" label="Profile photo link" value={s.avatar_url} onChange={set('avatar_url')} errors={errors} placeholder="https://…" />
       </div>
       {(!profile.identity.terms_accepted_at || !profile.identity.privacy_accepted_at) && (
-        <div className="space-y-2 rounded-lg border border-[#E4E7EC] p-3">
+        <div className="space-y-2 rounded-lg border border-slate-200 p-3">
           <label className="flex items-start gap-2 text-sm">
             <input type="checkbox" checked={s.accept_terms} onChange={(e) => set('accept_terms')(e.target.checked)} />
-            <span>I agree to the Terms of Use. <span className="text-[#DC2626]">*</span></span>
+            <span>I agree to the Terms of Use. <span className="text-red-600">*</span></span>
           </label>
           <label className="flex items-start gap-2 text-sm">
             <input type="checkbox" checked={s.accept_privacy} onChange={(e) => set('accept_privacy')(e.target.checked)} />
-            <span>I have read the Privacy Policy and agree to my profile being used to personalise my learning. <span className="text-[#DC2626]">*</span></span>
+            <span>I have read the Privacy Policy and agree to my profile being used to personalise my learning. <span className="text-red-600">*</span></span>
           </label>
           <FieldError errors={errors} name="accept_terms" />
           <FieldError errors={errors} name="accept_privacy" />
@@ -366,22 +366,22 @@ export function SkillsForm({ profile, errors, onChange, withInterests = true }: 
         {(SKILL_SUGGESTIONS[category] || [])
           .filter((s) => !skills.some((x) => x.name.toLowerCase() === s.toLowerCase()))
           .map((s) => (
-            <button key={s} type="button" onClick={() => add(s)} className="text-[11px] px-2 py-0.5 rounded-full border border-dashed border-[#D0D5DD] text-[#475467] hover:bg-[#F2F4F7]">
+            <button key={s} type="button" onClick={() => add(s)} className="text-[11px] px-2 py-0.5 rounded-full border border-dashed border-slate-300 text-slate-600 hover:bg-slate-100">
               + {s}
             </button>
           ))}
       </div>
       {skills.length === 0 ? (
-        <p className="text-sm text-[#667085]">No skills added yet.</p>
+        <p className="text-sm text-slate-500">No skills added yet.</p>
       ) : (
-        <ul className="divide-y divide-[#EAECF0] rounded-lg border border-[#EAECF0]">
+        <ul className="divide-y divide-slate-200 rounded-lg border border-slate-200">
           {skills.map((sk, i) => (
             <li key={sk.name} className="flex flex-wrap items-center gap-3 px-3 py-2">
-              <span className="font-medium text-sm text-[#101828] min-w-[120px]">{sk.name}</span>
-              <span className="text-xs text-[#667085]">{SKILL_CATEGORY_LABELS[sk.category] || sk.category}</span>
+              <span className="font-medium text-sm text-slate-900 min-w-[120px]">{sk.name}</span>
+              <span className="text-xs text-slate-500">{SKILL_CATEGORY_LABELS[sk.category] || sk.category}</span>
               <select
                 aria-label={`Proficiency for ${sk.name}`}
-                className={`${inputCls} w-40 ${!sk.proficiency ? 'border-[#F79009]' : ''}`}
+                className={`${inputCls} w-40 ${!sk.proficiency ? 'border-amber-500' : ''}`}
                 value={sk.proficiency}
                 onChange={(e) => setSkills((x) => x.map((y, j) => (j === i ? { ...y, proficiency: e.target.value } : y)))}
               >
@@ -392,7 +392,7 @@ export function SkillsForm({ profile, errors, onChange, withInterests = true }: 
                   </option>
                 ))}
               </select>
-              <button type="button" className="ml-auto text-[#667085] hover:text-[#DC2626]" aria-label={`Remove ${sk.name}`} onClick={() => setSkills((x) => x.filter((_, j) => j !== i))}>
+              <button type="button" className="ml-auto text-slate-500 hover:text-red-600" aria-label={`Remove ${sk.name}`} onClick={() => setSkills((x) => x.filter((_, j) => j !== i))}>
                 <Trash2 className="w-4 h-4" />
               </button>
               <FieldError errors={errors} name={`skills[${i}].proficiency`} />
@@ -439,19 +439,19 @@ export function ExperienceForm({ profile, errors, onChange }: SectionFormProps) 
     <div className="space-y-6">
       <section>
         <div className="flex items-center justify-between mb-2">
-          <h4 className="text-sm font-semibold text-[#101828]">Projects</h4>
+          <h4 className="text-sm font-semibold text-slate-900">Projects</h4>
           <Button type="button" size="sm" variant="outline" onClick={() => setProjects((x) => [...x, { title: '', description: '', technologies: [] }])}>
             <Plus className="w-4 h-4 mr-1" /> Add project
           </Button>
         </div>
         {projects.map((p, i) => (
-          <div key={p.id || `new-${i}`} className="rounded-lg border border-[#EAECF0] p-3 mb-3 space-y-3">
+          <div key={p.id || `new-${i}`} className="rounded-lg border border-slate-200 p-3 mb-3 space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <TextField id={`projects[${i}].title`} label="Project name" required value={p.title} onChange={(v) => upd<Proj>(setProjects, i, 'title', v)} errors={errors} />
               <SelectField id={`projects[${i}].status`} label="Status" value={p.status} onChange={(v) => upd<Proj>(setProjects, i, 'status', v || null)} errors={errors} options={['IDEA', 'PLANNED', 'IN_PROGRESS', 'COMPLETED', 'ON_HOLD'].map((x) => ({ value: x, label: x.replace('_', ' ').toLowerCase() }))} />
             </div>
             <div>
-              <label className={label} htmlFor={`projects[${i}].description`}>Description <span className="font-normal text-[#98A2B3]">(optional)</span></label>
+              <label className={label} htmlFor={`projects[${i}].description`}>Description <span className="font-normal text-slate-400">(optional)</span></label>
               <textarea id={`projects[${i}].description`} className={areaCls} rows={2} value={p.description || ''} onChange={(ev) => upd<Proj>(setProjects, i, 'description', ev.target.value)} />
             </div>
             <ChipList id={`projects[${i}].technologies`} label="Technologies used" values={p.technologies || []} onChange={(v) => upd<Proj>(setProjects, i, 'technologies', v)} errors={errors} />
@@ -469,13 +469,13 @@ export function ExperienceForm({ profile, errors, onChange }: SectionFormProps) 
 
       <section>
         <div className="flex items-center justify-between mb-2">
-          <h4 className="text-sm font-semibold text-[#101828]">Internships and work experience</h4>
+          <h4 className="text-sm font-semibold text-slate-900">Internships and work experience</h4>
           <Button type="button" size="sm" variant="outline" onClick={() => setExperience((x) => [...x, { kind: 'INTERNSHIP', organization: '', role: '', is_current: false }])}>
             <Plus className="w-4 h-4 mr-1" /> Add experience
           </Button>
         </div>
         {experience.map((x, i) => (
-          <div key={x.id || `new-${i}`} className="rounded-lg border border-[#EAECF0] p-3 mb-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div key={x.id || `new-${i}`} className="rounded-lg border border-slate-200 p-3 mb-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
             <SelectField id={`experience[${i}].kind`} label="Type" required value={x.kind} onChange={(v) => upd<Exp>(setExperience, i, 'kind', v)} errors={errors} options={['INTERNSHIP', 'WORK', 'RESEARCH', 'VOLUNTEER', 'OTHER'].map((k) => ({ value: k, label: k.toLowerCase() }))} />
             <TextField id={`experience[${i}].organization`} label="Organisation" required value={x.organization} onChange={(v) => upd<Exp>(setExperience, i, 'organization', v)} errors={errors} />
             <TextField id={`experience[${i}].role`} label="Role" required value={x.role} onChange={(v) => upd<Exp>(setExperience, i, 'role', v)} errors={errors} />
@@ -495,13 +495,13 @@ export function ExperienceForm({ profile, errors, onChange }: SectionFormProps) 
 
       <section>
         <div className="flex items-center justify-between mb-2">
-          <h4 className="text-sm font-semibold text-[#101828]">Certifications</h4>
+          <h4 className="text-sm font-semibold text-slate-900">Certifications</h4>
           <Button type="button" size="sm" variant="outline" onClick={() => setCerts((x) => [...x, { name: '' }])}>
             <Plus className="w-4 h-4 mr-1" /> Add certification
           </Button>
         </div>
         {certs.map((c, i) => (
-          <div key={c.id || `new-${i}`} className="rounded-lg border border-[#EAECF0] p-3 mb-3 grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
+          <div key={c.id || `new-${i}`} className="rounded-lg border border-slate-200 p-3 mb-3 grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
             <TextField id={`certifications[${i}].name`} label="Name" required value={c.name} onChange={(v) => upd<Cert>(setCerts, i, 'name', v)} errors={errors} />
             <TextField id={`certifications[${i}].issuer`} label="Issuer" value={c.issuer} onChange={(v) => upd<Cert>(setCerts, i, 'issuer', v || null)} errors={errors} />
             <TextField id={`certifications[${i}].credential_url`} label="Credential link" value={c.credential_url} onChange={(v) => upd<Cert>(setCerts, i, 'credential_url', v || null)} errors={errors} />
@@ -559,16 +559,16 @@ export function CareerForm({ profile, errors, onChange }: SectionFormProps) {
       <ChipList id="competitive_exams" label="Competitive examinations" values={s.competitive_exams} onChange={set('competitive_exams')} errors={errors} suggestions={['GATE', 'GRE', 'CAT', 'UPSC ESE']} />
       {gate && <TextField id="gate_paper" label="GATE paper" value={s.gate_paper} onChange={set('gate_paper')} errors={errors} placeholder="e.g. CS" hint="The paper code, such as CS, EC, EE or ME." />}
       <div>
-        <label className={label} htmlFor="placement_goals">Placement goals <span className="font-normal text-[#98A2B3]">(optional)</span></label>
+        <label className={label} htmlFor="placement_goals">Placement goals <span className="font-normal text-slate-400">(optional)</span></label>
         <textarea id="placement_goals" className={areaCls} rows={2} value={s.placement_goals} onChange={(e) => set('placement_goals')(e.target.value)} />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className={label} htmlFor="short_term_goals">Short-term goals <span className="font-normal text-[#98A2B3]">(optional)</span></label>
+          <label className={label} htmlFor="short_term_goals">Short-term goals <span className="font-normal text-slate-400">(optional)</span></label>
           <textarea id="short_term_goals" className={areaCls} rows={3} value={s.short_term_goals} onChange={(e) => set('short_term_goals')(e.target.value)} />
         </div>
         <div>
-          <label className={label} htmlFor="long_term_goals">Long-term goals <span className="font-normal text-[#98A2B3]">(optional)</span></label>
+          <label className={label} htmlFor="long_term_goals">Long-term goals <span className="font-normal text-slate-400">(optional)</span></label>
           <textarea id="long_term_goals" className={areaCls} rows={3} value={s.long_term_goals} onChange={(e) => set('long_term_goals')(e.target.value)} />
         </div>
       </div>
@@ -626,12 +626,12 @@ export function LearningForm({ profile, errors, onChange }: SectionFormProps) {
         <SelectField id="revision_preference" label="Revision preference" value={s.revision_preference} onChange={set('revision_preference')} errors={errors} options={opt(['DAILY', 'ALTERNATE_DAYS', 'WEEKLY', 'BEFORE_EXAMS', 'FLEXIBLE'])} />
       </div>
       <div>
-        <span className={label}>Preferred study days <span className="font-normal text-[#98A2B3]">(optional)</span></span>
+        <span className={label}>Preferred study days <span className="font-normal text-slate-400">(optional)</span></span>
         <div className="flex flex-wrap gap-2">
           {DAYS.map((d) => {
             const on = s.preferred_study_days.includes(d);
             return (
-              <button key={d} type="button" aria-pressed={on} onClick={() => set('preferred_study_days')(on ? s.preferred_study_days.filter((x) => x !== d) : [...s.preferred_study_days, d])} className={`px-3 py-1 rounded-full text-xs border ${on ? 'bg-[#2563EB] text-white border-[#2563EB]' : 'border-[#D0D5DD] text-[#344054]'}`}>
+              <button key={d} type="button" aria-pressed={on} onClick={() => set('preferred_study_days')(on ? s.preferred_study_days.filter((x) => x !== d) : [...s.preferred_study_days, d])} className={`px-3 py-1 rounded-full text-xs border ${on ? 'bg-blue-600 text-white border-blue-600' : 'border-slate-300 text-slate-700'}`}>
                 {d}
               </button>
             );
@@ -640,8 +640,8 @@ export function LearningForm({ profile, errors, onChange }: SectionFormProps) {
         <FieldError errors={errors} name="preferred_study_days" />
       </div>
       <ChipList id="learning_interests_6" label="Learning interests" values={s.learning_interests} onChange={set('learning_interests')} errors={errors} />
-      <fieldset className="rounded-lg border border-[#EAECF0] p-3">
-        <legend className="text-xs font-semibold text-[#344054] px-1">Notifications</legend>
+      <fieldset className="rounded-lg border border-slate-200 p-3">
+        <legend className="text-xs font-semibold text-slate-700 px-1">Notifications</legend>
         {(
           [
             ['in_app', 'In-app notifications'],

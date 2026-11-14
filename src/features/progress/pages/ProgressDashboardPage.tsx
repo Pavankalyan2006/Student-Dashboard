@@ -41,7 +41,7 @@ import {
 } from '../../../../server/models/communityProfileProgressTypes';
 import { toast } from 'sonner';
 
-const PIE_COLORS = ['#2563EB', '#0891B2', '#16A34A', '#7C3AED', '#F59E0B'];
+const PIE_COLORS = ['#4654E0', '#1F7AA2', '#14825A', '#7951D8', '#E48A1C'];
 
 const DATE_FILTERS = [
   { id: '7d', label: 'Last 7 Days' },
@@ -137,10 +137,10 @@ export function ProgressDashboardPage({ onNavigate }: { onNavigate: (path: strin
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
       {/* 6.1 Page Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-[#E4E7EC] pb-5">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-200 pb-5">
         <div className="space-y-1.5">
           <div className="flex flex-wrap items-center gap-2.5">
-            <h1 className="text-xl sm:text-2xl font-bold text-[#101828]">Unified Progress</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Unified Progress</h1>
             <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
               {student.name || 'Engineering Student'}
             </span>
@@ -148,7 +148,7 @@ export function ProgressDashboardPage({ onNavigate }: { onNavigate: (path: strin
               {student.degree || 'B.Tech'} • {student.branch || 'CSE'} • Sem {student.semester || 7}
             </span>
           </div>
-          <p className="text-xs text-[#667085]">
+          <p className="text-xs text-slate-500">
             Comprehensive learning, assessments, labs, and career development analytics grounded strictly in verified activity.
           </p>
         </div>
@@ -291,7 +291,7 @@ export function ProgressDashboardPage({ onNavigate }: { onNavigate: (path: strin
           <div
             key={card.title}
             onClick={() => card.href && onNavigate(card.href)}
-            className={`p-3.5 bg-white rounded-xl border border-[#E4E7EC] hover:border-blue-300 shadow-2xs transition-all flex flex-col justify-between ${
+            className={`p-3.5 bg-white rounded-xl border border-slate-200 hover:border-blue-300 shadow-2xs transition-all flex flex-col justify-between ${
               card.href ? 'cursor-pointer group' : ''
             }`}
           >
@@ -302,9 +302,9 @@ export function ProgressDashboardPage({ onNavigate }: { onNavigate: (path: strin
               {card.href && <ChevronRight className="h-3 w-3 text-slate-300 group-hover:text-blue-600" />}
             </div>
             <div>
-              <div className="text-base font-bold text-[#101828] tabular-nums">{card.val}</div>
+              <div className="text-base font-bold text-slate-900 tabular-nums">{card.val}</div>
               <div className="text-[11px] font-semibold text-slate-700 truncate">{card.title}</div>
-              <div className="text-[10px] text-[#667085] truncate">{card.sub}</div>
+              <div className="text-[10px] text-slate-500 truncate">{card.sub}</div>
             </div>
           </div>
         ))}
@@ -333,11 +333,11 @@ export function ProgressDashboardPage({ onNavigate }: { onNavigate: (path: strin
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Weekly Activity Area/Bar Chart */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-[#E4E7EC] p-5 shadow-2xs space-y-4">
+        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-bold text-[#101828]">Weekly Learning Activity Distribution</h2>
-              <p className="text-xs text-[#667085]">
+              <h2 className="text-sm font-bold text-slate-900">Weekly Learning Activity Distribution</h2>
+              <p className="text-xs text-slate-500">
                 Lessons, coding problems, quizzes, and research actions performed by day.
               </p>
             </div>
@@ -347,7 +347,7 @@ export function ProgressDashboardPage({ onNavigate }: { onNavigate: (path: strin
           </div>
 
           {!hasSufficientData ? (
-            <div className="h-64 flex flex-col items-center justify-center text-xs text-[#667085] bg-slate-50 rounded-xl border border-dashed border-slate-200 p-6 text-center space-y-2">
+            <div className="h-64 flex flex-col items-center justify-center text-xs text-slate-500 bg-slate-50 rounded-xl border border-dashed border-slate-200 p-6 text-center space-y-2">
               <TrendingUp className="h-8 w-8 text-slate-300" />
               <p className="font-medium text-slate-700">No activity yet in this time window.</p>
               <p className="text-[11px] text-slate-500 max-w-sm">
@@ -358,21 +358,21 @@ export function ProgressDashboardPage({ onNavigate }: { onNavigate: (path: strin
             <div className="h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={progress.weekly_activity}>
-                  <XAxis dataKey="day" stroke="#98A2B3" fontSize={11} />
-                  <YAxis stroke="#98A2B3" fontSize={11} allowDecimals={false} />
+                  <XAxis dataKey="day" stroke="#9AA3B5" fontSize={11} />
+                  <YAxis stroke="#9AA3B5" fontSize={11} allowDecimals={false} />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: '#FFFFFF',
-                      borderColor: '#E4E7EC',
+                      borderColor: '#E3E6EE',
                       borderRadius: '8px',
                       fontSize: '11px',
                     }}
                   />
                   <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
-                  <Bar dataKey="lessons" name="Lessons" fill="#2563EB" stackId="a" radius={[0, 0, 0, 0]} />
-                  <Bar dataKey="coding" name="Coding & DSA" fill="#0891B2" stackId="a" radius={[0, 0, 0, 0]} />
-                  <Bar dataKey="quizzes" name="Quizzes" fill="#F59E0B" stackId="a" radius={[0, 0, 0, 0]} />
-                  <Bar dataKey="research" name="Research" fill="#7C3AED" stackId="a" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="lessons" name="Lessons" fill="#4654E0" stackId="a" radius={[0, 0, 0, 0]} />
+                  <Bar dataKey="coding" name="Coding & DSA" fill="#1F7AA2" stackId="a" radius={[0, 0, 0, 0]} />
+                  <Bar dataKey="quizzes" name="Quizzes" fill="#E48A1C" stackId="a" radius={[0, 0, 0, 0]} />
+                  <Bar dataKey="research" name="Research" fill="#7951D8" stackId="a" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -380,10 +380,10 @@ export function ProgressDashboardPage({ onNavigate }: { onNavigate: (path: strin
         </div>
 
         {/* Category Breakdown Donut Chart */}
-        <div className="bg-white rounded-2xl border border-[#E4E7EC] p-5 shadow-2xs space-y-4 flex flex-col justify-between">
+        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-4 flex flex-col justify-between">
           <div>
-            <h2 className="text-sm font-bold text-[#101828]">Category Distribution</h2>
-            <p className="text-xs text-[#667085]">Proportion of completed activities across domains.</p>
+            <h2 className="text-sm font-bold text-slate-900">Category Distribution</h2>
+            <p className="text-xs text-slate-500">Proportion of completed activities across domains.</p>
           </div>
 
           <div className="h-52 w-full flex items-center justify-center">
@@ -407,7 +407,7 @@ export function ProgressDashboardPage({ onNavigate }: { onNavigate: (path: strin
                   <Tooltip
                     contentStyle={{
                       backgroundColor: '#FFFFFF',
-                      borderColor: '#E4E7EC',
+                      borderColor: '#E3E6EE',
                       borderRadius: '8px',
                       fontSize: '11px',
                     }}
@@ -429,9 +429,9 @@ export function ProgressDashboardPage({ onNavigate }: { onNavigate: (path: strin
                     className="h-2 w-2 rounded-full shrink-0"
                     style={{ backgroundColor: PIE_COLORS[idx % PIE_COLORS.length] }}
                   />
-                  <span className="text-[#344054] truncate max-w-[140px]">{cat.category}</span>
+                  <span className="text-slate-700 truncate max-w-[140px]">{cat.category}</span>
                 </div>
-                <span className="font-semibold text-[#101828] tabular-nums">
+                <span className="font-semibold text-slate-900 tabular-nums">
                   {cat.completed} completed
                 </span>
               </div>
@@ -441,11 +441,11 @@ export function ProgressDashboardPage({ onNavigate }: { onNavigate: (path: strin
       </div>
 
       {/* 14. Chronological Activity Timeline */}
-      <div className="bg-white rounded-2xl border border-[#E4E7EC] p-5 shadow-2xs space-y-4">
+      <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-sm font-bold text-[#101828]">Verified Activity Timeline</h2>
-            <p className="text-xs text-[#667085]">
+            <h2 className="text-sm font-bold text-slate-900">Verified Activity Timeline</h2>
+            <p className="text-xs text-slate-500">
               Real-time audit log of your verified platform actions and milestones.
             </p>
           </div>
@@ -467,7 +467,7 @@ export function ProgressDashboardPage({ onNavigate }: { onNavigate: (path: strin
                 <div className="flex items-center gap-3">
                   <div className="h-2 w-2 rounded-full bg-blue-600 shrink-0" />
                   <div>
-                    <h4 className="text-xs font-semibold text-[#101828] group-hover:text-blue-600 transition-colors">
+                    <h4 className="text-xs font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">
                       {act.title}
                     </h4>
                     <span className="text-[10px] text-slate-500">
@@ -490,21 +490,21 @@ export function ProgressDashboardPage({ onNavigate }: { onNavigate: (path: strin
       {/* 15. AI Learning Insights & Grounded Recommendations */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Insights */}
-        <div className="bg-white rounded-2xl border border-[#E4E7EC] p-5 shadow-2xs space-y-4">
+        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-4">
           <div className="flex items-center gap-2">
-            <div className="p-2 rounded-lg bg-indigo-50 text-[#4F46E5]">
+            <div className="p-2 rounded-lg bg-indigo-50 text-indigo-600">
               <Sparkles className="h-4 w-4" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-[#101828]">Factual Learning Observations</h2>
-              <p className="text-xs text-[#667085]">
+              <h2 className="text-sm font-bold text-slate-900">Factual Learning Observations</h2>
+              <p className="text-xs text-slate-500">
                 Descriptive analytics derived strictly from your verified platform actions.
               </p>
             </div>
           </div>
 
           {insightsSummary && (
-            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-[#344054] leading-relaxed italic">
+            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 leading-relaxed italic">
               "{insightsSummary}"
             </div>
           )}
@@ -518,9 +518,9 @@ export function ProgressDashboardPage({ onNavigate }: { onNavigate: (path: strin
                   key={idx}
                   className="p-3 rounded-xl border border-slate-100 bg-slate-50/50 flex items-start gap-2.5"
                 >
-                  <div className="h-1.5 w-1.5 rounded-full bg-[#4F46E5] shrink-0 mt-1.5" />
-                  <div className="text-xs text-[#344054] leading-relaxed">
-                    <span className="font-semibold text-[#101828]">{ins.title}: </span>
+                  <div className="h-1.5 w-1.5 rounded-full bg-indigo-600 shrink-0 mt-1.5" />
+                  <div className="text-xs text-slate-700 leading-relaxed">
+                    <span className="font-semibold text-slate-900">{ins.title}: </span>
                     {ins.observation}
                   </div>
                 </div>
@@ -530,14 +530,14 @@ export function ProgressDashboardPage({ onNavigate }: { onNavigate: (path: strin
         </div>
 
         {/* Recommendations */}
-        <div className="bg-white rounded-2xl border border-[#E4E7EC] p-5 shadow-2xs space-y-4">
+        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-4">
           <div className="flex items-center gap-2">
             <div className="p-2 rounded-lg bg-amber-50 text-amber-600">
               <Lightbulb className="h-4 w-4" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-[#101828]">Targeted Resource Recommendations</h2>
-              <p className="text-xs text-[#667085]">
+              <h2 className="text-sm font-bold text-slate-900">Targeted Resource Recommendations</h2>
+              <p className="text-xs text-slate-500">
                 Anchored in actual platform courses, quizzes, and papers with explicit reasons.
               </p>
             </div>
@@ -554,14 +554,14 @@ export function ProgressDashboardPage({ onNavigate }: { onNavigate: (path: strin
                   className="p-3.5 rounded-xl border border-slate-200 hover:border-blue-300 hover:bg-slate-50/60 transition-all cursor-pointer space-y-1.5 group"
                 >
                   <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-bold text-[#101828] group-hover:text-[#2563EB] transition-colors">
+                    <h4 className="text-xs font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
                       {rec.title}
                     </h4>
-                    <span className="text-[10px] font-mono uppercase px-1.5 py-0.2 rounded bg-slate-100 text-[#475467]">
+                    <span className="text-[10px] font-mono uppercase px-1.5 py-0.2 rounded bg-slate-100 text-slate-600">
                       {rec.resource_type.replace(/_/g, ' ')}
                     </span>
                   </div>
-                  <p className="text-[11px] text-[#475467] leading-relaxed">{rec.reason}</p>
+                  <p className="text-[11px] text-slate-600 leading-relaxed">{rec.reason}</p>
                 </div>
               ))
             )}

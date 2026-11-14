@@ -694,7 +694,7 @@ export function ArchitectureDesigner({
                 <path
                   d={pathD}
                   fill="none"
-                  stroke={isSelected ? '#38BDF8' : '#6366F1'}
+                  stroke={isSelected ? '#38BDF8' : '#6B66EC'}
                   strokeWidth={isSelected ? 3 : 2}
                   strokeDasharray={conn.is_async ? '6 4' : undefined}
                   markerEnd={isSelected ? 'url(#arrow-selected)' : 'url(#arrow)'}

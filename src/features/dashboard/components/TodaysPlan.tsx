@@ -28,13 +28,13 @@ export function TodaysPlan({
   };
 
   return (
-    <Card className="border border-[#E4E7EC] bg-white">
+    <Card className="border border-slate-200 bg-white">
       <CardHeader className="flex flex-row items-center justify-between pb-3">
         <div className="flex items-center gap-2">
-          <ListTodo className="h-4 w-4 text-[#2563EB]" />
+          <ListTodo className="h-4 w-4 text-blue-600" />
           <div>
-            <CardTitle className="text-sm sm:text-base font-bold text-[#101828]">Today's Learning Plan</CardTitle>
-            <p className="text-xs text-[#667085]">Personalized daily engineering objectives</p>
+            <CardTitle className="text-sm sm:text-base font-bold text-slate-900">Today's Learning Plan</CardTitle>
+            <p className="text-xs text-slate-500">Personalized daily engineering objectives</p>
           </div>
         </div>
         <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 tabular-nums">
@@ -44,7 +44,7 @@ export function TodaysPlan({
 
       <CardContent className="space-y-2.5">
         {tasks.length === 0 ? (
-          <div className="py-6 text-center text-xs text-[#667085]">
+          <div className="py-6 text-center text-xs text-slate-500">
             All objectives for today are completed! Take a break or consult AI for extra drills.
           </div>
         ) : (
@@ -54,14 +54,14 @@ export function TodaysPlan({
               className={`flex items-center justify-between p-3 rounded-xl border transition-all ${
                 task.is_completed
                   ? 'bg-slate-50/60 border-slate-200/80 text-slate-500'
-                  : 'bg-white border-[#E4E7EC] hover:border-blue-200 shadow-2xs'
+                  : 'bg-white border-slate-200 hover:border-blue-200 shadow-2xs'
               }`}
             >
               <div className="flex items-start gap-3 min-w-0 flex-1 pr-2">
                 <button
                   type="button"
                   onClick={() => onToggleTask(task.id)}
-                  className="mt-0.5 text-slate-400 hover:text-[#2563EB] cursor-pointer transition-colors shrink-0"
+                  className="mt-0.5 text-slate-400 hover:text-blue-600 cursor-pointer transition-colors shrink-0"
                   aria-label={task.is_completed ? 'Mark incomplete' : 'Mark complete'}
                 >
                   {task.is_completed ? (
@@ -76,13 +76,13 @@ export function TodaysPlan({
                     {getTypeBadge(task.type)}
                     <span
                       className={`text-xs font-semibold truncate ${
-                        task.is_completed ? 'line-through text-slate-400' : 'text-[#101828]'
+                        task.is_completed ? 'line-through text-slate-400' : 'text-slate-900'
                       }`}
                     >
                       {task.title}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1.5 text-[11px] text-[#667085]">
+                  <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
                     <Clock className="h-3 w-3" />
                     <span>Est. {task.estimated_time}</span>
                   </div>

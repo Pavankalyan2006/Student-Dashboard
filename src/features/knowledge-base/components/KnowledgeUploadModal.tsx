@@ -122,35 +122,35 @@ export const KnowledgeUploadModal: React.FC<KnowledgeUploadModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg shadow-2xl p-6 space-y-5">
-        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white backdrop-blur-sm animate-fade-in">
+      <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg shadow-2xl p-6 space-y-5">
+        <div className="flex items-center justify-between border-b border-slate-200 pb-3">
           <div className="flex items-center gap-2.5">
             <div
               className={`w-8 h-8 rounded-lg ${
-                targetDocument ? 'bg-amber-500/10 text-amber-400' : 'bg-indigo-500/10 text-indigo-400'
+                targetDocument ? 'bg-amber-50 text-amber-600' : 'bg-indigo-50 text-indigo-600'
               } flex items-center justify-center`}
             >
               {targetDocument ? <RefreshCw className="w-4 h-4" /> : <UploadCloud className="w-4 h-4" />}
             </div>
             <div>
-              <h3 className="text-base font-bold text-white">
+              <h3 className="text-base font-bold text-slate-900">
                 {targetDocument ? 'Upload New Document Version' : 'Upload to Knowledge Base'}
               </h3>
               {targetDocument && (
-                <p className="text-[11px] text-slate-400 truncate max-w-[280px]">
-                  Updating: <span className="text-slate-200 font-semibold">{targetDocument.title || targetDocument.original_filename}</span>
+                <p className="text-[11px] text-slate-500 truncate max-w-[280px]">
+                  Updating: <span className="text-slate-800 font-semibold">{targetDocument.title || targetDocument.original_filename}</span>
                 </p>
               )}
             </div>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-white">
+          <button onClick={onClose} className="text-slate-500 hover:text-slate-900">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {error && (
-          <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs flex items-center gap-2">
+          <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{error}</span>
           </div>
@@ -160,7 +160,7 @@ export const KnowledgeUploadModal: React.FC<KnowledgeUploadModalProps> = ({
           {/* File Picker Drag Box */}
           <div
             onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-slate-700 hover:border-indigo-500/60 rounded-2xl p-6 text-center cursor-pointer transition bg-slate-800/40 hover:bg-slate-800/70"
+            className="border-2 border-dashed border-slate-200 hover:border-indigo-200 rounded-2xl p-6 text-center cursor-pointer transition bg-slate-50 hover:bg-slate-50"
           >
             <input
               type="file"
@@ -170,8 +170,8 @@ export const KnowledgeUploadModal: React.FC<KnowledgeUploadModalProps> = ({
               className="hidden"
             />
             {file ? (
-              <div className="flex items-center justify-center gap-2 text-indigo-300 text-sm font-medium">
-                <FileText className="w-5 h-5 text-indigo-400" />
+              <div className="flex items-center justify-center gap-2 text-indigo-700 text-sm font-medium">
+                <FileText className="w-5 h-5 text-indigo-600" />
                 <span className="truncate max-w-[300px]">{file.name}</span>
                 <span className="text-xs text-slate-500">
                   ({(file.size / (1024 * 1024)).toFixed(1)} MB)
@@ -180,8 +180,8 @@ export const KnowledgeUploadModal: React.FC<KnowledgeUploadModalProps> = ({
             ) : (
               <div>
                 <UploadCloud className="w-8 h-8 text-slate-500 mx-auto mb-2" />
-                <p className="text-xs font-semibold text-white">Click or drag file here to upload</p>
-                <p className="text-[11px] text-slate-400 mt-1">
+                <p className="text-xs font-semibold text-slate-900">Click or drag file here to upload</p>
+                <p className="text-[11px] text-slate-500 mt-1">
                   PDF, DOCX, PPTX, TXT, MD, CSV, Code (.py, .java, .cpp, .ts, .sql) up to 25MB
                 </p>
               </div>
@@ -192,7 +192,7 @@ export const KnowledgeUploadModal: React.FC<KnowledgeUploadModalProps> = ({
             <>
               {/* Document Title */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
                   Document Title
                 </label>
                 <input
@@ -200,19 +200,19 @@ export const KnowledgeUploadModal: React.FC<KnowledgeUploadModalProps> = ({
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. Operating Systems Chapter 4 - Virtual Memory"
-                  className="w-full px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs focus:outline-none focus:border-indigo-500"
                 />
               </div>
 
               {/* Attach to Collection */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
                   Attach to Subject Collection
                 </label>
                 <select
                   value={collectionId}
                   onChange={(e) => setCollectionId(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs focus:outline-none focus:border-indigo-500"
                 >
                   <option value="">No Collection (General Unfiled)</option>
                   {collections.map((c) => (
@@ -225,7 +225,7 @@ export const KnowledgeUploadModal: React.FC<KnowledgeUploadModalProps> = ({
 
               {/* Tags */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
                   Tags (Comma separated)
                 </label>
                 <input
@@ -233,18 +233,18 @@ export const KnowledgeUploadModal: React.FC<KnowledgeUploadModalProps> = ({
                   value={tags}
                   onChange={(e) => setTags(e.target.value)}
                   placeholder="e.g. os, paging, virtual-memory, exam-notes"
-                  className="w-full px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs focus:outline-none focus:border-indigo-500"
                 />
               </div>
             </>
           )}
 
           {/* Actions */}
-          <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs text-slate-400 hover:text-white"
+              className="px-4 py-2 text-xs text-slate-500 hover:text-slate-900"
             >
               Cancel
             </button>

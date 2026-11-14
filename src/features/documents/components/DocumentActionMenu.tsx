@@ -86,7 +86,7 @@ export function DocumentActionMenu({
         )}
 
         <DropdownMenuItem onClick={onOpen} className="gap-2 cursor-pointer">
-          <BookOpen className="h-3.5 w-3.5 text-[#2563EB]" />
+          <BookOpen className="h-3.5 w-3.5 text-blue-600" />
           <span>Open AI Workspace</span>
         </DropdownMenuItem>
 

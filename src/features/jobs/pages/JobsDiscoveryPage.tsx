@@ -210,7 +210,7 @@ export const JobsDiscoveryPage: React.FC<JobsDiscoveryPageProps> = ({ onNavigate
       )}
 
       {/* Hero Header */}
-      <div className="relative rounded-3xl overflow-hidden border border-slate-200/80 dark:border-slate-800 bg-gradient-to-br from-indigo-900 via-slate-900 to-slate-950 text-white p-6 sm:p-10 shadow-xl">
+      <div className="relative rounded-3xl overflow-hidden border border-slate-200/80 dark:border-slate-800 hero-brand text-white p-6 sm:p-10">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-indigo-500/20 via-purple-500/10 to-transparent pointer-events-none" />
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">

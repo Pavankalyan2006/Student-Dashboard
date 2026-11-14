@@ -34,7 +34,7 @@ export const PlacementHeader: React.FC<Props> = ({
   const gradYear = education?.expected_graduation_year ? `Batch of ${education.expected_graduation_year}` : 'Batch of 2026';
 
   return (
-    <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-950 text-white p-6 sm:p-8 rounded-3xl shadow-lg relative overflow-hidden border border-indigo-900/40">
+    <div className="hero-brand text-white p-6 sm:p-8 rounded-3xl relative overflow-hidden border border-indigo-900/40">
       {/* Decorative background glow */}
       <div className="absolute -right-20 -top-20 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute right-1/3 -bottom-20 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />

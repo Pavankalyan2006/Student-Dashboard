@@ -181,7 +181,7 @@ export function AdminStudentsPage({ onNavigate }: { onNavigate: (path: string) =
 
           <button
             onClick={() => fetchStudents(pagination.page)}
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#14234B] hover:bg-[#1C3168] border border-[#233870] text-xs font-medium text-slate-200 transition-colors cursor-pointer"
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-navy-800 hover:bg-navy-700 border border-navy-600 text-xs font-medium text-slate-200 transition-colors cursor-pointer"
           >
             <RefreshCw className={cn('h-3.5 w-3.5', isLoading && 'animate-spin')} />
             Refresh Table
@@ -190,7 +190,7 @@ export function AdminStudentsPage({ onNavigate }: { onNavigate: (path: string) =
       </div>
 
       {/* Filters Bar */}
-      <div className="p-4 rounded-2xl bg-[#0D1836] border border-[#1A284D] flex flex-col md:flex-row items-center gap-3">
+      <div className="p-4 rounded-2xl bg-navy-900 border border-navy-700 flex flex-col md:flex-row items-center gap-3">
         <form onSubmit={handleSearchSubmit} className="flex-1 w-full relative">
           <Search className="h-4 w-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
@@ -198,7 +198,7 @@ export function AdminStudentsPage({ onNavigate }: { onNavigate: (path: string) =
             placeholder="Search by student name or university email..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 rounded-xl bg-[#081024] border border-[#1E2E55] text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
+            className="w-full pl-9 pr-4 py-2 rounded-xl bg-navy-950 border border-navy-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
           />
         </form>
 
@@ -207,7 +207,7 @@ export function AdminStudentsPage({ onNavigate }: { onNavigate: (path: string) =
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 rounded-xl bg-[#081024] border border-[#1E2E55] text-xs text-slate-200 focus:outline-none focus:border-amber-500 cursor-pointer"
+            className="px-3 py-2 rounded-xl bg-navy-950 border border-navy-700 text-xs text-slate-200 focus:outline-none focus:border-amber-500 cursor-pointer"
           >
             <option value="">All Statuses</option>
             <option value="ACTIVE">ACTIVE</option>
@@ -220,7 +220,7 @@ export function AdminStudentsPage({ onNavigate }: { onNavigate: (path: string) =
           <select
             value={branchFilter}
             onChange={(e) => setBranchFilter(e.target.value)}
-            className="px-3 py-2 rounded-xl bg-[#081024] border border-[#1E2E55] text-xs text-slate-200 focus:outline-none focus:border-amber-500 cursor-pointer"
+            className="px-3 py-2 rounded-xl bg-navy-950 border border-navy-700 text-xs text-slate-200 focus:outline-none focus:border-amber-500 cursor-pointer"
           >
             <option value="">All Branches</option>
             <option value="Computer Science">Computer Science & AI/ML</option>
@@ -231,10 +231,10 @@ export function AdminStudentsPage({ onNavigate }: { onNavigate: (path: string) =
       </div>
 
       {/* Students Table */}
-      <div className="rounded-2xl bg-[#0D1836] border border-[#1A284D] overflow-hidden">
+      <div className="rounded-2xl bg-navy-900 border border-navy-700 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-[#0A132C] border-b border-[#1A284D] text-slate-400 uppercase tracking-wider text-[10px]">
+            <thead className="bg-navy-950 border-b border-navy-700 text-slate-400 uppercase tracking-wider text-[10px]">
               <tr>
                 <th className="py-3 px-4">Student</th>
                 <th className="py-3 px-4">Academic Info</th>
@@ -244,7 +244,7 @@ export function AdminStudentsPage({ onNavigate }: { onNavigate: (path: string) =
                 <th className="py-3 px-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#162345]">
+            <tbody className="divide-y divide-navy-800">
               {students.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-8 text-center text-slate-500">
@@ -256,13 +256,13 @@ export function AdminStudentsPage({ onNavigate }: { onNavigate: (path: string) =
                   const currentStatus = std.status || (std.is_active ? 'ACTIVE' : 'SUSPENDED');
                   const isSuspended = currentStatus === 'SUSPENDED' || currentStatus === 'DISABLED';
                   return (
-                    <tr key={std.id} className="hover:bg-[#111E42]/50 transition-colors">
+                    <tr key={std.id} className="hover:bg-navy-800/50 transition-colors">
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-3">
                           <img
                             src={std.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${std.name}`}
                             alt={std.name}
-                            className="h-8 w-8 rounded-full bg-[#14234B] border border-[#233870]"
+                            className="h-8 w-8 rounded-full bg-navy-800 border border-navy-600"
                           />
                           <div>
                             <p className="font-semibold text-white">{std.name}</p>
@@ -312,7 +312,7 @@ export function AdminStudentsPage({ onNavigate }: { onNavigate: (path: string) =
                           <button
                             onClick={() => onNavigate(`/admin/students/${std.id}`)}
                             title="View student administrative summary"
-                            className="p-1.5 rounded-lg bg-[#14234B] hover:bg-[#1E3368] text-slate-300 hover:text-white transition-colors cursor-pointer"
+                            className="p-1.5 rounded-lg bg-navy-800 hover:bg-navy-700 text-slate-300 hover:text-white transition-colors cursor-pointer"
                           >
                             <Eye className="h-3.5 w-3.5" />
                           </button>
@@ -349,7 +349,7 @@ export function AdminStudentsPage({ onNavigate }: { onNavigate: (path: string) =
         </div>
 
         {/* Pagination Footer */}
-        <div className="p-4 border-t border-[#1A284D] bg-[#0A132C] flex items-center justify-between text-xs text-slate-400">
+        <div className="p-4 border-t border-navy-700 bg-navy-950 flex items-center justify-between text-xs text-slate-400">
           <span>
             Showing Page <strong>{pagination.page}</strong> of <strong>{pagination.totalPages || 1}</strong> ({pagination.total} students)
           </span>
@@ -357,14 +357,14 @@ export function AdminStudentsPage({ onNavigate }: { onNavigate: (path: string) =
             <button
               onClick={() => fetchStudents(pagination.page - 1)}
               disabled={pagination.page <= 1}
-              className="p-1.5 rounded-lg border border-[#1E2E55] bg-[#0D1836] disabled:opacity-40 hover:bg-[#14234B] cursor-pointer"
+              className="p-1.5 rounded-lg border border-navy-700 bg-navy-900 disabled:opacity-40 hover:bg-navy-800 cursor-pointer"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
             <button
               onClick={() => fetchStudents(pagination.page + 1)}
               disabled={pagination.page >= pagination.totalPages}
-              className="p-1.5 rounded-lg border border-[#1E2E55] bg-[#0D1836] disabled:opacity-40 hover:bg-[#14234B] cursor-pointer"
+              className="p-1.5 rounded-lg border border-navy-700 bg-navy-900 disabled:opacity-40 hover:bg-navy-800 cursor-pointer"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
@@ -375,7 +375,7 @@ export function AdminStudentsPage({ onNavigate }: { onNavigate: (path: string) =
       {/* Confirmation & Reason Dialog */}
       {selectedStudent && statusAction && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="max-w-md w-full bg-[#0D1836] border border-[#1A284D] rounded-2xl p-6 shadow-2xl space-y-4">
+          <div className="max-w-md w-full bg-navy-900 border border-navy-700 rounded-2xl p-6 shadow-2xl space-y-4">
             <div className="flex items-center gap-3">
               <div
                 className={cn(
@@ -410,7 +410,7 @@ export function AdminStudentsPage({ onNavigate }: { onNavigate: (path: string) =
                 placeholder="Enter mandatory reason for this account status change..."
                 value={statusReason}
                 onChange={(e) => setStatusReason(e.target.value)}
-                className="w-full p-3 rounded-xl bg-[#081024] border border-[#1E2E55] text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
+                className="w-full p-3 rounded-xl bg-navy-950 border border-navy-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
               />
             </div>
 
@@ -423,7 +423,7 @@ export function AdminStudentsPage({ onNavigate }: { onNavigate: (path: string) =
                   setStatusReason('');
                 }}
                 disabled={isSubmitting}
-                className="px-4 py-2 rounded-xl bg-[#14234B] hover:bg-[#1E3368] text-xs font-medium text-slate-300 cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-navy-800 hover:bg-navy-700 text-xs font-medium text-slate-300 cursor-pointer"
               >
                 Cancel
               </button>
@@ -449,8 +449,8 @@ export function AdminStudentsPage({ onNavigate }: { onNavigate: (path: string) =
       {/* Create Student Modal */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-[#0D1836] border border-amber-500/40 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-[#1E2E55] pb-3">
+          <div className="bg-navy-900 border border-amber-500/40 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-navy-700 pb-3">
               <div className="flex items-center gap-3">
                 <div className="h-9 w-9 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
                   <UserPlus className="h-5 w-5" />
@@ -479,7 +479,7 @@ export function AdminStudentsPage({ onNavigate }: { onNavigate: (path: string) =
                   placeholder="e.g. Rahul Sharma"
                   value={createForm.name}
                   onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
-                  className="w-full px-3.5 py-2 rounded-xl bg-[#081024] border border-[#1E2E55] text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
+                  className="w-full px-3.5 py-2 rounded-xl bg-navy-950 border border-navy-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
                 />
               </div>
 
@@ -493,7 +493,7 @@ export function AdminStudentsPage({ onNavigate }: { onNavigate: (path: string) =
                   placeholder="e.g. rahul.sharma@btech.edu"
                   value={createForm.email}
                   onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
-                  className="w-full px-3.5 py-2 rounded-xl bg-[#081024] border border-[#1E2E55] text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
+                  className="w-full px-3.5 py-2 rounded-xl bg-navy-950 border border-navy-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
                 />
               </div>
 
@@ -517,7 +517,7 @@ export function AdminStudentsPage({ onNavigate }: { onNavigate: (path: string) =
                   placeholder="Minimum 8 characters"
                   value={createForm.password}
                   onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
-                  className="w-full px-3.5 py-2 rounded-xl bg-[#081024] border border-[#1E2E55] text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 font-mono"
+                  className="w-full px-3.5 py-2 rounded-xl bg-navy-950 border border-navy-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 font-mono"
                 />
               </div>
 
@@ -529,7 +529,7 @@ export function AdminStudentsPage({ onNavigate }: { onNavigate: (path: string) =
                   <select
                     value={createForm.branch}
                     onChange={(e) => setCreateForm({ ...createForm, branch: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl bg-[#081024] border border-[#1E2E55] text-xs text-slate-200 focus:outline-none focus:border-amber-500 cursor-pointer"
+                    className="w-full px-3 py-2 rounded-xl bg-navy-950 border border-navy-700 text-xs text-slate-200 focus:outline-none focus:border-amber-500 cursor-pointer"
                   >
                     <option value="Computer Science & AI/ML">Computer Science & AI/ML</option>
                     <option value="Information Technology">Information Technology</option>
@@ -547,7 +547,7 @@ export function AdminStudentsPage({ onNavigate }: { onNavigate: (path: string) =
                   <select
                     value={createForm.semester}
                     onChange={(e) => setCreateForm({ ...createForm, semester: Number(e.target.value) })}
-                    className="w-full px-3 py-2 rounded-xl bg-[#081024] border border-[#1E2E55] text-xs text-slate-200 focus:outline-none focus:border-amber-500 cursor-pointer"
+                    className="w-full px-3 py-2 rounded-xl bg-navy-950 border border-navy-700 text-xs text-slate-200 focus:outline-none focus:border-amber-500 cursor-pointer"
                   >
                     {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
                       <option key={sem} value={sem}>
@@ -563,19 +563,19 @@ export function AdminStudentsPage({ onNavigate }: { onNavigate: (path: string) =
                 <select
                   value={createForm.role}
                   onChange={(e) => setCreateForm({ ...createForm, role: e.target.value as any })}
-                  className="w-full px-3 py-2 rounded-xl bg-[#081024] border border-[#1E2E55] text-xs text-slate-200 focus:outline-none focus:border-amber-500 cursor-pointer"
+                  className="w-full px-3 py-2 rounded-xl bg-navy-950 border border-navy-700 text-xs text-slate-200 focus:outline-none focus:border-amber-500 cursor-pointer"
                 >
                   <option value="STUDENT">STUDENT (Standard Learner)</option>
                   <option value="SUPER_ADMIN">SUPER_ADMIN (Platform Administrator)</option>
                 </select>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#1E2E55]">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-navy-700">
                 <button
                   type="button"
                   onClick={() => setIsCreateModalOpen(false)}
                   disabled={isCreating}
-                  className="px-4 py-2 rounded-xl bg-[#14234B] hover:bg-[#1E3368] text-xs font-medium text-slate-300 cursor-pointer transition-colors"
+                  className="px-4 py-2 rounded-xl bg-navy-800 hover:bg-navy-700 text-xs font-medium text-slate-300 cursor-pointer transition-colors"
                 >
                   Cancel
                 </button>

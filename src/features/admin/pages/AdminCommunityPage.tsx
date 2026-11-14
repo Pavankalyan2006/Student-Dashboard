@@ -74,7 +74,7 @@ export function AdminCommunityPage() {
 
         <button
           onClick={fetchReports}
-          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#14234B] hover:bg-[#1C3168] border border-[#233870] text-xs font-medium text-slate-200 transition-colors self-start sm:self-auto cursor-pointer"
+          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-navy-800 hover:bg-navy-700 border border-navy-600 text-xs font-medium text-slate-200 transition-colors self-start sm:self-auto cursor-pointer"
         >
           <RefreshCw className={cn('h-3.5 w-3.5', isLoading && 'animate-spin')} />
           Refresh Reports
@@ -82,10 +82,10 @@ export function AdminCommunityPage() {
       </div>
 
       {/* Reports Table */}
-      <div className="rounded-2xl bg-[#0D1836] border border-[#1A284D] overflow-hidden">
+      <div className="rounded-2xl bg-navy-900 border border-navy-700 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-[#0A132C] border-b border-[#1A284D] text-slate-400 uppercase tracking-wider text-[10px]">
+            <thead className="bg-navy-950 border-b border-navy-700 text-slate-400 uppercase tracking-wider text-[10px]">
               <tr>
                 <th className="py-3 px-4">Reason & Target</th>
                 <th className="py-3 px-4">Report Details</th>
@@ -95,7 +95,7 @@ export function AdminCommunityPage() {
                 <th className="py-3 px-4 text-right">Moderation Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#162345]">
+            <tbody className="divide-y divide-navy-800">
               {reports.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-8 text-center text-slate-500">
@@ -104,7 +104,7 @@ export function AdminCommunityPage() {
                 </tr>
               ) : (
                 reports.map((rep) => (
-                  <tr key={rep.id} className="hover:bg-[#111E42]/50">
+                  <tr key={rep.id} className="hover:bg-navy-800/50">
                     <td className="py-3 px-4">
                       <span className="font-semibold text-rose-300 block">{rep.reason}</span>
                       <span className="text-[10px] text-slate-400 font-mono">
@@ -139,7 +139,7 @@ export function AdminCommunityPage() {
                         <button
                           onClick={() => handleActionClick(rep, 'REVIEWING')}
                           title="Mark Reviewing"
-                          className="px-2 py-1 rounded bg-[#14234B] hover:bg-[#1C3168] text-slate-300 text-[10px] font-semibold cursor-pointer"
+                          className="px-2 py-1 rounded bg-navy-800 hover:bg-navy-700 text-slate-300 text-[10px] font-semibold cursor-pointer"
                         >
                           Review
                         </button>
@@ -170,7 +170,7 @@ export function AdminCommunityPage() {
       {/* Moderation Dialog */}
       {selectedReport && targetStatus && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="max-w-md w-full bg-[#0D1836] border border-[#1A284D] rounded-2xl p-6 shadow-2xl space-y-4">
+          <div className="max-w-md w-full bg-navy-900 border border-navy-700 rounded-2xl p-6 shadow-2xl space-y-4">
             <h3 className="text-base font-bold text-white">Moderate Report ({targetStatus})</h3>
             <p className="text-xs text-slate-300">
               Target: <strong className="text-white">{selectedReport.target_type} {selectedReport.target_id}</strong>
@@ -183,7 +183,7 @@ export function AdminCommunityPage() {
                 placeholder="Reason or actions taken regarding this content report..."
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className="w-full p-2.5 rounded-xl bg-[#081024] border border-[#1E2E55] text-xs text-white focus:outline-none focus:border-amber-500"
+                className="w-full p-2.5 rounded-xl bg-navy-950 border border-navy-700 text-xs text-white focus:outline-none focus:border-amber-500"
               />
             </div>
 
@@ -195,7 +195,7 @@ export function AdminCommunityPage() {
                   setTargetStatus(null);
                   setNotes('');
                 }}
-                className="px-4 py-2 rounded-xl bg-[#14234B] text-xs font-medium text-slate-300"
+                className="px-4 py-2 rounded-xl bg-navy-800 text-xs font-medium text-slate-300"
               >
                 Cancel
               </button>

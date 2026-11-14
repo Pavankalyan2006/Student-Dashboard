@@ -43,23 +43,23 @@ export function DocumentCitation({
     <div
       onClick={handleClick}
       className={cn(
-        'group relative p-2.5 rounded-lg border border-[#E4E7EC] bg-slate-50/70 hover:bg-blue-50/40 hover:border-blue-300 transition-all cursor-pointer text-left',
+        'group relative p-2.5 rounded-lg border border-slate-200 bg-slate-50/70 hover:bg-blue-50/40 hover:border-blue-300 transition-all cursor-pointer text-left',
         className
       )}
     >
       <div className="flex items-center justify-between gap-2 mb-1">
-        <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#101828] group-hover:text-[#2563EB] truncate">
-          <BookOpen className="h-3.5 w-3.5 text-[#2563EB] shrink-0" />
+        <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-900 group-hover:text-blue-600 truncate">
+          <BookOpen className="h-3.5 w-3.5 text-blue-600 shrink-0" />
           <span className="truncate">{citation.document_title || 'Study Document'}</span>
         </div>
-        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-white text-[#344054] border border-[#E4E7EC] shrink-0">
+        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-white text-slate-700 border border-slate-200 shrink-0">
           Page {citation.page_number}
           <ExternalLink className="h-2.5 w-2.5 text-slate-400 group-hover:text-blue-600" />
         </span>
       </div>
 
       {citation.quoted_text && (
-        <div className="flex items-start gap-1 text-[11px] text-[#475467] line-clamp-2 italic leading-relaxed pl-1 border-l-2 border-slate-200 group-hover:border-blue-300">
+        <div className="flex items-start gap-1 text-[11px] text-slate-600 line-clamp-2 italic leading-relaxed pl-1 border-l-2 border-slate-200 group-hover:border-blue-300">
           <Quote className="h-2.5 w-2.5 text-slate-400 shrink-0 mt-0.5" />
           <span>"{citation.quoted_text}"</span>
         </div>
@@ -79,7 +79,7 @@ export function CitationList({
 
   return (
     <div className="space-y-1.5 mt-3 pt-3 border-t border-slate-100">
-      <div className="text-[10px] uppercase tracking-wider font-semibold text-[#667085] flex items-center gap-1">
+      <div className="text-[10px] uppercase tracking-wider font-semibold text-slate-500 flex items-center gap-1">
         <BookOpen className="h-3 w-3 text-slate-400" />
         <span>Grounded Sources ({citations.length})</span>
       </div>

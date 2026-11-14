@@ -12,23 +12,23 @@ export function WeakAreas({
   onNavigate: (path: string) => void;
 }) {
   return (
-    <Card className="border border-[#E4E7EC] bg-white flex flex-col justify-between">
+    <Card className="border border-slate-200 bg-white flex flex-col justify-between">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Target className="h-4 w-4 text-amber-600" />
-            <CardTitle className="text-sm font-bold text-[#101828]">Target Improvement Areas</CardTitle>
+            <CardTitle className="text-sm font-bold text-slate-900">Target Improvement Areas</CardTitle>
           </div>
           <span className="text-[10px] uppercase font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
             Remedial
           </span>
         </div>
-        <p className="text-xs text-[#667085]">Identified through recent lab and quiz diagnostics</p>
+        <p className="text-xs text-slate-500">Identified through recent lab and quiz diagnostics</p>
       </CardHeader>
 
       <CardContent className="space-y-3">
         {areas.length === 0 ? (
-          <div className="py-6 text-center text-xs text-[#667085]">
+          <div className="py-6 text-center text-xs text-slate-500">
             Complete a few assessments or lab submissions to identify your weak areas.
           </div>
         ) : (
@@ -45,7 +45,7 @@ export function WeakAreas({
                 />
               </div>
               <div className="flex items-center justify-between pt-1">
-                <span className="text-[10px] text-[#667085] truncate">{area.subject}</span>
+                <span className="text-[10px] text-slate-500 truncate">{area.subject}</span>
                 <Button
                   variant="outline"
                   size="sm"

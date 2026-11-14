@@ -14,15 +14,15 @@ export function DocumentEmptyState({
   onClearFilters,
 }: DocumentEmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center p-12 text-center rounded-xl border border-dashed border-[#D0D5DD] bg-white">
-      <div className="h-12 w-12 rounded-full bg-blue-50 text-[#2563EB] flex items-center justify-center mb-3">
+    <div className="flex flex-col items-center justify-center p-12 text-center rounded-xl border border-dashed border-slate-300 bg-white">
+      <div className="h-12 w-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mb-3">
         <Files className="h-6 w-6" />
       </div>
 
-      <h3 className="text-sm font-semibold text-[#101828]">
+      <h3 className="text-sm font-semibold text-slate-900">
         {isFilterActive ? 'No matching documents found' : 'No documents yet'}
       </h3>
-      <p className="text-xs text-[#475467] mt-1 max-w-sm">
+      <p className="text-xs text-slate-600 mt-1 max-w-sm">
         {isFilterActive
           ? 'Try adjusting your search terms or filter selections.'
           : 'Upload your textbooks, lecture notes, syllabus guides, or research papers to unlock grounded AI study tools.'}
@@ -37,7 +37,7 @@ export function DocumentEmptyState({
         <Button
           size="sm"
           onClick={onUploadClick}
-          className="gap-1.5 bg-[#2563EB] hover:bg-[#1D4ED8]"
+          className="gap-1.5 bg-blue-600 hover:bg-blue-700"
         >
           <UploadCloud className="h-4 w-4" />
           <span>Upload Document</span>

@@ -409,7 +409,7 @@ export const ResumePage: React.FC<ResumePageProps> = ({ onNavigate }) => {
                   <div className="flex items-center gap-2 text-[11px] text-purple-700">
                     <span
                       className="w-2.5 h-2.5 rounded-full inline-block shrink-0 shadow-xs"
-                      style={{ backgroundColor: resume.custom_template_config?.styling.accent_color || '#1E40AF' }}
+                      style={{ backgroundColor: resume.custom_template_config?.styling.accent_color || '#2F389E' }}
                     />
                     <span className="truncate">
                       From {resume.custom_template_config?.filename} • {resume.custom_template_config?.styling.font_family} typography

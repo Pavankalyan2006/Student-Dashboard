@@ -26,7 +26,7 @@ export function FlashcardDeck({ cards, title, onClose }: FlashcardDeckProps) {
 
   if (!cards || cards.length === 0) {
     return (
-      <div className="p-8 text-center text-xs text-[#475467]">
+      <div className="p-8 text-center text-xs text-slate-600">
         No flashcards available. Click Generate Flashcards to synthesize active recall cards.
       </div>
     );
@@ -45,23 +45,23 @@ export function FlashcardDeck({ cards, title, onClose }: FlashcardDeckProps) {
   };
 
   return (
-    <Card className="border border-[#E4E7EC] bg-white shadow-sm overflow-hidden">
-      <CardHeader className="bg-slate-50 border-b border-[#E4E7EC] py-3 px-4 flex flex-row items-center justify-between">
+    <Card className="border border-slate-200 bg-white shadow-sm overflow-hidden">
+      <CardHeader className="bg-slate-50 border-b border-slate-200 py-3 px-4 flex flex-row items-center justify-between">
         <div className="flex items-center gap-2">
-          <Layers className="h-4 w-4 text-[#2563EB]" />
-          <CardTitle className="text-xs font-semibold text-[#101828]">
+          <Layers className="h-4 w-4 text-blue-600" />
+          <CardTitle className="text-xs font-semibold text-slate-900">
             {title ? `${title} · Flashcards` : 'Active Recall Flashcards'}
           </CardTitle>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-xs font-mono text-[#475467]">
+          <span className="text-xs font-mono text-slate-600">
             {currentIndex + 1} / {cards.length}
           </span>
           {onClose && (
             <button
               type="button"
               onClick={onClose}
-              className="text-xs text-[#98A2B3] hover:text-[#101828]"
+              className="text-xs text-slate-400 hover:text-slate-900"
             >
               Close
             </button>
@@ -73,32 +73,32 @@ export function FlashcardDeck({ cards, title, onClose }: FlashcardDeckProps) {
         {/* Flashcard Area */}
         <div
           onClick={() => setIsFlipped(!isFlipped)}
-          className="min-h-[220px] p-6 rounded-xl border border-[#D0D5DD] bg-gradient-to-b from-white to-slate-50 cursor-pointer flex flex-col justify-between hover:shadow-md transition-all select-none"
+          className="min-h-[220px] p-6 rounded-xl border border-slate-300 bg-gradient-to-b from-white to-slate-50 cursor-pointer flex flex-col justify-between hover:shadow-md transition-all select-none"
         >
-          <div className="flex items-center justify-between text-[11px] font-mono text-[#98A2B3]">
+          <div className="flex items-center justify-between text-[11px] font-mono text-slate-400">
             <span>{isFlipped ? 'ANSWER & INTUITION' : 'QUESTION / PROMPT'}</span>
-            <span className="capitalize text-[#2563EB]">{current.concept}</span>
+            <span className="capitalize text-blue-600">{current.concept}</span>
           </div>
 
           <div className="my-auto py-4 text-center">
-            <p className="text-sm font-medium text-[#101828] leading-relaxed">
+            <p className="text-sm font-medium text-slate-900 leading-relaxed">
               {isFlipped ? current.answer : current.question}
             </p>
           </div>
 
-          <div className="flex items-center justify-between text-[11px] text-[#98A2B3]">
+          <div className="flex items-center justify-between text-[11px] text-slate-400">
             <span>Click card to flip</span>
             <span className="font-mono text-[10px] uppercase">{current.difficulty || 'medium'}</span>
           </div>
         </div>
 
         {/* Navigation Controls */}
-        <div className="flex items-center justify-between mt-5 pt-3 border-t border-[#F2F4F7]">
+        <div className="flex items-center justify-between mt-5 pt-3 border-t border-slate-100">
           <Button
             variant="outline"
             size="sm"
             onClick={handlePrev}
-            className="text-xs text-[#475467] flex items-center gap-1"
+            className="text-xs text-slate-600 flex items-center gap-1"
           >
             <ChevronLeft className="h-3.5 w-3.5" /> Previous
           </Button>
@@ -106,7 +106,7 @@ export function FlashcardDeck({ cards, title, onClose }: FlashcardDeckProps) {
           <button
             type="button"
             onClick={() => setIsFlipped(!isFlipped)}
-            className="text-xs text-[#2563EB] font-medium hover:underline flex items-center gap-1"
+            className="text-xs text-blue-600 font-medium hover:underline flex items-center gap-1"
           >
             <RotateCcw className="h-3.5 w-3.5" /> Flip Card
           </button>
@@ -115,7 +115,7 @@ export function FlashcardDeck({ cards, title, onClose }: FlashcardDeckProps) {
             variant="outline"
             size="sm"
             onClick={handleNext}
-            className="text-xs text-[#475467] flex items-center gap-1"
+            className="text-xs text-slate-600 flex items-center gap-1"
           >
             Next <ChevronRight className="h-3.5 w-3.5" />
           </Button>
@@ -140,7 +140,7 @@ export function QuizRunner({ questions, title, onClose }: QuizRunnerProps) {
 
   if (!questions || questions.length === 0) {
     return (
-      <div className="p-8 text-center text-xs text-[#475467]">
+      <div className="p-8 text-center text-xs text-slate-600">
         No quiz questions generated. Click Generate Quiz to evaluate your mastery.
       </div>
     );
@@ -177,14 +177,14 @@ export function QuizRunner({ questions, title, onClose }: QuizRunnerProps) {
   if (isFinished) {
     const percentage = Math.round((score / questions.length) * 100);
     return (
-      <Card className="border border-[#E4E7EC] bg-white p-6 text-center shadow-sm">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-[#2563EB] mx-auto mb-3">
+      <Card className="border border-slate-200 bg-white p-6 text-center shadow-sm">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-600 mx-auto mb-3">
           <Trophy className="h-6 w-6" />
         </div>
-        <h3 className="text-base font-semibold text-[#101828] mb-1">Quiz Completed!</h3>
-        <p className="text-xs text-[#475467] mb-4">
-          You scored <strong className="text-[#101828]">{score}</strong> out of{' '}
-          <strong className="text-[#101828]">{questions.length}</strong> ({percentage}%)
+        <h3 className="text-base font-semibold text-slate-900 mb-1">Quiz Completed!</h3>
+        <p className="text-xs text-slate-600 mb-4">
+          You scored <strong className="text-slate-900">{score}</strong> out of{' '}
+          <strong className="text-slate-900">{questions.length}</strong> ({percentage}%)
         </p>
 
         <div className="flex items-center justify-center gap-3">
@@ -192,7 +192,7 @@ export function QuizRunner({ questions, title, onClose }: QuizRunnerProps) {
             Retake Quiz
           </Button>
           {onClose && (
-            <Button size="sm" onClick={onClose} className="bg-[#2563EB] text-white text-xs">
+            <Button size="sm" onClick={onClose} className="bg-blue-600 text-white text-xs">
               Finish Review
             </Button>
           )}
@@ -202,23 +202,23 @@ export function QuizRunner({ questions, title, onClose }: QuizRunnerProps) {
   }
 
   return (
-    <Card className="border border-[#E4E7EC] bg-white shadow-sm overflow-hidden">
-      <CardHeader className="bg-slate-50 border-b border-[#E4E7EC] py-3 px-4 flex flex-row items-center justify-between">
+    <Card className="border border-slate-200 bg-white shadow-sm overflow-hidden">
+      <CardHeader className="bg-slate-50 border-b border-slate-200 py-3 px-4 flex flex-row items-center justify-between">
         <div className="flex items-center gap-2">
-          <HelpCircle className="h-4 w-4 text-[#2563EB]" />
-          <CardTitle className="text-xs font-semibold text-[#101828]">
+          <HelpCircle className="h-4 w-4 text-blue-600" />
+          <CardTitle className="text-xs font-semibold text-slate-900">
             {title ? `${title} · Quiz` : 'Concept Mastery Quiz'}
           </CardTitle>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-xs font-mono text-[#475467]">
+          <span className="text-xs font-mono text-slate-600">
             Question {currentIdx + 1} of {questions.length}
           </span>
           {onClose && (
             <button
               type="button"
               onClick={onClose}
-              className="text-xs text-[#98A2B3] hover:text-[#101828]"
+              className="text-xs text-slate-400 hover:text-slate-900"
             >
               Close
             </button>
@@ -228,7 +228,7 @@ export function QuizRunner({ questions, title, onClose }: QuizRunnerProps) {
 
       <CardContent className="p-6 space-y-5">
         <div>
-          <h4 className="text-sm font-semibold text-[#101828] leading-snug mb-4">
+          <h4 className="text-sm font-semibold text-slate-900 leading-snug mb-4">
             {current.question}
           </h4>
 
@@ -238,17 +238,17 @@ export function QuizRunner({ questions, title, onClose }: QuizRunnerProps) {
               const isSelected = selectedOption === idx;
               const isCorrect = idx === current.correct_answer_index;
 
-              let style = 'border-[#D0D5DD] bg-white text-[#344054] hover:bg-slate-50';
+              let style = 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50';
               if (submitted) {
                 if (isCorrect) {
                   style = 'border-emerald-500 bg-emerald-50/60 text-emerald-950 font-medium';
                 } else if (isSelected && !isCorrect) {
                   style = 'border-rose-400 bg-rose-50/60 text-rose-950';
                 } else {
-                  style = 'border-[#E4E7EC] bg-white opacity-60';
+                  style = 'border-slate-200 bg-white opacity-60';
                 }
               } else if (isSelected) {
-                style = 'border-[#2563EB] bg-blue-50/50 text-[#2563EB] font-medium';
+                style = 'border-blue-600 bg-blue-50/50 text-blue-600 font-medium';
               }
 
               return (
@@ -270,7 +270,7 @@ export function QuizRunner({ questions, title, onClose }: QuizRunnerProps) {
 
         {/* Explanation once submitted */}
         {submitted && (
-          <div className="p-3 rounded-lg bg-blue-50/60 border border-blue-100 text-xs text-[#1E3A8A]">
+          <div className="p-3 rounded-lg bg-blue-50/60 border border-blue-100 text-xs text-blue-900">
             <p className="font-semibold mb-1">Diagnostic Explanation:</p>
             <p className="leading-relaxed">{current.explanation}</p>
           </div>
@@ -283,7 +283,7 @@ export function QuizRunner({ questions, title, onClose }: QuizRunnerProps) {
               size="sm"
               disabled={selectedOption === null}
               onClick={handleSubmit}
-              className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs h-8 px-4"
+              className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-8 px-4"
             >
               Submit Answer
             </Button>
@@ -291,7 +291,7 @@ export function QuizRunner({ questions, title, onClose }: QuizRunnerProps) {
             <Button
               size="sm"
               onClick={handleNext}
-              className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs h-8 px-4"
+              className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-8 px-4"
             >
               {currentIdx < questions.length - 1 ? 'Next Question' : 'View Results'}
             </Button>

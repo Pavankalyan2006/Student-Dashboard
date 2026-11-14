@@ -28,14 +28,14 @@ export class ErrorBoundary extends Component<Props, State> {
   public render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-[#F7F9FC] p-6 text-center">
+        <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-6 text-center">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-100 text-rose-600 mb-4">
             <AlertTriangle className="h-7 w-7" />
           </div>
-          <h2 className="text-xl font-bold text-[#101828] mb-2">
+          <h2 className="text-xl font-bold text-slate-900 mb-2">
             An unexpected application error occurred
           </h2>
-          <p className="text-xs text-[#475467] max-w-md mb-6 leading-relaxed">
+          <p className="text-xs text-slate-600 max-w-md mb-6 leading-relaxed">
             The workspace encountered an unexpected client issue. You can try refreshing the page or reloading your current session.
           </p>
           {this.state.error && (

@@ -74,7 +74,7 @@ export function LabDashboard({
   return (
     <div className="space-y-8 max-w-7xl mx-auto pb-12">
       {/* Page Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-6 sm:p-8 bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 rounded-3xl text-white shadow-xl relative overflow-hidden">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-6 sm:p-8 hero-brand rounded-3xl text-white relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
         
         <div className="space-y-2 max-w-2xl relative z-10">

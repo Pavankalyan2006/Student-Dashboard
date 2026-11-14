@@ -27,7 +27,6 @@ import { DSAProblemPage } from './features/dsa/pages/DSAProblemPage';
 import { DSAProgressPage } from './features/dsa/pages/DSAProgressPage';
 import { DSAAiTutorPage } from './features/dsa/pages/DSAAiTutorPage';
 import { QuizPage } from './features/quiz/pages/QuizPage';
-import { PilotFeedbackPage } from './features/feedback/pages/PilotFeedbackPage';
 import { QuizCreatePage } from './features/quiz/pages/QuizCreatePage';
 import { QuizPlayerPage } from './features/quiz/pages/QuizPlayerPage';
 import { QuizResultPage } from './features/quiz/pages/QuizResultPage';
@@ -143,19 +142,24 @@ import { LanguageLearningPage } from './features/languages/pages/LanguageLearnin
 import { useAuth } from './hooks/useAuth';
 import { StudentContextProvider } from './context/StudentContext';
 import { RefreshCw } from 'lucide-react';
+import { resolveRetiredRoute } from './lib/retiredRoutes';
+
+function currentBrowserPath(): string {
+  if (typeof window === 'undefined') return '/';
+  const raw = window.location.pathname + window.location.search;
+  const resolved = resolveRetiredRoute(raw);
+  if (resolved !== raw) window.history.replaceState({}, '', resolved);
+  return resolved;
+}
 
 function AppContent() {
   const { student, isAuthenticated, isLoading, checkAuth } = useAuth();
-  const [currentPath, setCurrentPath] = React.useState<string>(
-    typeof window !== 'undefined'
-      ? (window.location.pathname + window.location.search)
-      : '/'
-  );
+  const [currentPath, setCurrentPath] = React.useState<string>(currentBrowserPath);
 
   // Sync with browser navigation
   React.useEffect(() => {
     const handlePopState = () => {
-      setCurrentPath(window.location.pathname + window.location.search);
+      setCurrentPath(currentBrowserPath());
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
@@ -166,7 +170,8 @@ function AppContent() {
     checkAuth();
   }, [checkAuth]);
 
-  const navigate = (path: string) => {
+  const navigate = (rawPath: string) => {
+    const path = resolveRetiredRoute(rawPath);
     window.history.pushState({}, '', path);
     setCurrentPath(path);
     window.scrollTo(0, 0);
@@ -174,9 +179,9 @@ function AppContent() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#F7F9FC]">
-        <RefreshCw className="h-8 w-8 animate-spin text-[#2563EB] mb-3" />
-        <p className="text-xs font-medium text-[#475467]">Initializing B.Tech AI Learning Workspace...</p>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
+        <RefreshCw className="h-8 w-8 animate-spin text-blue-600 mb-3" />
+        <p className="text-xs font-medium text-slate-600">Initializing B.Tech AI Learning Workspace...</p>
       </div>
     );
   }
@@ -803,9 +808,6 @@ function AppContent() {
       return <ProfileBookmarksPage onNavigate={navigate} />;
     }
 
-    if (path === '/pilot-feedback' || path === '/feedback') {
-      return <PilotFeedbackPage onNavigate={navigate} />;
-    }
 
     if (path === '/profile/settings' || path === '/settings') {
       return <ProfileSettingsPage onNavigate={navigate} />;
@@ -1108,7 +1110,7 @@ function AppContent() {
   return (
     <AppShell currentPath={currentPath.split('?')[0]} onNavigate={navigate}>
       {recommendationModule && student && (
-        <div className="px-4 sm:px-6 lg:px-8 pt-4">
+        <div className="mb-5">
           <ProfileRecommendationsPanel module={recommendationModule} onNavigate={navigate} />
         </div>
       )}

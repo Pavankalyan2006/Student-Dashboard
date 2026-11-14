@@ -104,10 +104,10 @@ export function NotesPage({ onNavigate }: NotesPageProps) {
   return (
     <PageContainer>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-[#E4E7EC]">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-slate-200">
         <div>
-          <h1 className="text-2xl font-bold text-[#101828] tracking-tight">Smart Academic Notes</h1>
-          <p className="text-xs text-[#475467] mt-1">
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Smart Academic Notes</h1>
+          <p className="text-xs text-slate-600 mt-1">
             Create, synthesize, and revise structured B.Tech learning material with KaTeX math & code.
           </p>
         </div>
@@ -116,7 +116,7 @@ export function NotesPage({ onNavigate }: NotesPageProps) {
           <Button
             size="sm"
             onClick={() => setIsGeneratorOpen(!isGeneratorOpen)}
-            className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs h-9 px-3.5 font-medium flex items-center gap-1.5 shadow-xs"
+            className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-9 px-3.5 font-medium flex items-center gap-1.5 shadow-xs"
           >
             <Sparkles className="h-3.5 w-3.5" />
             {isGeneratorOpen ? 'Close Generator' : '+ Generate Notes'}
@@ -165,14 +165,14 @@ export function NotesPage({ onNavigate }: NotesPageProps) {
       <div className="my-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         {/* Search */}
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-[#98A2B3]" />
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             aria-label="Search notes"
             placeholder="Search notes by topic, keyword, or tag..."
-            className="w-full h-9 pl-9 pr-3 rounded-lg border border-[#D0D5DD] bg-white text-xs text-[#101828] placeholder-[#98A2B3] focus:outline-none focus:ring-2 focus:ring-[#2563EB] transition"
+            className="w-full h-9 pl-9 pr-3 rounded-lg border border-slate-300 bg-white text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 transition"
           />
         </div>
 
@@ -192,8 +192,8 @@ export function NotesPage({ onNavigate }: NotesPageProps) {
               onClick={() => setActiveFilter(tab.id)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition ${
                 activeFilter === tab.id
-                  ? 'bg-[#101828] text-white shadow-xs'
-                  : 'bg-white text-[#475467] hover:text-[#101828] hover:bg-slate-100 border border-[#E4E7EC]'
+                  ? 'bg-slate-900 text-white shadow-xs'
+                  : 'bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200'
               }`}
             >
               {tab.label}
@@ -227,10 +227,10 @@ export function NotesPage({ onNavigate }: NotesPageProps) {
         />
       ) : (
         <div className="space-y-6">
-          <div className="flex items-center justify-between text-xs text-[#475467]">
+          <div className="flex items-center justify-between text-xs text-slate-600">
             <span>
-              Showing <strong className="text-[#101828]">{notesData.items.length}</strong> of{' '}
-              <strong className="text-[#101828]">{notesData.total}</strong> notes
+              Showing <strong className="text-slate-900">{notesData.items.length}</strong> of{' '}
+              <strong className="text-slate-900">{notesData.total}</strong> notes
             </span>
           </div>
 

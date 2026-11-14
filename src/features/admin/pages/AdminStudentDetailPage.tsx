@@ -87,12 +87,12 @@ export function AdminStudentDetailPage({
 
   if (!data) {
     return (
-      <div className="p-8 rounded-2xl bg-[#0D1836] border border-rose-900/50 text-center space-y-4">
+      <div className="p-8 rounded-2xl bg-navy-900 border border-rose-900/50 text-center space-y-4">
         <AlertTriangle className="h-10 w-10 text-rose-500 mx-auto" />
         <h2 className="text-lg font-bold text-white">Student Record Not Found</h2>
         <button
           onClick={() => onNavigate('/admin/students')}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#14234B] hover:bg-[#1E3368] text-xs font-semibold text-white"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-navy-800 hover:bg-navy-700 text-xs font-semibold text-white"
         >
           <ArrowLeft className="h-4 w-4" /> Return to Student List
         </button>
@@ -135,12 +135,12 @@ export function AdminStudentDetailPage({
       </div>
 
       {/* Main Student Header Card */}
-      <div className="p-6 rounded-2xl bg-[#0D1836] border border-[#1A284D] flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="p-6 rounded-2xl bg-navy-900 border border-navy-700 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-start sm:items-center gap-4">
           <img
             src={student.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${student.name}`}
             alt={student.name}
-            className="h-16 w-16 rounded-2xl bg-[#14234B] border-2 border-amber-500/40 p-0.5 shadow-lg"
+            className="h-16 w-16 rounded-2xl bg-navy-800 border-2 border-amber-500/40 p-0.5 shadow-lg"
           />
           <div className="space-y-1">
             <div className="flex items-center gap-3">
@@ -170,7 +170,7 @@ export function AdminStudentDetailPage({
           </div>
         </div>
 
-        <div className="p-3 rounded-xl bg-[#0A132C] border border-[#1E2E55] text-xs text-slate-300 min-w-[200px]">
+        <div className="p-3 rounded-xl bg-navy-950 border border-navy-700 text-xs text-slate-300 min-w-[200px]">
           <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider mb-1">Least-Privilege Note</p>
           <p className="text-[11px] text-slate-400 leading-relaxed">
             Private credentials, password hashes, and user documents are protected from administrative exposure.
@@ -180,19 +180,19 @@ export function AdminStudentDetailPage({
 
       {/* Progress & Milestone Overview */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="p-4 rounded-xl bg-[#0D1836] border border-[#1A284D]">
+        <div className="p-4 rounded-xl bg-navy-900 border border-navy-700">
           <span className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Courses Completed</span>
           <p className="text-2xl font-bold text-white mt-1">{progress_summary?.courses_completed ?? 0}</p>
         </div>
-        <div className="p-4 rounded-xl bg-[#0D1836] border border-[#1A284D]">
+        <div className="p-4 rounded-xl bg-navy-900 border border-navy-700">
           <span className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">DSA Problems Solved</span>
           <p className="text-2xl font-bold text-white mt-1">{progress_summary?.dsa_solved ?? 0}</p>
         </div>
-        <div className="p-4 rounded-xl bg-[#0D1836] border border-[#1A284D]">
+        <div className="p-4 rounded-xl bg-navy-900 border border-navy-700">
           <span className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Active Projects</span>
           <p className="text-2xl font-bold text-white mt-1">{counts?.projects ?? 0}</p>
         </div>
-        <div className="p-4 rounded-xl bg-[#0D1836] border border-[#1A284D]">
+        <div className="p-4 rounded-xl bg-navy-900 border border-navy-700">
           <span className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Verified Certificates</span>
           <p className="text-2xl font-bold text-white mt-1">{counts?.certificates ?? 0}</p>
         </div>
@@ -200,22 +200,22 @@ export function AdminStudentDetailPage({
 
       {/* Academic Profile Details */}
       {academic_profile && (
-        <div className="p-6 rounded-2xl bg-[#0D1836] border border-[#1A284D] space-y-4">
+        <div className="p-6 rounded-2xl bg-navy-900 border border-navy-700 space-y-4">
           <h2 className="text-sm font-bold text-white tracking-tight">Academic Profile Snapshot</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-            <div className="p-3 rounded-xl bg-[#0A132C] border border-[#1E2E55]">
+            <div className="p-3 rounded-xl bg-navy-950 border border-navy-700">
               <span className="text-slate-500 font-medium">Institution & Roll No</span>
               <p className="text-white font-semibold mt-1">
                 {academic_profile.college_name || 'Department of Computer Science'}
               </p>
               <p className="text-slate-400 text-[11px]">{academic_profile.roll_number || '21AI042'}</p>
             </div>
-            <div className="p-3 rounded-xl bg-[#0A132C] border border-[#1E2E55]">
+            <div className="p-3 rounded-xl bg-navy-950 border border-navy-700">
               <span className="text-slate-500 font-medium">Current CGPA & Performance</span>
               <p className="text-white font-semibold mt-1">{academic_profile.cgpa ? `${academic_profile.cgpa} / 10.0` : '8.8 / 10.0'}</p>
               <p className="text-emerald-400 text-[11px]">Academic Standing: Good</p>
             </div>
-            <div className="p-3 rounded-xl bg-[#0A132C] border border-[#1E2E55]">
+            <div className="p-3 rounded-xl bg-navy-950 border border-navy-700">
               <span className="text-slate-500 font-medium">Graduation Year</span>
               <p className="text-white font-semibold mt-1">{academic_profile.graduation_year || 2027}</p>
               <p className="text-slate-400 text-[11px]">B.Tech Degree Cohort</p>
@@ -227,7 +227,7 @@ export function AdminStudentDetailPage({
       {/* Status Modal */}
       {statusDialogOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="max-w-md w-full bg-[#0D1836] border border-[#1A284D] rounded-2xl p-6 shadow-2xl space-y-4">
+          <div className="max-w-md w-full bg-navy-900 border border-navy-700 rounded-2xl p-6 shadow-2xl space-y-4">
             <h3 className="text-base font-bold text-white">
               {isSuspended ? 'Confirm Reactivation' : 'Confirm Suspension'}
             </h3>
@@ -246,7 +246,7 @@ export function AdminStudentDetailPage({
                 placeholder="Reason for changing this student's account status..."
                 value={statusReason}
                 onChange={(e) => setStatusReason(e.target.value)}
-                className="w-full p-3 rounded-xl bg-[#081024] border border-[#1E2E55] text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
+                className="w-full p-3 rounded-xl bg-navy-950 border border-navy-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
               />
             </div>
 
@@ -255,7 +255,7 @@ export function AdminStudentDetailPage({
                 type="button"
                 onClick={() => setStatusDialogOpen(false)}
                 disabled={isSubmitting}
-                className="px-4 py-2 rounded-xl bg-[#14234B] hover:bg-[#1E3368] text-xs font-medium text-slate-300 cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-navy-800 hover:bg-navy-700 text-xs font-medium text-slate-300 cursor-pointer"
               >
                 Cancel
               </button>

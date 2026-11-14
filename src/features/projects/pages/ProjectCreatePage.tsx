@@ -178,7 +178,7 @@ export const ProjectCreatePage: React.FC<ProjectCreatePageProps> = ({ search, on
             onClick={() => setStep(s.stepNum)}
             className={`py-2 px-3 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
               step === s.stepNum
-                ? 'bg-white dark:bg-slate-900 text-[#2563EB] shadow-xs'
+                ? 'bg-white dark:bg-slate-900 text-blue-600 shadow-xs'
                 : step > s.stepNum
                 ? 'text-emerald-600 dark:text-emerald-400'
                 : 'text-slate-400'
@@ -228,7 +228,7 @@ export const ProjectCreatePage: React.FC<ProjectCreatePageProps> = ({ search, on
                   onClick={() => setProjectType(item.type as ProjectType)}
                   className={`p-4 rounded-xl border-2 transition-all cursor-pointer ${
                     projectType === item.type
-                      ? 'border-[#2563EB] bg-blue-50/40 dark:bg-blue-950/20 shadow-xs'
+                      ? 'border-blue-600 bg-blue-50/40 dark:bg-blue-950/20 shadow-xs'
                       : 'border-slate-200 dark:border-slate-800 hover:border-slate-300'
                   }`}
                 >
@@ -237,7 +237,7 @@ export const ProjectCreatePage: React.FC<ProjectCreatePageProps> = ({ search, on
                       {item.label}
                     </h4>
                     {projectType === item.type && (
-                      <Check className="w-4 h-4 text-[#2563EB]" />
+                      <Check className="w-4 h-4 text-blue-600" />
                     )}
                   </div>
                   <p className="text-xs text-slate-500">{item.desc}</p>
@@ -283,7 +283,7 @@ export const ProjectCreatePage: React.FC<ProjectCreatePageProps> = ({ search, on
                   onClick={() => setDomain(d)}
                   className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
                     domain === d
-                      ? 'border-[#2563EB] bg-blue-50/50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300 font-bold'
+                      ? 'border-blue-600 bg-blue-50/50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300 font-bold'
                       : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 text-slate-700 dark:text-slate-300 text-xs font-medium'
                   }`}
                 >
@@ -528,7 +528,7 @@ export const ProjectCreatePage: React.FC<ProjectCreatePageProps> = ({ search, on
           {step < 5 ? (
             <button
               onClick={() => setStep((s) => Math.min(5, s + 1))}
-              className="px-5 py-2 bg-[#2563EB] hover:bg-blue-700 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+              className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
             >
               <span>Next</span>
               <ArrowRight className="w-3.5 h-3.5" />

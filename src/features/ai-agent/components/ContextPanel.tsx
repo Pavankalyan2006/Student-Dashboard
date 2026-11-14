@@ -75,7 +75,7 @@ export function ContextPanel({
 
   if (isContextLoading) {
     return (
-      <div className="p-4 space-y-4 bg-white border-l border-[#E4E7EC] h-full overflow-y-auto">
+      <div className="p-4 space-y-4 bg-white border-l border-slate-200 h-full overflow-y-auto">
         <Skeleton className="h-6 w-32" />
         <Skeleton className="h-24 w-full rounded-xl" />
         <Skeleton className="h-24 w-full rounded-xl" />
@@ -85,11 +85,11 @@ export function ContextPanel({
   }
 
   return (
-    <div className="flex flex-col h-full bg-white border-l border-[#E4E7EC] overflow-y-auto p-4 space-y-4 text-xs">
+    <div className="flex flex-col h-full bg-white border-l border-slate-200 overflow-y-auto p-4 space-y-4 text-xs">
       {/* Header */}
       <div className="flex items-center justify-between pb-2 border-b border-slate-100">
         <div className="flex items-center gap-2 text-slate-800">
-          <Compass className="h-4 w-4 text-[#2563EB]" />
+          <Compass className="h-4 w-4 text-blue-600" />
           <h3 className="font-bold uppercase tracking-wider text-[11px]">Tutor Controls</h3>
         </div>
         {onCloseMobile && (
@@ -107,10 +107,10 @@ export function ContextPanel({
         <div className="p-3 rounded-xl bg-gradient-to-br from-slate-50 to-blue-50/30 border border-slate-200/80 space-y-1">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <GraduationCap className="h-4 w-4 text-[#2563EB]" />
+              <GraduationCap className="h-4 w-4 text-blue-600" />
               <span className="font-bold text-slate-900">{context.student.name}</span>
             </div>
-            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-100/70 text-[#2563EB]">
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-100/70 text-blue-600">
               Sem {context.student.semester}
             </span>
           </div>
@@ -129,7 +129,7 @@ export function ContextPanel({
           aria-label="Tutor mode"
           value={selectedContext.mode || 'EXPLAIN'}
           onChange={(e) => onContextChange({ ...selectedContext, mode: e.target.value })}
-          className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+          className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-600"
         >
           {teachingModes.map((m) => (
             <option key={m.id} value={m.id}>
@@ -154,7 +154,7 @@ export function ContextPanel({
               onClick={() => onContextChange({ ...selectedContext, difficulty: lvl })}
               className={`py-1.5 px-1 rounded-md text-[10px] font-semibold transition-all cursor-pointer text-center ${
                 (selectedContext.difficulty || 'Intermediate') === lvl
-                  ? 'bg-[#2563EB] text-white shadow-xs'
+                  ? 'bg-blue-600 text-white shadow-xs'
                   : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/60'
               }`}
             >
@@ -192,10 +192,10 @@ export function ContextPanel({
           <div className="p-2.5 rounded-xl border border-blue-200 bg-blue-50/40 space-y-1.5">
             <div className="flex items-start justify-between gap-1">
               <div>
-                <span className="text-[10px] font-bold text-[#2563EB]">Active Course</span>
+                <span className="text-[10px] font-bold text-blue-600">Active Course</span>
                 <p className="font-bold text-slate-900 line-clamp-1">{selectedContext.courseName}</p>
               </div>
-              <BookOpen className="h-3.5 w-3.5 text-[#2563EB] shrink-0 mt-0.5" />
+              <BookOpen className="h-3.5 w-3.5 text-blue-600 shrink-0 mt-0.5" />
             </div>
             <button
               onClick={() =>
@@ -203,7 +203,7 @@ export function ContextPanel({
                   `Explain the core concepts and exam invariants of ${selectedContext.courseName}.`
                 )
               }
-              className="w-full py-1 px-2 rounded-lg bg-white border border-blue-200 text-[#2563EB] font-semibold text-[11px] hover:bg-blue-50 transition-colors flex items-center justify-center gap-1 cursor-pointer"
+              className="w-full py-1 px-2 rounded-lg bg-white border border-blue-200 text-blue-600 font-semibold text-[11px] hover:bg-blue-50 transition-colors flex items-center justify-center gap-1 cursor-pointer"
             >
               <span>Ask About Syllabus</span>
               <ArrowRight className="h-3 w-3" />
@@ -320,7 +320,7 @@ export function ContextPanel({
             onClick={() => onNavigate?.('/placements/coding')}
             className="p-2 rounded-lg border border-slate-200 hover:border-blue-300 hover:bg-blue-50/40 text-left transition-colors flex items-center gap-1.5 cursor-pointer text-slate-700"
           >
-            <Code2 className="h-3.5 w-3.5 text-[#2563EB]" />
+            <Code2 className="h-3.5 w-3.5 text-blue-600" />
             <span className="text-[11px] font-medium">Coding Lab</span>
           </button>
           <button

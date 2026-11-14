@@ -10,12 +10,12 @@ export interface CreateFolderModalProps {
 }
 
 const COLOR_OPTIONS = [
-  { label: 'Blue', value: '#2563EB' },
-  { label: 'Indigo', value: '#4F46E5' },
+  { label: 'Blue', value: '#4654E0' },
+  { label: 'Indigo', value: '#574FDD' },
   { label: 'Purple', value: '#9333EA' },
   { label: 'Emerald', value: '#059669' },
-  { label: 'Amber', value: '#D97706' },
-  { label: 'Rose', value: '#E11D48' },
+  { label: 'Amber', value: '#C66C12' },
+  { label: 'Rose', value: '#CC342C' },
   { label: 'Slate', value: '#475569' },
 ];
 
@@ -23,7 +23,7 @@ export function CreateFolderModal({ isOpen, onClose, onSuccess }: CreateFolderMo
   const { createFolder, isCreating } = useFolders();
   const [name, setName] = React.useState('');
   const [description, setDescription] = React.useState('');
-  const [color, setColor] = React.useState('#2563EB');
+  const [color, setColor] = React.useState('#4654E0');
 
   if (!isOpen) return null;
 

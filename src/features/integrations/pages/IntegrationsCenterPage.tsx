@@ -170,7 +170,7 @@ export function IntegrationsCenterPage({ onNavigate, initialTab = 'platforms' }:
               variant="outline"
               size="sm"
               onClick={() => onNavigate?.('/career/jobs')}
-              className="text-xs bg-[#2563EB] text-white hover:bg-[#1D4ED8]"
+              className="text-xs bg-blue-600 text-white hover:bg-blue-700"
             >
               Discover Jobs
             </Button>
@@ -179,11 +179,11 @@ export function IntegrationsCenterPage({ onNavigate, initialTab = 'platforms' }:
       />
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-[#E4E7EC] pb-2 overflow-x-auto">
+      <div className="flex items-center gap-2 border-b border-slate-200 pb-2 overflow-x-auto">
         <button
           onClick={() => setActiveTab('platforms')}
           className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-            activeTab === 'platforms' ? 'bg-[#101828] text-white' : 'text-[#475467] hover:bg-gray-100'
+            activeTab === 'platforms' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-gray-100'
           }`}
         >
           Supported Platforms ({providers.length})
@@ -191,7 +191,7 @@ export function IntegrationsCenterPage({ onNavigate, initialTab = 'platforms' }:
         <button
           onClick={() => setActiveTab('activity')}
           className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-            activeTab === 'activity' ? 'bg-[#101828] text-white' : 'text-[#475467] hover:bg-gray-100'
+            activeTab === 'activity' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-gray-100'
           }`}
         >
           Activity Stream ({activities.length})
@@ -199,7 +199,7 @@ export function IntegrationsCenterPage({ onNavigate, initialTab = 'platforms' }:
         <button
           onClick={() => setActiveTab('settings')}
           className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-            activeTab === 'settings' ? 'bg-[#101828] text-white' : 'text-[#475467] hover:bg-gray-100'
+            activeTab === 'settings' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-gray-100'
           }`}
         >
           Security & Sync Settings
@@ -217,13 +217,13 @@ export function IntegrationsCenterPage({ onNavigate, initialTab = 'platforms' }:
             return (
               <div
                 key={p.id}
-                className="p-5 rounded-2xl border border-[#E4E7EC] bg-white shadow-sm flex flex-col justify-between hover:border-blue-400 transition-all space-y-4"
+                className="p-5 rounded-2xl border border-slate-200 bg-white shadow-sm flex flex-col justify-between hover:border-blue-400 transition-all space-y-4"
               >
                 <div className="space-y-3">
                   {/* Top Bar: Icon + Category + Status */}
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-10 h-10 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center text-[#101828] font-bold text-sm">
+                      <div className="w-10 h-10 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center text-slate-900 font-bold text-sm">
                         {p.icon_name === 'Linkedin' && <Briefcase className="w-5 h-5 text-blue-700" />}
                         {p.icon_name === 'Code2' && <Code2 className="w-5 h-5 text-amber-600" />}
                         {p.icon_name === 'Github' && <Code2 className="w-5 h-5 text-gray-900" />}
@@ -234,7 +234,7 @@ export function IntegrationsCenterPage({ onNavigate, initialTab = 'platforms' }:
                         {p.icon_name === 'Briefcase' && <Briefcase className="w-5 h-5 text-indigo-600" />}
                       </div>
                       <div>
-                        <h3 className="text-sm font-bold text-[#101828]">{p.name}</h3>
+                        <h3 className="text-sm font-bold text-slate-900">{p.name}</h3>
                         <span className="text-[10px] text-gray-500 font-medium">
                           {p.category.replace(/_/g, ' ')}
                         </span>
@@ -254,7 +254,7 @@ export function IntegrationsCenterPage({ onNavigate, initialTab = 'platforms' }:
                     </span>
                   </div>
 
-                  <p className="text-xs text-[#475467] leading-relaxed">{p.description}</p>
+                  <p className="text-xs text-slate-600 leading-relaxed">{p.description}</p>
 
                   {/* Capabilities Badges */}
                   <div className="space-y-1">
@@ -303,7 +303,7 @@ export function IntegrationsCenterPage({ onNavigate, initialTab = 'platforms' }:
                   {/* Connected Details */}
                   {isConnected && connection && (
                     <div className="p-2.5 bg-gray-50 rounded-lg text-xs space-y-1 border border-gray-100">
-                      <div className="flex items-center justify-between text-[#344054]">
+                      <div className="flex items-center justify-between text-slate-700">
                         <span className="font-medium truncate">{connection.display_name}</span>
                         <a
                           href={connection.profile_url}
@@ -349,7 +349,7 @@ export function IntegrationsCenterPage({ onNavigate, initialTab = 'platforms' }:
                     <Button
                       size="sm"
                       onClick={() => handleOpenConnectModal(p)}
-                      className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs gap-1"
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs gap-1"
                     >
                       <Link2 className="w-3.5 h-3.5" />
                       {p.id === 'github' ? `Connect ${p.name}` : `Save ${p.name} link`}
@@ -366,10 +366,10 @@ export function IntegrationsCenterPage({ onNavigate, initialTab = 'platforms' }:
       {activeTab === 'activity' && (
         <div className="space-y-6">
           {/* Sync Operations Matrix */}
-          <div className="p-6 rounded-2xl border border-[#E4E7EC] bg-white shadow-sm space-y-4">
+          <div className="p-6 rounded-2xl border border-slate-200 bg-white shadow-sm space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-3">
               <div>
-                <h3 className="text-base font-bold text-[#101828] flex items-center gap-2">
+                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                   <RefreshCw className="w-4 h-4 text-blue-600" />
                   Sync Center & Platform Job Status
                 </h3>
@@ -389,7 +389,7 @@ export function IntegrationsCenterPage({ onNavigate, initialTab = 'platforms' }:
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-[#344054]">
+              <table className="w-full text-left text-xs text-slate-700">
                 <thead className="bg-gray-50 border-b border-gray-200 text-[11px] uppercase font-bold text-gray-500 tracking-wider">
                   <tr>
                     <th className="px-4 py-3">Platform</th>
@@ -409,7 +409,7 @@ export function IntegrationsCenterPage({ onNavigate, initialTab = 'platforms' }:
                     return (
                       <tr key={p.id} className="hover:bg-gray-50/50">
                         <td className="px-4 py-3">
-                          <div className="font-bold text-[#101828]">{p.name}</div>
+                          <div className="font-bold text-slate-900">{p.name}</div>
                           <div className="text-[10px] text-gray-400 capitalize">{p.category.toLowerCase().replace(/_/g, ' ')}</div>
                         </td>
                         <td className="px-4 py-3">
@@ -479,8 +479,8 @@ export function IntegrationsCenterPage({ onNavigate, initialTab = 'platforms' }:
           </div>
 
           {/* Activity Stream */}
-          <div className="p-6 rounded-2xl border border-[#E4E7EC] bg-white shadow-sm space-y-4">
-            <h3 className="text-base font-bold text-[#101828] flex items-center gap-2">
+          <div className="p-6 rounded-2xl border border-slate-200 bg-white shadow-sm space-y-4">
+            <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
               <Activity className="w-4 h-4 text-blue-600" />
               Verified Multi-Platform Activity Stream
             </h3>
@@ -497,9 +497,9 @@ export function IntegrationsCenterPage({ onNavigate, initialTab = 'platforms' }:
                         <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded uppercase">
                           {act.provider}
                         </span>
-                        <span className="text-xs font-bold text-[#101828]">{act.title}</span>
+                        <span className="text-xs font-bold text-slate-900">{act.title}</span>
                       </div>
-                      {act.description && <p className="text-xs text-[#475467]">{act.description}</p>}
+                      {act.description && <p className="text-xs text-slate-600">{act.description}</p>}
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
                       <span className="text-[11px] text-gray-400">
@@ -532,12 +532,12 @@ export function IntegrationsCenterPage({ onNavigate, initialTab = 'platforms' }:
 
       {/* Tab 3: Security & Privacy Settings */}
       {activeTab === 'settings' && (
-        <div className="p-6 rounded-2xl border border-[#E4E7EC] bg-white shadow-sm space-y-4 max-w-2xl">
-          <h3 className="text-base font-bold text-[#101828] flex items-center gap-2">
+        <div className="p-6 rounded-2xl border border-slate-200 bg-white shadow-sm space-y-4 max-w-2xl">
+          <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-emerald-600" />
             Privacy & External Credential Protections
           </h3>
-          <ul className="space-y-3 text-xs text-[#344054] leading-relaxed">
+          <ul className="space-y-3 text-xs text-slate-700 leading-relaxed">
             <li className="flex items-start gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
               <span>
@@ -563,9 +563,9 @@ export function IntegrationsCenterPage({ onNavigate, initialTab = 'platforms' }:
       {/* Connect Modal Dialog */}
       {connectModalProvider && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl border border-[#E4E7EC] shadow-2xl max-w-md w-full p-6 space-y-4">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-              <h3 className="text-base font-bold text-[#101828] flex items-center gap-2">
+              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                 <Link2 className="w-4 h-4 text-blue-600" />
                 Connect {connectModalProvider.display_name}
               </h3>
@@ -579,7 +579,7 @@ export function IntegrationsCenterPage({ onNavigate, initialTab = 'platforms' }:
 
             <form onSubmit={handleConnectSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-[#344054] mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Username or Handle
                 </label>
                 <input
@@ -587,13 +587,13 @@ export function IntegrationsCenterPage({ onNavigate, initialTab = 'platforms' }:
                   placeholder="e.g. your_handle"
                   value={connectUsername}
                   onChange={(e) => setConnectUsername(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-[#D0D5DD] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#344054] mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Public Profile URL
                 </label>
                 <input
@@ -601,7 +601,7 @@ export function IntegrationsCenterPage({ onNavigate, initialTab = 'platforms' }:
                   placeholder="https://..."
                   value={connectProfileUrl}
                   onChange={(e) => setConnectProfileUrl(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-[#D0D5DD] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
@@ -623,7 +623,7 @@ export function IntegrationsCenterPage({ onNavigate, initialTab = 'platforms' }:
                   type="submit"
                   size="sm"
                   disabled={isConnecting}
-                  className="bg-[#2563EB] text-white"
+                  className="bg-blue-600 text-white"
                 >
                   {isConnecting ? 'Verifying...' : 'Establish Connection'}
                 </Button>

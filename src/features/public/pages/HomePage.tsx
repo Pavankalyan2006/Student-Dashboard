@@ -42,7 +42,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
       description:
         'Instead of drowning in fragmented textbook PDFs and obsolete question papers, our engine parses your exact university syllabus into actionable units, topics, and verified learning milestones.',
       icon: BookOpen,
-      accent: 'from-blue-500/10 to-indigo-500/10 text-[#2563EB]',
+      accent: 'from-blue-500/10 to-indigo-500/10 text-blue-600',
     },
     {
       problem: 'Theory Without Practical Application',
@@ -81,7 +81,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
         'Exam Prep Agent: Formulates slip test, midterm, and end-sem revision priorities.',
       ],
       icon: GraduationCap,
-      color: 'border-blue-200 bg-blue-50/50 text-[#2563EB]',
+      color: 'border-blue-200 bg-blue-50/50 text-blue-600',
     },
     {
       title: 'Practical Laboratory Agents',
@@ -188,27 +188,27 @@ export function HomePage({ onNavigate }: HomePageProps) {
   return (
     <PublicLayout currentPath="/" onNavigate={onNavigate}>
       {/* 1. Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-white via-blue-50/30 to-[#F7F9FC] pt-12 pb-20 sm:pt-16 sm:pb-28 border-b border-[#E4E7EC]">
+      <section className="relative overflow-hidden bg-gradient-to-b from-white via-blue-50/30 to-slate-50 pt-12 pb-20 sm:pt-16 sm:pb-28 border-b border-slate-200">
         {/* Background glow effects */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-gradient-to-tr from-blue-400/10 via-indigo-400/10 to-transparent blur-3xl pointer-events-none" />
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           {/* Top Pill */}
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/80 text-[#2563EB] text-xs font-semibold mb-6 shadow-xs animate-fade-in">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/80 text-blue-600 text-xs font-semibold mb-6 shadow-xs animate-fade-in">
             <Sparkles className="h-3.5 w-3.5" />
             <span>The Academic & Career Operating System for B.Tech Students</span>
           </div>
 
           {/* Main Headline */}
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-[#101828] max-w-4xl mx-auto leading-tight sm:leading-none">
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 max-w-4xl mx-auto leading-tight sm:leading-none">
             Master Your Engineering Curriculum. <br />
-            <span className="bg-gradient-to-r from-[#2563EB] via-[#4F46E5] to-[#7C3AED] bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent">
               Code Real Labs. Build Career Mastery.
             </span>
           </h1>
 
           {/* Subtitle */}
-          <p className="mt-6 text-base sm:text-lg text-[#475467] max-w-2xl mx-auto leading-relaxed">
+          <p className="mt-6 text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
             Tailored directly to your degree, branch, semester, and university syllabus. Unified with intelligent
             multi-agent AI tutoring, isolated coding and SQL execution sandboxes, automated study planning, and placement preparation.
           </p>
@@ -217,7 +217,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button
               onClick={() => onNavigate('/register')}
-              className="w-full sm:w-auto bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold text-sm px-8 py-3.5 rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm px-8 py-3.5 rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <span>Get Started Free</span>
               <ArrowRight className="h-4 w-4" />
@@ -225,21 +225,21 @@ export function HomePage({ onNavigate }: HomePageProps) {
             <Button
               variant="outline"
               onClick={() => onNavigate('/how-it-works')}
-              className="w-full sm:w-auto border-slate-300 hover:bg-slate-100 text-[#344054] font-semibold text-sm px-6 py-3.5 rounded-xl cursor-pointer"
+              className="w-full sm:w-auto border-slate-300 hover:bg-slate-100 text-slate-700 font-semibold text-sm px-6 py-3.5 rounded-xl cursor-pointer"
             >
               See How It Works (12 Steps)
             </Button>
             <Button
               variant="ghost"
               onClick={() => onNavigate('/login')}
-              className="w-full sm:w-auto text-[#2563EB] hover:text-[#1D4ED8] hover:bg-blue-50 font-semibold text-sm px-4 py-3.5 rounded-xl cursor-pointer"
+              className="w-full sm:w-auto text-blue-600 hover:text-blue-700 hover:bg-blue-50 font-semibold text-sm px-4 py-3.5 rounded-xl cursor-pointer"
             >
               Already Registered? Sign In
             </Button>
           </div>
 
           {/* Key Trust Signals */}
-          <div className="mt-12 flex flex-wrap items-center justify-center gap-6 sm:gap-8 text-xs font-medium text-[#475467]">
+          <div className="mt-12 flex flex-wrap items-center justify-center gap-6 sm:gap-8 text-xs font-medium text-slate-600">
             <div className="flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-emerald-600" />
               <span>Supports 8+ Engineering Branches</span>
@@ -261,16 +261,16 @@ export function HomePage({ onNavigate }: HomePageProps) {
       </section>
 
       {/* 2. Engineering Problems & Solutions Grid */}
-      <section className="py-16 sm:py-24 bg-white border-b border-[#E4E7EC]">
+      <section className="py-16 sm:py-24 bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-[#2563EB]">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-blue-600">
               Built for Engineering Students
             </h2>
-            <p className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight text-[#101828]">
+            <p className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
               Solving the 4 Critical Challenges in Engineering Education
             </p>
-            <p className="mt-3 text-sm text-[#475467]">
+            <p className="mt-3 text-sm text-slate-600">
               Undergraduate engineering is rigorous and demanding. Here is how our purpose-built platform empowers your success.
             </p>
           </div>
@@ -281,7 +281,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
               return (
                 <div
                   key={idx}
-                  className="p-6 sm:p-8 rounded-2xl border border-[#E4E7EC] bg-[#F7F9FC] hover:bg-white hover:shadow-md transition-all space-y-4"
+                  className="p-6 sm:p-8 rounded-2xl border border-slate-200 bg-slate-50 hover:bg-white hover:shadow-md transition-all space-y-4"
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold px-2.5 py-1 rounded-md bg-red-50 text-red-600 border border-red-200">
@@ -291,11 +291,11 @@ export function HomePage({ onNavigate }: HomePageProps) {
                       <Icon className="h-5 w-5" />
                     </div>
                   </div>
-                  <h3 className="text-lg font-bold text-[#101828] flex items-center gap-2">
+                  <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
                     <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
                     <span>{item.solution}</span>
                   </h3>
-                  <p className="text-sm text-[#475467] leading-relaxed">
+                  <p className="text-sm text-slate-600 leading-relaxed">
                     {item.description}
                   </p>
                 </div>
@@ -306,16 +306,16 @@ export function HomePage({ onNavigate }: HomePageProps) {
       </section>
 
       {/* 3. Multi-Agent Orchestration Architecture Showcase */}
-      <section className="py-16 sm:py-24 bg-[#F7F9FC] border-b border-[#E4E7EC]">
+      <section className="py-16 sm:py-24 bg-slate-50 border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-[#4F46E5]">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-indigo-600">
               Intelligent Multi-Agent System
             </h2>
-            <p className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight text-[#101828]">
+            <p className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
               Coordinated Specialized AI Agents for Every Academic Need
             </p>
-            <p className="mt-3 text-sm text-[#475467]">
+            <p className="mt-3 text-sm text-slate-600">
               Instead of disconnected generic chatbots, our platform coordinates specialized autonomous agents orchestrated through a centralized Tool Registry and Student Context Engine.
             </p>
           </div>
@@ -326,18 +326,18 @@ export function HomePage({ onNavigate }: HomePageProps) {
               return (
                 <div
                   key={idx}
-                  className="bg-white rounded-2xl p-6 border border-[#E4E7EC] shadow-xs flex flex-col justify-between"
+                  className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs flex flex-col justify-between"
                 >
                   <div>
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 border ${group.color}`}>
                       <Icon className="h-5 w-5" />
                     </div>
-                    <h3 className="font-bold text-base text-[#101828]">{group.title}</h3>
-                    <p className="text-xs font-medium text-[#667085] mb-4">{group.subtitle}</p>
-                    <ul className="space-y-2 text-xs text-[#475467]">
+                    <h3 className="font-bold text-base text-slate-900">{group.title}</h3>
+                    <p className="text-xs font-medium text-slate-500 mb-4">{group.subtitle}</p>
+                    <ul className="space-y-2 text-xs text-slate-600">
                       {group.agents.map((agent, aIdx) => (
                         <li key={aIdx} className="flex items-start gap-1.5 leading-snug">
-                          <span className="text-[#2563EB] font-bold mt-0.5">•</span>
+                          <span className="text-blue-600 font-bold mt-0.5">•</span>
                           <span>{agent}</span>
                         </li>
                       ))}
@@ -351,16 +351,16 @@ export function HomePage({ onNavigate }: HomePageProps) {
       </section>
 
       {/* 4. Practical Laboratories Grid */}
-      <section className="py-16 sm:py-24 bg-white border-b border-[#E4E7EC]">
+      <section className="py-16 sm:py-24 bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-600">
               Hands-on Engineering
             </h2>
-            <p className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight text-[#101828]">
+            <p className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
               Comprehensive Practical Laboratories
             </p>
-            <p className="mt-3 text-sm text-[#475467]">
+            <p className="mt-3 text-sm text-slate-600">
               From algorithms to distributed systems, experience active learning directly inside the browser with secure execution sandboxes.
             </p>
           </div>
@@ -371,18 +371,18 @@ export function HomePage({ onNavigate }: HomePageProps) {
               return (
                 <div
                   key={idx}
-                  className="p-6 rounded-2xl border border-[#E4E7EC] bg-slate-50/50 hover:bg-white hover:border-blue-200 hover:shadow-sm transition-all"
+                  className="p-6 rounded-2xl border border-slate-200 bg-slate-50/50 hover:bg-white hover:border-blue-200 hover:shadow-sm transition-all"
                 >
                   <div className="flex items-center justify-between mb-3">
-                    <div className="p-2.5 rounded-xl bg-blue-50 text-[#2563EB]">
+                    <div className="p-2.5 rounded-xl bg-blue-50 text-blue-600">
                       <Icon className="h-5 w-5" />
                     </div>
-                    <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-[#475467] border border-slate-200">
+                    <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
                       {lab.badge}
                     </span>
                   </div>
-                  <h3 className="text-base font-bold text-[#101828] mb-1.5">{lab.name}</h3>
-                  <p className="text-xs text-[#475467] leading-relaxed">{lab.desc}</p>
+                  <h3 className="text-base font-bold text-slate-900 mb-1.5">{lab.name}</h3>
+                  <p className="text-xs text-slate-600 leading-relaxed">{lab.desc}</p>
                 </div>
               );
             })}
@@ -391,7 +391,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
       </section>
 
       {/* 5. 12-Step Student Workflow Banner */}
-      <section className="py-16 sm:py-24 bg-gradient-to-br from-[#0B1530] via-[#101828] to-[#1E293B] text-white">
+      <section className="py-16 sm:py-24 bg-gradient-to-br from-navy-900 via-slate-900 to-slate-800 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-xs font-bold uppercase tracking-wider text-blue-400">
             Structured Academic Success
@@ -434,7 +434,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
           <div className="mt-10">
             <Button
               onClick={() => onNavigate('/how-it-works')}
-              className="bg-white hover:bg-slate-100 text-[#0B1530] font-bold text-xs px-6 py-3 rounded-xl shadow-md cursor-pointer"
+              className="bg-white hover:bg-slate-100 text-navy-900 font-bold text-xs px-6 py-3 rounded-xl shadow-md cursor-pointer"
             >
               Read the Full 12-Step Implementation Guide
             </Button>
@@ -443,13 +443,13 @@ export function HomePage({ onNavigate }: HomePageProps) {
       </section>
 
       {/* 6. Frequently Asked Questions (FAQ) */}
-      <section className="py-16 sm:py-24 bg-white border-b border-[#E4E7EC]">
+      <section className="py-16 sm:py-24 bg-white border-b border-slate-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-[#2563EB]">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-blue-600">
               Questions & Answers
             </h2>
-            <p className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight text-[#101828]">
+            <p className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
               Frequently Asked Questions
             </p>
           </div>
@@ -460,21 +460,21 @@ export function HomePage({ onNavigate }: HomePageProps) {
               return (
                 <div
                   key={idx}
-                  className="border border-[#E4E7EC] rounded-2xl overflow-hidden transition-all bg-[#F7F9FC]"
+                  className="border border-slate-200 rounded-2xl overflow-hidden transition-all bg-slate-50"
                 >
                   <button
                     onClick={() => toggleFaq(idx)}
-                    className="w-full px-6 py-4 text-left flex items-center justify-between font-bold text-sm text-[#101828] hover:bg-slate-100/60 cursor-pointer"
+                    className="w-full px-6 py-4 text-left flex items-center justify-between font-bold text-sm text-slate-900 hover:bg-slate-100/60 cursor-pointer"
                   >
                     <span>{faq.q}</span>
                     <ChevronDown
-                      className={`h-4 w-4 text-[#667085] transition-transform duration-200 ${
-                        isOpen ? 'rotate-180 text-[#2563EB]' : ''
+                      className={`h-4 w-4 text-slate-500 transition-transform duration-200 ${
+                        isOpen ? 'rotate-180 text-blue-600' : ''
                       }`}
                     />
                   </button>
                   {isOpen && (
-                    <div className="px-6 pb-4 pt-1 text-xs text-[#475467] leading-relaxed border-t border-slate-100 bg-white">
+                    <div className="px-6 pb-4 pt-1 text-xs text-slate-600 leading-relaxed border-t border-slate-100 bg-white">
                       {faq.a}
                     </div>
                   )}
@@ -486,9 +486,9 @@ export function HomePage({ onNavigate }: HomePageProps) {
       </section>
 
       {/* 7. Final Call to Action */}
-      <section className="py-16 sm:py-20 bg-[#F7F9FC]">
+      <section className="py-16 sm:py-20 bg-slate-50">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 rounded-3xl p-8 sm:p-12 text-white shadow-xl">
+          <div className="hero-brand rounded-3xl p-8 sm:p-12 text-white">
             <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
               Ready to Transform Your B.Tech Journey?
             </h2>
@@ -498,7 +498,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button
                 onClick={() => onNavigate('/register')}
-                className="w-full sm:w-auto bg-white hover:bg-slate-100 text-[#2563EB] font-bold text-sm px-8 py-3.5 rounded-xl shadow-md cursor-pointer"
+                className="w-full sm:w-auto bg-white hover:bg-slate-100 text-blue-600 font-bold text-sm px-8 py-3.5 rounded-xl shadow-md cursor-pointer"
               >
                 Create Your Free Student Account
               </Button>

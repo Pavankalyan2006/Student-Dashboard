@@ -211,7 +211,7 @@ export function ProfileSettingsPage({
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E4E7EC] pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
         <div>
           <button
             onClick={() => onNavigate('/profile')}
@@ -220,15 +220,15 @@ export function ProfileSettingsPage({
             <ArrowLeft className="h-3.5 w-3.5" />
             <span>Back to Profile</span>
           </button>
-          <h1 className="text-xl sm:text-2xl font-bold text-[#101828]">Settings & Preferences</h1>
-          <p className="text-xs text-[#667085]">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Settings & Preferences</h1>
+          <p className="text-xs text-slate-500">
             Manage your authenticated account, AI tutor behaviors, appearance, notifications, and security.
           </p>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-1.5 border-b border-[#E4E7EC] overflow-x-auto pb-2">
+      <div className="flex items-center gap-1.5 border-b border-slate-200 overflow-x-auto pb-2">
         {[
           { id: 'account', label: 'Account & Security', icon: User },
           { id: 'learning', label: 'Learning & AI', icon: Sparkles },
@@ -242,8 +242,8 @@ export function ProfileSettingsPage({
             onClick={() => setActiveTab(tab.id as any)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap ${
               activeTab === tab.id
-                ? 'bg-blue-50 text-[#2563EB] shadow-2xs'
-                : 'text-[#475467] hover:bg-slate-100'
+                ? 'bg-blue-50 text-blue-600 shadow-2xs'
+                : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
             <tab.icon className="h-3.5 w-3.5" />
@@ -256,8 +256,8 @@ export function ProfileSettingsPage({
       {activeTab === 'account' && (
         <div className="space-y-6">
           {/* Identity card */}
-          <div className="bg-white rounded-2xl border border-[#E4E7EC] p-6 space-y-4 shadow-2xs">
-            <h2 className="text-sm font-bold text-[#101828]">Account Information</h2>
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-4 shadow-2xs">
+            <h2 className="text-sm font-bold text-slate-900">Account Information</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
               <div>
                 <span className="text-slate-500 font-medium">Display Name</span>
@@ -282,12 +282,12 @@ export function ProfileSettingsPage({
 
           {/* Change Password Form */}
           {provider === 'firebase' ? (
-            <div className="bg-white rounded-2xl border border-[#E4E7EC] p-6 space-y-3 shadow-2xs">
+            <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-3 shadow-2xs">
               <div className="flex items-center gap-2">
                 <KeyRound className="h-4 w-4 text-blue-600" />
-                <h2 className="text-sm font-bold text-[#101828]">Password</h2>
+                <h2 className="text-sm font-bold text-slate-900">Password</h2>
               </div>
-              <p className="text-xs text-[#667085]">Your password is managed by the sign-in service. We will email you a secure link to change it.</p>
+              <p className="text-xs text-slate-500">Your password is managed by the sign-in service. We will email you a secure link to change it.</p>
               <button
                 type="button"
                 onClick={async () => {
@@ -299,16 +299,16 @@ export function ProfileSettingsPage({
                     toast.error(err?.message || 'Could not send the reset email');
                   }
                 }}
-                className="px-4 py-2 text-xs font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] rounded-lg"
+                className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg"
               >
                 Email me a password reset link
               </button>
             </div>
           ) : (
-          <div className="bg-white rounded-2xl border border-[#E4E7EC] p-6 space-y-4 shadow-2xs">
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-4 shadow-2xs">
             <div className="flex items-center gap-2">
               <KeyRound className="h-4 w-4 text-blue-600" />
-              <h2 className="text-sm font-bold text-[#101828]">Change Password</h2>
+              <h2 className="text-sm font-bold text-slate-900">Change Password</h2>
             </div>
             <form onSubmit={handlePasswordChange} className="space-y-3 max-w-md">
               <div>
@@ -362,10 +362,10 @@ export function ProfileSettingsPage({
 
       {/* Tab 2: Learning & AI Preferences */}
       {activeTab === 'learning' && prefs && (
-        <div className="bg-white rounded-2xl border border-[#E4E7EC] p-6 space-y-6 shadow-2xs">
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-6 shadow-2xs">
           <div>
-            <h2 className="text-sm font-bold text-[#101828]">AI Tutor & Explanation Preferences</h2>
-            <p className="text-xs text-[#667085]">
+            <h2 className="text-sm font-bold text-slate-900">AI Tutor & Explanation Preferences</h2>
+            <p className="text-xs text-slate-500">
               These preferences configure the system prompt and tone across AI Tutor, Doubt Solver, and Coding Lab.
             </p>
           </div>
@@ -373,15 +373,15 @@ export function ProfileSettingsPage({
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3.5 rounded-xl border border-slate-200 bg-slate-50/50">
               <div>
-                <label className="text-xs font-semibold text-[#101828]">Explanation Level</label>
-                <p className="text-[11px] text-[#667085]">Conceptual depth of AI explanations</p>
+                <label className="text-xs font-semibold text-slate-900">Explanation Level</label>
+                <p className="text-[11px] text-slate-500">Conceptual depth of AI explanations</p>
               </div>
               <select
                 value={prefs.explanation_level}
                 onChange={(e) =>
                   setPrefs({ ...prefs, explanation_level: e.target.value as any })
                 }
-                className="px-3 py-1.5 text-xs rounded-lg border border-[#D0D5DD] bg-white font-medium focus:ring-2 focus:ring-[#2563EB]"
+                className="px-3 py-1.5 text-xs rounded-lg border border-slate-300 bg-white font-medium focus:ring-2 focus:ring-blue-600"
               >
                 <option value="BEGINNER">Beginner (Foundational)</option>
                 <option value="INTERMEDIATE">Intermediate (Standard B.Tech)</option>
@@ -391,15 +391,15 @@ export function ProfileSettingsPage({
 
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3.5 rounded-xl border border-slate-200 bg-slate-50/50">
               <div>
-                <label className="text-xs font-semibold text-[#101828]">Response Style</label>
-                <p className="text-[11px] text-[#667085]">Brevity vs comprehensive breakdown</p>
+                <label className="text-xs font-semibold text-slate-900">Response Style</label>
+                <p className="text-[11px] text-slate-500">Brevity vs comprehensive breakdown</p>
               </div>
               <select
                 value={prefs.response_style}
                 onChange={(e) =>
                   setPrefs({ ...prefs, response_style: e.target.value as any })
                 }
-                className="px-3 py-1.5 text-xs rounded-lg border border-[#D0D5DD] bg-white font-medium focus:ring-2 focus:ring-[#2563EB]"
+                className="px-3 py-1.5 text-xs rounded-lg border border-slate-300 bg-white font-medium focus:ring-2 focus:ring-blue-600"
               >
                 <option value="CONCISE">Concise & Direct</option>
                 <option value="DETAILED">Detailed with Examples</option>
@@ -408,15 +408,15 @@ export function ProfileSettingsPage({
 
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3.5 rounded-xl border border-slate-200 bg-slate-50/50">
               <div>
-                <label className="text-xs font-semibold text-[#101828]">Code Explanation Style</label>
-                <p className="text-[11px] text-[#667085]">How algorithmic solutions are broken down</p>
+                <label className="text-xs font-semibold text-slate-900">Code Explanation Style</label>
+                <p className="text-[11px] text-slate-500">How algorithmic solutions are broken down</p>
               </div>
               <select
                 value={prefs.code_explanation_preference}
                 onChange={(e) =>
                   setPrefs({ ...prefs, code_explanation_preference: e.target.value as any })
                 }
-                className="px-3 py-1.5 text-xs rounded-lg border border-[#D0D5DD] bg-white font-medium focus:ring-2 focus:ring-[#2563EB]"
+                className="px-3 py-1.5 text-xs rounded-lg border border-slate-300 bg-white font-medium focus:ring-2 focus:ring-blue-600"
               >
                 <option value="STEP_BY_STEP">Step-by-step with comments</option>
                 <option value="CONCEPTUAL">High-level architectural pattern</option>
@@ -426,15 +426,15 @@ export function ProfileSettingsPage({
 
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3.5 rounded-xl border border-slate-200 bg-slate-50/50">
               <div>
-                <label className="text-xs font-semibold text-[#101828]">Preferred Language</label>
-                <p className="text-[11px] text-[#667085]">Primary language for AI tutoring dialogue</p>
+                <label className="text-xs font-semibold text-slate-900">Preferred Language</label>
+                <p className="text-[11px] text-slate-500">Primary language for AI tutoring dialogue</p>
               </div>
               <select
                 value={prefs.preferred_language}
                 onChange={(e) =>
                   setPrefs({ ...prefs, preferred_language: e.target.value as any })
                 }
-                className="px-3 py-1.5 text-xs rounded-lg border border-[#D0D5DD] bg-white font-medium focus:ring-2 focus:ring-[#2563EB]"
+                className="px-3 py-1.5 text-xs rounded-lg border border-slate-300 bg-white font-medium focus:ring-2 focus:ring-blue-600"
               >
                 <option value="English">English</option>
                 <option value="Telugu">Telugu</option>
@@ -447,7 +447,7 @@ export function ProfileSettingsPage({
             <button
               onClick={saveAIPreferences}
               disabled={saving}
-              className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] rounded-lg transition-colors shadow-2xs cursor-pointer disabled:opacity-50"
+              className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-2xs cursor-pointer disabled:opacity-50"
             >
               <Save className="h-3.5 w-3.5" />
               <span>{saving ? 'Saving...' : 'Save AI Preferences'}</span>
@@ -458,17 +458,17 @@ export function ProfileSettingsPage({
 
       {/* Tab 3: Appearance */}
       {activeTab === 'appearance' && (
-        <div className="bg-white rounded-2xl border border-[#E4E7EC] p-6 space-y-6 shadow-2xs">
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-6 shadow-2xs">
           <div>
-            <h2 className="text-sm font-bold text-[#101828]">Appearance & Display Settings</h2>
-            <p className="text-xs text-[#667085]">Configure theme and accessibility preferences.</p>
+            <h2 className="text-sm font-bold text-slate-900">Appearance & Display Settings</h2>
+            <p className="text-xs text-slate-500">Configure theme and accessibility preferences.</p>
           </div>
 
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl border border-slate-200 bg-slate-50/50">
               <div>
-                <label className="text-xs font-semibold text-[#101828]">Color Theme</label>
-                <p className="text-[11px] text-[#667085]">Choose light, dark, or system appearance</p>
+                <label className="text-xs font-semibold text-slate-900">Color Theme</label>
+                <p className="text-[11px] text-slate-500">Choose light, dark, or system appearance</p>
               </div>
               <div className="flex items-center gap-2">
                 {[
@@ -494,8 +494,8 @@ export function ProfileSettingsPage({
 
             <div className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 bg-slate-50/50">
               <div>
-                <label className="text-xs font-semibold text-[#101828]">Reduced Motion</label>
-                <p className="text-[11px] text-[#667085]">Disable decorative animations and transitions</p>
+                <label className="text-xs font-semibold text-slate-900">Reduced Motion</label>
+                <p className="text-[11px] text-slate-500">Disable decorative animations and transitions</p>
               </div>
               <input
                 type="checkbox"
@@ -521,10 +521,10 @@ export function ProfileSettingsPage({
 
       {/* Tab 4: Notifications */}
       {activeTab === 'notifications' && notifs && (
-        <div className="bg-white rounded-2xl border border-[#E4E7EC] p-6 space-y-6 shadow-2xs">
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-6 shadow-2xs">
           <div>
-            <h2 className="text-sm font-bold text-[#101828]">Notification Categories</h2>
-            <p className="text-xs text-[#667085]">
+            <h2 className="text-sm font-bold text-slate-900">Notification Categories</h2>
+            <p className="text-xs text-slate-500">
               Select which categories of academic reminders and platform updates you wish to receive.
             </p>
           </div>
@@ -567,8 +567,8 @@ export function ProfileSettingsPage({
                 className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 bg-slate-50/50"
               >
                 <div>
-                  <h4 className="text-xs font-semibold text-[#101828]">{item.title}</h4>
-                  <p className="text-[11px] text-[#667085]">{item.desc}</p>
+                  <h4 className="text-xs font-semibold text-slate-900">{item.title}</h4>
+                  <p className="text-[11px] text-slate-500">{item.desc}</p>
                 </div>
                 <input
                   type="checkbox"
@@ -586,7 +586,7 @@ export function ProfileSettingsPage({
             <button
               onClick={saveNotifications}
               disabled={saving}
-              className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] rounded-lg transition-colors shadow-2xs cursor-pointer disabled:opacity-50"
+              className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-2xs cursor-pointer disabled:opacity-50"
             >
               <Save className="h-3.5 w-3.5" />
               <span>{saving ? 'Saving...' : 'Save Notification Preferences'}</span>
@@ -597,10 +597,10 @@ export function ProfileSettingsPage({
 
       {/* Tab 5: Privacy & Data */}
       {activeTab === 'privacy' && privacy && (
-        <div className="bg-white rounded-2xl border border-[#E4E7EC] p-6 space-y-6 shadow-2xs">
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-6 shadow-2xs">
           <div>
-            <h2 className="text-sm font-bold text-[#101828]">Profile & Data Visibility</h2>
-            <p className="text-xs text-[#667085]">
+            <h2 className="text-sm font-bold text-slate-900">Profile & Data Visibility</h2>
+            <p className="text-xs text-slate-500">
               Decide which areas of your learning record are visible to other verified students.
             </p>
           </div>
@@ -608,15 +608,15 @@ export function ProfileSettingsPage({
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3.5 rounded-xl border border-slate-200 bg-slate-50/50">
               <div>
-                <label className="text-xs font-semibold text-[#101828]">Profile Visibility</label>
-                <p className="text-[11px] text-[#667085]">Controls who can view your basic profile card</p>
+                <label className="text-xs font-semibold text-slate-900">Profile Visibility</label>
+                <p className="text-[11px] text-slate-500">Controls who can view your basic profile card</p>
               </div>
               <select
                 value={privacy.profile_visibility}
                 onChange={(e) =>
                   setPrivacy({ ...privacy, profile_visibility: e.target.value as any })
                 }
-                className="px-3 py-1.5 text-xs rounded-lg border border-[#D0D5DD] bg-white font-medium focus:ring-2 focus:ring-[#2563EB]"
+                className="px-3 py-1.5 text-xs rounded-lg border border-slate-300 bg-white font-medium focus:ring-2 focus:ring-blue-600"
               >
                 <option value="COMMUNITY">Community Only (Verified Students)</option>
                 <option value="PRIVATE">Strictly Private</option>
@@ -626,15 +626,15 @@ export function ProfileSettingsPage({
 
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3.5 rounded-xl border border-slate-200 bg-slate-50/50">
               <div>
-                <label className="text-xs font-semibold text-[#101828]">Project Showcase Visibility</label>
-                <p className="text-[11px] text-[#667085]">Controls visibility of published project showcases</p>
+                <label className="text-xs font-semibold text-slate-900">Project Showcase Visibility</label>
+                <p className="text-[11px] text-slate-500">Controls visibility of published project showcases</p>
               </div>
               <select
                 value={privacy.project_visibility}
                 onChange={(e) =>
                   setPrivacy({ ...privacy, project_visibility: e.target.value as any })
                 }
-                className="px-3 py-1.5 text-xs rounded-lg border border-[#D0D5DD] bg-white font-medium focus:ring-2 focus:ring-[#2563EB]"
+                className="px-3 py-1.5 text-xs rounded-lg border border-slate-300 bg-white font-medium focus:ring-2 focus:ring-blue-600"
               >
                 <option value="COMMUNITY">Community Only</option>
                 <option value="PRIVATE">Strictly Private</option>
@@ -645,8 +645,8 @@ export function ProfileSettingsPage({
             {/* Phase 5: product analytics are off until the student opts in */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3.5 rounded-xl border border-slate-200 bg-slate-50/50">
               <div>
-                <label htmlFor="analytics-consent" className="text-xs font-semibold text-[#101828]">Usage analytics</label>
-                <p className="text-[11px] text-[#667085]">Share anonymous usage events (no name, email, answers or documents). Off by default.</p>
+                <label htmlFor="analytics-consent" className="text-xs font-semibold text-slate-900">Usage analytics</label>
+                <p className="text-[11px] text-slate-500">Share anonymous usage events (no name, email, answers or documents). Off by default.</p>
               </div>
               <input
                 id="analytics-consent"
@@ -658,22 +658,6 @@ export function ProfileSettingsPage({
                 }}
                 className="h-4 w-4"
               />
-            </div>
-
-            {/* Phase 6: private pilot feedback, problem reports and privacy concerns */}
-            <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <h4 className="text-xs font-bold text-[#101828]">Pilot feedback and privacy concerns</h4>
-                <p className="text-[11px] text-[#667085]">
-                  Send private feedback, report a problem, or raise a privacy or security concern. Only you can see what you sent, and you can withdraw it.
-                </p>
-              </div>
-              <button
-                onClick={() => onNavigate?.('/pilot-feedback')}
-                className="px-3.5 py-1.5 text-xs font-semibold text-[#344054] bg-white border border-slate-200 hover:bg-slate-50 rounded-xl shrink-0"
-              >
-                Open pilot feedback
-              </button>
             </div>
 
             {/* Data Export section */}
@@ -699,7 +683,7 @@ export function ProfileSettingsPage({
             <button
               onClick={savePrivacy}
               disabled={saving}
-              className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] rounded-lg transition-colors shadow-2xs cursor-pointer disabled:opacity-50"
+              className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-2xs cursor-pointer disabled:opacity-50"
             >
               <Save className="h-3.5 w-3.5" />
               <span>{saving ? 'Saving...' : 'Save Privacy Settings'}</span>
@@ -710,10 +694,10 @@ export function ProfileSettingsPage({
 
       {/* Tab 6: Connected Platforms */}
       {activeTab === 'platforms' && (
-        <div className="bg-white rounded-2xl border border-[#E4E7EC] p-6 space-y-6 shadow-2xs">
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-6 shadow-2xs">
           <div>
-            <h2 className="text-sm font-bold text-[#101828]">Connected Platforms & Developer Accounts</h2>
-            <p className="text-xs text-[#667085]">
+            <h2 className="text-sm font-bold text-slate-900">Connected Platforms & Developer Accounts</h2>
+            <p className="text-xs text-slate-500">
               Link and sync your coding and professional accounts. Passwords are never requested.
             </p>
           </div>
@@ -750,17 +734,17 @@ function PlatformLinksList({ onNavigate }: { onNavigate: (path: string) => void 
       .catch((e: any) => setError(e?.message || 'Could not load your platform links'));
   }, []);
   if (error) return <p className="text-xs text-rose-600">{error}</p>;
-  if (!conns) return <p className="text-xs text-[#667085]">Loading your platform links...</p>;
+  if (!conns) return <p className="text-xs text-slate-500">Loading your platform links...</p>;
   return (
     <div className="space-y-3">
-      {conns.length === 0 && <p className="text-xs text-[#667085]">You have not linked any platforms yet.</p>}
+      {conns.length === 0 && <p className="text-xs text-slate-500">You have not linked any platforms yet.</p>}
       {conns.map((c) => {
         const verified = c.status === 'CONNECTED' || c.status === 'SYNCED';
         return (
           <div key={c.id} className="p-4 rounded-xl border border-slate-200 flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <h4 className="text-xs font-bold text-[#101828] capitalize">{c.provider}</h4>
-              <p className="text-[11px] text-[#667085] truncate">
+              <h4 className="text-xs font-bold text-slate-900 capitalize">{c.provider}</h4>
+              <p className="text-[11px] text-slate-500 truncate">
                 Account: <span className="font-semibold text-slate-800">{c.username || c.display_name}</span>
               </p>
             </div>
@@ -776,7 +760,7 @@ function PlatformLinksList({ onNavigate }: { onNavigate: (path: string) => void 
       })}
       <button
         onClick={() => onNavigate('/integrations')}
-        className="px-3 py-1.5 text-xs font-medium text-[#2563EB] hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+        className="px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
       >
         Manage platforms
       </button>

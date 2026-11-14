@@ -98,16 +98,16 @@ export function SemesterStudyStreamPage({ onNavigate }: SemesterStudyStreamPageP
       <SemesterCommandCenterLayout currentTab="stream" config={config} onNavigate={onNavigate}>
         <div className="space-y-6">
           {/* Header Controls */}
-          <div className="p-5 bg-slate-900 border border-slate-800 rounded-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="p-5 bg-white border border-slate-200 rounded-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2">
-                <GitBranch className="w-5 h-5 text-indigo-400" />
-                <h2 className="text-lg font-bold text-white">Semester Academic Study Stream</h2>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-mono">
+                <GitBranch className="w-5 h-5 text-indigo-600" />
+                <h2 className="text-lg font-bold text-slate-900">Semester Academic Study Stream</h2>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-200 font-mono">
                   Adaptive Sequence
                 </span>
               </div>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-slate-500 mt-1">
                 Visual pipeline connecting syllabus blocks, quizzes, slip tests, minor exams, and final revision in an optimal execution order.
               </p>
             </div>
@@ -115,11 +115,11 @@ export function SemesterStudyStreamPage({ onNavigate }: SemesterStudyStreamPageP
             <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
               {/* Subject Filter */}
               <div className="flex items-center gap-2">
-                <Filter className="w-3.5 h-3.5 text-slate-400" />
+                <Filter className="w-3.5 h-3.5 text-slate-500" />
                 <select
                   value={selectedSubjectId}
                   onChange={(e) => setSelectedSubjectId(e.target.value)}
-                  className="bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-indigo-500"
+                  className="bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 focus:outline-none focus:border-indigo-500"
                 >
                   <option value="ALL">All Semester Subjects</option>
                   {subjects.map((sub) => (
@@ -142,26 +142,26 @@ export function SemesterStudyStreamPage({ onNavigate }: SemesterStudyStreamPageP
           </div>
 
           {/* Stream Progress Bar */}
-          <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-between gap-4">
+          <div className="p-4 bg-white border border-slate-200 rounded-xl flex items-center justify-between gap-4">
             <div className="space-y-1">
-              <span className="text-xs text-slate-400">Stream Completion Rate</span>
-              <div className="text-base font-bold text-white">
+              <span className="text-xs text-slate-500">Stream Completion Rate</span>
+              <div className="text-base font-bold text-slate-900">
                 {completedCount} of {nodes.length} Academic Milestones Completed
               </div>
             </div>
             <div className="flex items-center gap-3 flex-1 max-w-xs">
-              <div className="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden">
+              <div className="w-full bg-slate-50 rounded-full h-2.5 overflow-hidden">
                 <div
                   className="bg-emerald-500 h-full rounded-full transition-all duration-500"
                   style={{ width: `${progressPercent}%` }}
                 />
               </div>
-              <span className="text-xs font-mono font-bold text-emerald-400">{progressPercent}%</span>
+              <span className="text-xs font-mono font-bold text-emerald-600">{progressPercent}%</span>
             </div>
           </div>
 
           {/* Interactive Stream Timeline Node Chain */}
-          <div className="relative pl-6 md:pl-8 space-y-6 before:absolute before:left-3 md:before:left-4 before:top-4 before:bottom-4 before:w-0.5 before:bg-slate-800">
+          <div className="relative pl-6 md:pl-8 space-y-6 before:absolute before:left-3 md:before:left-4 before:top-4 before:bottom-4 before:w-0.5 before:bg-slate-50">
             {nodes.map((node, index) => {
               const isCompleted = node.status === 'COMPLETED';
               const isActive = node.status === 'ACTIVE';
@@ -180,7 +180,7 @@ export function SemesterStudyStreamPage({ onNavigate }: SemesterStudyStreamPageP
                         ? 'bg-indigo-600 text-white ring-4 ring-indigo-500/20 animate-pulse'
                         : isRecovery
                         ? 'bg-amber-500 text-white ring-4 ring-amber-500/20'
-                        : 'bg-slate-800 text-slate-500 border border-slate-700'
+                        : 'bg-slate-50 text-slate-500 border border-slate-200'
                     }`}
                     title="Click to toggle completion"
                   >
@@ -199,43 +199,43 @@ export function SemesterStudyStreamPage({ onNavigate }: SemesterStudyStreamPageP
                   <div
                     className={`p-4 bg-slate-900 border rounded-xl transition-all ${
                       isActive
-                        ? 'border-indigo-500/60 shadow-lg shadow-indigo-950/30'
+                        ? 'border-indigo-200 shadow-lg shadow-indigo-950/30'
                         : isCompleted
-                        ? 'border-emerald-900/40 bg-slate-900/70'
-                        : 'border-slate-800 hover:border-slate-700'
+                        ? 'border-emerald-200 bg-white'
+                        : 'border-slate-200 hover:border-slate-200'
                     }`}
                   >
                     <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-indigo-400 font-bold uppercase">
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-50 text-indigo-600 font-bold uppercase">
                             {node.subject_name}
                           </span>
                           <span className="text-xs text-slate-500">•</span>
-                          <span className="text-[10px] font-medium text-slate-400 uppercase">
+                          <span className="text-[10px] font-medium text-slate-500 uppercase">
                             {(node.type || 'STUDY').replace(/_/g, ' ')}
                           </span>
                           {node.unit_number && (
-                            <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-800/80 text-slate-300">
+                            <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-50 text-slate-700">
                               Unit {node.unit_number}
                             </span>
                           )}
                           <span
                             className={`text-[9px] font-bold px-1.5 py-0.2 rounded ${
                               node.priority === 'CRITICAL'
-                                ? 'bg-red-500/10 text-red-400 border border-red-500/20'
+                                ? 'bg-red-50 text-red-600 border border-red-200'
                                 : node.priority === 'HIGH'
-                                ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                                : 'bg-slate-800 text-slate-400'
+                                ? 'bg-amber-50 text-amber-600 border border-amber-200'
+                                : 'bg-slate-50 text-slate-500'
                             }`}
                           >
                             {node.priority}
                           </span>
                         </div>
 
-                        <h3 className="text-sm font-bold text-white">{node.title}</h3>
+                        <h3 className="text-sm font-bold text-slate-900">{node.title}</h3>
 
-                        <div className="flex items-center gap-3 text-xs text-slate-400 pt-0.5">
+                        <div className="flex items-center gap-3 text-xs text-slate-500 pt-0.5">
                           <span className="flex items-center gap-1">
                             <Clock className="w-3.5 h-3.5 text-slate-500" />
                             Target: {node.estimated_time_minutes} mins
@@ -245,20 +245,20 @@ export function SemesterStudyStreamPage({ onNavigate }: SemesterStudyStreamPageP
                           {node.score !== undefined && (
                             <>
                               <span>•</span>
-                              <span className="text-emerald-400 font-bold">Score: {node.score}%</span>
+                              <span className="text-emerald-600 font-bold">Score: {node.score}%</span>
                             </>
                           )}
                         </div>
                       </div>
 
                       {/* Action Buttons */}
-                      <div className="flex items-center gap-2 w-full md:w-auto justify-end pt-2 md:pt-0 border-t md:border-t-0 border-slate-800">
+                      <div className="flex items-center gap-2 w-full md:w-auto justify-end pt-2 md:pt-0 border-t md:border-t-0 border-slate-200">
                         {node.action_route && (
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => onNavigate && onNavigate(node.action_route!)}
-                            className="text-xs border-slate-700 hover:bg-slate-800 text-slate-300 h-8"
+                            className="text-xs border-slate-200 hover:bg-slate-50 text-slate-700 h-8"
                           >
                             Execute Task <ArrowRight className="w-3 h-3 ml-1" />
                           </Button>
@@ -270,7 +270,7 @@ export function SemesterStudyStreamPage({ onNavigate }: SemesterStudyStreamPageP
                           onClick={() => handleToggleNodeStatus(node)}
                           className={`text-xs h-8 ${
                             isCompleted
-                              ? 'bg-slate-800 hover:bg-slate-700 text-slate-300'
+                              ? 'bg-slate-50 hover:bg-slate-100 text-slate-700'
                               : 'bg-indigo-600 hover:bg-indigo-500 text-white'
                           }`}
                         >

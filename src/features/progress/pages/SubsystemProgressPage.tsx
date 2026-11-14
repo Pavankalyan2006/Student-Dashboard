@@ -96,10 +96,10 @@ export function SubsystemProgressPage({
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-3 border-b border-[#E4E7EC] pb-4">
+      <div className="flex items-center gap-3 border-b border-slate-200 pb-4">
         <button
           onClick={() => onNavigate('/progress')}
-          className="p-2 text-[#475467] hover:text-[#101828] hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+          className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
@@ -107,8 +107,8 @@ export function SubsystemProgressPage({
           {getSubsystemIcon()}
         </div>
         <div>
-          <h1 className="text-xl font-bold text-[#101828]">{getSubsystemTitle()}</h1>
-          <p className="text-xs text-[#667085]">
+          <h1 className="text-xl font-bold text-slate-900">{getSubsystemTitle()}</h1>
+          <p className="text-xs text-slate-500">
             Granular breakdown of your completed modules, recorded evidence, and performance trends.
           </p>
         </div>
@@ -117,33 +117,33 @@ export function SubsystemProgressPage({
       {/* Summary Metric Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {Object.entries(data.summary_metrics).map(([key, value]) => (
-          <div key={key} className="bg-white p-4 rounded-xl border border-[#E4E7EC] shadow-2xs space-y-1">
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-[#667085]">
+          <div key={key} className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs space-y-1">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
               {key.replace(/_/g, ' ')}
             </span>
-            <div className="text-xl font-bold text-[#101828] tabular-nums">{String(value)}</div>
+            <div className="text-xl font-bold text-slate-900 tabular-nums">{String(value)}</div>
           </div>
         ))}
       </div>
 
       {/* Activity Trend Chart */}
       {data.activity_trend.length > 0 && (
-        <div className="bg-white rounded-2xl border border-[#E4E7EC] p-5 shadow-2xs space-y-3">
-          <h2 className="text-sm font-bold text-[#101828]">Activity Trend</h2>
+        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-3">
+          <h2 className="text-sm font-bold text-slate-900">Activity Trend</h2>
           <div className="h-56 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data.activity_trend}>
-                <XAxis dataKey="label" stroke="#98A2B3" fontSize={11} />
-                <YAxis stroke="#98A2B3" fontSize={11} allowDecimals={false} />
+                <XAxis dataKey="label" stroke="#9AA3B5" fontSize={11} />
+                <YAxis stroke="#9AA3B5" fontSize={11} allowDecimals={false} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: '#FFFFFF',
-                    borderColor: '#E4E7EC',
+                    borderColor: '#E3E6EE',
                     borderRadius: '8px',
                     fontSize: '11px',
                   }}
                 />
-                <Bar dataKey="value" name="Metric" fill="#2563EB" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="value" name="Metric" fill="#4654E0" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -151,20 +151,20 @@ export function SubsystemProgressPage({
       )}
 
       {/* Detailed Items List */}
-      <div className="bg-white rounded-2xl border border-[#E4E7EC] p-5 shadow-2xs space-y-4">
-        <h2 className="text-sm font-bold text-[#101828]">Tracked Records & Items</h2>
+      <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-4">
+        <h2 className="text-sm font-bold text-slate-900">Tracked Records & Items</h2>
 
         <div className="divide-y divide-slate-100">
           {data.detailed_items.length === 0 ? (
-            <p className="text-xs text-[#667085] py-4 text-center">No detailed items recorded yet.</p>
+            <p className="text-xs text-slate-500 py-4 text-center">No detailed items recorded yet.</p>
           ) : (
             data.detailed_items.map((item, idx) => (
               <div key={idx} className="py-3 flex items-center justify-between gap-4">
                 <div className="space-y-0.5 min-w-0">
-                  <h4 className="text-xs font-semibold text-[#101828] truncate">
+                  <h4 className="text-xs font-semibold text-slate-900 truncate">
                     {item.title || item.skill_name || item.name || item.topic || `Item #${idx + 1}`}
                   </h4>
-                  <p className="text-[11px] text-[#667085]">
+                  <p className="text-[11px] text-slate-500">
                     {item.domain || item.description || item.category || 'Platform Tracked Activity'}
                   </p>
                 </div>

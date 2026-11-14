@@ -84,7 +84,7 @@ export function ChatWorkspace({
     {
       title: 'Explain a Concept',
       desc: 'Intuitive analogies, mathematical formulations, and practical applications.',
-      icon: <BrainCircuit className="h-4 w-4 text-[#2563EB]" />,
+      icon: <BrainCircuit className="h-4 w-4 text-blue-600" />,
       prompt: 'Explain the core principles, mathematical formulation, and practical applications of AVL Tree rotations.',
       mode: 'EXPLAIN',
     },
@@ -147,7 +147,7 @@ export function ChatWorkspace({
     {
       title: 'Continue My Previous Session',
       desc: 'Resume your prior learning context with retrieval drills.',
-      icon: <Sparkles className="h-4 w-4 text-[#4F46E5]" />,
+      icon: <Sparkles className="h-4 w-4 text-indigo-600" />,
       prompt: 'Review the key concepts from our previous learning session and test my retention with 2 quick comprehension questions.',
       mode: 'REVISION',
     },
@@ -156,7 +156,7 @@ export function ChatWorkspace({
   return (
     <div className="flex flex-col h-full bg-white overflow-hidden relative">
       {/* Top Workspace Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-[#E4E7EC] bg-white/95 backdrop-blur-xs z-10">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-white/95 backdrop-blur-xs z-10">
         <div className="flex items-center gap-2.5 min-w-0">
           {onToggleHistory && (
             <button
@@ -169,7 +169,7 @@ export function ChatWorkspace({
           )}
 
           <div className="flex items-center gap-2 min-w-0">
-            <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-gradient-to-br from-[#2563EB] to-[#4F46E5] text-white shrink-0 shadow-xs">
+            <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white shrink-0 shadow-xs">
               <Bot className="h-4 w-4" />
             </div>
             <div className="min-w-0">
@@ -186,8 +186,8 @@ export function ChatWorkspace({
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          <span className="hidden sm:inline-flex items-center gap-1.5 text-[10px] font-semibold text-[#2563EB] bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#2563EB] animate-pulse" />
+          <span className="hidden sm:inline-flex items-center gap-1.5 text-[10px] font-semibold text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
+            <span className="h-1.5 w-1.5 rounded-full bg-blue-600 animate-pulse" />
             {selectedContext.mode || 'Explain'} Mode
           </span>
 
@@ -218,7 +218,7 @@ export function ChatWorkspace({
         {messages.length === 0 ? (
           /* Personalized Welcome Experience */
           <div className="p-4 sm:p-8 max-w-3xl mx-auto flex flex-col items-center text-center space-y-6">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#2563EB] to-[#4F46E5] text-white shadow-md">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-md">
               <Sparkles className="h-7 w-7" />
             </div>
 
@@ -268,13 +268,13 @@ export function ChatWorkspace({
                       onContextChange({ ...selectedContext, mode: act.mode });
                       onSelectPrompt(act.prompt, act.mode);
                     }}
-                    className="p-3.5 rounded-xl border border-slate-200/90 bg-slate-50/50 hover:bg-white hover:border-[#2563EB] hover:shadow-xs transition-all text-left space-y-1 cursor-pointer group"
+                    className="p-3.5 rounded-xl border border-slate-200/90 bg-slate-50/50 hover:bg-white hover:border-blue-600 hover:shadow-xs transition-all text-left space-y-1 cursor-pointer group"
                   >
                     <div className="flex items-center gap-2">
                       <div className="p-1.5 rounded-lg bg-white border border-slate-200/80 shadow-2xs group-hover:border-blue-300">
                         {act.icon}
                       </div>
-                      <h5 className="text-xs font-bold text-slate-900 group-hover:text-[#2563EB] transition-colors truncate">
+                      <h5 className="text-xs font-bold text-slate-900 group-hover:text-blue-600 transition-colors truncate">
                         {act.title}
                       </h5>
                     </div>
@@ -305,7 +305,7 @@ export function ChatWorkspace({
         {isGenerating && (
           <div className="p-4 sm:p-5 bg-slate-50/60 border-t border-slate-100 space-y-3">
             <div className="flex items-center gap-2">
-              <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br from-[#2563EB] to-[#4F46E5] text-white shadow-2xs">
+              <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-2xs">
                 <Sparkles className="h-3.5 w-3.5" />
               </div>
               <span className="text-xs font-bold text-slate-900">AI Academic Tutor</span>
@@ -324,11 +324,11 @@ export function ChatWorkspace({
             {streamingContent ? (
               <div className="text-xs sm:text-sm text-slate-900 leading-relaxed">
                 <MarkdownContent content={streamingContent} />
-                <span className="inline-block h-3.5 w-1.5 ml-1 bg-[#2563EB] animate-pulse align-middle" />
+                <span className="inline-block h-3.5 w-1.5 ml-1 bg-blue-600 animate-pulse align-middle" />
               </div>
             ) : (
               <div className="flex items-center gap-2 text-xs text-slate-500 py-2">
-                <Loader2 className="h-4 w-4 animate-spin text-[#2563EB]" />
+                <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
                 <span>Consulting curriculum syllabus &amp; computing proof invariants...</span>
               </div>
             )}

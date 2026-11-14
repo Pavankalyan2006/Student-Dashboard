@@ -16,13 +16,13 @@ import { AICitationItem, AgentPlanItem, ToolExecutionSummary } from '../types/ai
 export function AICitation({ citation }: { citation: AICitationItem }) {
   return (
     <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg border border-slate-200 bg-slate-50 text-[11px] text-slate-700 shadow-2xs hover:border-blue-300 transition-colors">
-      <FileText className="h-3 w-3 text-[#2563EB] shrink-0" />
+      <FileText className="h-3 w-3 text-blue-600 shrink-0" />
       <span className="font-semibold text-slate-900">{citation.title}</span>
       {citation.page && <span className="text-slate-500">p. {citation.page}</span>}
       {citation.link && (
         <a
           href={citation.link}
-          className="text-[#2563EB] hover:underline flex items-center gap-0.5 ml-1"
+          className="text-blue-600 hover:underline flex items-center gap-0.5 ml-1"
         >
           <span>View</span>
           <ExternalLink className="h-2.5 w-2.5" />
@@ -71,7 +71,7 @@ export function ToolExecutionCard({ tool }: { tool: ToolExecutionSummary }) {
     <div className="my-2 rounded-xl border border-slate-200 bg-slate-50/80 p-3 text-xs space-y-1.5 shadow-2xs">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Terminal className="h-3.5 w-3.5 text-[#2563EB]" />
+          <Terminal className="h-3.5 w-3.5 text-blue-600" />
           <span className="font-mono font-bold text-slate-800">{tool.tool_name}</span>
           <span
             className={`text-[10px] font-mono px-1.5 py-0.2 rounded font-semibold uppercase ${
@@ -87,7 +87,7 @@ export function ToolExecutionCard({ tool }: { tool: ToolExecutionSummary }) {
         </div>
         <button
           onClick={() => setExpanded(!expanded)}
-          className="text-[11px] font-semibold text-[#2563EB] hover:underline cursor-pointer"
+          className="text-[11px] font-semibold text-blue-600 hover:underline cursor-pointer"
         >
           {expanded ? 'Hide Details' : 'View Payload'}
         </button>
@@ -120,7 +120,7 @@ export function AgentPlanCard({ steps }: { steps: AgentPlanItem[] }) {
     <div className="my-2 p-3.5 rounded-xl border border-indigo-200 bg-gradient-to-r from-indigo-50/50 to-blue-50/30 space-y-2 text-xs">
       <div className="flex items-center justify-between font-bold text-indigo-950">
         <div className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-[#4F46E5]" />
+          <Sparkles className="h-4 w-4 text-indigo-600" />
           <span>Multi-Agent Orchestration Plan</span>
         </div>
         <span className="text-[10px] font-semibold text-indigo-600 bg-indigo-100/70 px-2 py-0.5 rounded-full">
@@ -140,7 +140,7 @@ export function AgentPlanCard({ steps }: { steps: AgentPlanItem[] }) {
                   st.status === 'completed'
                     ? 'bg-emerald-600 text-white'
                     : st.status === 'in_progress'
-                    ? 'bg-[#2563EB] text-white animate-pulse'
+                    ? 'bg-blue-600 text-white animate-pulse'
                     : st.status === 'failed'
                     ? 'bg-rose-100 text-rose-700'
                     : 'bg-slate-200 text-slate-600'

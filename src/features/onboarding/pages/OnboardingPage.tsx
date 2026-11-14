@@ -86,7 +86,7 @@ function AccountCreateForm({ onCreated }: { onCreated: () => void }) {
   if (pendingProvisioning) {
     return (
       <div className="space-y-3">
-        <p className="text-sm text-[#B54708]">{error}</p>
+        <p className="text-sm text-amber-700">{error}</p>
         <Button onClick={async () => (await retryProvisioning()) && onCreated()}>
           <RefreshCw className="w-4 h-4 mr-1" /> Try again
         </Button>
@@ -102,7 +102,7 @@ function AccountCreateForm({ onCreated }: { onCreated: () => void }) {
         <div>
           <TextField id="password" label="Password" type="password" required value={f.password} onChange={set('password')} errors={errors} />
           {f.password && (
-            <p className={`mt-1 text-[11px] ${problems.length ? 'text-[#B54708]' : 'text-[#027A48]'}`}>
+            <p className={`mt-1 text-[11px] ${problems.length ? 'text-amber-700' : 'text-emerald-700'}`}>
               {problems.length ? `Needs ${problems.join(', ')}` : 'Strong enough'}
             </p>
           )}
@@ -110,18 +110,18 @@ function AccountCreateForm({ onCreated }: { onCreated: () => void }) {
         <TextField id="confirm_password" label="Confirm password" type="password" required value={f.confirm} onChange={set('confirm')} errors={errors} />
         <TextField id="phone" label="Phone number" type="tel" value={f.phone} onChange={set('phone')} errors={errors} />
       </div>
-      <div className="space-y-2 rounded-lg border border-[#E4E7EC] p-3">
+      <div className="space-y-2 rounded-lg border border-slate-200 p-3">
         <label className="flex items-start gap-2 text-sm">
-          <input type="checkbox" checked={f.terms} onChange={(e) => set('terms')(e.target.checked)} /> I agree to the Terms of Use. <span className="text-[#DC2626]">*</span>
+          <input type="checkbox" checked={f.terms} onChange={(e) => set('terms')(e.target.checked)} /> I agree to the Terms of Use. <span className="text-red-600">*</span>
         </label>
         <FieldError errors={errors} name="accept_terms" />
         <label className="flex items-start gap-2 text-sm">
-          <input type="checkbox" checked={f.privacy} onChange={(e) => set('privacy')(e.target.checked)} /> I have read the Privacy Policy and agree to my profile being used to personalise my learning. <span className="text-[#DC2626]">*</span>
+          <input type="checkbox" checked={f.privacy} onChange={(e) => set('privacy')(e.target.checked)} /> I have read the Privacy Policy and agree to my profile being used to personalise my learning. <span className="text-red-600">*</span>
         </label>
         <FieldError errors={errors} name="accept_privacy" />
       </div>
-      {errors.form && <p role="alert" className="text-sm text-[#DC2626]">{errors.form}</p>}
-      <p className="text-xs text-[#667085]">
+      {errors.form && <p role="alert" className="text-sm text-red-600">{errors.form}</p>}
+      <p className="text-xs text-slate-500">
         {provider === 'firebase'
           ? 'Your password is handled by Firebase Authentication. We will send a verification email.'
           : 'Your password is stored only as a secure hash.'}
@@ -138,7 +138,7 @@ function VerificationBanner() {
   const { data, refetch } = useStudentProfile();
   if (provider !== 'firebase' || data?.profile.identity.email_verified || student?.email_verified) return null;
   return (
-    <div className="mb-4 rounded-lg border border-[#FEDF89] bg-[#FFFAEB] p-3 text-sm text-[#93370D] flex flex-wrap items-center gap-2">
+    <div className="mb-4 rounded-lg border border-[#FEDF89] bg-[#FFFAEB] p-3 text-sm text-amber-800 flex flex-wrap items-center gap-2">
       <MailCheck className="w-4 h-4" />
       <span>
         Verify your email address using the link we sent.{emailVerificationRequired ? ' Verification is needed before you can finish registration.' : ''}
@@ -167,12 +167,12 @@ function Review({ onEdit }: { onEdit: (step: number) => void }) {
   ];
   return (
     <div className="space-y-3">
-      <p className="text-sm text-[#344054]">
+      <p className="text-sm text-slate-700">
         Profile completion: <strong>{completion.overall_percentage}%</strong>
-        {completion.incomplete_sections.length > 0 && <span className="text-[#667085]"> · recommended to finish later: {completion.sections.filter((s) => s.percentage < 100).map((s) => s.label).join(', ')}</span>}
+        {completion.incomplete_sections.length > 0 && <span className="text-slate-500"> · recommended to finish later: {completion.sections.filter((s) => s.percentage < 100).map((s) => s.label).join(', ')}</span>}
       </p>
       {rows.map(([step, title, fields]) => (
-        <div key={step} className="rounded-lg border border-[#EAECF0] p-3">
+        <div key={step} className="rounded-lg border border-slate-200 p-3">
           <div className="flex items-center justify-between mb-2">
             <h4 className="text-sm font-semibold">{title}</h4>
             <Button size="sm" variant="ghost" onClick={() => onEdit(step)}><Pencil className="w-3 h-3 mr-1" /> Edit</Button>
@@ -180,8 +180,8 @@ function Review({ onEdit }: { onEdit: (step: number) => void }) {
           <dl className="grid sm:grid-cols-2 gap-x-4 gap-y-1 text-sm">
             {fields.map(([k, v]) => (
               <React.Fragment key={k}>
-                <dt className="text-[#667085]">{k}</dt>
-                <dd className="text-[#101828] break-words">{v}</dd>
+                <dt className="text-slate-500">{k}</dt>
+                <dd className="text-slate-900 break-words">{v}</dd>
               </React.Fragment>
             ))}
           </dl>
@@ -219,10 +219,10 @@ export function OnboardingPage({ onNavigate }: { onNavigate: (path: string) => v
     return (
       <Shell step={1} completed={[]} skipped={[]} onJump={() => {}}>
         <h2 className="text-lg font-semibold mb-1">Create your account</h2>
-        <p className="text-sm text-[#667085] mb-4">Step 1 of 7. You can save and continue the rest later.</p>
+        <p className="text-sm text-slate-500 mb-4">Step 1 of 7. You can save and continue the rest later.</p>
         <AccountCreateForm onCreated={() => { resumed.current = false; void refetch(); }} />
-        <p className="mt-4 text-sm text-[#667085]">
-          Already registered? <button className="text-[#2563EB] font-medium" onClick={() => onNavigate('/login')}>Sign in</button>
+        <p className="mt-4 text-sm text-slate-500">
+          Already registered? <button className="text-blue-600 font-medium" onClick={() => onNavigate('/login')}>Sign in</button>
         </p>
       </Shell>
     );
@@ -230,7 +230,7 @@ export function OnboardingPage({ onNavigate }: { onNavigate: (path: string) => v
 
   if (isLoading || !data) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-[#667085]">
+      <div className="min-h-screen flex items-center justify-center text-slate-500">
         <Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading your profile…
       </div>
     );
@@ -276,7 +276,7 @@ export function OnboardingPage({ onNavigate }: { onNavigate: (path: string) => v
     <Shell step={step} completed={o.completed_steps} skipped={o.skipped_steps} onJump={setStep}>
       <VerificationBanner />
       <h2 className="text-lg font-semibold mb-1">{meta.title}</h2>
-      <p className="text-sm text-[#667085] mb-4">
+      <p className="text-sm text-slate-500 mb-4">
         Step {step} of 7{meta.optional ? ' · optional, you can skip it and complete it later' : ''}. Fields marked * are required.
       </p>
       {step === 1 && <IdentityForm {...formProps} emailVerificationRequired={emailVerificationRequired} />}
@@ -310,24 +310,24 @@ export function OnboardingPage({ onNavigate }: { onNavigate: (path: string) => v
           )
         )}
         {step === 7 && !completion.onboarding_ready && (
-          <p className="text-xs text-[#B54708] w-full">
+          <p className="text-xs text-amber-700 w-full">
             Still required:{' '}
             {completion.sections.flatMap((s) => s.items.filter((i) => i.required && !i.done).map((i) => `${i.label} (step ${s.step})`)).join(', ')}
           </p>
         )}
       </div>
-      {student && <p className="mt-6 text-xs text-[#98A2B3]">Your progress is saved on the server after each step. You can sign out and continue later.</p>}
+      {student && <p className="mt-6 text-xs text-slate-400">Your progress is saved on the server after each step. You can sign out and continue later.</p>}
     </Shell>
   );
 }
 
 function Shell({ step, completed, skipped, onJump, children }: { step: number; completed: number[]; skipped: number[]; onJump: (n: number) => void; children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-[#F9FAFB] py-8 px-4">
+    <div className="min-h-screen bg-slate-50 py-8 px-4">
       <div className="max-w-5xl mx-auto grid md:grid-cols-[240px_1fr] gap-6">
         {/* Phase 6 (P6-005): on phones the step list filled the first screen and pushed the form below the fold; it now follows the form there. */}
-        <nav aria-label="Registration steps" className="order-2 md:order-1 bg-white rounded-xl border border-[#EAECF0] p-4 h-fit">
-          <p className="text-xs font-semibold text-[#667085] mb-3">Student registration</p>
+        <nav aria-label="Registration steps" className="order-2 md:order-1 bg-white rounded-xl border border-slate-200 p-4 h-fit">
+          <p className="text-xs font-semibold text-slate-500 mb-3">Student registration</p>
           <ol className="space-y-1">
             {REGISTRATION_STEPS.map((s) => {
               const done = completed.includes(s.n);
@@ -338,18 +338,18 @@ function Shell({ step, completed, skipped, onJump, children }: { step: number; c
                     type="button"
                     onClick={() => onJump(s.n)}
                     aria-current={s.n === step ? 'step' : undefined}
-                    className={`w-full text-left flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm ${s.n === step ? 'bg-[#EFF4FF] text-[#1D4ED8] font-medium' : 'text-[#344054] hover:bg-[#F2F4F7]'}`}
+                    className={`w-full text-left flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm ${s.n === step ? 'bg-blue-50 text-blue-700 font-medium' : 'text-slate-700 hover:bg-slate-100'}`}
                   >
-                    {done ? <CheckCircle2 className="w-4 h-4 text-[#12B76A]" /> : <Circle className="w-4 h-4 text-[#D0D5DD]" />}
+                    {done ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Circle className="w-4 h-4 text-slate-300" />}
                     <span>{s.n}. {s.title}</span>
-                    {skip && <span className="ml-auto text-[10px] text-[#98A2B3]">skipped</span>}
+                    {skip && <span className="ml-auto text-[10px] text-slate-400">skipped</span>}
                   </button>
                 </li>
               );
             })}
           </ol>
         </nav>
-        <main className="order-1 md:order-2 bg-white rounded-xl border border-[#EAECF0] p-5 sm:p-6">{children}</main>
+        <main className="order-1 md:order-2 bg-white rounded-xl border border-slate-200 p-5 sm:p-6">{children}</main>
       </div>
     </div>
   );

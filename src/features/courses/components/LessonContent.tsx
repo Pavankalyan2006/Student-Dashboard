@@ -40,17 +40,17 @@ export function LessonContent({
   return (
     <div className="flex flex-col h-full bg-white overflow-y-auto">
       {/* Top Banner / Breadcrumb */}
-      <div className="border-b border-[#E4E7EC] bg-slate-50/70 px-6 py-2.5 flex items-center justify-between text-xs text-slate-500 shrink-0">
+      <div className="border-b border-slate-200 bg-slate-50/70 px-6 py-2.5 flex items-center justify-between text-xs text-slate-500 shrink-0">
         <div className="flex items-center gap-2 truncate">
           {onBackToCourse && (
             <button
               onClick={onBackToCourse}
-              className="text-[#2563EB] hover:underline font-semibold cursor-pointer truncate max-w-[120px]"
+              className="text-blue-600 hover:underline font-semibold cursor-pointer truncate max-w-[120px]"
             >
               {lesson.course_title}
             </button>
           )}
-          <span className="font-mono font-semibold text-[#2563EB] bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
+          <span className="font-mono font-semibold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
             {lesson.course_code}
           </span>
           <span className="text-slate-400">/</span>
@@ -75,7 +75,7 @@ export function LessonContent({
             onClick={onOpenAI}
             className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-700 font-semibold text-xs hover:bg-indigo-100 transition-colors cursor-pointer"
           >
-            <Sparkles className="h-3.5 w-3.5 text-[#4F46E5]" />
+            <Sparkles className="h-3.5 w-3.5 text-indigo-600" />
             <span>AI Assistant</span>
           </button>
         </div>
@@ -103,12 +103,12 @@ export function LessonContent({
             )}
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#101828] tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
             {lesson.title}
           </h1>
 
           {lesson.description && (
-            <p className="text-sm text-[#475467] leading-relaxed">
+            <p className="text-sm text-slate-600 leading-relaxed">
               {lesson.description}
             </p>
           )}
@@ -195,7 +195,7 @@ export function LessonContent({
                     {lesson.next_lesson.title}
                   </div>
                 </div>
-                <ArrowRight className="h-4 w-4 text-[#2563EB] group-hover:translate-x-0.5 transition-transform shrink-0" />
+                <ArrowRight className="h-4 w-4 text-blue-600 group-hover:translate-x-0.5 transition-transform shrink-0" />
               </button>
             ) : (
               <div className="p-3 rounded-xl bg-emerald-50 text-emerald-800 text-xs font-bold flex items-center gap-1.5 ml-auto border border-emerald-200">

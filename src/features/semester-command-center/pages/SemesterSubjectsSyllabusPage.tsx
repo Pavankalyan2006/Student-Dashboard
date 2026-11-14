@@ -189,13 +189,13 @@ export function SemesterSubjectsSyllabusPage({ initialSubjectId, onNavigate }: S
       <SemesterCommandCenterLayout currentTab="subjects" config={config} onNavigate={onNavigate}>
         <div className="space-y-6">
           {/* Top Bar with Add Subject & Import Syllabus */}
-          <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="p-4 bg-white border border-slate-200 rounded-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div>
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                <BookOpen className="w-5 h-5 text-indigo-400" />
+              <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-indigo-600" />
                 Semester Subjects & 5-Unit Syllabus Architecture
               </h2>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-slate-500 mt-0.5">
                 Curate units, topic prerequisites, estimated study hours, and track real-time completion.
               </p>
             </div>
@@ -205,9 +205,9 @@ export function SemesterSubjectsSyllabusPage({ initialSubjectId, onNavigate }: S
                 variant="outline"
                 size="sm"
                 onClick={() => setShowImportSyllabusModal(true)}
-                className="text-xs border-slate-700 hover:bg-slate-800 text-slate-300"
+                className="text-xs border-slate-200 hover:bg-slate-50 text-slate-700"
               >
-                <Upload className="w-3.5 h-3.5 mr-1 text-indigo-400" />
+                <Upload className="w-3.5 h-3.5 mr-1 text-indigo-600" />
                 Paste / Import Syllabus
               </Button>
               <Button
@@ -225,7 +225,7 @@ export function SemesterSubjectsSyllabusPage({ initialSubjectId, onNavigate }: S
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Left Col: Subject Selector Tabs */}
             <div className="space-y-2 lg:col-span-1">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block px-1">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block px-1">
                 Enrolled Subjects ({subjects.length})
               </span>
 
@@ -237,8 +237,8 @@ export function SemesterSubjectsSyllabusPage({ initialSubjectId, onNavigate }: S
                     onClick={() => setSelectedSubjectId(sub.id)}
                     className={`p-3.5 rounded-xl border cursor-pointer transition-all ${
                       isSelected
-                        ? 'bg-slate-900 border-indigo-500/80 shadow-md shadow-indigo-950/20'
-                        : 'bg-slate-950/60 border-slate-800 hover:border-slate-700'
+                        ? 'bg-white border-indigo-200 shadow-md shadow-indigo-950/20'
+                        : 'bg-white border-slate-200 hover:border-slate-200'
                     }`}
                   >
                     <div className="flex items-center justify-between">
@@ -247,14 +247,14 @@ export function SemesterSubjectsSyllabusPage({ initialSubjectId, onNavigate }: S
                       </span>
                       <span className="text-[10px] font-mono text-slate-500 font-semibold">{sub.progress_percent}%</span>
                     </div>
-                    <div className="flex items-center justify-between text-[11px] text-slate-400 mt-1">
+                    <div className="flex items-center justify-between text-[11px] text-slate-500 mt-1">
                       <span>{sub.code}</span>
-                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-300">
+                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-50 text-slate-700">
                         {sub.credits} Credits
                       </span>
                     </div>
 
-                    <div className="w-full bg-slate-800 rounded-full h-1 mt-2.5 overflow-hidden">
+                    <div className="w-full bg-slate-50 rounded-full h-1 mt-2.5 overflow-hidden">
                       <div
                         className={`h-full rounded-full ${isSelected ? 'bg-indigo-500' : 'bg-slate-600'}`}
                         style={{ width: `${sub.progress_percent}%` }}
@@ -269,33 +269,33 @@ export function SemesterSubjectsSyllabusPage({ initialSubjectId, onNavigate }: S
             {activeSubject && (
               <div className="lg:col-span-3 space-y-5">
                 {/* Active Subject Header */}
-                <div className="p-5 bg-slate-900 border border-slate-800 rounded-xl space-y-3">
+                <div className="p-5 bg-white border border-slate-200 rounded-xl space-y-3">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
                       <div className="flex items-center gap-2">
-                        <h3 className="text-xl font-bold text-white">{activeSubject.name}</h3>
-                        <span className="text-xs font-mono px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                        <h3 className="text-xl font-bold text-slate-900">{activeSubject.name}</h3>
+                        <span className="text-xs font-mono px-2 py-0.5 rounded bg-indigo-50 text-indigo-600 border border-indigo-200">
                           {activeSubject.code}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-400 mt-1">
-                        Type: <strong className="text-slate-200">{activeSubject.subject_type}</strong> • Target Grade:{' '}
-                        <strong className="text-emerald-400">{activeSubject.target_grade || 'A+'}</strong> • Difficulty:{' '}
-                        <strong className="text-amber-400">{activeSubject.difficulty}</strong>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Type: <strong className="text-slate-800">{activeSubject.subject_type}</strong> • Target Grade:{' '}
+                        <strong className="text-emerald-600">{activeSubject.target_grade || 'A+'}</strong> • Difficulty:{' '}
+                        <strong className="text-amber-600">{activeSubject.difficulty}</strong>
                       </p>
                     </div>
 
                     <div className="text-right">
-                      <div className="text-2xl font-bold text-white font-mono">{activeSubject.progress_percent}%</div>
-                      <div className="text-xs text-slate-400">Syllabus Covered</div>
+                      <div className="text-2xl font-bold text-slate-900 font-mono">{activeSubject.progress_percent}%</div>
+                      <div className="text-xs text-slate-500">Syllabus Covered</div>
                     </div>
                   </div>
                 </div>
 
                 {/* Units List */}
                 <div className="space-y-4">
-                  <h4 className="text-sm font-semibold text-slate-300 uppercase tracking-wide flex items-center gap-2">
-                    <Layers className="w-4 h-4 text-indigo-400" />
+                  <h4 className="text-sm font-semibold text-slate-700 uppercase tracking-wide flex items-center gap-2">
+                    <Layers className="w-4 h-4 text-indigo-600" />
                     Syllabus Units & Topic Breakdown ({activeSubject.units.length} Units)
                   </h4>
 
@@ -304,19 +304,19 @@ export function SemesterSubjectsSyllabusPage({ initialSubjectId, onNavigate }: S
                     const completedTopicsCount = unit.topics.filter((t) => t.completed).length;
 
                     return (
-                      <div key={unit.id} className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+                      <div key={unit.id} className="bg-white border border-slate-200 rounded-xl overflow-hidden">
                         {/* Unit Title Header */}
                         <div
                           onClick={() => setExpandedUnitId(isExpanded ? '' : unit.id)}
-                          className="p-4 bg-slate-950/70 border-b border-slate-800/80 flex items-center justify-between cursor-pointer hover:bg-slate-950 transition-colors"
+                          className="p-4 bg-white border-b border-slate-200 flex items-center justify-between cursor-pointer hover:bg-white transition-colors"
                         >
                           <div className="flex items-center gap-3">
-                            <span className="w-7 h-7 rounded-lg bg-indigo-600/20 border border-indigo-500/30 text-indigo-400 font-bold text-xs flex items-center justify-center font-mono">
+                            <span className="w-7 h-7 rounded-lg bg-indigo-100 border border-indigo-200 text-indigo-600 font-bold text-xs flex items-center justify-center font-mono">
                               U{unit.unit_number}
                             </span>
                             <div>
-                              <h5 className="text-sm font-bold text-white">{unit.name}</h5>
-                              <p className="text-xs text-slate-400">
+                              <h5 className="text-sm font-bold text-slate-900">{unit.name}</h5>
+                              <p className="text-xs text-slate-500">
                                 {unit.topics.length} topics • {completedTopicsCount} completed
                                 {unit.weightage_percent && ` • Weightage: ${unit.weightage_percent}%`}
                               </p>
@@ -327,21 +327,21 @@ export function SemesterSubjectsSyllabusPage({ initialSubjectId, onNavigate }: S
                             <span
                               className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
                                 unit.status === 'COMPLETED'
-                                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                  ? 'bg-emerald-50 text-emerald-600 border border-emerald-200'
                                   : unit.status === 'IN_PROGRESS'
-                                  ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
-                                  : 'bg-slate-800 text-slate-400'
+                                  ? 'bg-indigo-50 text-indigo-600 border border-indigo-200'
+                                  : 'bg-slate-50 text-slate-500'
                               }`}
                             >
                               {(unit.status || 'IN_PROGRESS').replace(/_/g, ' ')}
                             </span>
-                            {isExpanded ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+                            {isExpanded ? <ChevronUp className="w-4 h-4 text-slate-500" /> : <ChevronDown className="w-4 h-4 text-slate-500" />}
                           </div>
                         </div>
 
                         {/* Topics List */}
                         {isExpanded && (
-                          <div className="p-4 space-y-2 bg-slate-900">
+                          <div className="p-4 space-y-2 bg-white">
                             {unit.topics.length === 0 ? (
                               <p className="text-xs text-slate-500 py-2">No topics added to this unit yet.</p>
                             ) : (
@@ -351,8 +351,8 @@ export function SemesterSubjectsSyllabusPage({ initialSubjectId, onNavigate }: S
                                   onClick={() => handleToggleTopic(unitIdx, topic.id)}
                                   className={`p-3 rounded-lg border flex items-center justify-between cursor-pointer transition-all ${
                                     topic.completed
-                                      ? 'bg-emerald-950/15 border-emerald-900/30 text-slate-300'
-                                      : 'bg-slate-950 border-slate-800 hover:border-slate-700 text-white'
+                                      ? 'bg-emerald-50 border-emerald-200 text-slate-700'
+                                      : 'bg-white border-slate-200 hover:border-slate-200 text-slate-900'
                                   }`}
                                 >
                                   <div className="flex items-center gap-3">
@@ -360,7 +360,7 @@ export function SemesterSubjectsSyllabusPage({ initialSubjectId, onNavigate }: S
                                       className={`w-5 h-5 rounded flex items-center justify-center border transition-colors ${
                                         topic.completed
                                           ? 'bg-emerald-500 border-emerald-500 text-white'
-                                          : 'border-slate-600 bg-slate-900 text-transparent'
+                                          : 'border-slate-600 bg-white text-transparent'
                                       }`}
                                     >
                                       <Check className="w-3.5 h-3.5 stroke-[3]" />
@@ -378,7 +378,7 @@ export function SemesterSubjectsSyllabusPage({ initialSubjectId, onNavigate }: S
                                         {topic.revision_count > 0 && (
                                           <>
                                             <span>•</span>
-                                            <span className="text-purple-400 font-medium">{topic.revision_count}x revised</span>
+                                            <span className="text-purple-600 font-medium">{topic.revision_count}x revised</span>
                                           </>
                                         )}
                                       </div>
@@ -389,10 +389,10 @@ export function SemesterSubjectsSyllabusPage({ initialSubjectId, onNavigate }: S
                                     <span
                                       className={`text-[9px] font-bold px-1.5 py-0.2 rounded ${
                                         topic.conceptual_difficulty === 'HARD'
-                                          ? 'bg-red-500/10 text-red-400'
+                                          ? 'bg-red-50 text-red-600'
                                           : topic.conceptual_difficulty === 'MEDIUM'
-                                          ? 'bg-amber-500/10 text-amber-400'
-                                          : 'bg-emerald-500/10 text-emerald-400'
+                                          ? 'bg-amber-50 text-amber-600'
+                                          : 'bg-emerald-50 text-emerald-600'
                                       }`}
                                     >
                                       {topic.conceptual_difficulty}
@@ -414,18 +414,18 @@ export function SemesterSubjectsSyllabusPage({ initialSubjectId, onNavigate }: S
 
         {/* MODAL 1: ADD SUBJECT */}
         {showAddSubjectModal && (
-          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
-              <div className="p-5 border-b border-slate-800 flex items-center justify-between">
-                <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  <BookOpen className="w-4 h-4 text-indigo-400" />
+          <div className="fixed inset-0 z-50 bg-slate-50 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
+              <div className="p-5 border-b border-slate-200 flex items-center justify-between">
+                <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-indigo-600" />
                   Add New Semester Subject
                 </h3>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setShowAddSubjectModal(false)}
-                  className="border-slate-700 text-slate-400 hover:text-white"
+                  className="border-slate-200 text-slate-500 hover:text-slate-900"
                 >
                   Cancel
                 </Button>
@@ -434,47 +434,47 @@ export function SemesterSubjectsSyllabusPage({ initialSubjectId, onNavigate }: S
               <form onSubmit={handleAddSubjectSubmit} className="p-6 space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1">Subject Name *</label>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Subject Name *</label>
                     <input
                       type="text"
                       required
                       value={newSubForm.name}
                       onChange={(e) => setNewSubForm({ ...newSubForm, name: e.target.value })}
                       placeholder="e.g. Distributed Cloud Computing"
-                      className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+                      className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-indigo-500"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1">Subject Code *</label>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Subject Code *</label>
                     <input
                       type="text"
                       required
                       value={newSubForm.code}
                       onChange={(e) => setNewSubForm({ ...newSubForm, code: e.target.value })}
                       placeholder="e.g. CS606PC"
-                      className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+                      className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-indigo-500"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1">Credits</label>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Credits</label>
                     <input
                       type="number"
                       min={1}
                       max={6}
                       value={newSubForm.credits}
                       onChange={(e) => setNewSubForm({ ...newSubForm, credits: Number(e.target.value) })}
-                      className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+                      className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-indigo-500"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1">Subject Type</label>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Subject Type</label>
                     <select
                       value={newSubForm.subject_type}
                       onChange={(e) => setNewSubForm({ ...newSubForm, subject_type: e.target.value as any })}
-                      className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+                      className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-indigo-500"
                     >
                       <option value="CORE">CORE</option>
                       <option value="ELECTIVE">ELECTIVE</option>
@@ -488,11 +488,11 @@ export function SemesterSubjectsSyllabusPage({ initialSubjectId, onNavigate }: S
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1">Difficulty</label>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Difficulty</label>
                     <select
                       value={newSubForm.difficulty}
                       onChange={(e) => setNewSubForm({ ...newSubForm, difficulty: e.target.value as any })}
-                      className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+                      className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-indigo-500"
                     >
                       <option value="EASY">Easy</option>
                       <option value="MEDIUM">Medium</option>
@@ -500,11 +500,11 @@ export function SemesterSubjectsSyllabusPage({ initialSubjectId, onNavigate }: S
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1">Priority</label>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Priority</label>
                     <select
                       value={newSubForm.priority}
                       onChange={(e) => setNewSubForm({ ...newSubForm, priority: e.target.value as any })}
-                      className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+                      className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-indigo-500"
                     >
                       <option value="LOW">Low</option>
                       <option value="MEDIUM">Medium</option>
@@ -514,7 +514,7 @@ export function SemesterSubjectsSyllabusPage({ initialSubjectId, onNavigate }: S
                   </div>
                 </div>
 
-                <div className="pt-3 border-t border-slate-800 flex justify-end">
+                <div className="pt-3 border-t border-slate-200 flex justify-end">
                   <Button type="submit" className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs">
                     Create Subject & 5 Units
                   </Button>
@@ -526,15 +526,15 @@ export function SemesterSubjectsSyllabusPage({ initialSubjectId, onNavigate }: S
 
         {/* MODAL 2: PASTE / IMPORT SYLLABUS */}
         {showImportSyllabusModal && (
-          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden">
-              <div className="p-5 border-b border-slate-800 flex items-center justify-between">
+          <div className="fixed inset-0 z-50 bg-slate-50 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden">
+              <div className="p-5 border-b border-slate-200 flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                    <Upload className="w-4 h-4 text-indigo-400" />
+                  <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                    <Upload className="w-4 h-4 text-indigo-600" />
                     Paste Syllabus for {activeSubject?.name}
                   </h3>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-slate-500">
                     Paste raw text from your university PDF or course handbook.
                   </p>
                 </div>
@@ -542,7 +542,7 @@ export function SemesterSubjectsSyllabusPage({ initialSubjectId, onNavigate }: S
                   variant="outline"
                   size="sm"
                   onClick={() => setShowImportSyllabusModal(false)}
-                  className="border-slate-700 text-slate-400 hover:text-white"
+                  className="border-slate-200 text-slate-500 hover:text-slate-900"
                 >
                   Cancel
                 </Button>
@@ -550,7 +550,7 @@ export function SemesterSubjectsSyllabusPage({ initialSubjectId, onNavigate }: S
 
               <form onSubmit={handleImportSyllabusSubmit} className="p-6 space-y-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
                     Syllabus Content (Unit Topics, Objectives, Sub-topics)
                   </label>
                   <textarea
@@ -559,13 +559,13 @@ export function SemesterSubjectsSyllabusPage({ initialSubjectId, onNavigate }: S
                     value={pasteSyllabusText}
                     onChange={(e) => setPasteSyllabusText(e.target.value)}
                     placeholder="Unit 1: Introduction to Distributed Systems&#10;- Concurrency models&#10;- Message passing vs RPC&#10;- CAP theorem & consistency proofs"
-                    className="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+                    className="w-full bg-white border border-slate-200 rounded-lg p-3 text-xs text-slate-800 focus:outline-none focus:border-indigo-500"
                   />
                 </div>
 
-                <div className="pt-3 border-t border-slate-800 flex items-center justify-between">
+                <div className="pt-3 border-t border-slate-200 flex items-center justify-between">
                   <span className="text-[11px] text-slate-500 flex items-center gap-1">
-                    <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+                    <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
                     Auto-analyzes conceptual difficulty & hours
                   </span>
                   <Button

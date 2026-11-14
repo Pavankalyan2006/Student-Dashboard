@@ -55,28 +55,28 @@ export const ResumeTemplateUploadModal: React.FC<ResumeTemplateUploadModalProps>
       name: 'Google_SWE_Technical.pdf',
       desc: 'High-density mono-spaced technical layout for systems & full-stack engineers',
       font: 'sans',
-      color: '#1E40AF',
+      color: '#2F389E',
       accentLabel: 'Deep Navy',
     },
     {
       name: 'Harvard_Academic_Serif.pdf',
       desc: 'Formal academic publication & research standard with centered header',
       font: 'serif',
-      color: '#991B1B',
+      color: '#8D2520',
       accentLabel: 'Crimson',
     },
     {
       name: 'Minimalist_Startup_Dev.pdf',
       desc: 'Clean Scandinavian aesthetic with high whitespace and modern accents',
       font: 'sans',
-      color: '#0F172A',
+      color: '#121829',
       accentLabel: 'Slate',
     },
     {
       name: 'FinTech_Modern_Teal.pdf',
       desc: 'Balanced corporate layout with structured dividers and bold metrics',
       font: 'sans',
-      color: '#0E7490',
+      color: '#1C6283',
       accentLabel: 'Teal',
     },
   ];
@@ -146,11 +146,11 @@ export const ResumeTemplateUploadModal: React.FC<ResumeTemplateUploadModalProps>
         if (lowerText.includes('serif') || uploadFile.name.toLowerCase().includes('harvard') || uploadTextHasSerif(uploadFile.name)) font = 'serif';
         if (lowerText.includes('mono') || uploadFile.name.toLowerCase().includes('swe') || uploadFile.name.toLowerCase().includes('tech')) font = 'mono';
 
-        let accent = '#1E40AF';
-        if (uploadFile.name.toLowerCase().includes('harvard') || uploadFile.name.toLowerCase().includes('crimson')) accent = '#991B1B';
-        if (uploadFile.name.toLowerCase().includes('teal') || uploadFile.name.toLowerCase().includes('cyan')) accent = '#0E7490';
-        if (uploadFile.name.toLowerCase().includes('minimalist') || uploadFile.name.toLowerCase().includes('slate')) accent = '#0F172A';
-        if (uploadFile.name.toLowerCase().includes('purple') || uploadFile.name.toLowerCase().includes('indigo')) accent = '#6366F1';
+        let accent = '#2F389E';
+        if (uploadFile.name.toLowerCase().includes('harvard') || uploadFile.name.toLowerCase().includes('crimson')) accent = '#8D2520';
+        if (uploadFile.name.toLowerCase().includes('teal') || uploadFile.name.toLowerCase().includes('cyan')) accent = '#1C6283';
+        if (uploadFile.name.toLowerCase().includes('minimalist') || uploadFile.name.toLowerCase().includes('slate')) accent = '#121829';
+        if (uploadFile.name.toLowerCase().includes('purple') || uploadFile.name.toLowerCase().includes('indigo')) accent = '#6B66EC';
 
         const config: CustomTemplateConfig = {
           template_name: uploadFile.name.replace(/\.pdf$/i, '').replace(/[_-]/g, ' '),

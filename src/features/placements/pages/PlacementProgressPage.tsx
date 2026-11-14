@@ -90,7 +90,7 @@ export const PlacementProgressPage: React.FC<Props> = ({ onNavigate }) => {
       </button>
 
       {/* Top Banner Header */}
-      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-900 rounded-2xl p-6 sm:p-8 text-white shadow-sm relative overflow-hidden">
+      <div className="hero-brand rounded-2xl p-6 sm:p-8 text-white shadow-sm relative overflow-hidden">
         <div className="relative z-10 max-w-3xl">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/10 backdrop-blur rounded-full text-xs font-semibold tracking-wide text-blue-200 mb-3">
             <TrendingUp className="h-3.5 w-3.5 text-blue-300" />
@@ -198,18 +198,18 @@ export const PlacementProgressPage: React.FC<Props> = ({ onNavigate }) => {
             <div className="h-[260px] w-full pt-4">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={dimensionChartData} margin={{ top: 10, right: 10, left: -20, bottom: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EFF1F6" />
                   <XAxis
                     dataKey="name"
                     tickLine={false}
                     axisLine={false}
-                    tick={{ fontSize: 11, fill: '#64748B' }}
+                    tick={{ fontSize: 11, fill: '#6A7387' }}
                   />
                   <YAxis
                     domain={[0, 100]}
                     tickLine={false}
                     axisLine={false}
-                    tick={{ fontSize: 11, fill: '#64748B' }}
+                    tick={{ fontSize: 11, fill: '#6A7387' }}
                   />
                   <Tooltip
                     content={({ active, payload }) => {
@@ -229,7 +229,7 @@ export const PlacementProgressPage: React.FC<Props> = ({ onNavigate }) => {
                     {dimensionChartData.map((_, index) => (
                       <Cell
                         key={`cell-${index}`}
-                        fill={index % 2 === 0 ? '#2563EB' : '#4F46E5'}
+                        fill={index % 2 === 0 ? '#4654E0' : '#574FDD'}
                       />
                     ))}
                   </Bar>
@@ -251,18 +251,18 @@ export const PlacementProgressPage: React.FC<Props> = ({ onNavigate }) => {
               <div className="h-[200px] w-full pt-2">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={interviewTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EFF1F6" />
                     <XAxis
                       dataKey="round"
                       tickLine={false}
                       axisLine={false}
-                      tick={{ fontSize: 11, fill: '#64748B' }}
+                      tick={{ fontSize: 11, fill: '#6A7387' }}
                     />
                     <YAxis
                       domain={[0, 100]}
                       tickLine={false}
                       axisLine={false}
-                      tick={{ fontSize: 11, fill: '#64748B' }}
+                      tick={{ fontSize: 11, fill: '#6A7387' }}
                     />
                     <Tooltip
                       content={({ active, payload }) => {
@@ -281,9 +281,9 @@ export const PlacementProgressPage: React.FC<Props> = ({ onNavigate }) => {
                     <Line
                       type="monotone"
                       dataKey="score"
-                      stroke="#10B981"
+                      stroke="#21A06F"
                       strokeWidth={3}
-                      dot={{ r: 4, fill: '#10B981' }}
+                      dot={{ r: 4, fill: '#21A06F' }}
                     />
                   </LineChart>
                 </ResponsiveContainer>

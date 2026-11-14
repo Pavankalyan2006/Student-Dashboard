@@ -24,19 +24,19 @@ export function LearningAnalytics({ analytics }: { analytics: DashboardAnalytics
   const totalProblems = analytics.weekly_study_minutes.reduce((acc, curr) => acc + curr.problems_solved, 0);
 
   return (
-    <Card className="border border-[#E4E7EC] bg-white">
+    <Card className="border border-slate-200 bg-white">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <div className="flex items-center gap-2">
-          <BarChart3 className="h-4 w-4 text-[#2563EB]" />
+          <BarChart3 className="h-4 w-4 text-blue-600" />
           <div>
-            <CardTitle className="text-sm sm:text-base font-bold text-[#101828]">Weekly Study Activity</CardTitle>
-            <p className="text-xs text-[#667085]">Hours dedicated to coursework and lab problem solving</p>
+            <CardTitle className="text-sm sm:text-base font-bold text-slate-900">Weekly Study Activity</CardTitle>
+            <p className="text-xs text-slate-500">Hours dedicated to coursework and lab problem solving</p>
           </div>
         </div>
 
         <div className="flex items-center gap-3 text-xs">
           <div className="flex items-center gap-1.5 font-semibold text-slate-800">
-            <Clock className="h-3.5 w-3.5 text-[#2563EB]" />
+            <Clock className="h-3.5 w-3.5 text-blue-600" />
             <span className="tabular-nums">{totalHours} hrs</span>
           </div>
           <div className="flex items-center gap-1.5 font-semibold text-slate-800">
@@ -50,17 +50,17 @@ export function LearningAnalytics({ analytics }: { analytics: DashboardAnalytics
         <div className="h-[200px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EFF1F6" />
               <XAxis
                 dataKey="day"
                 tickLine={false}
                 axisLine={false}
-                tick={{ fontSize: 11, fill: '#667085' }}
+                tick={{ fontSize: 11, fill: '#6A7387' }}
               />
               <YAxis
                 tickLine={false}
                 axisLine={false}
-                tick={{ fontSize: 11, fill: '#667085' }}
+                tick={{ fontSize: 11, fill: '#6A7387' }}
                 tickFormatter={(v) => `${v}h`}
               />
               <Tooltip
@@ -68,8 +68,8 @@ export function LearningAnalytics({ analytics }: { analytics: DashboardAnalytics
                   if (active && payload && payload.length) {
                     const data = payload[0].payload;
                     return (
-                      <div className="rounded-xl border border-[#E4E7EC] bg-white p-2.5 shadow-sm text-xs">
-                        <div className="font-bold text-[#101828] mb-1">{label}</div>
+                      <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-sm text-xs">
+                        <div className="font-bold text-slate-900 mb-1">{label}</div>
                         <div className="text-slate-600 tabular-nums">
                           Study Time: <span className="font-semibold text-slate-900">{data.hours} hours</span>
                         </div>
@@ -82,7 +82,7 @@ export function LearningAnalytics({ analytics }: { analytics: DashboardAnalytics
                   return null;
                 }}
               />
-              <Bar dataKey="hours" fill="#2563EB" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="hours" fill="#4654E0" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>

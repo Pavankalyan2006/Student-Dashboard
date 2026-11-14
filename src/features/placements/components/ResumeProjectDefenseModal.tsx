@@ -112,7 +112,7 @@ export const ResumeProjectDefenseModal: React.FC<Props> = ({
           {activeTab === 'AUDIT' && audit && (
             <div className="space-y-6">
               {/* Score Box */}
-              <div className="bg-gradient-to-r from-slate-900 to-indigo-950 text-white p-6 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="hero-brand text-white p-6 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="space-y-1">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-blue-300">
                     Profile Completeness

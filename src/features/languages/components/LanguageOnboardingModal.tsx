@@ -109,34 +109,34 @@ export function LanguageOnboardingModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-50 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="p-6 border-b border-slate-800 flex items-center justify-between bg-slate-950/50">
+        <div className="p-6 border-b border-slate-200 flex items-center justify-between bg-white">
           <div className="flex items-center gap-3">
             <span className="text-3xl">{language.flag_emoji}</span>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-xl font-bold text-white">Start Learning {language.name}</h2>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                <h2 className="text-xl font-bold text-slate-900">Start Learning {language.name}</h2>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-200">
                   {language.native_name}
                 </span>
               </div>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-slate-500 mt-0.5">
                 Personalized Learning Pathway Setup • Step {step} of 3
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
+            className="p-2 text-slate-500 hover:text-slate-900 rounded-lg hover:bg-slate-50 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Step Progress Bar */}
-        <div className="w-full bg-slate-800 h-1">
+        <div className="w-full bg-slate-50 h-1">
           <div
             className="bg-indigo-500 h-1 transition-all duration-300"
             style={{ width: `${(step / 3) * 100}%` }}
@@ -144,13 +144,13 @@ export function LanguageOnboardingModal({
         </div>
 
         {/* Modal Body */}
-        <div className="p-6 overflow-y-auto space-y-6 flex-1 text-slate-200">
+        <div className="p-6 overflow-y-auto space-y-6 flex-1 text-slate-800">
           {/* STEP 1: Purpose & Explanation Language */}
           {step === 1 && (
             <div className="space-y-5 animate-in fade-in">
               <div>
-                <h3 className="text-base font-semibold text-white">Why are you learning {language.name}?</h3>
-                <p className="text-xs text-slate-400 mt-1">
+                <h3 className="text-base font-semibold text-slate-900">Why are you learning {language.name}?</h3>
+                <p className="text-xs text-slate-500 mt-1">
                   We'll tailor vocabulary, conversational scenarios, and examples to your primary objective.
                 </p>
               </div>
@@ -166,20 +166,20 @@ export function LanguageOnboardingModal({
                       onClick={() => setPurpose(opt.key)}
                       className={`p-3.5 rounded-xl border text-left transition-all flex items-start gap-3 ${
                         isSelected
-                          ? 'border-indigo-500 bg-indigo-950/30 text-white ring-1 ring-indigo-500'
-                          : 'border-slate-800 bg-slate-800/40 text-slate-300 hover:border-slate-700'
+                          ? 'border-indigo-500 bg-indigo-50 text-slate-900 ring-1 ring-indigo-500'
+                          : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-200'
                       }`}
                     >
                       <div
                         className={`p-2 rounded-lg ${
-                          isSelected ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400'
+                          isSelected ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-500'
                         }`}
                       >
                         <Icon className="w-4 h-4" />
                       </div>
                       <div>
                         <div className="text-sm font-medium">{opt.label}</div>
-                        <div className="text-xs text-slate-400 mt-0.5">{opt.desc}</div>
+                        <div className="text-xs text-slate-500 mt-0.5">{opt.desc}</div>
                       </div>
                     </button>
                   );
@@ -187,13 +187,13 @@ export function LanguageOnboardingModal({
               </div>
 
               <div className="pt-2">
-                <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                <label className="block text-xs font-medium text-slate-700 mb-1.5">
                   Preferred Language for Explanations & Translations:
                 </label>
                 <select
                   value={explanationLanguage}
                   onChange={(e) => setExplanationLanguage(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-sm text-white focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-900 focus:outline-none focus:border-indigo-500"
                 >
                   <option value="English">English (Standard)</option>
                   <option value="Hindi">Hindi (हिन्दी)</option>
@@ -210,8 +210,8 @@ export function LanguageOnboardingModal({
           {step === 2 && (
             <div className="space-y-5 animate-in fade-in">
               <div>
-                <h3 className="text-base font-semibold text-white">What is your current level in {language.name}?</h3>
-                <p className="text-xs text-slate-400 mt-1">
+                <h3 className="text-base font-semibold text-slate-900">What is your current level in {language.name}?</h3>
+                <p className="text-xs text-slate-500 mt-1">
                   Mapped approximately to the CEFR standard. You can retake or adjust this anytime.
                 </p>
               </div>
@@ -226,31 +226,31 @@ export function LanguageOnboardingModal({
                       onClick={() => setCurrentLevel(opt.key)}
                       className={`w-full p-3 rounded-xl border text-left transition-all flex items-center justify-between ${
                         isSelected
-                          ? 'border-indigo-500 bg-indigo-950/30 text-white ring-1 ring-indigo-500'
-                          : 'border-slate-800 bg-slate-800/40 text-slate-300 hover:border-slate-700'
+                          ? 'border-indigo-500 bg-indigo-50 text-slate-900 ring-1 ring-indigo-500'
+                          : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-200'
                       }`}
                     >
                       <div>
                         <div className="text-sm font-medium flex items-center gap-2">
                           <span>{opt.label}</span>
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-700 text-slate-300 font-mono">
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 font-mono">
                             {opt.cefr}
                           </span>
                         </div>
-                        <div className="text-xs text-slate-400 mt-0.5">{opt.desc}</div>
+                        <div className="text-xs text-slate-500 mt-0.5">{opt.desc}</div>
                       </div>
-                      {isSelected && <CheckCircle2 className="w-5 h-5 text-indigo-400 shrink-0" />}
+                      {isSelected && <CheckCircle2 className="w-5 h-5 text-indigo-600 shrink-0" />}
                     </button>
                   );
                 })}
               </div>
 
               <div className="pt-2">
-                <label className="block text-xs font-medium text-slate-300 mb-1.5">Target Fluency Goal:</label>
+                <label className="block text-xs font-medium text-slate-700 mb-1.5">Target Fluency Goal:</label>
                 <select
                   value={targetLevel}
                   onChange={(e) => setTargetLevel(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-sm text-white focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-900 focus:outline-none focus:border-indigo-500"
                 >
                   <option value="A2 (Basic Everyday Travel)">A2 — Basic Everyday Travel & Daily Life</option>
                   <option value="B1 (Conversational Independence)">B1 — Conversational Independence</option>
@@ -265,8 +265,8 @@ export function LanguageOnboardingModal({
           {step === 3 && (
             <div className="space-y-5 animate-in fade-in">
               <div>
-                <h3 className="text-base font-semibold text-white">Daily Study Commitment</h3>
-                <p className="text-xs text-slate-400 mt-1">
+                <h3 className="text-base font-semibold text-slate-900">Daily Study Commitment</h3>
+                <p className="text-xs text-slate-500 mt-1">
                   Consistent micro-learning is the fastest way to acquire a language.
                 </p>
               </div>
@@ -279,18 +279,18 @@ export function LanguageOnboardingModal({
                     onClick={() => setDailyGoalMinutes(mins)}
                     className={`py-3 px-2 rounded-xl border text-center transition-all ${
                       dailyGoalMinutes === mins
-                        ? 'border-indigo-500 bg-indigo-950/40 text-white font-semibold ring-1 ring-indigo-500'
-                        : 'border-slate-800 bg-slate-800/40 text-slate-400 hover:border-slate-700'
+                        ? 'border-indigo-500 bg-indigo-50 text-slate-900 font-semibold ring-1 ring-indigo-500'
+                        : 'border-slate-200 bg-slate-50 text-slate-500 hover:border-slate-200'
                     }`}
                   >
-                    <div className="text-lg font-bold text-white">{mins}</div>
-                    <div className="text-[11px] text-slate-400">mins / day</div>
+                    <div className="text-lg font-bold text-slate-900">{mins}</div>
+                    <div className="text-[11px] text-slate-500">mins / day</div>
                   </button>
                 ))}
               </div>
 
               <div className="pt-2">
-                <h4 className="text-xs font-semibold text-slate-300 mb-2">Preferred Learning Modalities:</h4>
+                <h4 className="text-xs font-semibold text-slate-700 mb-2">Preferred Learning Modalities:</h4>
                 <div className="space-y-2">
                   {methodOptions.map((opt) => {
                     const isChecked = selectedMethods.includes(opt.key);
@@ -301,13 +301,13 @@ export function LanguageOnboardingModal({
                         onClick={() => toggleMethod(opt.key)}
                         className={`w-full p-2.5 rounded-xl border text-left transition-all flex items-center justify-between ${
                           isChecked
-                            ? 'border-indigo-500/60 bg-indigo-950/20 text-white'
-                            : 'border-slate-800 bg-slate-800/30 text-slate-400'
+                            ? 'border-indigo-200 bg-indigo-50 text-slate-900'
+                            : 'border-slate-200 bg-slate-50 text-slate-500'
                         }`}
                       >
                         <div>
-                          <div className="text-xs font-medium text-slate-200">{opt.label}</div>
-                          <div className="text-[11px] text-slate-400">{opt.desc}</div>
+                          <div className="text-xs font-medium text-slate-800">{opt.label}</div>
+                          <div className="text-[11px] text-slate-500">{opt.desc}</div>
                         </div>
                         <div
                           className={`w-4 h-4 rounded border flex items-center justify-center ${
@@ -326,12 +326,12 @@ export function LanguageOnboardingModal({
         </div>
 
         {/* Footer Navigation */}
-        <div className="p-4 border-t border-slate-800 flex items-center justify-between bg-slate-950/50">
+        <div className="p-4 border-t border-slate-200 flex items-center justify-between bg-white">
           {step > 1 ? (
             <button
               type="button"
               onClick={() => setStep((s) => (s - 1) as any)}
-              className="px-4 py-2 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors flex items-center gap-1.5"
+              className="px-4 py-2 rounded-xl text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-50 transition-colors flex items-center gap-1.5"
             >
               <ArrowLeft className="w-4 h-4" /> Back
             </button>

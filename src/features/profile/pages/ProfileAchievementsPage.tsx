@@ -34,17 +34,17 @@ export function ProfileAchievementsPage({ onNavigate }: { onNavigate: (path: str
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E4E7EC] pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
         <div className="flex items-center gap-3">
           <button
             onClick={() => onNavigate('/profile')}
-            className="p-2 text-[#475467] hover:text-[#101828] hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+            className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div>
-            <h1 className="text-xl font-bold text-[#101828]">Student Achievements</h1>
-            <p className="text-xs text-[#667085]">
+            <h1 className="text-xl font-bold text-slate-900">Student Achievements</h1>
+            <p className="text-xs text-slate-500">
               Deterministic milestone badges awarded strictly for verified learning and technical accomplishments.
             </p>
           </div>
@@ -67,8 +67,8 @@ export function ProfileAchievementsPage({ onNavigate }: { onNavigate: (path: str
             onClick={() => setSelectedCategory(cat)}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
               selectedCategory === cat
-                ? 'bg-[#2563EB] text-white shadow-2xs'
-                : 'bg-white border border-[#E4E7EC] text-[#475467] hover:bg-slate-50'
+                ? 'bg-blue-600 text-white shadow-2xs'
+                : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
             }`}
           >
             {cat === 'ALL' ? 'All Badges' : cat}
@@ -84,7 +84,7 @@ export function ProfileAchievementsPage({ onNavigate }: { onNavigate: (path: str
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="p-12 text-center text-xs text-[#667085] bg-white rounded-2xl border border-[#E4E7EC]">
+        <div className="p-12 text-center text-xs text-slate-500 bg-white rounded-2xl border border-slate-200">
           No achievements in this category yet.
         </div>
       ) : (
@@ -116,12 +116,12 @@ export function ProfileAchievementsPage({ onNavigate }: { onNavigate: (path: str
               </div>
 
               <div>
-                <h3 className="text-sm font-bold text-[#101828]">{item.name}</h3>
-                <p className="text-xs text-[#475467] leading-relaxed mt-1">{item.description}</p>
+                <h3 className="text-sm font-bold text-slate-900">{item.name}</h3>
+                <p className="text-xs text-slate-600 leading-relaxed mt-1">{item.description}</p>
               </div>
 
               <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
-                <span className="text-[#667085] font-mono text-[10px]">
+                <span className="text-slate-500 font-mono text-[10px]">
                   Criteria: {item.criteria.threshold} {item.criteria.type.replace(/_/g, ' ')}
                 </span>
                 {item.is_earned && item.earned_at && (

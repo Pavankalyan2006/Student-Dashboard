@@ -53,8 +53,8 @@ In Phase 7 (Coding Lab), this workspace will execute code against sandboxed test
           leftPanel={
             <div className="h-full p-4 flex flex-col justify-between bg-white overflow-y-auto">
               <div className="space-y-3">
-                <div className="flex items-center gap-2 text-xs font-semibold text-[#101828]">
-                  <Sparkles className="h-4 w-4 text-[#4F46E5]" />
+                <div className="flex items-center gap-2 text-xs font-semibold text-slate-900">
+                  <Sparkles className="h-4 w-4 text-indigo-600" />
                   <span>Problem Specification &amp; KaTeX Mathematics</span>
                 </div>
                 <MarkdownContent content={problemExplanation} />

@@ -131,21 +131,21 @@ export function DocumentUploader({
           className={cn(
             'flex flex-col items-center justify-center p-8 rounded-xl border-2 border-dashed transition-all cursor-pointer bg-white text-center',
             isDragOver
-              ? 'border-[#2563EB] bg-blue-50/50 scale-[0.99]'
-              : 'border-[#D0D5DD] hover:border-[#2563EB] hover:bg-slate-50/50'
+              ? 'border-blue-600 bg-blue-50/50 scale-[0.99]'
+              : 'border-slate-300 hover:border-blue-600 hover:bg-slate-50/50'
           )}
         >
-          <div className="h-12 w-12 rounded-full bg-blue-50 text-[#2563EB] flex items-center justify-center mb-3 shadow-xs">
+          <div className="h-12 w-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mb-3 shadow-xs">
             <UploadCloud className="h-6 w-6" />
           </div>
 
-          <p className="text-sm font-semibold text-[#101828]">
-            <span className="text-[#2563EB] underline decoration-blue-300 underline-offset-2">
+          <p className="text-sm font-semibold text-slate-900">
+            <span className="text-blue-600 underline decoration-blue-300 underline-offset-2">
               Click to upload
             </span>{' '}
             or drag and drop your academic document
           </p>
-          <p className="text-xs text-[#475467] mt-1">
+          <p className="text-xs text-slate-600 mt-1">
             Supports PDF, Word (DOCX), PowerPoint (PPTX), Excel (XLSX), Markdown, Text, CSV, Images, and Code
           </p>
 
@@ -343,20 +343,20 @@ export function DocumentUploader({
       {(uploadState.status === 'reading' ||
         uploadState.status === 'uploading' ||
         uploadState.status === 'queued') && (
-        <div className="p-6 rounded-xl border border-[#E4E7EC] bg-white shadow-xs space-y-3">
+        <div className="p-6 rounded-xl border border-slate-200 bg-white shadow-xs space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 max-w-sm truncate">
-              <FileText className="h-5 w-5 text-[#2563EB] shrink-0" />
+              <FileText className="h-5 w-5 text-blue-600 shrink-0" />
               <div className="truncate">
-                <p className="text-xs font-semibold text-[#101828] truncate">
+                <p className="text-xs font-semibold text-slate-900 truncate">
                   {uploadState.filename}
                 </p>
-                <p className="text-[11px] text-[#667085]">
+                <p className="text-[11px] text-slate-500">
                   {(uploadState.sizeBytes / (1024 * 1024)).toFixed(2)} MB · Validating & storing
                 </p>
               </div>
             </div>
-            <span className="text-xs font-mono font-medium text-[#2563EB]">
+            <span className="text-xs font-mono font-medium text-blue-600">
               {uploadState.progressPercentage}%
             </span>
           </div>
@@ -364,13 +364,13 @@ export function DocumentUploader({
           {/* Progress Bar */}
           <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
             <div
-              className="h-full bg-[#2563EB] transition-all duration-300 rounded-full"
+              className="h-full bg-blue-600 transition-all duration-300 rounded-full"
               style={{ width: `${uploadState.progressPercentage}%` }}
             />
           </div>
 
           <p className="text-[11px] text-slate-500 flex items-center gap-1.5">
-            <RefreshCw className="h-3 w-3 animate-spin text-[#2563EB]" />
+            <RefreshCw className="h-3 w-3 animate-spin text-blue-600" />
             <span>
               {uploadState.status === 'reading'
                 ? 'Validating file format and safety checksums...'

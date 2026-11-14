@@ -112,14 +112,14 @@ export function LanguageQuizView({ language, onBack }: LanguageQuizViewProps) {
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+      <div className="flex items-center justify-between border-b border-slate-200 pb-4">
         <button
           onClick={onBack}
-          className="flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors"
+          className="flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" /> Back to Dashboard
         </button>
-        <div className="text-xs text-slate-400 font-mono">
+        <div className="text-xs text-slate-500 font-mono">
           Assessment • {language.name}
         </div>
       </div>
@@ -130,23 +130,23 @@ export function LanguageQuizView({ language, onBack }: LanguageQuizViewProps) {
           <div
             className={`p-6 rounded-3xl border text-center space-y-3 ${
               result.passed
-                ? 'bg-emerald-950/20 border-emerald-500/40 text-emerald-200'
-                : 'bg-amber-950/20 border-amber-500/40 text-amber-200'
+                ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                : 'bg-amber-50 border-amber-200 text-amber-700'
             }`}
           >
             <div className="text-4xl font-extrabold font-mono">
               {result.score_percentage}%
             </div>
-            <div className="text-base font-bold text-white">
+            <div className="text-base font-bold text-slate-900">
               {result.passed ? 'Assessment Passed! Outstanding Work' : 'Review Needed to Pass (70% required)'}
             </div>
-            <p className="text-xs text-slate-400 max-w-sm mx-auto">
+            <p className="text-xs text-slate-500 max-w-sm mx-auto">
               You answered {result.correct_count} of {result.total_questions} questions correctly.
             </p>
             <div className="pt-2">
               <button
                 onClick={handleRetake}
-                className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-750 text-white text-xs font-semibold flex items-center gap-2 mx-auto transition-colors"
+                className="px-5 py-2.5 rounded-xl bg-slate-50 hover:bg-slate-750 text-slate-900 text-xs font-semibold flex items-center gap-2 mx-auto transition-colors"
               >
                 <RotateCcw className="w-3.5 h-3.5" /> Retake Quiz
               </button>
@@ -155,14 +155,14 @@ export function LanguageQuizView({ language, onBack }: LanguageQuizViewProps) {
 
           {/* Question Breakdown */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-white">Question Review & Explanations</h3>
+            <h3 className="text-sm font-semibold text-slate-900">Question Review & Explanations</h3>
             {result.question_results.map((qr, i) => (
-              <div key={i} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-2">
+              <div key={i} className="bg-white border border-slate-200 rounded-2xl p-5 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-slate-400 font-mono">Question {i + 1}</span>
+                  <span className="text-xs text-slate-500 font-mono">Question {i + 1}</span>
                   <span
                     className={`text-xs font-semibold flex items-center gap-1 ${
-                      qr.is_correct ? 'text-emerald-400' : 'text-rose-400'
+                      qr.is_correct ? 'text-emerald-600' : 'text-rose-600'
                     }`}
                   >
                     {qr.is_correct ? (
@@ -176,17 +176,17 @@ export function LanguageQuizView({ language, onBack }: LanguageQuizViewProps) {
                     )}
                   </span>
                 </div>
-                <div className="text-sm font-medium text-white">{qr.question}</div>
-                <div className="text-xs text-slate-400">
-                  Your Answer: <strong className={qr.is_correct ? 'text-emerald-300' : 'text-rose-300'}>{qr.user_answer}</strong>
+                <div className="text-sm font-medium text-slate-900">{qr.question}</div>
+                <div className="text-xs text-slate-500">
+                  Your Answer: <strong className={qr.is_correct ? 'text-emerald-700' : 'text-rose-700'}>{qr.user_answer}</strong>
                 </div>
                 {!qr.is_correct && (
-                  <div className="text-xs text-slate-400">
-                    Correct Answer: <strong className="text-emerald-400">{qr.correct_answer}</strong>
+                  <div className="text-xs text-slate-500">
+                    Correct Answer: <strong className="text-emerald-600">{qr.correct_answer}</strong>
                   </div>
                 )}
-                <div className="text-xs text-slate-300 bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80 leading-relaxed">
-                  <span className="text-indigo-400 font-semibold">Note:</span> {qr.explanation}
+                <div className="text-xs text-slate-700 bg-white p-2.5 rounded-xl border border-slate-200 leading-relaxed">
+                  <span className="text-indigo-600 font-semibold">Note:</span> {qr.explanation}
                 </div>
               </div>
             ))}
@@ -195,22 +195,22 @@ export function LanguageQuizView({ language, onBack }: LanguageQuizViewProps) {
       ) : (
         /* Quiz Form */
         <div className="space-y-6">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
-            <h2 className="text-base font-bold text-white mb-1">
+          <div className="bg-white border border-slate-200 rounded-2xl p-5">
+            <h2 className="text-base font-bold text-slate-900 mb-1">
               {language.name} Foundation & Culture Quiz
             </h2>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500">
               Answer all 4 questions to evaluate your understanding of essential {language.name} greetings, script, and polite conversation rules.
             </p>
           </div>
 
           <div className="space-y-5">
             {questions.map((q, idx) => (
-              <div key={q.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
-                <div className="text-xs text-indigo-400 font-mono font-semibold">
+              <div key={q.id} className="bg-white border border-slate-200 rounded-2xl p-5 space-y-3">
+                <div className="text-xs text-indigo-600 font-mono font-semibold">
                   Question {idx + 1} of {questions.length}
                 </div>
-                <h3 className="text-sm font-semibold text-white">{q.question}</h3>
+                <h3 className="text-sm font-semibold text-slate-900">{q.question}</h3>
 
                 <div className="space-y-2">
                   {q.options.map((opt, optIdx) => {
@@ -222,12 +222,12 @@ export function LanguageQuizView({ language, onBack }: LanguageQuizViewProps) {
                         onClick={() => handleSelectOption(q.id, optIdx)}
                         className={`w-full p-3 rounded-xl border text-left text-xs font-medium transition-all flex items-center justify-between ${
                           isSelected
-                            ? 'border-indigo-500 bg-indigo-950/30 text-white ring-1 ring-indigo-500'
-                            : 'border-slate-800 bg-slate-800/40 text-slate-300 hover:border-slate-700'
+                            ? 'border-indigo-500 bg-indigo-50 text-slate-900 ring-1 ring-indigo-500'
+                            : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-200'
                         }`}
                       >
                         <span>{opt}</span>
-                        {isSelected && <CheckCircle2 className="w-4 h-4 text-indigo-400 shrink-0" />}
+                        {isSelected && <CheckCircle2 className="w-4 h-4 text-indigo-600 shrink-0" />}
                       </button>
                     );
                   })}
@@ -237,8 +237,8 @@ export function LanguageQuizView({ language, onBack }: LanguageQuizViewProps) {
           </div>
 
           {/* Submit */}
-          <div className="flex items-center justify-between border-t border-slate-800 pt-4">
-            <span className="text-xs text-slate-400">
+          <div className="flex items-center justify-between border-t border-slate-200 pt-4">
+            <span className="text-xs text-slate-500">
               {Object.keys(selectedAnswers).length} of {questions.length} answered
             </span>
             <button

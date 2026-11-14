@@ -234,7 +234,7 @@ ${interviewQuestions.slice(0, 5).map((q, idx) => `### Q${idx + 1}: ${q.question}
   return (
     <div className="max-w-7xl mx-auto space-y-6">
       {/* Top Banner Header */}
-      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-950 rounded-2xl p-6 sm:p-8 text-white shadow-sm relative overflow-hidden">
+      <div className="hero-brand rounded-2xl p-6 sm:p-8 text-white shadow-sm relative overflow-hidden">
         <div className="relative z-10 max-w-3xl">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/10 backdrop-blur rounded-full text-xs font-semibold tracking-wide text-blue-200 mb-3">
             <Sparkles className="h-3.5 w-3.5 text-blue-300" />
