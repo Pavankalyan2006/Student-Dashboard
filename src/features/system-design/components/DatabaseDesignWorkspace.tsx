@@ -26,6 +26,7 @@ import {
   SqlDialect
 } from '../types/systemDesign';
 import { toast } from 'sonner';
+import { copyText } from '../../../lib/clipboard';
 
 interface DatabaseDesignWorkspaceProps {
   databaseDesign?: DatabaseDesign;
@@ -156,7 +157,7 @@ export function DatabaseDesignWorkspace({
 
   // Copy SQL
   const handleCopySql = () => {
-    navigator.clipboard.writeText(generatedSql);
+    copyText(generatedSql);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
     toast.success(`Copied ${activeDialect} SQL DDL to clipboard`);

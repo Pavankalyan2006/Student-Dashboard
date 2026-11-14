@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { KnowledgeSearchResult, KnowledgeCollection, KnowledgeSearchMatch } from '../types/knowledgeBaseTypes';
 import { knowledgeBaseApi } from '../api/knowledgeBaseApi';
+import { copyText } from '../../../lib/clipboard';
 
 interface KnowledgeSemanticSearchProps {
   collections: KnowledgeCollection[];
@@ -51,7 +52,7 @@ export const KnowledgeSemanticSearch: React.FC<KnowledgeSemanticSearchProps> = (
   };
 
   const handleCopy = (chunkId: string, text: string) => {
-    navigator.clipboard.writeText(text);
+    copyText(text);
     setCopiedId(chunkId);
     setTimeout(() => setCopiedId(null), 2000);
   };

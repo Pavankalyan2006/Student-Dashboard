@@ -19,6 +19,7 @@ import { MarkdownContent } from '../../../components/content/MarkdownContent';
 import { AICitation, ToolExecutionCard, AgentPlanCard } from './RichCards';
 import { conversationApi } from '../api/conversationApi';
 import { toast } from 'sonner';
+import { copyText } from '../../../lib/clipboard';
 
 export function MessageItem({
   message,
@@ -41,7 +42,7 @@ export function MessageItem({
   const hasCode = message.content.includes('```');
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(message.content);
+    copyText(message.content);
     setCopied(true);
     toast.success('Response copied to clipboard');
     setTimeout(() => setCopied(false), 2000);

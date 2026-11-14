@@ -17,6 +17,7 @@ import {
   Copy,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { copyText } from '../../../lib/clipboard';
 
 interface EditorToolbarProps {
   onRun: () => void;
@@ -51,7 +52,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(useCodingEditorStore.getState().sourceCode);
+      await copyText(useCodingEditorStore.getState().sourceCode);
       toast.success('Code copied to clipboard');
     } catch {
       toast.error('Could not access the clipboard');
@@ -72,7 +73,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
       return;
     }
     try {
-      await navigator.clipboard.writeText(window.location.href);
+      await copyText(window.location.href);
       toast.success('Workspace link copied to clipboard (only you can open it while signed in)');
     } catch {
       toast.error('Could not access the clipboard');

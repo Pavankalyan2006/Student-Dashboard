@@ -6,6 +6,7 @@ import rehypeKatex from 'rehype-katex';
 import { Copy, Check, Terminal, ExternalLink, Printer } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import { toast } from 'sonner';
+import { copyText } from '../../../lib/clipboard';
 
 interface NoteViewerProps {
   content: string;
@@ -17,7 +18,7 @@ export function NoteViewer({ content, onNavigate, className = '' }: NoteViewerPr
   const [copiedCodeId, setCopiedCodeId] = React.useState<string | null>(null);
 
   const handleCopyCode = (code: string, id: string) => {
-    navigator.clipboard.writeText(code);
+    copyText(code);
     setCopiedCodeId(id);
     toast.success('Code copied to clipboard');
     setTimeout(() => setCopiedCodeId(null), 2000);

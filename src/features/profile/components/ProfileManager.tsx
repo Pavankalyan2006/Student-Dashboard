@@ -190,7 +190,8 @@ export function ProfileRecommendationsPanel({ module, title, onNavigate }: { mod
                 {it.kind === 'MANDATORY' ? (module === 'courses' ? 'Your subject' : 'Selected') : 'Suggested'}
               </span>
               <span className="flex-1">
-                {it.link ? (
+                {/* A link back to the page the student is already on would do nothing when clicked. */}
+                {it.link && it.link !== window.location.pathname ? (
                   <button className="text-left text-[#101828] hover:text-[#2563EB]" onClick={() => go(it.link)}>{it.title}</button>
                 ) : (
                   <span className="text-[#101828]">{it.title}</span>

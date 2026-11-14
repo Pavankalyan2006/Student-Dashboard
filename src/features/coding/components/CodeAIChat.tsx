@@ -19,6 +19,7 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import { toast } from 'sonner';
+import { copyText } from '../../../lib/clipboard';
 
 interface Message {
   id: string;
@@ -393,7 +394,7 @@ ${gen.code}
 
                   <button
                     onClick={() => {
-                      navigator.clipboard.writeText(m.codeSnippet!);
+                      copyText(m.codeSnippet!);
                       toast.success('Code copied');
                     }}
                     className="p-1 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 rounded"

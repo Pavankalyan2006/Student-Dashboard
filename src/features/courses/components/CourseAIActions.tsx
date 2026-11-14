@@ -23,6 +23,7 @@ import { coursesApi } from '../api/coursesApi';
 import { CourseAIAssistantResponse } from '../types/courses';
 import { MarkdownContent } from '../../../components/content/MarkdownContent';
 import { toast } from 'sonner';
+import { copyText } from '../../../lib/clipboard';
 
 export function CourseAIActions({
   courseTitle,
@@ -79,7 +80,7 @@ export function CourseAIActions({
 
   const handleCopy = () => {
     if (activeResult?.result) {
-      navigator.clipboard.writeText(activeResult.result);
+      copyText(activeResult.result);
       setCopied(true);
       toast.success('Copied to clipboard');
       setTimeout(() => setCopied(false), 2000);

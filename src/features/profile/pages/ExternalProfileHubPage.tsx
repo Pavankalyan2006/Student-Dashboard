@@ -38,6 +38,7 @@ import {
 import { toast } from 'sonner';
 import { ExternalProfilesPage } from './ExternalProfilesPage';
 import { externalProfilesApi } from '../api/externalProfilesApi';
+import { copyText } from '../../../lib/clipboard';
 
 interface ExternalProfileHubPageProps {
   onNavigate?: (path: string) => void;
@@ -126,7 +127,7 @@ export function ExternalProfileHubPage({ onNavigate }: ExternalProfileHubPagePro
   };
 
   const copyProfileShare = () => {
-    navigator.clipboard.writeText(window.location.href);
+    copyText(window.location.href);
     setCopiedProfile(true);
     toast.success('Profile URL copied to clipboard');
     setTimeout(() => setCopiedProfile(false), 2000);

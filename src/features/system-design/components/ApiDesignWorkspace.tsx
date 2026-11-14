@@ -19,6 +19,7 @@ import { Button } from '../../../components/ui/button';
 import { systemDesignApi } from '../api/systemDesignApi';
 import { ApiSpecification, ApiEndpoint, HttpMethod } from '../types/systemDesign';
 import { toast } from 'sonner';
+import { copyText } from '../../../lib/clipboard';
 
 interface ApiDesignWorkspaceProps {
   apiSpecification?: ApiSpecification;
@@ -151,7 +152,7 @@ export function ApiDesignWorkspace({
 
   const handleCopySpec = () => {
     const text = activeOutputTab === 'json' ? openApiOutput.openapi_json : openApiOutput.openapi_yaml;
-    navigator.clipboard.writeText(text);
+    copyText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
     toast.success('Copied OpenAPI specification');

@@ -3,6 +3,7 @@ import { ArrowLeft, Award, ExternalLink, Copy, CheckCircle2, ShieldCheck, Share2
 import { communityProfileApi } from '../../../api/communityProfileApi';
 import { Certificate } from '../../../../server/models/communityProfileProgressTypes';
 import { toast } from 'sonner';
+import { copyText } from '../../../lib/clipboard';
 
 export function ProfileCertificatesPage({ onNavigate }: { onNavigate: (path: string) => void }) {
   const [certificates, setCertificates] = React.useState<Certificate[]>([]);
@@ -26,7 +27,7 @@ export function ProfileCertificatesPage({ onNavigate }: { onNavigate: (path: str
 
   const handleCopyLink = (certId: string) => {
     const url = `${window.location.origin}/verify/certificate/${certId}`;
-    navigator.clipboard.writeText(url);
+    copyText(url);
     toast.success('Public verification link copied to clipboard!');
   };
 

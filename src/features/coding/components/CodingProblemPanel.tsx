@@ -17,6 +17,7 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import { toast } from 'sonner';
+import { copyText } from '../../../lib/clipboard';
 
 interface CodingProblemPanelProps {
   problem: CodingProblem;
@@ -51,7 +52,7 @@ export const CodingProblemPanel: React.FC<CodingProblemPanelProps> = ({
   const [hintsExpanded, setHintsExpanded] = useState<boolean>(false);
 
   const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text);
+    copyText(text);
     toast.success('Copied to clipboard');
   };
 

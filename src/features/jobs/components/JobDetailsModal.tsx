@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { JobListing, StudentJobMatchExplanation } from '../types/jobsTypes';
 import { jobsApi } from '../api/jobsApi';
+import { copyText } from '../../../lib/clipboard';
 
 interface JobDetailsModalProps {
   job: JobListing | null;
@@ -71,7 +72,7 @@ export const JobDetailsModal: React.FC<JobDetailsModalProps> = ({
   const isGovt = job.category === 'GOVERNMENT';
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(window.location.origin + `/career/jobs?id=${job.id}`);
+    copyText(window.location.origin + `/career/jobs?id=${job.id}`);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2000);
   };

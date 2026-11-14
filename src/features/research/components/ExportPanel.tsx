@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { researchApi } from '../api/researchApi';
 import { Download, FileText, CheckCircle2, Copy, Check } from 'lucide-react';
 import { toast } from 'sonner';
+import { copyText } from '../../../lib/clipboard';
 
 interface ExportPanelProps {
   projectId: string;
@@ -40,7 +41,7 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({ projectId }) => {
   };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(previewContent);
+    copyText(previewContent);
     setCopied(true);
     toast.success('Copied to clipboard');
     setTimeout(() => setCopied(false), 2000);

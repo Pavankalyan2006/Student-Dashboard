@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { StudentExternalProfile } from '../types/externalProfileTypes';
 import { externalProfilesApi } from '../api/externalProfilesApi';
+import { copyText } from '../../../lib/clipboard';
 
 interface ProfileVerificationModalProps {
   isOpen: boolean;
@@ -67,7 +68,7 @@ export const ProfileVerificationModal: React.FC<ProfileVerificationModalProps> =
 
   const handleCopy = () => {
     if (!challengeToken) return;
-    navigator.clipboard.writeText(challengeToken);
+    copyText(challengeToken);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };

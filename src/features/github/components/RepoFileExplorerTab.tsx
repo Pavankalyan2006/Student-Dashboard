@@ -15,6 +15,7 @@ import {
   Terminal,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { copyText } from '../../../lib/clipboard';
 
 interface RepoFileExplorerTabProps {
   repoId: string;
@@ -206,7 +207,7 @@ export const RepoFileExplorerTab: React.FC<RepoFileExplorerTabProps> = ({ repoId
                   <span>Unit Test Scaffold ({generatedTests.test_framework})</span>
                   <button
                     onClick={() => {
-                      navigator.clipboard.writeText(generatedTests.test_code);
+                      copyText(generatedTests.test_code);
                       toast.success('Test code copied');
                     }}
                     className="text-[11px] hover:text-white"

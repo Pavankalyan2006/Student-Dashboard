@@ -4,12 +4,18 @@ import { CodingService } from '../../services/coding';
 import { CodeAIService } from '../../services/codeAi';
 import { LanguageRegistry } from '../../execution/languages';
 import { ValidationError } from '../../core/exceptions';
+import { detectIsolation } from '../../execution/isolation';
 
 export const codingRouter = Router();
 
 // ================= LANGUAGES =================
 codingRouter.get('/coding/languages', (req, res) => {
-  const configs = LanguageRegistry.getAll();
+  // Without a secure sandbox nothing can run (e.g. on Vercel), so report every language as
+  // unavailable instead of letting the editor offer a Run that can only fail.
+  const sandbox = detectIsolation().allowed;
+  const configs = LanguageRegistry.getAll().map((c) =>
+    sandbox ? c : { ...c, available: false, availability_detail: 'sandbox_unavailable' }
+  );
   res.json({
     success: true,
     data: configs,

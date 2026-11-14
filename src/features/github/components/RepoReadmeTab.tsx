@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useGitHubReadme } from '../hooks/useGitHub';
 import { FileText, Copy, Check, ExternalLink, AlertCircle, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
+import { copyText } from '../../../lib/clipboard';
 
 interface RepoReadmeTabProps {
   repoId: string;
@@ -13,7 +14,7 @@ export const RepoReadmeTab: React.FC<RepoReadmeTabProps> = ({ repoId }) => {
 
   const handleCopy = () => {
     if (!readme?.content) return;
-    navigator.clipboard.writeText(readme.content);
+    copyText(readme.content);
     setCopied(true);
     toast.success('README markdown copied to clipboard');
     setTimeout(() => setCopied(false), 2000);

@@ -23,6 +23,7 @@ import {
 import { MockInterviewReport } from '../types/mockInterviewTypes';
 import { mockInterviewApi } from '../api/mockInterviewApi';
 import { toast } from 'sonner';
+import { copyText } from '../../../lib/clipboard';
 
 interface Props {
   sessionId: string;
@@ -73,7 +74,7 @@ ${report.improvement_areas.map((i) => `- ${i}`).join('\n')}
 ${report.communication_observations.map((c) => `- ${c}`).join('\n')}
 `;
       // Call notes export or clipboard
-      await navigator.clipboard.writeText(content);
+      await copyText(content);
       toast.success('Interview debrief copied to clipboard for your Notes workspace!');
     } catch {
       toast.error('Failed to export notes');

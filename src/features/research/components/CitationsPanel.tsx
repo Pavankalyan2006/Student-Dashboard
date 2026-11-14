@@ -4,6 +4,7 @@ import { researchApi } from '../api/researchApi';
 import { CitationStyle } from '../types';
 import { BookmarkCheck, Copy, Check, Download, FileText, Code2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { copyText } from '../../../lib/clipboard';
 
 interface CitationsPanelProps {
   projectId: string;
@@ -15,7 +16,7 @@ export const CitationsPanel: React.FC<CitationsPanelProps> = ({ projectId }) => 
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const handleCopy = (text: string, id: string) => {
-    navigator.clipboard.writeText(text);
+    copyText(text);
     setCopiedId(id);
     toast.success('Citation copied to clipboard');
     setTimeout(() => setCopiedId(null), 2000);

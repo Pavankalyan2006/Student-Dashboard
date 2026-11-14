@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Copy, Check, Code, Play } from 'lucide-react';
 import { Button } from '../ui/button';
 import { cn } from '../../lib/utils';
+import { copyText } from '../../lib/clipboard';
 
 export interface CodeEditorProps {
   value: string;
@@ -23,7 +24,7 @@ export function CodeEditor({
   const [copied, setCopied] = React.useState(false);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(value);
+    copyText(value);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };

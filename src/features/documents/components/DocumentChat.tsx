@@ -22,6 +22,7 @@ import {
 import { Button } from '../../../components/ui/button';
 import { cn } from '../../../lib/utils';
 import { toast } from 'sonner';
+import { copyText } from '../../../lib/clipboard';
 
 export interface DocumentChatProps {
   document: Document;
@@ -58,7 +59,7 @@ export function DocumentChat({
   };
 
   const handleCopy = (id: string, text: string) => {
-    navigator.clipboard.writeText(text);
+    copyText(text);
     setCopiedId(id);
     toast.success('Copied to clipboard');
     setTimeout(() => setCopiedId(null), 2000);

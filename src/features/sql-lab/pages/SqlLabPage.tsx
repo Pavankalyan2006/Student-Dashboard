@@ -51,6 +51,7 @@ import {
   SQLDataType,
 } from '../../../types/learningModules';
 import { toast } from 'sonner';
+import { copyText } from '../../../lib/clipboard';
 
 interface SqlLabPageProps {
   onNavigate?: (path: string) => void;
@@ -1086,7 +1087,7 @@ export function SqlLabPage({ onNavigate }: SqlLabPageProps) {
                     </span>
                     <button
                       onClick={() => {
-                        navigator.clipboard.writeText(generatedSqlPreview);
+                        copyText(generatedSqlPreview);
                         toast.success('SQL copied to clipboard');
                       }}
                       className="text-xs flex items-center gap-1 text-slate-400 hover:text-white"

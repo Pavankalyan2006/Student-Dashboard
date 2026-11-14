@@ -69,7 +69,11 @@ export const LanguageSelector: React.FC<{ disabled?: boolean; onChangeLanguage?:
               className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
             >
               {l.name}
-              {availability[l.id]?.available === false ? ' (not installed on server)' : ''}
+              {availability[l.id]?.available === false
+                ? availability[l.id]?.detail === 'sandbox_unavailable'
+                  ? ' (running code is off on this server)'
+                  : ' (not installed on server)'
+                : ''}
             </option>
           ))}
         </select>

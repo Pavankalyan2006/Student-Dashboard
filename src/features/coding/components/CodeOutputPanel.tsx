@@ -12,6 +12,7 @@ import {
   Copy,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { copyText } from '../../../lib/clipboard';
 
 interface CodeOutputPanelProps {
   onAskAiDebug?: (err: string) => void;
@@ -30,7 +31,7 @@ export const CodeOutputPanel: React.FC<CodeOutputPanelProps> = ({
   const setStdin = useCodingEditorStore((s) => s.setStdin);
 
   const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text);
+    copyText(text);
     toast.success('Copied to clipboard');
   };
 
