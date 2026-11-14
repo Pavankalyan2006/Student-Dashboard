@@ -310,7 +310,7 @@ export function ExamPreparationPage({ onNavigate }: ExamPreparationPageProps) {
                 </span>
                 <h2 className="text-xl font-bold text-slate-900 mt-1">{selectedExam.title}</h2>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Button
                   size="sm"
                   onClick={() => onNavigate?.(`/quiz/create?topic=${encodeURIComponent(selectedExam.subject)}`)}

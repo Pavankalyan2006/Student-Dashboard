@@ -132,7 +132,7 @@ export function SemesterCalendarEventsPage({ onNavigate }: SemesterCalendarEvent
               </p>
             </div>
 
-            <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
+            <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-between md:justify-end">
               {/* Event Type Filter */}
               <div className="flex items-center gap-2">
                 <Filter className="w-3.5 h-3.5 text-slate-500" />

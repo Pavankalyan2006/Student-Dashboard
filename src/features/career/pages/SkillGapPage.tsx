@@ -84,7 +84,7 @@ export const SkillGapPage: React.FC<SkillGapPageProps> = ({ onNavigate, initialR
         </div>
 
         {/* Role Selector & Actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <label className="text-xs font-semibold text-slate-500">Target Role:</label>
           <select
             value={selectedRoleId}
