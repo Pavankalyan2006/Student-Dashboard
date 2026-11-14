@@ -1,3 +1,4 @@
+import { parseLooseJson } from '../ai/modelOutput';
 import { db } from '../db/database';
 import {
   Note,
@@ -288,7 +289,7 @@ Return a fresh structured JSON object matching the note schema (title, overview,
       throw new AppError(`${what} needs the AI provider, which is not available right now. Nothing was generated.`, 503, 'AI_UNAVAILABLE');
     }
     try {
-      return JSON.parse(this.extractJsonString(res.text));
+      return parseLooseJson(this.extractJsonString(res.text));
     } catch {
       throw new AppError(`The AI provider returned an unreadable response, so nothing was generated. Please try again.`, 502, 'AI_BAD_RESPONSE');
     }
@@ -605,7 +606,7 @@ Explain clearly using Markdown with KaTeX formulas ($...$) where helpful. Keep i
   private static parseAndValidateAIOutput(rawText: string, fallbackTitle: string): StructuredNoteContent {
     try {
       const jsonStr = this.extractJsonString(rawText);
-      const parsed = JSON.parse(jsonStr);
+      const parsed = parseLooseJson(jsonStr);
 
       const title = parsed.title || fallbackTitle;
       const overview = parsed.overview || `Essential academic study notes on ${fallbackTitle}.`;

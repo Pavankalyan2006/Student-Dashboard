@@ -1,3 +1,4 @@
+import { parseLooseJson, isModelAvailable } from '../ai/modelOutput';
 import { AIService } from '../ai/service';
 import { db } from '../db/database';
 import { logger } from '../core/logging';
@@ -43,6 +44,7 @@ export class QuizGenerationService {
     });
 
     let rawQuestions: any[] = [];
+    let modelAnswered = false;
     let quizTitle = req.title || resolvedTitle;
     let quizDesc = `Adaptive diagnostic assessment on ${resolvedTopic} (${difficulty}).`;
 
@@ -52,6 +54,7 @@ export class QuizGenerationService {
         'student_learning_agent',
         0.4
       );
+      modelAnswered = isModelAvailable() && !AIService.isUnavailableResult(response) && !/^\[Mock AI Provider\]/.test(response.text || '');
 
       const parsed = this.parseAIOutput(response.text);
       if (parsed && Array.isArray(parsed.questions) && parsed.questions.length > 0) {
@@ -67,6 +70,9 @@ export class QuizGenerationService {
 
     // 3. No template questions are invented when the model produced none: the quiz would look
     //    AI-generated but test nothing real. Fewer questions than requested are kept as they are.
+    if (rawQuestions.length === 0 && modelAnswered) {
+      throw new AppError('The AI answered in an unexpected format, so no quiz was created. Please try again.', 502, 'AI_BAD_OUTPUT');
+    }
     if (rawQuestions.length === 0) {
       throw new AppError(
         'Quiz generation needs the AI provider, which is not available right now. No quiz was created.',
@@ -532,12 +538,12 @@ Return ONLY a valid JSON object matching this schema EXACTLY:
         .replace(/^```\s*/i, '')
         .replace(/\s*```$/i, '')
         .trim();
-      return JSON.parse(cleaned);
+      return parseLooseJson(cleaned);
     } catch {
       const match = text.match(/\{[\s\S]*\}/);
       if (match) {
         try {
-          return JSON.parse(match[0]);
+          return parseLooseJson(match[0]);
         } catch {
           return null;
         }

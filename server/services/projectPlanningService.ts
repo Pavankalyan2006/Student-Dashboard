@@ -1,5 +1,5 @@
 import { AIService } from '../ai/service';
-import { isModelAvailable, requireModelText, rethrowAi } from '../ai/modelOutput';
+import { isModelAvailable, requireModelText, rethrowAi, parseLooseJson } from '../ai/modelOutput';
 import { AppError } from '../core/exceptions';
 import { db } from '../db/database';
 import {
@@ -486,7 +486,7 @@ Return ONLY a valid JSON object:
       const cleaned = text.replace(/```json/gi, '').replace(/```/g, '').trim();
       const match = cleaned.match(/\[[\s\S]*\]/);
       if (match) {
-        return JSON.parse(match[0]);
+        return parseLooseJson(match[0]);
       }
     } catch (e) {
       // Ignore
@@ -499,7 +499,7 @@ Return ONLY a valid JSON object:
       const cleaned = text.replace(/```json/gi, '').replace(/```/g, '').trim();
       const match = cleaned.match(/\{[\s\S]*\}/);
       if (match) {
-        return JSON.parse(match[0]);
+        return parseLooseJson(match[0]);
       }
     } catch (e) {
       // Ignore

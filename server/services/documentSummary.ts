@@ -1,3 +1,4 @@
+import { parseLooseJson } from '../ai/modelOutput';
 import { db } from '../db/database';
 import { AIService } from '../ai/service';
 import { DocumentSummary, DocumentSummaryLevel } from '../models/types';
@@ -128,7 +129,7 @@ Return valid JSON conforming to this schema:
 
       const jsonMatch = raw.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        summaryData = JSON.parse(jsonMatch[0]);
+        summaryData = parseLooseJson(jsonMatch[0]);
       }
     } catch (err) {
       logger.warn('AI summary parsing error, generating educational structured fallback', {

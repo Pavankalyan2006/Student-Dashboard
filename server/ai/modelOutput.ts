@@ -20,6 +20,22 @@ export function requireModelText(result: AIGenerateResult, what: string): string
   return result.text;
 }
 
+/**
+ * JSON.parse that tolerates the most common model slip: backslashes that are not valid JSON
+ * escapes, e.g. LaTeX such as `$max\_need_i$` or `\sum`. Those are doubled so the text survives
+ * as written. Throws the original error when the text still is not JSON.
+ */
+export function parseLooseJson<T = any>(text: string): T {
+  try {
+    return JSON.parse(text) as T;
+  } catch (err) {
+    // Valid escapes (\\, \", \n, \u00e9, ...) are kept as pairs; any other backslash is doubled.
+    const repaired = text.replace(/\\(["\\/nrt]|[bf](?![a-zA-Z])|u[0-9a-fA-F]{4})|\\/g, (m, ok) => (ok ? m : '\\\\'));
+    if (repaired === text) throw err;
+    return JSON.parse(repaired) as T;
+  }
+}
+
 /** Strips a ```json fence and parses; throws 502 when the model did not return JSON. */
 export function parseModelJson<T = any>(result: AIGenerateResult, what: string): T {
   const text = requireModelText(result, what).trim();
@@ -28,7 +44,7 @@ export function parseModelJson<T = any>(result: AIGenerateResult, what: string):
   const end = Math.max(cleaned.lastIndexOf('}'), cleaned.lastIndexOf(']'));
   if (start > 0 || (end > -1 && end < cleaned.length - 1)) cleaned = cleaned.slice(Math.max(0, start), end + 1);
   try {
-    return JSON.parse(cleaned) as T;
+    return parseLooseJson<T>(cleaned);
   } catch {
     throw new AppError(`${what}: the AI answered in an unexpected format, so nothing is shown. Please try again.`, 502, 'AI_BAD_OUTPUT');
   }

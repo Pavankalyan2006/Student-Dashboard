@@ -439,6 +439,10 @@ export function SqlLabPage({ onNavigate }: SqlLabPageProps) {
       toast.success(res.message);
       setShowCreateDbModal(false);
       const cleanName = newDbName.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_');
+      // The new database is empty: drop the table selected in the previous one, or the page
+      // would try to load that table from the new database and show an error.
+      setSelectedTable(null);
+      setTableData(null);
       setSelectedDb(cleanName);
       setNewDbName('');
       loadInitialData();

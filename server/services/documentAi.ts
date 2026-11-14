@@ -1,3 +1,4 @@
+import { parseLooseJson } from '../ai/modelOutput';
 import { db } from '../db/database';
 import { AIService } from '../ai/service';
 import { DocumentRetrievalService } from '../rag/retriever';
@@ -121,7 +122,7 @@ Respond with valid JSON conforming to:
 
       const jsonMatch = raw.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        parsedResponse = JSON.parse(jsonMatch[0]);
+        parsedResponse = parseLooseJson(jsonMatch[0]);
       }
     } catch (err) {
       logger.warn('Error parsing AI document response JSON', { error: { message: String(err) } });

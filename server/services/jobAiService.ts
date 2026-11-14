@@ -1,3 +1,4 @@
+import { parseLooseJson } from '../ai/modelOutput';
 // server/services/jobAiService.ts
 // Secure server-side Gemini AI integration for Job Analysis, Classification, Summarization, and Student Profile Matching
 
@@ -192,7 +193,7 @@ Output only a JSON array of strings e.g. ["term1", "term2", "term3"].`;
         0.2
       );
       const cleaned = res.text.replace(/```json/gi, '').replace(/```/g, '').trim();
-      const parsed = JSON.parse(cleaned);
+      const parsed = parseLooseJson(cleaned);
       if (Array.isArray(parsed) && parsed.length > 0) {
         return Array.from(new Set([query, ...parsed]));
       }

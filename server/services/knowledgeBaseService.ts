@@ -10,7 +10,7 @@ import { EmbeddingService } from '../rag/embeddings';
 import { DocumentRetrievalService } from '../rag/retriever';
 import { AIService } from '../ai/service';
 import { AIMessage } from '../ai/provider';
-import { isModelAvailable, requireModelText, rethrowAi } from '../ai/modelOutput';
+import { isModelAvailable, requireModelText, rethrowAi, parseLooseJson } from '../ai/modelOutput';
 import {
   KnowledgeCollection,
   KnowledgeCategory,
@@ -487,7 +487,7 @@ Cite every claim with [Source N]. After the answer add a JSON block:
         const jsonMatch = rawText.match(/```json\s*([\s\S]*?)\s*```/);
         if (jsonMatch) {
           try {
-            const parsed = JSON.parse(jsonMatch[1]);
+            const parsed = parseLooseJson(jsonMatch[1]);
             keyConcepts = Array.isArray(parsed.key_concepts) ? parsed.key_concepts.map(String).slice(0, 8) : [];
             followUps = Array.isArray(parsed.follow_up_questions) ? parsed.follow_up_questions.map(String).slice(0, 5) : [];
           } catch {
@@ -691,7 +691,7 @@ Return valid JSON only with this structure:
     }
     try {
       const cleanJson = (aiResult.text || '').replace(/```json\s*|\s*```/g, '').trim();
-      contentPayload = JSON.parse(cleanJson);
+      contentPayload = parseLooseJson(cleanJson);
     } catch {
       throw new AppError('The AI provider returned an unreadable response, so no study material was saved. Please try again.', 502, 'AI_BAD_RESPONSE');
     }

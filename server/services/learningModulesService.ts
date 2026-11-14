@@ -1,3 +1,4 @@
+import { parseLooseJson } from '../ai/modelOutput';
 // server/services/learningModulesService.ts
 // Comprehensive backend service implementing data operations and logic for the 10 learning modules
 
@@ -972,7 +973,7 @@ Answer the doubt accurately. Return valid JSON only:
     if (!res || AIService.isUnavailableResult(res)) return null;
     try {
       const m = res.text.match(/\{[\s\S]*\}/);
-      const parsed = m ? JSON.parse(m[0]) : null;
+      const parsed = m ? parseLooseJson(m[0]) : null;
       if (!parsed || typeof parsed.direct_answer !== 'string' || !parsed.direct_answer.trim()) return null;
       const q = parsed.quiz_question;
       const quizOk = q && Array.isArray(q.options) && q.options.length >= 2 && Number.isInteger(q.correct) && q.correct >= 0 && q.correct < q.options.length;
@@ -1556,7 +1557,7 @@ Output JSON format:
       const raw = aiResult.text.trim();
       const jsonStart = raw.indexOf('{');
       const jsonEnd = raw.lastIndexOf('}');
-      parsed = JSON.parse(jsonStart !== -1 && jsonEnd !== -1 ? raw.slice(jsonStart, jsonEnd + 1) : raw);
+      parsed = parseLooseJson(jsonStart !== -1 && jsonEnd !== -1 ? raw.slice(jsonStart, jsonEnd + 1) : raw);
     } catch {
       parsed = null;
     }

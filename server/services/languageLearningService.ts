@@ -1,3 +1,4 @@
+import { parseLooseJson } from '../ai/modelOutput';
 // server/services/languageLearningService.ts
 // Comprehensive core service for the Language Learning Platform (Up to 150 Languages)
 
@@ -658,7 +659,7 @@ Evaluate and respond ONLY with a valid JSON object matching this schema:
       const res = await AIService.generate(messages, undefined, 0.2);
       const jsonMatch = res.text.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        aiFeedback = JSON.parse(jsonMatch[0]);
+        aiFeedback = parseLooseJson(jsonMatch[0]);
       }
     } catch (err) {
       logger.warn('AI writing feedback evaluation failed; returning 503', { error: err instanceof Error ? err.message : String(err) });
@@ -778,7 +779,7 @@ Respond ONLY with a valid JSON object matching this schema:
       const res = await AIService.generate([{ role: 'user', content: systemPrompt }], undefined, 0.4);
       const jsonMatch = res.text.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
+        const parsed = parseLooseJson(jsonMatch[0]);
         aiReplyText = parsed.reply_in_target_language;
         aiTranslation = parsed.english_translation;
         aiCorrection = parsed.correction_note;
@@ -854,7 +855,7 @@ Provide a rich linguistic breakdown. Respond ONLY in valid JSON:
       const res = await AIService.generate([{ role: 'user', content: prompt }], undefined, 0.2);
       const jsonMatch = res.text.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
+        const parsed = parseLooseJson(jsonMatch[0]);
         result = {
           source_lang: src.code,
           target_lang: tgt.code,
