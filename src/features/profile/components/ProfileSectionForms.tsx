@@ -195,8 +195,8 @@ export function IdentityForm({ profile, errors, onChange, emailVerificationRequi
         <TextField id="display_name" label="Display name" value={s.display_name} onChange={set('display_name')} errors={errors} />
         <div>
           <span className={label}>Email</span>
-          <div className="h-9 flex items-center gap-2 text-sm text-[#344054]">
-            {profile.identity.email}
+          <div className="min-h-9 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-[#344054]">
+            <span className="min-w-0 break-all">{profile.identity.email}</span>
             {profile.identity.email_verified ? (
               <span className="inline-flex items-center gap-1 text-xs text-[#027A48]"><CheckCircle2 className="w-3 h-3" /> verified</span>
             ) : (

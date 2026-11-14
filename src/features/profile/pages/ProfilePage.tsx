@@ -90,7 +90,7 @@ export function ProfilePage({ onNavigate }: { onNavigate: (path: string) => void
       <div className="relative overflow-hidden rounded-2xl border border-[#E4E7EC] bg-white p-6 sm:p-8 shadow-xs">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-start sm:items-center gap-5">
-            <div className="relative">
+            <div className="relative shrink-0">
               <img
                 src={
                   profile.avatar_url ||
@@ -102,18 +102,18 @@ export function ProfilePage({ onNavigate }: { onNavigate: (path: string) => void
               <span className="absolute -bottom-1.5 -right-1.5 p-1 bg-emerald-500 rounded-full ring-2 ring-white" />
             </div>
 
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 min-w-0">
               <div className="flex flex-wrap items-center gap-2.5">
-                <h1 className="text-xl sm:text-2xl font-bold text-[#101828]">{profile.name}</h1>
-                <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-[#2563EB] border border-blue-200">
+                <h1 className="text-xl sm:text-2xl font-bold text-[#101828] break-words">{profile.name}</h1>
+                <span className="max-w-full truncate px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-[#2563EB] border border-blue-200">
                   @{profile.username}
                 </span>
-                <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-[#475467]">
+                <span className="max-w-full truncate px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-[#475467]">
                   {profile.branch} · Sem {profile.semester}
                 </span>
               </div>
 
-              <p className="text-xs text-[#667085]">
+              <p className="text-xs text-[#667085] break-all">
                 {profile.email} · Class of {profile.graduation_year}
               </p>
 
