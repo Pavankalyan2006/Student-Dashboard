@@ -8147,7 +8147,16 @@ print(power_mod(2, 10, 1000))  # Output: 24
       }
     }
 
-    const longestStreak = Math.max(currentStreak, sortedDates.length > 0 ? 5 : 0);
+    // Longest run of consecutive active days, computed from the student's own history (never assumed).
+    let longestStreak = currentStreak;
+    let run = 0;
+    let prevDay: number | null = null;
+    for (const d of [...sortedDates].reverse()) {
+      const day = Math.floor(new Date(d).getTime() / 86400000);
+      run = prevDay !== null && day - prevDay === 1 ? run + 1 : 1;
+      if (run > longestStreak) longestStreak = run;
+      prevDay = day;
+    }
     const now = new Date();
     const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
     const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
@@ -10539,7 +10548,7 @@ print(power_mod(2, 10, 1000))  # Output: 24
         is_correct: isCorrect,
         marks_awarded: awarded > 0 ? awarded : 0,
         negative_deducted: awarded < 0 ? Math.abs(awarded) : 0,
-        time_spent_seconds: session.answers[qid]?.time_spent_seconds || 45,
+        time_spent_seconds: session.answers[qid]?.time_spent_seconds || 0, // 0 = not recorded; never assume a time
         attempted_at: new Date().toISOString(),
       };
       const curList = this.gateQuestionAttempts.get(studentId) || [];

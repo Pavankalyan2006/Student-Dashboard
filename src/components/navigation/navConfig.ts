@@ -46,6 +46,13 @@ import {
   UsersRound,
   UserRound,
   BriefcaseBusiness,
+  Activity,
+  BarChart3,
+  Route,
+  Medal,
+  Bookmark,
+  BadgeCheck,
+  NotebookPen,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -80,6 +87,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
       { name: 'Semester Command Center', href: '/semester-command-center', icon: CalendarRange, match: ['/semester'] },
       { name: 'Unified Progress', href: '/progress', icon: TrendingUp },
+      { name: 'Learning Analytics', href: '/analytics', icon: Activity, match: ['/learning-analytics'] },
       { name: 'Notifications', href: '/notifications', icon: Bell },
     ],
   },
@@ -89,6 +97,7 @@ export const NAV_SECTIONS: NavSection[] = [
     icon: BookOpen,
     items: [
       { name: 'AI Tutor', href: '/ai-agent', icon: Bot, isAi: true, badge: 'AI', match: ['/ai-tutor'] },
+      { name: 'Discover', href: '/discover', icon: Compass, isAi: true, badge: 'Sources' },
       { name: 'Courses', href: '/courses', icon: BookOpen, match: ['/course'] },
       { name: 'Notes', href: '/notes', icon: FileText },
       { name: 'Documents', href: '/documents', icon: Files },
@@ -126,6 +135,7 @@ export const NAV_SECTIONS: NavSection[] = [
     icon: ListChecks,
     items: [
       { name: 'Quiz', href: '/quiz', icon: ListChecks },
+      { name: 'Mistake Notebook', href: '/mistakes', icon: NotebookPen, match: ['/mistake-notebook'] },
       { name: 'Exam Preparation', href: '/exams', icon: GraduationCap },
       { name: 'GATE Exam Preparation', href: '/assessment/gate-preparation', icon: BookOpenCheck, match: ['/gate'] },
       {
@@ -142,7 +152,10 @@ export const NAV_SECTIONS: NavSection[] = [
     title: 'Career',
     icon: BriefcaseBusiness,
     items: [
-      { name: 'Career', href: '/career', icon: Compass },
+      { name: 'Career', href: '/career', icon: BriefcaseBusiness, match: ['/career/explore', '/career/roles', '/career/role'] },
+      { name: 'Skills Profile', href: '/skills', icon: BarChart3 },
+      { name: 'Skill Gap Analysis', href: '/career/skill-gap', icon: Target },
+      { name: 'Career Roadmap', href: '/career/roadmap', icon: Route },
       { name: 'Jobs Discovery', href: '/career/jobs', icon: Search, match: ['/jobs'] },
       { name: 'Resume', href: '/resume', icon: FileUser },
       { name: 'Internships / Applications', href: '/applications', icon: Briefcase },
@@ -176,7 +189,10 @@ export const NAV_SECTIONS: NavSection[] = [
     icon: UserRound,
     items: [
       { name: 'Student Profile', href: '/profile', icon: User },
-      { name: 'Learning Goals', href: '/goals', icon: Target },
+      { name: 'Learning Goals', href: '/goals', icon: Target, match: ['/learning-goals'] },
+      { name: 'Achievements', href: '/profile/achievements', icon: Medal },
+      { name: 'Certificates', href: '/certificates', icon: BadgeCheck, match: ['/profile/certificates'] },
+      { name: 'Bookmarks', href: '/bookmarks', icon: Bookmark, match: ['/profile/bookmarks'] },
       { name: 'Focus Timer', href: '/focus', icon: Timer, match: ['/focus-timer'] },
       { name: 'Connected Platforms', href: '/integrations', icon: Link2 },
       { name: 'External Profiles', href: '/profile/external', icon: ExternalLink },

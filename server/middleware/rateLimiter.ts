@@ -35,16 +35,20 @@ export function createRateLimiter(options: RateLimitOptions = {}) {
   const keyPrefix = options.keyPrefix || 'global';
 
   return async (req: Request, res: Response, next: NextFunction) => {
+    // Use the full URL: when this middleware is mounted with app.use('/api', ...), req.path no longer starts
+    // with /api, and an earlier version therefore skipped every request (the limit was never applied).
+    const fullPath = (req.originalUrl || req.url || '').split('?')[0];
     // Whitelist non-API routes, health checks, Vite internals, and static assets
     if (
-      !req.path.startsWith('/api') ||
-      req.path.startsWith('/health') ||
-      req.path.startsWith('/assets') ||
-      req.path.startsWith('/src') ||
-      req.path.startsWith('/@') ||
-      req.path.startsWith('/node_modules') ||
-      req.path.endsWith('.ico')
+      !fullPath.startsWith('/api') ||
+      fullPath.startsWith('/api/health') ||
+      fullPath.startsWith('/api/v1/health') ||
+      fullPath.endsWith('.ico')
     ) {
+      return next();
+    }
+    // Test suites make hundreds of calls per second as one user; they opt in when testing the limiter itself.
+    if ((process.env.VITEST || process.env.NODE_ENV === 'test') && process.env.API_RATE_LIMIT_IN_TESTS !== '1') {
       return next();
     }
 
@@ -107,7 +111,8 @@ export function createRateLimiter(options: RateLimitOptions = {}) {
 // Global default rate limiter
 export const globalRateLimiter = createRateLimiter({
   windowSeconds: 60,
-  maxRequests: 300,
+  // Per student (or per IP when signed out). A busy dashboard load makes ~20 calls, so this leaves headroom.
+  maxRequests: Number(process.env.API_RATE_LIMIT_PER_MINUTE) || 600,
   keyPrefix: 'global',
 });
 
@@ -131,3 +136,17 @@ export const uploadRateLimiter = createRateLimiter({
   maxRequests: 20,
   keyPrefix: 'upload',
 });
+
+/** POST endpoints that call the AI model. Each one costs model quota, so they get the stricter AI limit. */
+export function isAIGenerationRequest(method: string, url: string): boolean {
+  if (method !== 'POST') return false;
+  const p = (url || '').split('?')[0].toLowerCase();
+  if (!p.startsWith('/api/')) return false;
+  return /^\/api\/v1\/(ai|discover)\//.test(p) || /\/(generate|explain|chat|ask|tutor|summari[sz]e|analy[sz]e|evaluate|feedback|hint|hints)(\/|$)/.test(p);
+}
+
+/** Applies the AI limiter only to AI generation calls; everything else passes straight through. */
+export function aiGenerationRateLimiter(req: Request, res: Response, next: NextFunction) {
+  if (!isAIGenerationRequest(req.method, req.originalUrl || req.url)) return next();
+  return aiRateLimiter(req, res, next);
+}

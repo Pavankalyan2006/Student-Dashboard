@@ -5,126 +5,131 @@ import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { AppShell } from './components/layout/AppShell';
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
-import { AiAgentPage } from './pages/AiAgentPage';
-import { DocumentsPage } from './features/documents/pages/DocumentsPage';
-import { DocumentWorkspacePage } from './features/documents/pages/DocumentWorkspacePage';
-import { DocumentUploadPage } from './features/documents/pages/DocumentUploadPage';
-import { CodingLabPage } from './features/coding/pages/CodingLabPage';
-import { CodingEditorPage } from './features/coding/pages/CodingEditorPage';
-import { CodingSavedPage } from './features/coding/pages/CodingSavedPage';
-import { CodingHistoryPage } from './features/coding/pages/CodingHistoryPage';
-import { CoursesPage } from './features/courses/pages/CoursesPage';
-import { CourseDetailPage } from './features/courses/pages/CourseDetailPage';
-import { CourseLearningPage } from './features/courses/pages/CourseLearningPage';
-import { NotesPage } from './features/notes/pages/NotesPage';
-import { NoteDetailPage } from './features/notes/pages/NoteDetailPage';
-import { DSALabPage } from './features/dsa/pages/DSALabPage';
-import { DSATopicsPage } from './features/dsa/pages/DSATopicsPage';
-import { DSATopicDetailPage } from './features/dsa/pages/DSATopicDetailPage';
-import { DSAVisualizePage } from './features/dsa/pages/DSAVisualizePage';
-import { DSAPracticePage } from './features/dsa/pages/DSAPracticePage';
-import { DSAProblemPage } from './features/dsa/pages/DSAProblemPage';
-import { DSAProgressPage } from './features/dsa/pages/DSAProgressPage';
-import { DSAAiTutorPage } from './features/dsa/pages/DSAAiTutorPage';
-import { QuizPage } from './features/quiz/pages/QuizPage';
-import { QuizCreatePage } from './features/quiz/pages/QuizCreatePage';
-import { QuizPlayerPage } from './features/quiz/pages/QuizPlayerPage';
-import { QuizResultPage } from './features/quiz/pages/QuizResultPage';
-import { QuizReviewPage } from './features/quiz/pages/QuizReviewPage';
-import { QuizHistoryPage } from './features/quiz/pages/QuizHistoryPage';
-import { QuizProgressPage } from './features/quiz/pages/QuizProgressPage';
-import { ProjectsPage } from './features/projects/pages/ProjectsPage';
-import { ProjectCreatePage } from './features/projects/pages/ProjectCreatePage';
-import { ProjectWorkspacePage } from './features/projects/pages/ProjectWorkspacePage';
-import { PlacementDashboardPage } from './features/placements/pages/PlacementDashboardPage';
-import { PlacementTopicsPage } from './features/placements/pages/PlacementTopicsPage';
-import { PlacementTopicDetailPage } from './features/placements/pages/PlacementTopicDetailPage';
-import { PlacementCompaniesPage } from './features/placements/pages/PlacementCompaniesPage';
-import { PlacementPlanPage } from './features/placements/pages/PlacementPlanPage';
-import { TechnicalPreparationPage } from './features/placements/pages/TechnicalPreparationPage';
-import { RolePreparationPage } from './features/placements/pages/RolePreparationPage';
-import { PlacementProgressPage } from './features/placements/pages/PlacementProgressPage';
-import { MockInterviewsPage } from './features/mock-interviews/pages/MockInterviewsPage';
+const AiAgentPage = lazyPage(() => import('./pages/AiAgentPage'), 'AiAgentPage');
+const DocumentsPage = lazyPage(() => import('./features/documents/pages/DocumentsPage'), 'DocumentsPage');
+const DocumentWorkspacePage = lazyPage(() => import('./features/documents/pages/DocumentWorkspacePage'), 'DocumentWorkspacePage');
+const DocumentUploadPage = lazyPage(() => import('./features/documents/pages/DocumentUploadPage'), 'DocumentUploadPage');
+const CodingLabPage = lazyPage(() => import('./features/coding/pages/CodingLabPage'), 'CodingLabPage');
+const CodingEditorPage = lazyPage(() => import('./features/coding/pages/CodingEditorPage'), 'CodingEditorPage');
+const CodingSavedPage = lazyPage(() => import('./features/coding/pages/CodingSavedPage'), 'CodingSavedPage');
+const CodingHistoryPage = lazyPage(() => import('./features/coding/pages/CodingHistoryPage'), 'CodingHistoryPage');
+const CoursesPage = lazyPage(() => import('./features/courses/pages/CoursesPage'), 'CoursesPage');
+const CourseDetailPage = lazyPage(() => import('./features/courses/pages/CourseDetailPage'), 'CourseDetailPage');
+const CourseLearningPage = lazyPage(() => import('./features/courses/pages/CourseLearningPage'), 'CourseLearningPage');
+const NotesPage = lazyPage(() => import('./features/notes/pages/NotesPage'), 'NotesPage');
+const NoteDetailPage = lazyPage(() => import('./features/notes/pages/NoteDetailPage'), 'NoteDetailPage');
+const DSALabPage = lazyPage(() => import('./features/dsa/pages/DSALabPage'), 'DSALabPage');
+const DSATopicsPage = lazyPage(() => import('./features/dsa/pages/DSATopicsPage'), 'DSATopicsPage');
+const DSATopicDetailPage = lazyPage(() => import('./features/dsa/pages/DSATopicDetailPage'), 'DSATopicDetailPage');
+const DSAVisualizePage = lazyPage(() => import('./features/dsa/pages/DSAVisualizePage'), 'DSAVisualizePage');
+const DSAPracticePage = lazyPage(() => import('./features/dsa/pages/DSAPracticePage'), 'DSAPracticePage');
+const DSAProblemPage = lazyPage(() => import('./features/dsa/pages/DSAProblemPage'), 'DSAProblemPage');
+const DSAProgressPage = lazyPage(() => import('./features/dsa/pages/DSAProgressPage'), 'DSAProgressPage');
+const DSAAiTutorPage = lazyPage(() => import('./features/dsa/pages/DSAAiTutorPage'), 'DSAAiTutorPage');
+const QuizPage = lazyPage(() => import('./features/quiz/pages/QuizPage'), 'QuizPage');
+const QuizCreatePage = lazyPage(() => import('./features/quiz/pages/QuizCreatePage'), 'QuizCreatePage');
+const QuizPlayerPage = lazyPage(() => import('./features/quiz/pages/QuizPlayerPage'), 'QuizPlayerPage');
+const QuizResultPage = lazyPage(() => import('./features/quiz/pages/QuizResultPage'), 'QuizResultPage');
+const QuizReviewPage = lazyPage(() => import('./features/quiz/pages/QuizReviewPage'), 'QuizReviewPage');
+const QuizHistoryPage = lazyPage(() => import('./features/quiz/pages/QuizHistoryPage'), 'QuizHistoryPage');
+const QuizProgressPage = lazyPage(() => import('./features/quiz/pages/QuizProgressPage'), 'QuizProgressPage');
+const ProjectsPage = lazyPage(() => import('./features/projects/pages/ProjectsPage'), 'ProjectsPage');
+const ProjectCreatePage = lazyPage(() => import('./features/projects/pages/ProjectCreatePage'), 'ProjectCreatePage');
+const ProjectWorkspacePage = lazyPage(() => import('./features/projects/pages/ProjectWorkspacePage'), 'ProjectWorkspacePage');
+const PlacementDashboardPage = lazyPage(() => import('./features/placements/pages/PlacementDashboardPage'), 'PlacementDashboardPage');
+const PlacementTopicsPage = lazyPage(() => import('./features/placements/pages/PlacementTopicsPage'), 'PlacementTopicsPage');
+const PlacementTopicDetailPage = lazyPage(() => import('./features/placements/pages/PlacementTopicDetailPage'), 'PlacementTopicDetailPage');
+const PlacementCompaniesPage = lazyPage(() => import('./features/placements/pages/PlacementCompaniesPage'), 'PlacementCompaniesPage');
+const PlacementPlanPage = lazyPage(() => import('./features/placements/pages/PlacementPlanPage'), 'PlacementPlanPage');
+const TechnicalPreparationPage = lazyPage(() => import('./features/placements/pages/TechnicalPreparationPage'), 'TechnicalPreparationPage');
+const RolePreparationPage = lazyPage(() => import('./features/placements/pages/RolePreparationPage'), 'RolePreparationPage');
+const PlacementProgressPage = lazyPage(() => import('./features/placements/pages/PlacementProgressPage'), 'PlacementProgressPage');
+const MockInterviewsPage = lazyPage(() => import('./features/mock-interviews/pages/MockInterviewsPage'), 'MockInterviewsPage');
 // Phase 12: Resume Builder, Career Assistant & Skill Assessment Pages
-import { ResumePage } from './features/resume/pages/ResumePage';
-import { ResumeEditorPage } from './features/resume/pages/ResumeEditorPage';
-import { ResumeCreatePage } from './features/resume/pages/ResumeCreatePage';
-import { ResumePreviewPage } from './features/resume/pages/ResumePreviewPage';
-import { ResumeTailorPage } from './features/resume/pages/ResumeTailorPage';
-import { ResumeTemplatesPage } from './features/resume/pages/ResumeTemplatesPage';
-import { CareerDashboardPage } from './features/career/pages/CareerDashboardPage';
-import { CareerExplorePage } from './features/career/pages/CareerExplorePage';
-import { CareerRoleDetailPage } from './features/career/pages/CareerRoleDetailPage';
-import { CareerRoadmapPage } from './features/career/pages/CareerRoadmapPage';
-import { SkillGapPage } from './features/career/pages/SkillGapPage';
-import { SkillProfilePage } from './features/skills/pages/SkillProfilePage';
-import { SkillAssessmentPage } from './features/skills/pages/SkillAssessmentPage';
+const ResumePage = lazyPage(() => import('./features/resume/pages/ResumePage'), 'ResumePage');
+const ResumeEditorPage = lazyPage(() => import('./features/resume/pages/ResumeEditorPage'), 'ResumeEditorPage');
+const ResumeCreatePage = lazyPage(() => import('./features/resume/pages/ResumeCreatePage'), 'ResumeCreatePage');
+const ResumePreviewPage = lazyPage(() => import('./features/resume/pages/ResumePreviewPage'), 'ResumePreviewPage');
+const ResumeTailorPage = lazyPage(() => import('./features/resume/pages/ResumeTailorPage'), 'ResumeTailorPage');
+const ResumeTemplatesPage = lazyPage(() => import('./features/resume/pages/ResumeTemplatesPage'), 'ResumeTemplatesPage');
+const CareerDashboardPage = lazyPage(() => import('./features/career/pages/CareerDashboardPage'), 'CareerDashboardPage');
+const CareerExplorePage = lazyPage(() => import('./features/career/pages/CareerExplorePage'), 'CareerExplorePage');
+const CareerRoleDetailPage = lazyPage(() => import('./features/career/pages/CareerRoleDetailPage'), 'CareerRoleDetailPage');
+const CareerRoadmapPage = lazyPage(() => import('./features/career/pages/CareerRoadmapPage'), 'CareerRoadmapPage');
+const SkillGapPage = lazyPage(() => import('./features/career/pages/SkillGapPage'), 'SkillGapPage');
+const SkillProfilePage = lazyPage(() => import('./features/skills/pages/SkillProfilePage'), 'SkillProfilePage');
+const SkillAssessmentPage = lazyPage(() => import('./features/skills/pages/SkillAssessmentPage'), 'SkillAssessmentPage');
 // Phase 13: Research Assistant & GitHub Integration Pages
-import { ResearchDashboardPage } from './pages/ResearchDashboardPage';
-import { CreateResearchProjectPage } from './pages/CreateResearchProjectPage';
-import { ResearchWorkspacePage } from './pages/ResearchWorkspacePage';
-import { GitHubDashboardPage } from './pages/GitHubDashboardPage';
-import { GitHubConnectPage } from './pages/GitHubConnectPage';
-import { RepositoryListPage } from './pages/RepositoryListPage';
-import { RepositoryDetailPage } from './pages/RepositoryDetailPage';
+const ResearchDashboardPage = lazyPage(() => import('./pages/ResearchDashboardPage'), 'ResearchDashboardPage');
+const CreateResearchProjectPage = lazyPage(() => import('./pages/CreateResearchProjectPage'), 'CreateResearchProjectPage');
+const ResearchWorkspacePage = lazyPage(() => import('./pages/ResearchWorkspacePage'), 'ResearchWorkspacePage');
+const GitHubDashboardPage = lazyPage(() => import('./pages/GitHubDashboardPage'), 'GitHubDashboardPage');
+const GitHubConnectPage = lazyPage(() => import('./pages/GitHubConnectPage'), 'GitHubConnectPage');
+const RepositoryListPage = lazyPage(() => import('./pages/RepositoryListPage'), 'RepositoryListPage');
+const RepositoryDetailPage = lazyPage(() => import('./pages/RepositoryDetailPage'), 'RepositoryDetailPage');
 // Phase 14: Community, Student Profile, Progress & Student Utilities
-import { ProfilePage } from './features/profile/pages/ProfilePage';
-import { ProfileEditPage } from './features/profile/pages/ProfileEditPage';
-import { ProfileActivityPage } from './features/profile/pages/ProfileActivityPage';
-import { ProfileAchievementsPage } from './features/profile/pages/ProfileAchievementsPage';
-import { ProfileCertificatesPage } from './features/profile/pages/ProfileCertificatesPage';
-import { CertificateVerificationPage } from './features/profile/pages/CertificateVerificationPage';
-import { ProfileBookmarksPage } from './features/profile/pages/ProfileBookmarksPage';
-import { ProfileSettingsPage } from './features/profile/pages/ProfileSettingsPage';
-import { OnboardingPage } from './features/onboarding/pages/OnboardingPage';
-import { ProgressDashboardPage } from './features/progress/pages/ProgressDashboardPage';
-import { SubsystemProgressPage } from './features/progress/pages/SubsystemProgressPage';
-import { GoalsPage } from './features/goals/pages/GoalsPage';
-import { FocusTimerPage } from './features/focus/pages/FocusTimerPage';
-import { GoalDetailPage } from './features/goals/pages/GoalDetailPage';
-import { CommunityDashboardPage } from './features/community/pages/CommunityDashboardPage';
-import { CommunityQuestionsPage } from './features/community/pages/CommunityQuestionsPage';
-import { CommunityQuestionDetailPage } from './features/community/pages/CommunityQuestionDetailPage';
-import { CommunityDiscussionsPage } from './features/community/pages/CommunityDiscussionsPage';
-import { CommunityProjectsPage } from './features/community/pages/CommunityProjectsPage';
-import { CommunityResourcesPage } from './features/community/pages/CommunityResourcesPage';
-import { CommunityTopicDetailPage } from './features/community/pages/CommunityTopicDetailPage';
-import { NotificationsPage } from './features/notifications/pages/NotificationsPage';
+const ProfilePage = lazyPage(() => import('./features/profile/pages/ProfilePage'), 'ProfilePage');
+const ProfileEditPage = lazyPage(() => import('./features/profile/pages/ProfileEditPage'), 'ProfileEditPage');
+const ProfileActivityPage = lazyPage(() => import('./features/profile/pages/ProfileActivityPage'), 'ProfileActivityPage');
+const ProfileAchievementsPage = lazyPage(() => import('./features/profile/pages/ProfileAchievementsPage'), 'ProfileAchievementsPage');
+const ProfileCertificatesPage = lazyPage(() => import('./features/profile/pages/ProfileCertificatesPage'), 'ProfileCertificatesPage');
+const CertificateVerificationPage = lazyPage(() => import('./features/profile/pages/CertificateVerificationPage'), 'CertificateVerificationPage');
+const ProfileBookmarksPage = lazyPage(() => import('./features/profile/pages/ProfileBookmarksPage'), 'ProfileBookmarksPage');
+const ProfileSettingsPage = lazyPage(() => import('./features/profile/pages/ProfileSettingsPage'), 'ProfileSettingsPage');
+const OnboardingPage = lazyPage(() => import('./features/onboarding/pages/OnboardingPage'), 'OnboardingPage');
+const ProgressDashboardPage = lazyPage(() => import('./features/progress/pages/ProgressDashboardPage'), 'ProgressDashboardPage');
+const SubsystemProgressPage = lazyPage(() => import('./features/progress/pages/SubsystemProgressPage'), 'SubsystemProgressPage');
+const GoalsPage = lazyPage(() => import('./features/goals/pages/GoalsPage'), 'GoalsPage');
+const FocusTimerPage = lazyPage(() => import('./features/focus/pages/FocusTimerPage'), 'FocusTimerPage');
+const LearningAnalyticsPage = lazyPage(() => import('./features/analytics/pages/LearningAnalyticsPage'), 'LearningAnalyticsPage');
+const DiscoverPage = lazyPage(() => import('./features/discover/pages/DiscoverPage'), 'DiscoverPage');
+const MistakeNotebookPage = lazyPage(() => import('./features/mistakes/pages/MistakeNotebookPage'), 'MistakeNotebookPage');
+const GoalDetailPage = lazyPage(() => import('./features/goals/pages/GoalDetailPage'), 'GoalDetailPage');
+const CommunityDashboardPage = lazyPage(() => import('./features/community/pages/CommunityDashboardPage'), 'CommunityDashboardPage');
+const CommunityQuestionsPage = lazyPage(() => import('./features/community/pages/CommunityQuestionsPage'), 'CommunityQuestionsPage');
+const CommunityQuestionDetailPage = lazyPage(() => import('./features/community/pages/CommunityQuestionDetailPage'), 'CommunityQuestionDetailPage');
+const CommunityDiscussionsPage = lazyPage(() => import('./features/community/pages/CommunityDiscussionsPage'), 'CommunityDiscussionsPage');
+const CommunityProjectsPage = lazyPage(() => import('./features/community/pages/CommunityProjectsPage'), 'CommunityProjectsPage');
+const CommunityResourcesPage = lazyPage(() => import('./features/community/pages/CommunityResourcesPage'), 'CommunityResourcesPage');
+const CommunityTopicDetailPage = lazyPage(() => import('./features/community/pages/CommunityTopicDetailPage'), 'CommunityTopicDetailPage');
+const NotificationsPage = lazyPage(() => import('./features/notifications/pages/NotificationsPage'), 'NotificationsPage');
 import { ModulePlaceholderPage, MODULE_REGISTRY } from './pages/ModulePlaceholderPage';
 import { NotFoundPage, ForbiddenPage } from './pages/ErrorPages';
 // 10 New AI Learning Modules
-import { StudyPlannerPage } from './features/study-planner/pages/StudyPlannerPage';
-import { ExamPreparationPage } from './features/exams/pages/ExamPreparationPage';
-import { DoubtSolverPage } from './features/doubts/pages/DoubtSolverPage';
-import { FlashcardsPage } from './features/flashcards/pages/FlashcardsPage';
-import { LabAssistantPage } from './features/labs/pages/LabAssistantPage';
-import { SqlLabPage } from './features/sql-lab/pages/SqlLabPage';
-import { GitLabPage } from './features/git-lab/pages/GitLabPage';
-import { MlLabPage } from './features/ml-lab/pages/MlLabPage';
-import { SystemDesignLabPage } from './features/system-design/pages/SystemDesignLabPage';
-import { KnowledgeBasePage } from './features/knowledge/pages/KnowledgeBasePage';
-import { ApplicationTrackerPage } from './features/applications/pages/ApplicationTrackerPage';
-import { IntegrationsCenterPage } from './features/integrations/pages/IntegrationsCenterPage';
-import { ExternalProfileHubPage } from './features/profile/pages/ExternalProfileHubPage';
-import { JobsDiscoveryPage } from './features/jobs/pages/JobsDiscoveryPage';
+const StudyPlannerPage = lazyPage(() => import('./features/study-planner/pages/StudyPlannerPage'), 'StudyPlannerPage');
+const ExamPreparationPage = lazyPage(() => import('./features/exams/pages/ExamPreparationPage'), 'ExamPreparationPage');
+const DoubtSolverPage = lazyPage(() => import('./features/doubts/pages/DoubtSolverPage'), 'DoubtSolverPage');
+const FlashcardsPage = lazyPage(() => import('./features/flashcards/pages/FlashcardsPage'), 'FlashcardsPage');
+const LabAssistantPage = lazyPage(() => import('./features/labs/pages/LabAssistantPage'), 'LabAssistantPage');
+const SqlLabPage = lazyPage(() => import('./features/sql-lab/pages/SqlLabPage'), 'SqlLabPage');
+const GitLabPage = lazyPage(() => import('./features/git-lab/pages/GitLabPage'), 'GitLabPage');
+const MlLabPage = lazyPage(() => import('./features/ml-lab/pages/MlLabPage'), 'MlLabPage');
+const SystemDesignLabPage = lazyPage(() => import('./features/system-design/pages/SystemDesignLabPage'), 'SystemDesignLabPage');
+const KnowledgeBasePage = lazyPage(() => import('./features/knowledge/pages/KnowledgeBasePage'), 'KnowledgeBasePage');
+const ApplicationTrackerPage = lazyPage(() => import('./features/applications/pages/ApplicationTrackerPage'), 'ApplicationTrackerPage');
+const IntegrationsCenterPage = lazyPage(() => import('./features/integrations/pages/IntegrationsCenterPage'), 'IntegrationsCenterPage');
+const ExternalProfileHubPage = lazyPage(() => import('./features/profile/pages/ExternalProfileHubPage'), 'ExternalProfileHubPage');
+const JobsDiscoveryPage = lazyPage(() => import('./features/jobs/pages/JobsDiscoveryPage'), 'JobsDiscoveryPage');
 // Academic Semester Command Center
-import { SemesterOverviewPage } from './features/semester-command-center/pages/SemesterOverviewPage';
-import { SemesterSetupWizardPage } from './features/semester-command-center/pages/SemesterSetupWizardPage';
-import { SemesterStudyStreamPage } from './features/semester-command-center/pages/SemesterStudyStreamPage';
-import { SemesterSubjectsSyllabusPage } from './features/semester-command-center/pages/SemesterSubjectsSyllabusPage';
-import { SemesterCalendarEventsPage } from './features/semester-command-center/pages/SemesterCalendarEventsPage';
-import { SemesterExamsSlipTestsPage } from './features/semester-command-center/pages/SemesterExamsSlipTestsPage';
-import { SemesterRecoveryGuidancePage } from './features/semester-command-center/pages/SemesterRecoveryGuidancePage';
+const SemesterOverviewPage = lazyPage(() => import('./features/semester-command-center/pages/SemesterOverviewPage'), 'SemesterOverviewPage');
+const SemesterSetupWizardPage = lazyPage(() => import('./features/semester-command-center/pages/SemesterSetupWizardPage'), 'SemesterSetupWizardPage');
+const SemesterStudyStreamPage = lazyPage(() => import('./features/semester-command-center/pages/SemesterStudyStreamPage'), 'SemesterStudyStreamPage');
+const SemesterSubjectsSyllabusPage = lazyPage(() => import('./features/semester-command-center/pages/SemesterSubjectsSyllabusPage'), 'SemesterSubjectsSyllabusPage');
+const SemesterCalendarEventsPage = lazyPage(() => import('./features/semester-command-center/pages/SemesterCalendarEventsPage'), 'SemesterCalendarEventsPage');
+const SemesterExamsSlipTestsPage = lazyPage(() => import('./features/semester-command-center/pages/SemesterExamsSlipTestsPage'), 'SemesterExamsSlipTestsPage');
+const SemesterRecoveryGuidancePage = lazyPage(() => import('./features/semester-command-center/pages/SemesterRecoveryGuidancePage'), 'SemesterRecoveryGuidancePage');
 // Public Website Pages
-import { HomePage } from './features/public/pages/HomePage';
-import { AboutPage } from './features/public/pages/AboutPage';
-import { HowItWorksPage } from './features/public/pages/HowItWorksPage';
-import { GateExamPreparationPage } from './features/gate/pages/GateExamPreparationPage';
-import { LanguageLearningPage } from './features/languages/pages/LanguageLearningPage';
+const HomePage = lazyPage(() => import('./features/public/pages/HomePage'), 'HomePage');
+const AboutPage = lazyPage(() => import('./features/public/pages/AboutPage'), 'AboutPage');
+const HowItWorksPage = lazyPage(() => import('./features/public/pages/HowItWorksPage'), 'HowItWorksPage');
+const GateExamPreparationPage = lazyPage(() => import('./features/gate/pages/GateExamPreparationPage'), 'GateExamPreparationPage');
+const LanguageLearningPage = lazyPage(() => import('./features/languages/pages/LanguageLearningPage'), 'LanguageLearningPage');
 import { useAuth } from './hooks/useAuth';
 import { StudentContextProvider } from './context/StudentContext';
 import { RefreshCw } from 'lucide-react';
 import { resolveRetiredRoute } from './lib/retiredRoutes';
+import { lazyPage } from './lib/lazyPage';
+import { LoadingState } from './components/layout/PageComponents';
 
 function currentBrowserPath(): string {
   if (typeof window === 'undefined') return '/';
@@ -828,6 +833,18 @@ function AppContent() {
       return <FocusTimerPage onNavigate={navigate} />;
     }
 
+    if (path === '/analytics' || path === '/learning-analytics') {
+      return <LearningAnalyticsPage onNavigate={navigate} />;
+    }
+
+    if (path === '/mistakes' || path === '/mistake-notebook') {
+      return <MistakeNotebookPage onNavigate={navigate} />;
+    }
+
+    if (path === '/discover') {
+      return <DiscoverPage onNavigate={navigate} />;
+    }
+
     if (path === '/goals' || path === '/goals/create' || path === '/learning-goals') {
       return <GoalsPage onNavigate={navigate} />;
     }
@@ -1091,7 +1108,7 @@ function AppContent() {
 
   return (
     <AppShell currentPath={currentPath.split('?')[0]} onNavigate={navigate}>
-      {renderRoute()}
+      <React.Suspense fallback={<LoadingState message="Opening page…" />}>{renderRoute()}</React.Suspense>
     </AppShell>
   );
 }
@@ -1101,7 +1118,9 @@ export default function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <StudentContextProvider>
-          <AppContent />
+          <React.Suspense fallback={<LoadingState message="Loading…" className="min-h-screen" />}>
+            <AppContent />
+          </React.Suspense>
         </StudentContextProvider>
       </QueryClientProvider>
     </ErrorBoundary>
