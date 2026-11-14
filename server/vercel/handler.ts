@@ -1,9 +1,9 @@
-// Vercel serverless entry point. vercel.json rewrites /api/* and /health* here; the
-// built frontend (dist/) is served by Vercel's CDN.
+// Vercel request handler. Bundled by scripts/build-vercel-api.mjs into api/_lib/handler.mjs;
+// api/index.js re-exports it. The built frontend (dist/) is served by Vercel's CDN.
 import type { IncomingMessage, ServerResponse } from 'http';
-import { createApp } from '../server/app';
-import { errorHandler } from '../server/middleware/errorHandler';
-import { logger } from '../server/core/logging';
+import { createApp } from '../app';
+import { errorHandler } from '../middleware/errorHandler';
+import { logger } from '../core/logging';
 
 let appPromise: ReturnType<typeof createApp> | null = null;
 

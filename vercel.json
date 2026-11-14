@@ -5,7 +5,7 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "functions": {
-    "api/index.ts": {
+    "api/index.js": {
       "memory": 1024,
       "maxDuration": 60,
       "includeFiles": "{supabase/migrations/**,server/execution/sqlWorker.cjs,node_modules/sql.js/dist/**}"

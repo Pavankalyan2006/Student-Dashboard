@@ -5,6 +5,9 @@
 //
 //   BASE=http://localhost:3611 node scripts/pilot/phase6-synthetic-journeys.cjs > out.json
 const { call, uniq, summary } = require('./lib.cjs');
+// Production (Firebase) mode: FIREBASE_WEB_API_KEY + FIREBASE_SERVICE_ACCOUNT_BASE64 set.
+const fbAccounts = require('./firebase-accounts.cjs');
+const createdFirebaseUsers = [];
 
 const results = [];
 function record(workflow, step, ok, detail) {
@@ -21,7 +24,49 @@ const STEPS = (label, semester) => ({
   6: { preferred_languages: ['English'], explanation_style: 'STANDARD', weekly_study_hours: 10 },
 });
 
+async function registerFirebase(label, semester) {
+  const W = 'WF1 Registration';
+  const email = `p6.${label.toLowerCase()}.${uniq()}@example.test`;
+  const password = 'Phase6-Pass-' + uniq();
+  const su = await fbAccounts.signUp(email, password);
+  record(W, `${label}: Firebase sign-up`, su.status === 200, `${su.status} ${short(su.body?.error?.message || '')}`);
+  if (su.body?.localId) createdFirebaseUsers.push(su.body.localId);
+  const unverified = await call('POST', '/auth/firebase/session', su.body?.idToken, { full_name: `Pilot Synthetic ${label}`, accept_terms: true, accept_privacy: true }, 'POST /auth/firebase/session');
+  const v = await fbAccounts.markVerified(su.body?.localId);
+  record(W, `${label}: email verified (admin, test only)`, v.status === 200, `${v.status}`);
+  const si = await fbAccounts.signIn(email, password);
+  const token = si.body?.idToken;
+  // A double submit (double click / retry after a dropped response) must create one student.
+  const [r1, r2] = await Promise.all([
+    call('POST', '/auth/firebase/session', token, { full_name: `Pilot Synthetic ${label}`, accept_terms: true, accept_privacy: true }, 'POST /auth/firebase/session'),
+    call('POST', '/auth/firebase/session', token, { full_name: `Pilot Synthetic ${label}`, accept_terms: true, accept_privacy: true }, 'POST /auth/firebase/session'),
+  ]);
+  const ids = new Set([unverified.body?.data?.student?.id, r1.body?.data?.student?.id, r2.body?.data?.student?.id].filter(Boolean));
+  record(W, `${label}: session is idempotent (one student)`, r1.status < 300 && r2.status < 300 && ids.size === 1, `statuses ${unverified.status}/${r1.status}/${r2.status}, students ${ids.size}`);
+  const id = r1.body?.data?.student?.id;
+  const steps = STEPS(label, semester);
+  for (const s of [1, 2]) await call('PUT', `/profile/me/onboarding/steps/${s}`, token, { data: steps[s] }, 'PUT /profile/me/onboarding/steps/:n');
+  const resume = await call('GET', '/profile/me/onboarding', token);
+  record(W, `${label}: onboarding resumes after interruption`, resume.body?.data?.onboarding?.current_step === 3, `current_step ${resume.body?.data?.onboarding?.current_step}`);
+  for (const s of [3, 4, 4, 5, 6]) await call('PUT', `/profile/me/onboarding/steps/${s}`, token, { data: steps[s] }, 'PUT /profile/me/onboarding/steps/:n');
+  const c1 = await call('POST', '/profile/me/onboarding/complete', token, {});
+  const c2 = await call('POST', '/profile/me/onboarding/complete', token, {});
+  record(W, `${label}: onboarding completes (retry safe)`, c1.status === 200 && c2.status === 200, `${c1.status}/${c2.status} ${c1.status >= 300 ? short(c1.body) : ''}`);
+  const me = await call('GET', '/profile/me', token);
+  record(W, `${label}: retried project step does not duplicate`, me.body?.data?.profile?.experience?.projects?.length === 1, `projects ${me.body?.data?.profile?.experience?.projects?.length}`);
+  await call('POST', '/auth/logout', token, {});
+  const again = await fbAccounts.signIn(email, password);
+  const back = await call('POST', '/auth/firebase/session', again.body?.idToken, {}, 'POST /auth/firebase/session');
+  record(W, `${label}: logout and login again`, back.status === 200 && back.body?.data?.student?.id === id, `${back.status}`);
+  const bad = await fbAccounts.signIn(email, 'WrongPass9!');
+  record(W, `${label}: wrong password refused`, bad.status === 400 && /INVALID/.test(bad.body?.error?.message || ''), `${bad.status} ${short(bad.body?.error?.message || '')}`);
+  const legacy = await call('POST', '/auth/login', null, { email, password }, 'POST /auth/login (legacy)');
+  record(W, `${label}: legacy password login is disabled`, legacy.status >= 400 && legacy.status < 500, `${legacy.status}`);
+  return { label, email, id, token: again.body?.idToken || token };
+}
+
 async function register(label, semester) {
+  if (fbAccounts.enabled) return registerFirebase(label, semester);
   const W = 'WF1 Registration';
   const email = `p6.${label.toLowerCase()}.${uniq()}@example.test`;
   const body = { email, password: 'Phase6Pass1', confirm_password: 'Phase6Pass1', name: `Pilot Synthetic ${label}`, accept_terms: true, accept_privacy: true };
@@ -304,6 +349,9 @@ async function register(label, semester) {
     }
   }
 
+  if (process.env.KEEP_FIREBASE_USERS !== 'true') {
+    for (const uid of createdFirebaseUsers) await fbAccounts.deleteAccount(uid);
+  }
   console.log(JSON.stringify({ base: process.env.BASE || 'http://localhost:3611', ran_at: new Date().toISOString(), students: [A.id, B.id], results, timings: summary() }, null, 2));
 })().catch((e) => {
   console.error('FAILED', e);
