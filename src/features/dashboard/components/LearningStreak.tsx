@@ -35,12 +35,12 @@ export function LearningStreak({
         </div>
 
         {/* Days visualizer */}
-        <div className="flex items-center justify-between gap-1.5 pt-1">
+        <div className="grid grid-cols-7 gap-1 pt-1 [&>*]:min-w-0">
           {days.map((d, i) => (
-            <div key={i} className="flex flex-col items-center gap-1">
+            <div key={i} className="flex min-w-0 flex-col items-center gap-1">
               <span className="text-[10px] font-bold text-slate-500">{d.day}</span>
               <div
-                className={`h-7 w-7 rounded-lg flex items-center justify-center text-xs font-bold transition-all ${
+                className={`h-7 w-full max-w-7 rounded-lg flex items-center justify-center text-xs font-bold transition-all ${
                   d.active
                     ? 'bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs'
                     : 'bg-slate-100 text-slate-400'

@@ -44,14 +44,14 @@ export function NoteCard({
       <div>
         {/* Top bar: Source indicator & Favorite + Menu */}
         <div className="flex items-center justify-between gap-2 mb-3">
-          <div className="flex items-center gap-1.5 text-[11px] font-medium text-slate-600">
+          <div className="flex min-w-0 items-center gap-1.5 text-[11px] font-medium text-slate-600">
             <BookOpen className="h-3.5 w-3.5 text-blue-600" />
-            <span className="truncate max-w-[200px]">
+            <span className="truncate">
               {note.source_title || (note.source_type === 'topic' ? 'Topic Note' : 'Curriculum Note')}
             </span>
           </div>
 
-          <div className="flex items-center gap-1">
+          <div className="flex shrink-0 items-center gap-1">
             <button
               type="button"
               onClick={(e) => {

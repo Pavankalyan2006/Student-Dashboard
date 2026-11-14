@@ -155,7 +155,7 @@ export function DashboardPage({ onNavigate }: { onNavigate: (path: string) => vo
           </h2>
           <p className="text-[13px] text-slate-500">Live numbers from each module you use.</p>
         </div>
-        <div className="grid grid-cols-1 items-start gap-6 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 items-start gap-6 md:grid-cols-2 xl:grid-cols-3 [&>*]:min-w-0">
           <RecentCodingWidget onNavigate={onNavigate} />
           <DSAProgressWidget onNavigate={onNavigate} />
           <QuizProgressWidget onNavigate={onNavigate} />

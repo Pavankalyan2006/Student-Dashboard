@@ -106,7 +106,7 @@ export function SemesterExamsSlipTestsPage({
       >
         <div className="space-y-6">
           {/* Sub-Tabs Switcher */}
-          <div className="flex border-b border-slate-200 gap-6">
+          <div className="flex border-b border-slate-200 gap-6 overflow-x-auto [&>button]:shrink-0 [&>button]:whitespace-nowrap">
             <button
               onClick={() => setActiveTab('slip-tests')}
               className={`pb-3 text-sm font-medium transition-colors border-b-2 flex items-center gap-2 ${

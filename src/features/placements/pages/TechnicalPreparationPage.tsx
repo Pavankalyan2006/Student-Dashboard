@@ -343,7 +343,7 @@ ${interviewQuestions.slice(0, 5).map((q, idx) => `### Q${idx + 1}: ${q.question}
 
       {/* Main 4-Tab Interface: Learn, Interview Questions, Practice, Revision */}
       <div className="space-y-4">
-        <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
+        <div className="flex items-center gap-2 overflow-x-auto border-b border-slate-200 pb-2 [&>button]:shrink-0 [&>button]:whitespace-nowrap">
           {[
             { id: 'learn', label: '1. Learn & Concepts', icon: BookOpen },
             { id: 'questions', label: '2. Interview Viva Questions', icon: HelpCircle },

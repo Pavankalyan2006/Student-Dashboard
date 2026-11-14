@@ -28,11 +28,11 @@ export const ResearchGitHubWidget: React.FC<ResearchGitHubWidgetProps> = ({ onNa
   const activeRepo = repos[0];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-6">
+    <div className="grid grid-cols-1 gap-6">
       {/* Research Assistant Card */}
       <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-2xs space-y-4 flex flex-col justify-between">
         <div className="space-y-3">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2 text-indigo-700">
               <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
                 <BookOpen className="w-4 h-4" />
