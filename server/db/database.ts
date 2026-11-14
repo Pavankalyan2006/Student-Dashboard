@@ -3123,7 +3123,7 @@ print(power_mod(2, 10, 1000))  # Output: 24
   }
 
   // Search method
-  public async search(query: string, type?: SearchCategory | 'all', page = 1, limit = 10): Promise<{
+  public async search(query: string, type?: SearchCategory | 'all', page = 1, limit = 10, viewerId?: string): Promise<{
     items: SearchResultItem[];
     total: number;
     page: number;
@@ -3133,7 +3133,12 @@ print(power_mod(2, 10, 1000))  # Output: 24
     await this.initialize();
     const cleanQuery = (query || '').toLowerCase().trim();
 
-    let filtered = this.searchIndex;
+    // Documents and projects belong to one student: only their owner finds them in search.
+    let filtered = this.searchIndex.filter((item) => {
+      if (item.type === 'documents') return Boolean(viewerId) && this.documents.get(item.id)?.student_id === viewerId;
+      if ((item.type as string) === 'projects') return Boolean(viewerId) && this.projects.get(item.id)?.student_id === viewerId;
+      return true;
+    });
     if (type && type !== 'all') {
       filtered = filtered.filter((item) => item.type === type);
     }

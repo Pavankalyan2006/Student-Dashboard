@@ -285,6 +285,35 @@ export class StudentContextEngine {
   }
 
   /**
+   * The same context with everything the AI provider does not need removed: name, account id, institution,
+   * school marks, entrance rank, family and financial context, and the persona text that embeds them.
+   * Use this whenever the context is handed to a model (for example as a tool result).
+   */
+  public static forModel(context: UnifiedStudentContext): Omit<UnifiedStudentContext, 'student' | 'aiPersona' | 'education'> & {
+    student: { branch: string; semester: number };
+    tutorTone?: string;
+    education?: { degree: string; branch: string; currentYear: number; currentSemester: number; expectedGraduationYear: number };
+  } {
+    const { student, aiPersona, education, ...rest } = context;
+    return {
+      ...rest,
+      student: { branch: student.branch, semester: student.semester },
+      ...(aiPersona ? { tutorTone: aiPersona.pedagogical_tone } : {}),
+      ...(education
+        ? {
+            education: {
+              degree: education.degree,
+              branch: education.branch,
+              currentYear: education.currentYear,
+              currentSemester: education.currentSemester,
+              expectedGraduationYear: education.expectedGraduationYear,
+            },
+          }
+        : {}),
+    };
+  }
+
+  /**
    * Formats unified student context into a concise markdown prompt snippet for LLMs.
    */
   public static formatPromptContext(context: UnifiedStudentContext): string {

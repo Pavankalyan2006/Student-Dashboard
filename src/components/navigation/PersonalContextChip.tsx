@@ -9,6 +9,7 @@ import { findActiveNavItem } from './navConfig';
 interface AiContextSummary {
   module: string;
   lines: string[];
+  personalize?: boolean;
 }
 
 /**
@@ -51,6 +52,8 @@ export function PersonalContextChip({ currentPath, onNavigate }: { currentPath: 
             <p className="text-xs text-slate-500">Loading…</p>
           ) : isError ? (
             <p className="text-xs text-red-600">Could not load your context.</p>
+          ) : data?.personalize === false ? (
+            <p className="text-xs text-slate-600">Personalisation is off, so AI answers receive nothing about you. Turn it back on in AI Memory.</p>
           ) : lines.length === 0 ? (
             <p className="text-xs text-slate-600">Nothing yet. Add your subjects, skills and goals to your profile so answers fit you.</p>
           ) : (
@@ -77,6 +80,9 @@ export function PersonalContextChip({ currentPath, onNavigate }: { currentPath: 
         <div className="p-1">
           <DropdownMenuItem onSelect={() => onNavigate('/profile/edit')}>
             <PencilLine className="mr-2 h-3.5 w-3.5" /> Update my profile
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => onNavigate('/ai-memory')}>
+            <BrainCircuit className="mr-2 h-3.5 w-3.5" /> Manage AI memory
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={() => onNavigate('/ai-agent')}>
             <Bot className="mr-2 h-3.5 w-3.5" /> Ask my AI tutor

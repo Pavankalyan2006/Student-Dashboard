@@ -878,6 +878,11 @@ function requireStudent(studentId?: string): string {
   return studentId;
 }
 
+const ACADEMIC_EVENT_TYPES = [
+  'SEMESTER_START', 'SEMESTER_END', 'CLASS', 'HOLIDAY', 'SLIP_TEST', 'QUIZ', 'ASSIGNMENT', 'LAB', 'LAB_EXAM',
+  'MINOR_1', 'MINOR_2', 'MINOR_3', 'PROJECT_REVIEW', 'SEMINAR', 'REVISION', 'STUDY_DAY', 'END_SEMESTER', 'OTHER',
+] as const satisfies readonly AcademicEvent['event_type'][];
+
 export const semesterCommandCenterService = {
   // 1. Complete semester overview for one student
   getOverview: (studentIdArg?: string): SemesterOverviewDashboardData => {
@@ -1008,12 +1013,23 @@ export const semesterCommandCenterService = {
       throw Object.assign(new Error('Event date must be a valid YYYY-MM-DD date'), { statusCode: 400 });
     }
     const st = stateFor(studentId);
+    // Only known fields are kept, each within limits, so a request cannot store arbitrary data.
+    const pick = <T extends string>(v: unknown, allowed: readonly T[], fallback: T): T => (allowed.includes(v as T) ? (v as T) : fallback);
+    const time = (v: unknown) => (typeof v === 'string' && /^\d{2}:\d{2}$/.test(v) ? v : undefined);
+    const text = (v: unknown, max: number) => (typeof v === 'string' && v.trim() ? v.trim().slice(0, max) : undefined);
     const newEvent: AcademicEvent = {
-      ...eventData,
-      title: String(eventData.title).trim(),
-      id: `ev_${Date.now()}`,
+      title: String(eventData.title).trim().slice(0, 140),
+      date: eventData.date.slice(0, 10),
+      event_type: pick(eventData.event_type, ACADEMIC_EVENT_TYPES, 'OTHER'),
+      priority: pick(eventData.priority, ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] as const, 'MEDIUM') as AcademicEvent['priority'],
+      status: pick(eventData.status, ['UPCOMING', 'COMPLETED', 'MISSED', 'CANCELLED'] as const, 'UPCOMING'),
+      subject_id: text(eventData.subject_id, 60),
+      start_time: time(eventData.start_time),
+      end_time: time(eventData.end_time),
+      syllabus_scope: text(eventData.syllabus_scope, 300),
+      notes: text(eventData.notes, 500),
+      id: `ev_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
       student_id: studentId,
-      status: eventData.status || 'UPCOMING',
     };
     st.events.push(newEvent);
     st.events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());

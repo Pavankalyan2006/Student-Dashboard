@@ -172,6 +172,16 @@ export class ToolRegistry {
 }
 
 // ----------------- READ-ONLY TOOLS -----------------
+/** False when the student switched AI personalisation off in their AI Memory settings. */
+async function personalisationAllowed(studentId: string): Promise<boolean> {
+  try {
+    const { AiMemoryService } = await import('../services/aiMemoryService');
+    return AiMemoryService.get(studentId).personalize;
+  } catch {
+    return true;
+  }
+}
+
 ToolRegistry.register({
   name: 'get_student_profile',
   description: 'Retrieves verified academic profile details of the authenticated B.Tech student.',
@@ -183,12 +193,24 @@ ToolRegistry.register({
   handler: async (_params, context) => {
     const student = await db.getStudentById(context.studentId);
     if (!student) throw new ValidationError('Student not found');
-    const safeStudent = db.toSafeStudent(student);
+    // Tool results are sent to the AI provider, so only study-relevant fields go out: no name, email,
+    // username, college, links or account ids.
+    if (!(await personalisationAllowed(context.studentId))) return { personalisation: 'off' };
     try {
-      const profile = await ProfileService.getProfile(context.studentId);
-      return { ...profile, ...safeStudent, id: student.id };
+      const p = await ProfileService.getProfile(context.studentId);
+      return {
+        branch: p.branch || student.branch,
+        semester: p.semester || student.semester,
+        graduation_year: p.graduation_year,
+        target_role: p.target_role,
+        skills: p.skills,
+        interests: p.interests,
+        learning_goals: p.learning_goals,
+        github_connected: p.github_connected,
+        completion_percentage: p.completion_percentage,
+      };
     } catch {
-      return safeStudent;
+      return { branch: student.branch, semester: student.semester };
     }
   },
 });
@@ -204,7 +226,9 @@ ToolRegistry.register({
   confirmationRequired: false,
   category: 'READ_ONLY',
   handler: async (params, context) => {
-    return await StudentContextEngine.buildContext(context.studentId, { domain: params.domain || 'GENERAL' });
+    if (!(await personalisationAllowed(context.studentId))) return { personalisation: 'off' };
+    const ctx = await StudentContextEngine.buildContext(context.studentId, { domain: params.domain || 'GENERAL' });
+    return StudentContextEngine.forModel(ctx);
   },
 });
 
@@ -515,8 +539,8 @@ ToolRegistry.register({
   timeoutMs: 4000,
   confirmationRequired: false,
   category: 'READ_ONLY',
-  handler: async (params) => {
-    const results = await db.search(params.query, 'documents', 1, 5);
+  handler: async (params, context) => {
+    const results = await db.search(params.query, 'documents', 1, 5, context.studentId);
     return results.items;
   },
 });

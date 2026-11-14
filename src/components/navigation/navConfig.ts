@@ -55,6 +55,9 @@ import {
   NotebookPen,
   Calculator,
   CalendarCheck,
+  CalendarClock,
+  BrainCircuit,
+  Presentation,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -90,6 +93,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { name: 'Semester Command Center', href: '/semester-command-center', icon: CalendarRange, match: ['/semester'] },
       { name: 'Grades & CGPA', href: '/grades', icon: Calculator, match: ['/cgpa', '/cgpa-calculator'] },
       { name: 'Attendance', href: '/attendance', icon: CalendarCheck },
+      { name: 'Deadlines', href: '/deadlines', icon: CalendarClock, match: ['/calendar'] },
       { name: 'Unified Progress', href: '/progress', icon: TrendingUp },
       { name: 'Learning Analytics', href: '/analytics', icon: Activity, match: ['/learning-analytics'] },
       { name: 'Notifications', href: '/notifications', icon: Bell },
@@ -193,7 +197,9 @@ export const NAV_SECTIONS: NavSection[] = [
     icon: UserRound,
     items: [
       { name: 'Student Profile', href: '/profile', icon: User },
+      { name: 'AI Memory', href: '/ai-memory', icon: BrainCircuit, isAi: true, match: ['/profile/ai-memory'] },
       { name: 'Learning Goals', href: '/goals', icon: Target, match: ['/learning-goals'] },
+      { name: 'Portfolio Showcase', href: '/portfolio', icon: Presentation, match: ['/showcase', '/profile/portfolio'] },
       { name: 'Achievements', href: '/profile/achievements', icon: Medal },
       { name: 'Certificates', href: '/certificates', icon: BadgeCheck, match: ['/profile/certificates'] },
       { name: 'Bookmarks', href: '/bookmarks', icon: Bookmark, match: ['/profile/bookmarks'] },

@@ -289,8 +289,12 @@ describe('Student Profile, Onboarding & Multi-Agent Intelligence Suite', () => {
 
       const result = await tool!.handler({ domain: 'GENERAL' }, { studentId: testStudentId, role: 'STUDENT' });
       expect(result).toBeDefined();
-      expect(result.student.id).toBe(testStudentId);
       expect(result.career.targetRole).toBe('Full Stack AI Engineer');
+      // Tool results go to the AI provider: no account id, name or persona text.
+      expect(result.student.id).toBeUndefined();
+      expect(result.student.name).toBeUndefined();
+      expect(result.aiPersona).toBeUndefined();
+      expect(JSON.stringify(result)).not.toContain(testStudentId);
     });
 
     it('verifies LearningAgent has permission for student context tools in AgentRegistry', () => {

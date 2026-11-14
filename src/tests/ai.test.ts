@@ -26,8 +26,12 @@ describe('AI Infrastructure & Tool Registry', () => {
       { studentId: 'std_01j8k9x2p4', role: 'STUDENT' }
     );
 
-    expect(result.id).toBe('std_01j8k9x2p4');
-    expect(result.email).toBe('student@btech.edu');
-    expect(result.role).toBe('STUDENT');
+    // The result is sent to the AI provider, so it carries study fields only: no id, email, name or college.
+    expect(result.branch).toBeTruthy();
+    expect(result.id).toBeUndefined();
+    expect(result.email).toBeUndefined();
+    expect(result.name).toBeUndefined();
+    expect(result.college_name).toBeUndefined();
+    expect(JSON.stringify(result)).not.toContain('student@btech.edu');
   });
 });
