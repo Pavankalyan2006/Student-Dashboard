@@ -135,3 +135,69 @@ All three pages are personalised automatically, because every AI call carries th
 
 - **Firebase SDK major upgrade.** It would clear the last 4 high `npm audit` items. All of them are in gRPC/Firestore code paths that the browser app does not use for sign-in. It needs a separate tested upgrade.
 - **Currency in Markdown.** With the math parser on, two dollar amounts in one sentence (for example "$5 and $10") can render as a formula.
+
+## 6. Follow-up: B.Tech academic tools
+
+Requested later the same day: "add more features and new pages … which the B.Tech student will get help from". The audit
+showed that no page tracked grades or attendance, two things every B.Tech student checks every week. Both pages
+are now in the Overview group.
+
+### Grades & CGPA (`/grades`, also `/cgpa`)
+
+- The student enters each semester's subjects, credits and grades from their own grade card.
+- Grade scales:
+  - O / A+ / A / B+ / B / C / P / F (10-point)
+  - AA / AB / BB / BC / CC / CD / DD / FF (10-point)
+  - typed grade points (0–10) for any other university
+- SGPA and CGPA are credit-weighted. A subject whose result is still awaited is left out instead of guessed.
+- A failed grade is listed as a backlog.
+- **Target CGPA planner** shows the average SGPA needed over the remaining semesters, or says plainly that the
+  target cannot be reached and suggests the highest reachable one. The page states its one assumption: the
+  remaining credits follow the student's own average credits per semester so far.
+- An SGPA-by-semester chart is included. In the current semester, subject names can be added from the student's
+  profile subjects.
+- The page converts CGPA to a percentage only if the university's own formula is known, so it shows no
+  percentage now. Formulas differ between universities, and a wrong one would mislead the student.
+
+### Attendance (`/attendance`)
+
+- Each subject has **Present / Absent** buttons, one tap per class.
+- Each subject shows its percentage and either:
+  - "You can miss N more classes and stay at 75% or above", or
+  - "Attend the next N classes in a row to get back to 75%".
+- The minimum is editable (default 75%). If the minimum cannot be reached any more, the page says so.
+- Shows overall attendance and lists the subjects below the minimum.
+
+### How it is stored
+
+- `server/services/academicRecordsService.ts` keeps one record per student. It is registered with the state
+  store (`academicRecords`), so on Vercel it is saved to Supabase like the rest of the platform.
+- `server/services/academicMath.ts` holds the calculations. They are pure, and the server and the pages share
+  them, so the numbers update as the student types and match what is saved.
+- API:
+  - `GET /api/v1/academics/me`
+  - `PUT /api/v1/academics/me` (validated: grades must be on the chosen scale, a semester cannot be listed twice,
+    attended classes cannot exceed classes held)
+  - `POST /api/v1/academics/me/attendance/:subjectId/mark`
+- Grades and attendance are **not** added to the AI's student context, because PR #12 keeps marks out of
+  what the AI receives.
+
+### Verification
+
+- **Unit tests:** `src/tests/academic_records.test.ts` (6 tests) covers:
+  - each grade scale
+  - credit-weighted SGPA and CGPA
+  - backlogs
+  - reachable and unreachable targets
+  - classes you can miss or must attend
+  - input validation
+  - per-student separation
+  - sidebar links
+- **Browser check (production build, run locally):**
+  - Two semesters entered (A+ 4 credits and B 3 credits gave SGPA 7.71; an F in semester 2 gave CGPA 4.91 and
+    1 backlog). The values survived a page reload.
+  - A target of 8 needed SGPA 9.03 over the next 6 semesters, which matches the hand calculation.
+  - Attendance at 20 of 30 said "attend the next 10". After two Present taps it read 22 of 32 (68.75%) and
+    "attend the next 8", and this survived a reload.
+- **All 53 sidebar pages** at 1440 px and 390 px: 0 page errors, 0 crashes, 0 horizontal overflow.
+- **Automated checks:** `vitest` 1042 passed, 10 skipped. `tsc` and the build both pass.

@@ -53,6 +53,8 @@ import {
   Bookmark,
   BadgeCheck,
   NotebookPen,
+  Calculator,
+  CalendarCheck,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -86,6 +88,8 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
       { name: 'Semester Command Center', href: '/semester-command-center', icon: CalendarRange, match: ['/semester'] },
+      { name: 'Grades & CGPA', href: '/grades', icon: Calculator, match: ['/cgpa', '/cgpa-calculator'] },
+      { name: 'Attendance', href: '/attendance', icon: CalendarCheck },
       { name: 'Unified Progress', href: '/progress', icon: TrendingUp },
       { name: 'Learning Analytics', href: '/analytics', icon: Activity, match: ['/learning-analytics'] },
       { name: 'Notifications', href: '/notifications', icon: Bell },
