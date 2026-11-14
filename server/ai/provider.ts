@@ -145,7 +145,13 @@ export class GeminiProvider implements AIProvider {
           if (res.statusCode === 200) {
             try {
               const parsed = JSON.parse(responseData);
-              const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
+              // Gemini can split one answer across several parts; using only the first one cut
+              // long answers (e.g. a 10-question quiz) off mid-sentence.
+              const parts: any[] = parsed.candidates?.[0]?.content?.parts || [];
+              const text = parts
+                .filter((pt) => typeof pt?.text === 'string' && !pt.thought)
+                .map((pt) => pt.text)
+                .join('');
               const um = parsed.usageMetadata;
               if (um) {
                 this.lastUsage = {
