@@ -84,6 +84,8 @@ const FocusTimerPage = lazyPage(() => import('./features/focus/pages/FocusTimerP
 const LearningAnalyticsPage = lazyPage(() => import('./features/analytics/pages/LearningAnalyticsPage'), 'LearningAnalyticsPage');
 const DiscoverPage = lazyPage(() => import('./features/discover/pages/DiscoverPage'), 'DiscoverPage');
 const MistakeNotebookPage = lazyPage(() => import('./features/mistakes/pages/MistakeNotebookPage'), 'MistakeNotebookPage');
+const GradesPage = lazyPage(() => import('./features/academics/pages/GradesPage'), 'GradesPage');
+const AttendancePage = lazyPage(() => import('./features/academics/pages/AttendancePage'), 'AttendancePage');
 const GoalDetailPage = lazyPage(() => import('./features/goals/pages/GoalDetailPage'), 'GoalDetailPage');
 const CommunityDashboardPage = lazyPage(() => import('./features/community/pages/CommunityDashboardPage'), 'CommunityDashboardPage');
 const CommunityQuestionsPage = lazyPage(() => import('./features/community/pages/CommunityQuestionsPage'), 'CommunityQuestionsPage');
@@ -835,6 +837,14 @@ function AppContent() {
 
     if (path === '/analytics' || path === '/learning-analytics') {
       return <LearningAnalyticsPage onNavigate={navigate} />;
+    }
+
+    if (path === '/grades' || path === '/cgpa' || path === '/cgpa-calculator') {
+      return <GradesPage onNavigate={navigate} />;
+    }
+
+    if (path === '/attendance') {
+      return <AttendancePage onNavigate={navigate} />;
     }
 
     if (path === '/mistakes' || path === '/mistake-notebook') {

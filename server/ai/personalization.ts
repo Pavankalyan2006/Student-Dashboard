@@ -206,7 +206,7 @@ export function apiPathForPage(pagePath: string): string {
     [/^\/(placement|placements)/, '/placements'],
     [/^\/(career|resume|applications|skills)/, '/career'],
     [/^\/(projects|research|github)/, '/projects'],
-    [/^\/semester/, '/semester'],
+    [/^\/(semester|grades|cgpa|attendance)/, '/semester'],
     [/^\/(courses|course|learn)/, '/courses'],
     [/^\/notes/, '/notes'],
   ];
