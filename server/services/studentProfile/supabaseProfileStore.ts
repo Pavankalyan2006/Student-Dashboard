@@ -14,6 +14,7 @@ import type { CanonicalProfile } from './types';
 import { defaultOnboarding } from './profileCache';
 
 const { Pool } = pg;
+import { pgSslFor } from '../../db/pgSsl';
 
 function isConnectivityError(err: any): boolean {
   const code = String(err?.code || '');
@@ -34,6 +35,7 @@ export class SupabaseProfilePersistence implements ProfilePersistence {
       connectionTimeoutMillis: 5000,
       idleTimeoutMillis: 30000,
       statement_timeout: 10000,
+      ...pgSslFor(connectionString),
       ...poolOptions,
     } as pg.PoolConfig);
     // Never log the connection string.

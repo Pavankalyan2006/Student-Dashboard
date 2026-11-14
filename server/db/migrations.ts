@@ -7,6 +7,7 @@ import fs from 'fs';
 import path from 'path';
 import pg from 'pg';
 import { logger } from '../core/logging';
+import { pgSslFor } from './pgSsl';
 
 export function migrationsDir(): string | null {
   const candidates = [
@@ -23,7 +24,7 @@ export async function runMigrations(connectionString: string): Promise<string[]>
     return [];
   }
   const files = fs.readdirSync(dir).filter((f) => f.endsWith('.sql')).sort();
-  const client = new pg.Client({ connectionString, connectionTimeoutMillis: 8000, statement_timeout: 60000 } as pg.ClientConfig);
+  const client = new pg.Client({ connectionString, connectionTimeoutMillis: 8000, statement_timeout: 60000, ...pgSslFor(connectionString) } as pg.ClientConfig);
   await client.connect();
   const applied: string[] = [];
   try {

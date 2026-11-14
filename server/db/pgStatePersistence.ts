@@ -13,6 +13,7 @@
 // Concurrent writes to the same entry from two instances resolve last-write-wins per entry.
 import pg from 'pg';
 import { logger } from '../core/logging';
+import { pgSslFor } from './pgSsl';
 import { encodeValue, decodeValue, getRegisteredSources } from './persistence';
 
 const { Pool } = pg;
@@ -85,6 +86,7 @@ export class PgStatePersistence {
       connectionTimeoutMillis: 8000,
       idleTimeoutMillis: 10000,
       statement_timeout: 20000,
+      ...pgSslFor(connectionString),
       ...poolOptions,
     } as pg.PoolConfig);
     // Never log the connection string.
