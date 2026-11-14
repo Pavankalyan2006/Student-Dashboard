@@ -12,7 +12,18 @@ export class DocumentProcessingService {
    * Enqueues and initiates asynchronous background processing of an uploaded document.
    */
   public static async processDocumentAsync(documentId: string, studentId: string): Promise<void> {
-    // Non-blocking trigger
+    // On serverless hosting (Vercel) the function is frozen as soon as the response is sent, so
+    // background work may never finish and its results would not be saved with the request.
+    // There the upload request waits for processing instead (callers await this method).
+    if (process.env.VERCEL || process.env.PROCESS_DOCUMENTS_INLINE === 'true') {
+      try {
+        await this.runProcessingPipeline(documentId, studentId);
+      } catch (err: any) {
+        logger.error(`Document processing failed for ${documentId}`, err);
+      }
+      return;
+    }
+    // Long-running server: non-blocking trigger
     setImmediate(async () => {
       try {
         await this.runProcessingPipeline(documentId, studentId);

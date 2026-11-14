@@ -296,7 +296,8 @@ export class DocumentService {
     });
 
     // 6. Asynchronously trigger processing job
-    DocumentProcessingService.processDocumentAsync(document.id, studentId);
+    await DocumentProcessingService.processDocumentAsync(document.id, studentId);
+    if (process.env.VERCEL) return (await db.getDocumentById(document.id, studentId)) || document;
 
     return document;
   }
@@ -380,7 +381,7 @@ export class DocumentService {
     });
 
     // Re-run background processing pipeline
-    DocumentProcessingService.processDocumentAsync(documentId, studentId);
+    await DocumentProcessingService.processDocumentAsync(documentId, studentId);
 
     logger.info(`Uploaded version ${currentVersion + 1} for document ${documentId}`, {
       userId: studentId,
@@ -443,7 +444,7 @@ export class DocumentService {
       processing_error: undefined,
     });
 
-    DocumentProcessingService.processDocumentAsync(documentId, studentId);
+    await DocumentProcessingService.processDocumentAsync(documentId, studentId);
     return { success: true, status: 'QUEUED' };
   }
 
@@ -833,7 +834,7 @@ export class DocumentService {
     const doc = await db.restoreDocumentVersion(documentId, versionNumber, studentId);
     // Invalidate existing vectors and re-process restored version
     VectorStore.deleteDocumentVectors(documentId, studentId);
-    DocumentProcessingService.processDocumentAsync(documentId, studentId);
+    await DocumentProcessingService.processDocumentAsync(documentId, studentId);
     return doc;
   }
 
