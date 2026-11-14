@@ -13,7 +13,7 @@ const fb = require('./firebase-accounts.cjs');
 const BASE = process.env.BASE;
 const OUT = process.argv[2] || 'prod-ui-out';
 fs.mkdirSync(`${OUT}/shots`, { recursive: true });
-const PAGES = [
+const ALL_PAGES = [
   '/dashboard', '/semester-command-center', '/ai-agent', '/courses', '/notes', '/documents', '/doubts', '/flashcards',
   '/study-planner', '/languages', '/coding', '/dsa', '/sql-lab', '/ml-lab', '/system-design', '/git', '/labs', '/quiz',
   '/exams', '/interviews', '/assessment/gate-preparation', '/projects', '/github', '/research', '/knowledge', '/career',
@@ -21,6 +21,7 @@ const PAGES = [
   '/community', '/community/questions', '/community/discussions', '/community/resources', '/progress', '/goals',
   '/profile', '/profile/edit', '/notifications', '/profile/settings', '/settings', '/sandbox',
 ];
+const PAGES = process.env.PAGES ? process.env.PAGES.split(',') : ALL_PAGES;
 const uniq = () => `${Date.now()}${Math.random().toString(36).slice(2, 6)}`;
 const created = [];
 
@@ -30,12 +31,13 @@ async function api(method, path, token, body) {
 }
 
 (async () => {
-  const browser = await chromium.launch();
+  const proxy = process.env.HTTPS_PROXY ? { server: process.env.HTTPS_PROXY } : undefined;
+  const browser = await chromium.launch(proxy ? { proxy } : {});
   const report = { base: BASE, ran_at: new Date().toISOString(), registration_ui: {}, login_ui: {}, pages: [] };
 
   // ---- 1. Registration form ----
   {
-    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, ignoreHTTPSErrors: Boolean(proxy) });
     const page = await ctx.newPage();
     const errs = []; page.on('pageerror', (e) => errs.push(e.message.slice(0, 160)));
     const email = `prod.ui.reg.${uniq()}@example.test`;
@@ -84,7 +86,7 @@ async function api(method, path, token, body) {
   report.login_ui.onboarding_complete_status = done.status;
 
   for (const [w, h] of [[390, 844], [1366, 900]]) {
-    const ctx = await browser.newContext({ viewport: { width: w, height: h } });
+    const ctx = await browser.newContext({ viewport: { width: w, height: h }, ignoreHTTPSErrors: Boolean(proxy) });
     const lp = await ctx.newPage();
     const lerr = []; lp.on('pageerror', (e) => lerr.push(e.message.slice(0, 160)));
     try {
@@ -113,6 +115,13 @@ async function api(method, path, token, body) {
         h1: (document.querySelector('h1')?.innerText || '').slice(0, 60),
         error_screen: /something went wrong|page not found|failed to load|unable to load/i.test(document.body.innerText.slice(0, 4000)),
         redirected_to: location.pathname,
+        overflow_by: (() => {
+          const W = window.innerWidth;
+          const over = (el) => { const r = el.getBoundingClientRect(); return r.width > 0 && r.left < W && r.right > W + 1; };
+          const name = (el) => el.tagName.toLowerCase() + (typeof el.className === 'string' && el.className ? '.' + el.className.trim().split(/\s+/).slice(0, 5).join('.') : '');
+          const leaves = [...document.body.querySelectorAll('*')].filter((el) => over(el) && ![...el.children].some(over));
+          return leaves.slice(0, 3).map((el) => ({ sel: name(el).slice(0, 140), parent: name(el.parentElement).slice(0, 100), over: Math.round(el.getBoundingClientRect().right - W), w: Math.round(el.getBoundingClientRect().width) }));
+        })(),
       })).catch(() => ({}));
       if (info.error_screen || errs.length || bad.length || loadErr || ['/dashboard', '/profile', '/ai-agent', '/courses'].includes(path)) {
         await p.screenshot({ path: `${OUT}/shots/page${path.replace(/\//g, '-')}-${w}.png` }).catch(() => {});
@@ -127,5 +136,5 @@ async function api(method, path, token, body) {
   report.firebase_users_deleted = created.length;
   fs.writeFileSync(`${OUT}/ui-walkthrough.json`, JSON.stringify(report, null, 2));
   const probs = report.pages.filter((x) => x.overflow_px > 0 || x.page_errors.length || x.api_5xx.length || x.error_screen || x.load_error || x.redirected_to === '/login');
-  console.log(JSON.stringify({ registration_ui: report.registration_ui, login_ui: report.login_ui, pages: report.pages.length, with_problems: probs.length, problems: probs.map((x) => ({ w: x.width, path: x.path, to: x.redirected_to, err: x.page_errors[0], api: x.api_5xx[0], screen: x.error_screen, load: x.load_error, of: x.overflow_px })) }, null, 2));
+  console.log(JSON.stringify({ registration_ui: report.registration_ui, login_ui: report.login_ui, pages: report.pages.length, with_problems: probs.length, problems: probs.map((x) => ({ w: x.width, path: x.path, to: x.redirected_to, err: x.page_errors[0], api: x.api_5xx[0], screen: x.error_screen, load: x.load_error, of: x.overflow_px, by: x.overflow_px ? x.overflow_by : undefined })) }, null, 2));
 })().catch(async (e) => { console.error(e); for (const uid of created) await fb.deleteAccount(uid).catch(() => {}); process.exit(1); });

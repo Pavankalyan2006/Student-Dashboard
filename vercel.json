@@ -8,13 +8,13 @@
     "api/index.js": {
       "memory": 1024,
       "maxDuration": 60,
-      "includeFiles": "{supabase/migrations/**,server/execution/sqlWorker.cjs,node_modules/sql.js/dist/**}"
+      "includeFiles": "{supabase/migrations/**,server/execution/sqlWorker.cjs,node_modules/sql.js/**}"
     }
   },
   "rewrites": [
-    { "source": "/api/:path*", "destination": "/api" },
+    { "source": "/api/(.*)", "destination": "/api" },
     { "source": "/health", "destination": "/api" },
-    { "source": "/health/:path*", "destination": "/api" },
+    { "source": "/health/(.*)", "destination": "/api" },
     { "source": "/((?!api/|assets/).*)", "destination": "/index.html" }
   ],
   "headers": [

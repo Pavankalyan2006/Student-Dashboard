@@ -34,6 +34,7 @@ export function ProfilePage({ onNavigate }: { onNavigate: (path: string) => void
   const [profile, setProfile] = React.useState<StudentProfileData | null>(null);
   const [portfolio, setPortfolio] = React.useState<UnifiedPortfolioSummary | null>(null);
   const [recentActivities, setRecentActivities] = React.useState<StudentActivity[]>([]);
+  const [streakDays, setStreakDays] = React.useState(0);
   const [loading, setLoading] = React.useState(true);
   const [activeTab, setActiveTab] = React.useState<
     'about' | 'skills' | 'projects' | 'research' | 'portfolio' | 'activity'
@@ -58,6 +59,7 @@ export function ProfilePage({ onNavigate }: { onNavigate: (path: string) => void
       setProfile(profData);
       setPortfolio(portData);
       setRecentActivities(actData.slice(0, 8));
+      setStreakDays(await communityProfileApi.getActivityStreakDays().catch(() => 0));
     } catch (err: any) {
       toast.error('Failed to load profile details');
     } finally {
@@ -92,7 +94,7 @@ export function ProfilePage({ onNavigate }: { onNavigate: (path: string) => void
               <img
                 src={
                   profile.avatar_url ||
-                  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'
+                  `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(profile.name || 'Student')}`
                 }
                 alt={profile.name}
                 className="h-20 w-20 sm:h-24 sm:w-24 rounded-2xl object-cover ring-4 ring-blue-50 border border-slate-200 shadow-xs"
@@ -221,7 +223,7 @@ export function ProfilePage({ onNavigate }: { onNavigate: (path: string) => void
             <ChevronRight className="h-3.5 w-3.5" />
           </div>
           <div className="text-xl font-bold text-[#101828] tabular-nums">
-            {profile.stats?.courses_completed ?? 2}
+            {profile.stats?.courses_completed ?? portfolio?.courses_completed_count ?? 0}
           </div>
           <div className="text-[11px] font-medium text-[#475467]">Courses Finished</div>
         </div>
@@ -235,7 +237,7 @@ export function ProfilePage({ onNavigate }: { onNavigate: (path: string) => void
             <ChevronRight className="h-3.5 w-3.5" />
           </div>
           <div className="text-xl font-bold text-[#101828] tabular-nums">
-            {profile.stats?.skills_count ?? 8}
+            {profile.stats?.skills_count ?? portfolio?.skills_count ?? 0}
           </div>
           <div className="text-[11px] font-medium text-[#475467]">Verified Skills</div>
         </div>
@@ -249,7 +251,7 @@ export function ProfilePage({ onNavigate }: { onNavigate: (path: string) => void
             <ChevronRight className="h-3.5 w-3.5" />
           </div>
           <div className="text-xl font-bold text-[#101828] tabular-nums">
-            {profile.stats?.projects_count ?? 2}
+            {profile.stats?.projects_count ?? portfolio?.projects_count ?? 0}
           </div>
           <div className="text-[11px] font-medium text-[#475467]">Projects Built</div>
         </div>
@@ -263,7 +265,7 @@ export function ProfilePage({ onNavigate }: { onNavigate: (path: string) => void
             <ChevronRight className="h-3.5 w-3.5" />
           </div>
           <div className="text-xl font-bold text-[#101828] tabular-nums">
-            {profile.stats?.research_papers_analyzed ?? 3}
+            {profile.stats?.research_papers_analyzed ?? portfolio?.research_papers_count ?? 0}
           </div>
           <div className="text-[11px] font-medium text-[#475467]">Papers Analyzed</div>
         </div>
@@ -277,7 +279,7 @@ export function ProfilePage({ onNavigate }: { onNavigate: (path: string) => void
             <ChevronRight className="h-3.5 w-3.5" />
           </div>
           <div className="text-xl font-bold text-[#101828] tabular-nums">
-            {profile.stats?.certificates_count ?? 1}
+            {profile.stats?.certificates_count ?? portfolio?.certificates_count ?? 0}
           </div>
           <div className="text-[11px] font-medium text-[#475467]">Certificates</div>
         </div>
@@ -291,7 +293,7 @@ export function ProfilePage({ onNavigate }: { onNavigate: (path: string) => void
             <ChevronRight className="h-3.5 w-3.5" />
           </div>
           <div className="text-xl font-bold text-[#101828] tabular-nums">
-            {profile.stats?.learning_streak_days ?? 7}d
+            {profile.stats?.learning_streak_days ?? streakDays}d
           </div>
           <div className="text-[11px] font-medium text-[#475467]">Learning Streak</div>
         </div>

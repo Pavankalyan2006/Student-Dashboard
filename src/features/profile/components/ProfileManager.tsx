@@ -114,8 +114,8 @@ export function ProfileManager({ initialTab = 'identity' }: { initialTab?: Profi
 
   const props = { profile: data.profile, errors, onChange: setDraft };
   return (
-    <div className="grid lg:grid-cols-[1fr_300px] gap-6">
-      <div className="rounded-2xl border border-[#E4E7EC] bg-white">
+    <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-6 min-w-0">
+      <div className="min-w-0 rounded-2xl border border-[#E4E7EC] bg-white">
         <div role="tablist" aria-label="Profile sections" className="flex flex-wrap gap-1 border-b border-[#EAECF0] p-2">
           {TABS.map((t) => (
             <button
@@ -129,14 +129,14 @@ export function ProfileManager({ initialTab = 'identity' }: { initialTab?: Profi
             </button>
           ))}
         </div>
-        <div className="p-5" key={`${tab}-${formKey}`}>
+        <div className="p-4 sm:p-5 min-w-0" key={`${tab}-${formKey}`}>
           {tab === 'identity' && <IdentityForm {...props} emailVerificationRequired={emailVerificationRequired} />}
           {tab === 'academic' && <AcademicForm {...props} />}
           {tab === 'skills' && <SkillsForm {...props} withInterests={false} />}
           {tab === 'experience' && <ExperienceForm {...props} />}
           {tab === 'career' && <CareerForm {...props} />}
           {tab === 'learning' && <LearningForm {...props} />}
-          <div className="mt-6 flex items-center gap-3">
+          <div className="mt-6 flex flex-wrap items-center gap-3">
             <Button isLoading={update.isPending} onClick={save}>Save changes</Button>
             <span className="text-xs text-[#98A2B3]">
               Last saved {data.profile.account.last_profile_update ? new Date(data.profile.account.last_profile_update).toLocaleString() : 'never'}

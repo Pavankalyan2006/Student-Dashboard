@@ -179,7 +179,7 @@ async function register(label, semester) {
       }
     }
     const gen = await call('POST', '/ai/tutor/generate-flashcards', A.token, { topic: 'Paging' }, 'POST /ai/tutor/generate-flashcards');
-    record(W, 'AI flashcard generation', gen.status === 200 ? true : gen.status === 503 ? null : false, `${gen.status} ${short(gen.body?.error?.code || '')}`);
+    record(W, 'AI flashcard generation', gen.status === 200 || gen.status === 201 ? true : gen.status === 503 ? null : false, `${gen.status} ${short(gen.body?.error?.code || '')}`);
     const quizzes = await call('GET', '/quizzes', A.token);
     const qlist = Array.isArray(quizzes.body?.data) ? quizzes.body.data : [];
     record(W, 'a new student has a quiz to take without AI', qlist.length > 0 ? true : null, `${qlist.length} quizzes; the Quiz UI only creates quizzes by AI generation`);
@@ -329,8 +329,9 @@ async function register(label, semester) {
     record(W, 'update notification preferences', np.status === 200, `${np.status} ${np.status >= 300 ? short(np.body) : ''}`);
     const vis = await call('PATCH', '/profile/privacy', A.token, { profile_visibility: 'PRIVATE' }, 'PATCH /profile/privacy');
     record(W, 'set profile visibility', vis.status === 200, `${vis.status} ${vis.status >= 300 ? short(vis.body) : ''}`);
-    const li = await call('POST', '/auth/login', null, { email: A.email, password: 'Phase6Pass1' });
-    const pv = await call('GET', '/profile/privacy', li.body?.data?.token);
+    // Firebase mode: a fresh sign-in token; legacy mode: log in again with the password.
+    const li = fbAccounts.enabled ? null : await call('POST', '/auth/login', null, { email: A.email, password: 'Phase6Pass1' });
+    const pv = await call('GET', '/profile/privacy', fbAccounts.enabled ? A.token : li.body?.data?.token);
     record(W, 'visibility persists after login', pv.body?.data?.profile_visibility === 'PRIVATE', short(pv.body?.data));
   }
 

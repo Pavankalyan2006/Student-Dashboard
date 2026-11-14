@@ -46,7 +46,16 @@ export const communityProfileApi = {
     if (filters?.startDate) params.set('startDate', filters.startDate);
     if (filters?.endDate) params.set('endDate', filters.endDate);
     const qs = params.toString();
-    return apiClient.request<StudentActivity[]>(`/profile/activity${qs ? `?${qs}` : ''}`);
+    // The endpoint returns { activities, streak }; older builds returned a bare array.
+    const res = await apiClient.request<StudentActivity[] | { activities?: StudentActivity[] }>(
+      `/profile/activity${qs ? `?${qs}` : ''}`
+    );
+    return Array.isArray(res) ? res : res?.activities || [];
+  },
+
+  async getActivityStreakDays(): Promise<number> {
+    const res = await apiClient.request<{ streak?: { current_streak_days?: number; current_streak?: number } }>('/profile/activity');
+    return Number(res?.streak?.current_streak_days ?? res?.streak?.current_streak ?? 0) || 0;
   },
 
   async getStreak(): Promise<LearningStreakData> {
