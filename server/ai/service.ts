@@ -4,6 +4,7 @@ import { ToolRegistry } from './tools';
 import { config } from '../core/config';
 import { logger } from '../core/logging';
 import { UserRole } from '../models/types';
+import { studentContextForCurrentRequest, withStudentContext } from './personalization';
 
 export class AIService {
   private static provider: AIProvider =
@@ -59,8 +60,12 @@ export class AIService {
       systemInstruction = PromptService.getPrompt(promptKey);
     }
 
+    // Every AI feature answers for this particular student: same context, from the central profile.
+    const studentBlock = await studentContextForCurrentRequest();
+    systemInstruction = withStudentContext(systemInstruction, studentBlock);
+
     logger.info('AIService generate call initiated', {
-      context: { provider: this.provider.name, promptKey, messageCount: filteredMessages.length },
+      context: { provider: this.provider.name, promptKey, messageCount: filteredMessages.length, personalized: Boolean(studentBlock) },
     });
 
     return this.provider.generate({
@@ -95,8 +100,11 @@ export class AIService {
       systemInstruction = PromptService.getPrompt(promptKey);
     }
 
+    const studentBlock = await studentContextForCurrentRequest();
+    systemInstruction = withStudentContext(systemInstruction, studentBlock);
+
     logger.info('AIService stream call initiated', {
-      context: { provider: this.provider.name, promptKey, messageCount: filteredMessages.length },
+      context: { provider: this.provider.name, promptKey, messageCount: filteredMessages.length, personalized: Boolean(studentBlock) },
     });
 
     return this.provider.stream(

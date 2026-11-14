@@ -19,6 +19,8 @@ import { Button } from '../../../components/ui/button';
 import { useCourses } from '../../courses/hooks/useCourses';
 import { coursesApi } from '../../courses/api/coursesApi';
 import { apiClient } from '../../../api/client';
+import { useProfileDefaults, levelToStudentLevel } from '../../profile/hooks/useProfileDefaults';
+import { ProfileQuickPicks } from '../../profile/components/ProfileQuickPicks';
 
 interface NotesGeneratorProps {
   initialCourseId?: string;
@@ -58,6 +60,15 @@ export function NotesGenerator({
   const [selectedDocId, setSelectedDocId] = React.useState('');
   const [selectedContent, setSelectedContent] = React.useState(initialSelectedContent);
   const [level, setLevel] = React.useState<StudentLevel>('INTERMEDIATE');
+  // Notes are pitched at the student's own level and start from their subjects.
+  const profileDefaults = useProfileDefaults();
+  const appliedProfileLevel = React.useRef(false);
+  React.useEffect(() => {
+    if (appliedProfileLevel.current || !profileDefaults.ready) return;
+    appliedProfileLevel.current = true;
+    const l = levelToStudentLevel(profileDefaults.level);
+    if (l) setLevel(l as StudentLevel);
+  }, [profileDefaults.ready, profileDefaults.level]);
   const [noteType, setNoteType] = React.useState<NoteType>('STUDY_NOTES');
   const [length, setLength] = React.useState<NoteLength>('MEDIUM');
   const [tagsInput, setTagsInput] = React.useState('');
@@ -268,6 +279,7 @@ export function NotesGenerator({
                 <p className="text-[11px] text-slate-600 mt-1">
                   Type any engineering subject, theorem, algorithm, or syllabus topic.
                 </p>
+                <ProfileQuickPicks label="Your subjects" values={[...profileDefaults.subjects, ...profileDefaults.interests]} selected={topic} onPick={setTopic} />
               </div>
             )}
 

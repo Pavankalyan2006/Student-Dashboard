@@ -22,6 +22,7 @@ import { Button } from '../../../components/ui/button';
 import { learningModulesApi } from '../../../api/learningModulesApi';
 import { StudentDoubt, DoubtStatus } from '../../../types/learningModules';
 import { toast } from 'sonner';
+import { useProfileDefaults } from '../../profile/hooks/useProfileDefaults';
 
 interface DoubtSolverPageProps {
   onNavigate?: (path: string) => void;
@@ -37,6 +38,14 @@ export function DoubtSolverPage({ onNavigate }: DoubtSolverPageProps) {
   const [title, setTitle] = React.useState('');
   const [questionText, setQuestionText] = React.useState('');
   const [subject, setSubject] = React.useState('Database Management Systems');
+  // The subject list starts with the student's own subjects; the first one is preselected.
+  const profileDefaults = useProfileDefaults();
+  const subjectTouched = React.useRef(false);
+  React.useEffect(() => {
+    if (!subjectTouched.current && profileDefaults.subjects[0]) setSubject(profileDefaults.subjects[0]);
+  }, [profileDefaults.subjects[0]]);
+  const GENERAL_SUBJECTS = ['Database Management Systems', 'Data Structures & Algorithms', 'Operating Systems', 'Computer Networks', 'Machine Learning', 'Engineering Mathematics'];
+  const subjectOptions = [...new Set([...profileDefaults.subjects, ...GENERAL_SUBJECTS])];
   const [codeSnippet, setCodeSnippet] = React.useState('');
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
@@ -157,15 +166,24 @@ export function DoubtSolverPage({ onNavigate }: DoubtSolverPageProps) {
                   <select
                     aria-label="Subject"
                     value={subject}
-                    onChange={(e) => setSubject(e.target.value)}
+                    onChange={(e) => {
+                      subjectTouched.current = true;
+                      setSubject(e.target.value);
+                    }}
                     className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="Database Management Systems">Database Management Systems</option>
-                    <option value="Data Structures & Algorithms">Data Structures & Algorithms</option>
-                    <option value="Operating Systems">Operating Systems</option>
-                    <option value="Computer Networks">Computer Networks</option>
-                    <option value="Machine Learning">Machine Learning</option>
-                    <option value="Engineering Mathematics">Engineering Mathematics</option>
+                    {profileDefaults.subjects.length > 0 && (
+                      <optgroup label="Your subjects">
+                        {profileDefaults.subjects.map((s) => (
+                          <option key={`p-${s}`} value={s}>{s}</option>
+                        ))}
+                      </optgroup>
+                    )}
+                    <optgroup label={profileDefaults.subjects.length > 0 ? 'Other subjects' : 'Subjects'}>
+                      {subjectOptions.filter((s) => !profileDefaults.subjects.includes(s)).map((s) => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </optgroup>
                   </select>
                 </div>
 
