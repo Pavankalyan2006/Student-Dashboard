@@ -85,6 +85,10 @@ const LearningAnalyticsPage = lazyPage(() => import('./features/analytics/pages/
 const DiscoverPage = lazyPage(() => import('./features/discover/pages/DiscoverPage'), 'DiscoverPage');
 const MistakeNotebookPage = lazyPage(() => import('./features/mistakes/pages/MistakeNotebookPage'), 'MistakeNotebookPage');
 const GradesPage = lazyPage(() => import('./features/academics/pages/GradesPage'), 'GradesPage');
+const AiMemoryPage = lazyPage(() => import('./features/ai-memory/pages/AiMemoryPage'), 'AiMemoryPage');
+const ShowcasePage = lazyPage(() => import('./features/showcase/pages/ShowcasePage'), 'ShowcasePage');
+const PublicShowcasePage = lazyPage(() => import('./features/showcase/pages/PublicShowcasePage'), 'PublicShowcasePage');
+const DeadlinesPage = lazyPage(() => import('./features/deadlines/pages/DeadlinesPage'), 'DeadlinesPage');
 const AttendancePage = lazyPage(() => import('./features/academics/pages/AttendancePage'), 'AttendancePage');
 const GoalDetailPage = lazyPage(() => import('./features/goals/pages/GoalDetailPage'), 'GoalDetailPage');
 const CommunityDashboardPage = lazyPage(() => import('./features/community/pages/CommunityDashboardPage'), 'CommunityDashboardPage');
@@ -181,6 +185,12 @@ function AppContent() {
   const publicCertMatch = initialPathname.match(/^\/verify\/certificate\/([^/]+)$/);
   if (publicCertMatch) {
     return <CertificateVerificationPage certificateId={publicCertMatch[1]} onNavigate={navigate} />;
+  }
+
+  // A student's shared portfolio link works without signing in.
+  const publicShowcaseMatch = initialPathname.match(/^\/showcase\/([\w-]{6,40})$/);
+  if (publicShowcaseMatch) {
+    return <PublicShowcasePage slug={publicShowcaseMatch[1]} onNavigate={navigate} />;
   }
 
   // Public Website Pages accessible without login
@@ -845,6 +855,18 @@ function AppContent() {
 
     if (path === '/attendance') {
       return <AttendancePage onNavigate={navigate} />;
+    }
+
+    if (path === '/deadlines' || path === '/calendar') {
+      return <DeadlinesPage onNavigate={navigate} />;
+    }
+
+    if (path === '/portfolio' || path === '/showcase' || path === '/profile/portfolio') {
+      return <ShowcasePage onNavigate={navigate} />;
+    }
+
+    if (path === '/ai-memory' || path === '/profile/ai-memory') {
+      return <AiMemoryPage onNavigate={navigate} />;
     }
 
     if (path === '/mistakes' || path === '/mistake-notebook') {

@@ -56,7 +56,7 @@ export interface LiveLearningState {
 }
 
 /** Builds the text block. Pure, so it can be tested without a database. */
-export function formatStudentContext(p: CanonicalProfile, module: ProfileModule, live?: LiveLearningState): string {
+export function formatStudentContext(p: CanonicalProfile, module: ProfileModule, live?: LiveLearningState, notes: string[] = []): string {
   const lines: string[] = [];
   const a = p.academic;
   const academic = [
@@ -114,6 +114,9 @@ export function formatStudentContext(p: CanonicalProfile, module: ProfileModule,
     if (live.weak_areas?.length) lines.push(`Weak areas from their results: ${list(live.weak_areas, 6)}`);
     if (live.pending_today?.length) lines.push(`Still planned for today: ${list(live.pending_today, 4)}`);
   }
+  // Notes the student wrote in their AI Memory, already cleaned of contact details when saved.
+  const remembered = notes.filter(Boolean).slice(0, 20);
+  if (remembered.length) lines.push(`Asked you to remember: ${remembered.join('; ')}`);
 
   if (!lines.length) return '';
   return [
@@ -153,9 +156,13 @@ export async function studentContextForCurrentRequest(): Promise<string> {
   if (!rc?.studentId || rc.personalize === false) return '';
   try {
     const { StudentProfileService } = await import('../services/studentProfile/studentProfileService');
+    const { AiMemoryService } = await import('../services/aiMemoryService');
+    const memory = AiMemoryService.get(rc.studentId);
+    if (!memory.personalize) return '';
     const { profile } = await StudentProfileService.getProfile(rc.studentId);
     const module = moduleForPath(rc.path);
-    return formatStudentContext(profile, module, await liveState(rc.studentId));
+    const live = memory.use_activity ? await liveState(rc.studentId) : undefined;
+    return formatStudentContext(profile, module, live, memory.notes.map((n) => n.text));
   } catch (err) {
     logger.warn(`Student context unavailable for AI request: ${(err as any)?.code || (err as any)?.name || 'error'}`);
     return '';
@@ -173,16 +180,25 @@ export function withStudentContext(systemInstruction: string | undefined, block:
  * What the assistant knows about the student for a given page, as plain lines, so the student can see
  * (and correct) exactly what personalises their answers.
  */
-export async function studentContextSummary(studentId: string, pagePath: string): Promise<{ module: ProfileModule; lines: string[] }> {
+export async function studentContextSummary(
+  studentId: string,
+  pagePath: string
+): Promise<{ module: ProfileModule; lines: string[]; personalize: boolean; use_activity: boolean }> {
   const { StudentProfileService } = await import('../services/studentProfile/studentProfileService');
-  const { profile } = await StudentProfileService.getProfile(studentId);
+  const { AiMemoryService } = await import('../services/aiMemoryService');
+  const memory = AiMemoryService.get(studentId);
   const module = moduleForPath(apiPathForPage(pagePath));
-  const block = formatStudentContext(profile, module, await liveState(studentId));
+  const base = { module, personalize: memory.personalize, use_activity: memory.use_activity };
+  // Switched off: the AI receives nothing about the student, so there is nothing to show.
+  if (process.env.AI_PERSONALIZATION === 'off' || !memory.personalize) return { ...base, lines: [] };
+  const { profile } = await StudentProfileService.getProfile(studentId);
+  const live = memory.use_activity ? await liveState(studentId) : undefined;
+  const block = formatStudentContext(profile, module, live, memory.notes.map((n) => n.text));
   const lines = block
     .split('\n')
     .filter((l) => l.startsWith('- '))
     .map((l) => l.slice(2));
-  return { module, lines };
+  return { ...base, lines };
 }
 
 /** Maps a page URL to the API area that serves it, so the summary matches what that page's AI receives. */
@@ -209,6 +225,7 @@ export function apiPathForPage(pagePath: string): string {
     [/^\/(semester|grades|cgpa|attendance)/, '/semester'],
     [/^\/(courses|course|learn)/, '/courses'],
     [/^\/notes/, '/notes'],
+    [/^\/(deadlines|calendar)/, '/study-planner'],
   ];
   for (const [re, api] of map) if (re.test(p)) return api;
   return '/ai';
