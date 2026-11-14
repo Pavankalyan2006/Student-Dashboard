@@ -121,12 +121,25 @@ async function setupPersistence(options: CreateAppOptions): Promise<StateBackend
   if (backend === 'postgres') {
     const url = stateDbUrl();
     if (!url) throw new Error('STATE_STORE=postgres needs STATE_DB_URL or SUPABASE_DB_URL (server-only Postgres connection string).');
-    if (process.env.RUN_DB_MIGRATIONS !== 'false') {
-      await runMigrations(url);
+    let target = 'database';
+    try {
+      const u = new URL(url);
+      target = `${u.hostname}:${u.port || '5432'}`; // host only: never the user name or password
+    } catch {
+      /* unparsable URL: pg reports it below */
     }
-    pgState = new PgStatePersistence(url);
-    await pgState.ensureSchema();
-    await pgState.load();
+    try {
+      if (process.env.RUN_DB_MIGRATIONS !== 'false') {
+        await runMigrations(url);
+      }
+      pgState = new PgStatePersistence(url);
+      await pgState.ensureSchema();
+      await pgState.load();
+    } catch (err) {
+      const e = new Error(`Could not use the database at ${target}: ${(err as any)?.code || ''} ${(err as any)?.message || err}`.replace(/\s+/g, ' '));
+      (e as any).code = (err as any)?.code;
+      throw e;
+    }
     retireLegacyRecords();
     // Write seed data on the very first start and any retirements; later saves are diffs.
     await pgState.save();
