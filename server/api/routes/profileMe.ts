@@ -60,6 +60,12 @@ profileMeRouter.get('/profile/me/context/:module', requireAuth, handle((req) =>
   StudentProfileService.getModuleContext(me(req), String(req.params.module))
 ));
 
+// What the AI assistant knows about this student for a page (the same lines every AI feature receives).
+profileMeRouter.get('/profile/me/ai-context', requireAuth, handle(async (req) => {
+  const { studentContextSummary } = await import('../../ai/personalization');
+  return studentContextSummary(me(req), String(req.query.page || '/'));
+}));
+
 profileMeRouter.get('/profile/me/recommendations/:module', requireAuth, handle(async (req) => {
   const { profile } = await StudentProfileService.getProfile(me(req));
   return getModuleRecommendations(profile, String(req.params.module));

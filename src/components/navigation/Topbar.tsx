@@ -6,6 +6,7 @@ import { NotificationBell } from './NotificationBell';
 import { ProfileMenu } from './ProfileMenu';
 import { findActiveNavItem, findSectionForItem } from './navConfig';
 import { useWorkspacePrefs } from '../../store/workspacePrefsStore';
+import { PersonalContextChip } from './PersonalContextChip';
 import { cn } from '../../lib/utils';
 
 export interface TopbarProps {
@@ -142,6 +143,7 @@ export function Topbar({ currentPath, onNavigate }: TopbarProps) {
         >
           <Search className="h-[18px] w-[18px]" />
         </button>
+        <PersonalContextChip currentPath={currentPath} onNavigate={onNavigate} />
         <AskAIButton onClick={() => onNavigate('/ai-agent')} />
         <NotificationBell onNavigate={onNavigate} />
         <span className="mx-0.5 hidden h-6 w-px bg-slate-200 sm:block" aria-hidden="true" />

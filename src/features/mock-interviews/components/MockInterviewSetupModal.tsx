@@ -30,6 +30,7 @@ import {
 import { mockInterviewApi } from '../api/mockInterviewApi';
 import { apiClient } from '../../../api/client';
 import { toast } from 'sonner';
+import { useProfileDefaults, levelToStudentLevel } from '../../profile/hooks/useProfileDefaults';
 
 interface Props {
   isOpen: boolean;
@@ -73,6 +74,26 @@ export const MockInterviewSetupModal: React.FC<Props> = ({
     if (preselectedCategory) setSelectedCategory(preselectedCategory);
     if (preselectedRole) setTargetRole(preselectedRole);
   }, [preselectedCategory, preselectedRole]);
+
+  // Without a role in the link, start from the student's own target role and level.
+  const profileDefaults = useProfileDefaults();
+  const appliedProfile = React.useRef(false);
+  useEffect(() => {
+    if (appliedProfile.current || preselectedRole || !profileDefaults.ready || roles.length === 0) return;
+    appliedProfile.current = true;
+    const wanted = profileDefaults.targetRoles[0];
+    if (wanted) {
+      const match = roles.find((r) => r.title.toLowerCase() === wanted.toLowerCase())
+        || roles.find((r) => r.title.toLowerCase().includes(wanted.toLowerCase()) || wanted.toLowerCase().includes(r.title.toLowerCase()));
+      if (match) setTargetRole(match.title);
+      else {
+        setTargetRole('CUSTOM');
+        setCustomRole(wanted);
+      }
+    }
+    const l = levelToStudentLevel(profileDefaults.level);
+    if (l) setDifficulty(l as InterviewDifficulty);
+  }, [profileDefaults.ready, roles, preselectedRole]);
 
   useEffect(() => {
     async function loadData() {

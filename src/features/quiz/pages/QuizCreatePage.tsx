@@ -16,6 +16,8 @@ import {
   Zap,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useProfileDefaults, levelToDifficulty } from '../../profile/hooks/useProfileDefaults';
+import { ProfileQuickPicks } from '../../profile/components/ProfileQuickPicks';
 
 interface QuizCreatePageProps {
   onNavigate?: (path: string) => void;
@@ -53,6 +55,16 @@ export const QuizCreatePage: React.FC<QuizCreatePageProps> = ({ onNavigate, sear
     (searchParams.get('difficulty')?.toUpperCase() as QuizDifficulty) || 'MEDIUM'
   );
   const [questionType, setQuestionType] = useState<QuestionType | 'MIXED'>('MIXED');
+
+  // Start from the student's own level and subjects (a difficulty in the link still wins).
+  const profileDefaults = useProfileDefaults();
+  const appliedProfileLevel = React.useRef(false);
+  useEffect(() => {
+    if (appliedProfileLevel.current || !profileDefaults.ready) return;
+    appliedProfileLevel.current = true;
+    const d = levelToDifficulty(profileDefaults.level);
+    if (d && !searchParams.get('difficulty')) setDifficulty(d as QuizDifficulty);
+  }, [profileDefaults.ready, profileDefaults.level]);
   const [questionCount, setQuestionCount] = useState<number>(5);
   const [timeLimitMinutes, setTimeLimitMinutes] = useState<number>(10);
   const [adaptiveMode, setAdaptiveMode] = useState<boolean>(false);
@@ -202,6 +214,7 @@ export const QuizCreatePage: React.FC<QuizCreatePageProps> = ({ onNavigate, sear
                   className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   required
                 />
+                <ProfileQuickPicks label="Your subjects" values={[...profileDefaults.subjects, ...profileDefaults.interests]} selected={topic} onPick={setTopic} />
               </div>
             )}
 

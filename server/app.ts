@@ -1,5 +1,6 @@
 // Builds the Express application. Used by server.ts (long-running Node/Docker) and by
 // api/index.ts (Vercel serverless function). Keep both entry points thin.
+import { requestContextMiddleware } from './core/requestContext';
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
@@ -234,6 +235,8 @@ export async function createApp(options: CreateAppOptions = {}): Promise<express
   }
 
   app.use(authenticate);
+  // Which student this request serves, for the AI personalisation layer (see server/ai/personalization.ts).
+  app.use(requestContextMiddleware);
 
   if (backend === 'file') {
     // Persist the store after any request that may have changed data.

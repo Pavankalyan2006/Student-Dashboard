@@ -25,6 +25,7 @@ import { Button } from '../../../components/ui/button';
 import { learningModulesApi } from '../../../api/learningModulesApi';
 import { StudyPlan, StudyPlanTask } from '../../../types/learningModules';
 import { toast } from 'sonner';
+import { useProfileDefaults } from '../../profile/hooks/useProfileDefaults';
 
 interface StudyPlannerPageProps {
   onNavigate?: (path: string) => void;
@@ -49,6 +50,11 @@ export function StudyPlannerPage({ onNavigate }: StudyPlannerPageProps) {
   const [newPlanDescription, setNewPlanDescription] = React.useState('');
   const [newPlanTargetDate, setNewPlanTargetDate] = React.useState('');
   const [newPlanTargetHours, setNewPlanTargetHours] = React.useState(20);
+  // A new plan starts from the hours the student said they can study each week.
+  const profileDefaults = useProfileDefaults();
+  React.useEffect(() => {
+    if (profileDefaults.weeklyStudyHours) setNewPlanTargetHours(profileDefaults.weeklyStudyHours);
+  }, [profileDefaults.weeklyStudyHours]);
   const [expandedPlanId, setExpandedPlanId] = React.useState<string | null>(null);
   const [taskTitle, setTaskTitle] = React.useState('');
   const [taskSubject, setTaskSubject] = React.useState('');
@@ -552,7 +558,13 @@ export function StudyPlannerPage({ onNavigate }: StudyPlannerPageProps) {
                       placeholder="Subject (optional)"
                       value={taskSubject}
                       onChange={(e) => setTaskSubject(e.target.value)}
+                      list="planner-profile-subjects"
                     />
+                    <datalist id="planner-profile-subjects">
+                      {profileDefaults.subjects.map((sub) => (
+                        <option key={sub} value={sub} />
+                      ))}
+                    </datalist>
                     <input
                       aria-label="Date"
                       type="date"

@@ -3951,8 +3951,10 @@ print(power_mod(2, 10, 1000))  # Output: 24
       if (studentId) {
         const student = this.students.get(studentId);
         if (student) {
-          const sBranch = (student.branch || '').toLowerCase();
-          const sSem = Number(student.semester) || 1;
+          const central = await this.centralProfileFor(studentId);
+          const profileSubjects: string[] = central?.academic.subjects || [];
+          const sBranch = (central?.academic.branch || student.branch || '').toLowerCase();
+          const sSem = Number(central?.academic.current_semester || student.semester) || 1;
           hydrated.sort((a, b) => {
             const aHasChapters = (a.total_chapters || 0) > 0 ? 2 : 0;
             const bHasChapters = (b.total_chapters || 0) > 0 ? 2 : 0;
@@ -3972,7 +3974,10 @@ print(power_mod(2, 10, 1000))  # Output: 24
                 : 0;
             const aSemMatch = a.semester === sSem ? 1 : 0;
             const bSemMatch = b.semester === sSem ? 1 : 0;
-            return bBranchMatch + bSemMatch - (aBranchMatch + aSemMatch);
+            // The subjects the student listed in their profile come first of all.
+            const aSubject = matchesProfileSubject(a, profileSubjects) ? 4 : 0;
+            const bSubject = matchesProfileSubject(b, profileSubjects) ? 4 : 0;
+            return bSubject + bBranchMatch + bSemMatch - (aSubject + aBranchMatch + aSemMatch);
           });
         }
       }
@@ -10115,20 +10120,33 @@ print(power_mod(2, 10, 1000))  # Output: 24
     }));
   }
 
+  /** The student's central profile, or null when it cannot be read (never throws). */
+  private async centralProfileFor(studentId: string): Promise<any | null> {
+    try {
+      const { StudentProfileService } = await import('../services/studentProfile/studentProfileService');
+      return (await StudentProfileService.getProfile(studentId)).profile;
+    } catch {
+      return null;
+    }
+  }
+
   public async getGateStudentProfile(studentId: string): Promise<GateStudentProfile> {
     await this.initialize();
     let profile = this.gateStudentProfiles.get(studentId);
     if (!profile) {
+      // A new GATE workspace starts from the student's central profile: their chosen GATE paper (or the
+      // paper for their branch), their weekly study hours and study days. Fixed values only when unknown.
+      const central = await this.centralProfileFor(studentId);
       profile = {
         student_id: studentId,
-        target_paper: 'CS',
+        target_paper: gatePaperFor(central?.career.gate_paper, central?.academic.branch) || 'CS',
         // Exam cycle, date and goals are left empty until the student sets them: the official GATE
         // schedule is announced by the organising IIT each year, so no date is assumed here.
         exam_cycle: '',
         target_date: '',
         air_goal: '',
-        weekly_study_hours: 18,
-        study_days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+        weekly_study_hours: central?.learning.weekly_study_hours || 18,
+        study_days: studyDaysFor(central?.learning.preferred_study_days) || ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
         onboarding_completed: false,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -12605,3 +12623,43 @@ print(power_mod(2, 10, 1000))  # Output: 24
 
 export const db = new DatabaseStore();
 export const database = db;
+
+/** GATE paper code from the student's chosen paper, else from their branch; null when unknown. */
+export function gatePaperFor(chosen?: string | null, branch?: string | null): string | null {
+  if (chosen && /^[A-Z]{2}$/i.test(chosen.trim())) return chosen.trim().toUpperCase();
+  const b = (branch || '').toLowerCase();
+  if (!b) return null;
+  if (/data science|artificial intelligence|\bai\b|aiml|machine learning/.test(b) && !/computer science/.test(b)) return 'DA';
+  if (/computer|cse|\bit\b|information technology|software/.test(b)) return 'CS';
+  if (/electronics|ece|communication/.test(b)) return 'EC';
+  if (/electrical|eee/.test(b)) return 'EE';
+  if (/mechanical|\bmech/.test(b)) return 'ME';
+  if (/civil/.test(b)) return 'CE';
+  if (/chemical/.test(b)) return 'CH';
+  if (/instrumentation/.test(b)) return 'IN';
+  if (/biotech/.test(b)) return 'BT';
+  return null;
+}
+
+const DAY_NAMES: Record<string, string> = { MON: 'Monday', TUE: 'Tuesday', WED: 'Wednesday', THU: 'Thursday', FRI: 'Friday', SAT: 'Saturday', SUN: 'Sunday' };
+
+/** Full day names from the profile's study days; null when none were given. */
+export function studyDaysFor(days?: string[] | null): string[] | null {
+  const out = (days || []).map((d) => DAY_NAMES[String(d).slice(0, 3).toUpperCase()]).filter(Boolean);
+  return out.length ? out : null;
+}
+
+/** True when a course is one of the subjects the student listed (by title or code, ignoring case). */
+export function matchesProfileSubject(course: { title?: string; code?: string }, subjects: string[]): boolean {
+  if (!subjects.length) return false;
+  const title = (course.title || '').toLowerCase();
+  const code = (course.code || '').toLowerCase();
+  return subjects.some((raw) => {
+    const s = raw.toLowerCase().trim();
+    if (!s) return false;
+    if (code && s === code) return true;
+    if (title && (title.includes(s) || (s.length > 6 && title.length > 6 && s.includes(title)))) return true;
+    // "DBMS" style abbreviations against "Database Management Systems (DBMS)".
+    return /^[a-z]{2,6}$/.test(s) && new RegExp(`\\(${s}\\)|\\b${s}\\b`).test(title);
+  });
+}

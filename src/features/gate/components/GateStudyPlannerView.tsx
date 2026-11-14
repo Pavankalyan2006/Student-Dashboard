@@ -19,12 +19,15 @@ interface GateStudyPlannerViewProps {
   tasks: GateStudyTask[];
   onToggleTask: (taskId: string) => Promise<void>;
   onAddTask: (task: Omit<GateStudyTask, 'id' | 'student_id' | 'is_completed'>) => Promise<void>;
+  /** The student's GATE paper; new tasks belong to it. */
+  paperCode?: string;
 }
 
 export const GateStudyPlannerView: React.FC<GateStudyPlannerViewProps> = ({
   tasks,
   onToggleTask,
   onAddTask,
+  paperCode = 'CS',
 }) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [taskTitle, setTaskTitle] = useState('');
@@ -41,7 +44,7 @@ export const GateStudyPlannerView: React.FC<GateStudyPlannerViewProps> = ({
       return;
     }
     await onAddTask({
-      paper_code: 'CS',
+      paper_code: paperCode,
       title: taskTitle.trim(),
       subject: taskSubject,
       type: taskType,

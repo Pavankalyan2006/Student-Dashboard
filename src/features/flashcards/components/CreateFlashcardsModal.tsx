@@ -21,6 +21,8 @@ import { notesApi } from '../../notes/api/notesApi';
 import { documentsApi } from '../../documents/api/documentsApi';
 import { coursesApi } from '../../courses/api/coursesApi';
 import { toast } from 'sonner';
+import { useProfileDefaults, levelToStudentLevel } from '../../profile/hooks/useProfileDefaults';
+import { ProfileQuickPicks } from '../../profile/components/ProfileQuickPicks';
 
 interface CreateFlashcardsModalProps {
   isOpen: boolean;
@@ -72,6 +74,20 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
   const [aiDifficulty, setAiDifficulty] = React.useState<'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED'>('INTERMEDIATE');
   const [aiStyle, setAiStyle] = React.useState<'DEFINITION' | 'CONCEPT' | 'COMPARISON' | 'EXAMPLE' | 'FORMULA' | 'MIXED'>('MIXED');
   const [aiCount, setAiCount] = React.useState(6);
+
+  // Start from the student's first subject and their own level; they can change both.
+  const profileDefaults = useProfileDefaults();
+  const appliedProfile = React.useRef(false);
+  React.useEffect(() => {
+    if (appliedProfile.current || !profileDefaults.ready) return;
+    appliedProfile.current = true;
+    if (profileDefaults.subjects[0]) {
+      setAiSubject(profileDefaults.subjects[0]);
+      setManualSubject(profileDefaults.subjects[0]);
+    }
+    const l = levelToStudentLevel(profileDefaults.level);
+    if (l) setAiDifficulty(l);
+  }, [profileDefaults.ready]);
   const [previewCards, setPreviewCards] = React.useState<any[] | null>(null);
   const [previewTitle, setPreviewTitle] = React.useState('');
   const [previewSubject, setPreviewSubject] = React.useState('');
@@ -610,6 +626,7 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
                         placeholder="e.g. Data Structures, Operating Systems, Computer Networks"
                         className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
                       />
+                      <ProfileQuickPicks label="Your subjects" values={profileDefaults.subjects} selected={aiSubject} onPick={setAiSubject} max={4} />
                     </div>
 
                     <div>

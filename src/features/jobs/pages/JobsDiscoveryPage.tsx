@@ -35,6 +35,8 @@ import { JobDetailsModal } from '../components/JobDetailsModal';
 import { JobAlertsModal } from '../components/JobAlertsModal';
 import { ExternalJdAnalyzerModal } from '../components/ExternalJdAnalyzerModal';
 import { JobSourcesHealthModal } from '../components/JobSourcesHealthModal';
+import { useProfileDefaults } from '../../profile/hooks/useProfileDefaults';
+import { ProfileQuickPicks } from '../../profile/components/ProfileQuickPicks';
 
 interface JobsDiscoveryPageProps {
   onNavigate?: (path: string) => void;
@@ -139,6 +141,17 @@ export const JobsDiscoveryPage: React.FC<JobsDiscoveryPageProps> = ({ onNavigate
   }, [activeTab, selectedSubcategory, remoteOnly, freshersOnly, sortBy]);
 
   // Handle Search Submission
+  // Search by one of the student's own target roles in one click.
+  const profileDefaults = useProfileDefaults();
+  const [rolePickNonce, setRolePickNonce] = useState(0);
+  useEffect(() => {
+    if (rolePickNonce) loadJobs();
+  }, [rolePickNonce]);
+  const pickRole = (role: string) => {
+    setSearchQuery(role);
+    setRolePickNonce((n) => n + 1);
+  };
+
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     loadJobs();
@@ -489,6 +502,7 @@ export const JobsDiscoveryPage: React.FC<JobsDiscoveryPageProps> = ({ onNavigate
           </button>
         </div>
       </form>
+      <ProfileQuickPicks label="Your target roles" values={profileDefaults.targetRoles} selected={searchQuery} onPick={pickRole} className="-mt-2 px-1" />
 
       {/* Job Listings Grid */}
       <div>

@@ -424,6 +424,7 @@ export const GateExamPreparationPage: React.FC<GateExamPreparationPageProps> = (
                 tasks={studyTasks}
                 onToggleTask={handleToggleStudyTask}
                 onAddTask={handleAddStudyTask}
+                paperCode={profile?.target_paper || 'CS'}
               />
             )}
 
