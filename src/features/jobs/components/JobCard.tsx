@@ -54,7 +54,7 @@ export const JobCard: React.FC<JobCardProps> = ({
         className={`absolute top-0 left-0 right-0 h-1.5 ${
           isGovt
             ? 'bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500'
-            : 'bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500'
+            : 'bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500'
         }`}
       />
 

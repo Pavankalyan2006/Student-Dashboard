@@ -73,22 +73,22 @@ export const ProfilePrivacyModal: React.FC<ProfilePrivacyModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fadeIn">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-50 backdrop-blur-sm animate-fadeIn">
+      <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/60">
+        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-white">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+            <div className="p-2 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-200">
               <Settings2 className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-white text-base">Privacy & Sharing Controls</h3>
-              <p className="text-xs text-slate-400">{profile.platform_name} (@{profile.username})</p>
+              <h3 className="font-bold text-slate-900 text-base">Privacy & Sharing Controls</h3>
+              <p className="text-xs text-slate-500">{profile.platform_name} (@{profile.username})</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -98,7 +98,7 @@ export const ProfilePrivacyModal: React.FC<ProfilePrivacyModalProps> = ({
         <form onSubmit={handleSave} className="p-6 space-y-5">
           {/* Label input */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-slate-200">
+            <label className="block text-xs font-semibold text-slate-800">
               Display Name or Label
             </label>
             <input
@@ -106,87 +106,87 @@ export const ProfilePrivacyModal: React.FC<ProfilePrivacyModalProps> = ({
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder="e.g. Primary GitHub Account"
-              className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 transition-colors"
             />
-            <p className="text-[11px] text-slate-400">
+            <p className="text-[11px] text-slate-500">
               Custom label shown on your student dashboard and resume header.
             </p>
           </div>
 
           {/* Granular Sharing Toggles */}
-          <div className="space-y-3 pt-2 border-t border-slate-800">
-            <h4 className="text-xs font-semibold text-white uppercase tracking-wider">
+          <div className="space-y-3 pt-2 border-t border-slate-200">
+            <h4 className="text-xs font-semibold text-slate-900 uppercase tracking-wider">
               Cross-Module Consent Settings
             </h4>
 
             <div className="space-y-2.5 text-xs">
-              <label className="flex items-start gap-3 p-3 rounded-xl bg-slate-800/40 border border-slate-800 cursor-pointer hover:bg-slate-800/70 transition-colors">
+              <label className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer hover:bg-slate-50 transition-colors">
                 <input
                   type="checkbox"
                   checked={sharing.use_for_resume}
                   onChange={(e) => setSharing({ ...sharing, use_for_resume: e.target.checked })}
-                  className="rounded border-slate-700 text-indigo-600 focus:ring-indigo-500 mt-0.5"
+                  className="rounded border-slate-200 text-indigo-600 focus:ring-indigo-500 mt-0.5"
                 />
                 <div>
-                  <div className="flex items-center gap-1.5 font-medium text-white">
-                    <FileText className="w-3.5 h-3.5 text-indigo-400" />
+                  <div className="flex items-center gap-1.5 font-medium text-slate-900">
+                    <FileText className="w-3.5 h-3.5 text-indigo-600" />
                     <span>Include in AI Resume Generator</span>
                   </div>
-                  <p className="text-[11px] text-slate-400 mt-0.5">
+                  <p className="text-[11px] text-slate-500 mt-0.5">
                     Allows the resume builder to extract metrics, repo highlights, and verified links into your generated PDF.
                   </p>
                 </div>
               </label>
 
-              <label className="flex items-start gap-3 p-3 rounded-xl bg-slate-800/40 border border-slate-800 cursor-pointer hover:bg-slate-800/70 transition-colors">
+              <label className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer hover:bg-slate-50 transition-colors">
                 <input
                   type="checkbox"
                   checked={sharing.use_for_career}
                   onChange={(e) => setSharing({ ...sharing, use_for_career: e.target.checked })}
-                  className="rounded border-slate-700 text-indigo-600 focus:ring-indigo-500 mt-0.5"
+                  className="rounded border-slate-200 text-indigo-600 focus:ring-indigo-500 mt-0.5"
                 />
                 <div>
-                  <div className="flex items-center gap-1.5 font-medium text-white">
-                    <Briefcase className="w-3.5 h-3.5 text-blue-400" />
+                  <div className="flex items-center gap-1.5 font-medium text-slate-900">
+                    <Briefcase className="w-3.5 h-3.5 text-blue-600" />
                     <span>Career Roadmap & Recommendations</span>
                   </div>
-                  <p className="text-[11px] text-slate-400 mt-0.5">
+                  <p className="text-[11px] text-slate-500 mt-0.5">
                     Factors in coding contest rating, solved problems, and repos when suggesting semester milestones.
                   </p>
                 </div>
               </label>
 
-              <label className="flex items-start gap-3 p-3 rounded-xl bg-slate-800/40 border border-slate-800 cursor-pointer hover:bg-slate-800/70 transition-colors">
+              <label className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer hover:bg-slate-50 transition-colors">
                 <input
                   type="checkbox"
                   checked={sharing.use_for_job_matching}
                   onChange={(e) => setSharing({ ...sharing, use_for_job_matching: e.target.checked })}
-                  className="rounded border-slate-700 text-indigo-600 focus:ring-indigo-500 mt-0.5"
+                  className="rounded border-slate-200 text-indigo-600 focus:ring-indigo-500 mt-0.5"
                 />
                 <div>
-                  <div className="flex items-center gap-1.5 font-medium text-white">
-                    <Target className="w-3.5 h-3.5 text-amber-400" />
+                  <div className="flex items-center gap-1.5 font-medium text-slate-900">
+                    <Target className="w-3.5 h-3.5 text-amber-600" />
                     <span>Jobs Discovery Match Scoring</span>
                   </div>
-                  <p className="text-[11px] text-slate-400 mt-0.5">
+                  <p className="text-[11px] text-slate-500 mt-0.5">
                     Boosts your match score on verified private and government job openings matching your demonstrated stack.
                   </p>
                 </div>
               </label>
 
-              <label className="flex items-start gap-3 p-3 rounded-xl bg-slate-800/40 border border-slate-800 cursor-pointer hover:bg-slate-800/70 transition-colors">
+              <label className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer hover:bg-slate-50 transition-colors">
                 <input
                   type="checkbox"
                   checked={sharing.include_in_public_portfolio}
                   onChange={(e) => setSharing({ ...sharing, include_in_public_portfolio: e.target.checked })}
-                  className="rounded border-slate-700 text-indigo-600 focus:ring-indigo-500 mt-0.5"
+                  className="rounded border-slate-200 text-indigo-600 focus:ring-indigo-500 mt-0.5"
                 />
                 <div>
-                  <div className="flex items-center gap-1.5 font-medium text-white">
-                    <Globe className="w-3.5 h-3.5 text-emerald-400" />
+                  <div className="flex items-center gap-1.5 font-medium text-slate-900">
+                    <Globe className="w-3.5 h-3.5 text-emerald-600" />
                     <span>Public Portfolio Showcase</span>
                   </div>
-                  <p className="text-[11px] text-slate-400 mt-0.5">
+                  <p className="text-[11px] text-slate-500 mt-0.5">
                     Display badge and link on your publicly shareable student portfolio profile.
                   </p>
                 </div>
@@ -195,18 +195,18 @@ export const ProfilePrivacyModal: React.FC<ProfilePrivacyModalProps> = ({
           </div>
 
           {errorMsg && (
-            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+            <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
               <span>{errorMsg}</span>
             </div>
           )}
 
           {/* Footer */}
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+          <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-colors"
+              className="px-4 py-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold transition-colors"
             >
               Cancel
             </button>

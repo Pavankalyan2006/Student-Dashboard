@@ -141,7 +141,7 @@ export function LinkResourceModal({
       <DialogContent className="max-w-md p-6">
         <DialogHeader>
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center text-[#2563EB]">
+            <div className="h-8 w-8 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600">
               <LinkIcon className="h-4 w-4" />
             </div>
             <div>

@@ -63,7 +63,7 @@ export function AdminJobsPage() {
 
         <button
           onClick={fetchJobs}
-          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#14234B] hover:bg-[#1C3168] border border-[#233870] text-xs font-medium text-slate-200 transition-colors self-start sm:self-auto cursor-pointer"
+          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-navy-800 hover:bg-navy-700 border border-navy-600 text-xs font-medium text-slate-200 transition-colors self-start sm:self-auto cursor-pointer"
         >
           <RefreshCw className={cn('h-3.5 w-3.5', isLoading && 'animate-spin')} />
           Refresh Jobs
@@ -71,7 +71,7 @@ export function AdminJobsPage() {
       </div>
 
       {/* Filter */}
-      <div className="flex items-center gap-3 p-4 rounded-2xl bg-[#0D1836] border border-[#1A284D]">
+      <div className="flex items-center gap-3 p-4 rounded-2xl bg-navy-900 border border-navy-700">
         <Filter className="h-4 w-4 text-slate-400" />
         <span className="text-xs text-slate-300 font-medium">Filter by State:</span>
         <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -83,7 +83,7 @@ export function AdminJobsPage() {
                 'px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer',
                 statusFilter === st
                   ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 font-semibold'
-                  : 'bg-[#081024] text-slate-400 hover:text-white border border-[#182649]'
+                  : 'bg-navy-950 text-slate-400 hover:text-white border border-navy-700'
               )}
             >
               {st || 'ALL'}
@@ -93,10 +93,10 @@ export function AdminJobsPage() {
       </div>
 
       {/* Jobs Table */}
-      <div className="rounded-2xl bg-[#0D1836] border border-[#1A284D] overflow-hidden">
+      <div className="rounded-2xl bg-navy-900 border border-navy-700 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-[#0A132C] border-b border-[#1A284D] text-slate-400 uppercase tracking-wider text-[10px]">
+            <thead className="bg-navy-950 border-b border-navy-700 text-slate-400 uppercase tracking-wider text-[10px]">
               <tr>
                 <th className="py-3 px-4">Job Type & ID</th>
                 <th className="py-3 px-4">Summary</th>
@@ -107,7 +107,7 @@ export function AdminJobsPage() {
                 <th className="py-3 px-4 text-right">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#162345]">
+            <tbody className="divide-y divide-navy-800">
               {jobs.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-8 text-center text-slate-500">
@@ -118,7 +118,7 @@ export function AdminJobsPage() {
                 jobs.map((job) => {
                   const isFailed = job.status === 'FAILED';
                   return (
-                    <tr key={job.id} className="hover:bg-[#111E42]/50">
+                    <tr key={job.id} className="hover:bg-navy-800/50">
                       <td className="py-3 px-4">
                         <p className="font-semibold text-white">{job.job_type}</p>
                         <p className="font-mono text-[10px] text-slate-500">{job.id}</p>

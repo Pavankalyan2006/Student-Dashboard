@@ -349,7 +349,7 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
               variant={activeView === 'kanban' ? 'primary' : 'outline'}
               size="sm"
               onClick={() => setActiveView('kanban')}
-              className={activeView === 'kanban' ? 'bg-[#2563EB] text-white' : ''}
+              className={activeView === 'kanban' ? 'bg-blue-600 text-white' : ''}
             >
               Pipeline Kanban
             </Button>
@@ -357,14 +357,14 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
               variant={activeView === 'list' ? 'primary' : 'outline'}
               size="sm"
               onClick={() => setActiveView('list')}
-              className={activeView === 'list' ? 'bg-[#2563EB] text-white' : ''}
+              className={activeView === 'list' ? 'bg-blue-600 text-white' : ''}
             >
               List View ({applications.length})
             </Button>
             <Button
               size="sm"
               onClick={() => setActiveView(activeView === 'create' ? 'kanban' : 'create')}
-              className="gap-1.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white"
+              className="gap-1.5 bg-blue-600 hover:bg-blue-700 text-white"
             >
               <Plus className="w-4 h-4" />
               {activeView === 'create' ? 'View Pipeline' : 'Add Application'}
@@ -375,10 +375,10 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
 
       {/* KPI Highlights with Transparent Evidence Calculation */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <div className="p-4 rounded-xl border border-[#E4E7EC] bg-white shadow-xs flex items-center justify-between">
+        <div className="p-4 rounded-xl border border-slate-200 bg-white shadow-xs flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium text-[#475467]">Total Tracked</p>
-            <h3 className="text-2xl font-bold text-[#101828] mt-1">{totalTracked}</h3>
+            <p className="text-xs font-medium text-slate-600">Total Tracked</p>
+            <h3 className="text-2xl font-bold text-slate-900 mt-1">{totalTracked}</h3>
             <p className="text-xs text-blue-600 mt-0.5">{totalApplied} applied, {totalTracked - totalApplied} saved</p>
           </div>
           <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
@@ -386,11 +386,11 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
           </div>
         </div>
 
-        <div className="p-4 rounded-xl border border-[#E4E7EC] bg-white shadow-xs flex items-center justify-between">
+        <div className="p-4 rounded-xl border border-slate-200 bg-white shadow-xs flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium text-[#475467]">In Interview Rounds</p>
+            <p className="text-xs font-medium text-slate-600">In Interview Rounds</p>
             <h3 className="text-2xl font-bold text-purple-600 mt-1">{interviewsCount}</h3>
-            <p className="text-[11px] text-[#475467] mt-0.5">
+            <p className="text-[11px] text-slate-600 mt-0.5">
               {interviewRate === null ? 'No applications yet' : `${interviewRate}% of applications (${interviewsCount}/${totalApplied})`}
             </p>
           </div>
@@ -399,9 +399,9 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
           </div>
         </div>
 
-        <div className="p-4 rounded-xl border border-[#E4E7EC] bg-white shadow-xs flex items-center justify-between">
+        <div className="p-4 rounded-xl border border-slate-200 bg-white shadow-xs flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium text-[#475467]">Offers Received</p>
+            <p className="text-xs font-medium text-slate-600">Offers Received</p>
             <h3 className="text-2xl font-bold text-emerald-600 mt-1">{offersCount}</h3>
             <p className="text-xs text-emerald-600 mt-0.5">As recorded by you</p>
           </div>
@@ -410,10 +410,10 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
           </div>
         </div>
 
-        <div className="p-4 rounded-xl border border-[#E4E7EC] bg-white shadow-xs flex items-center justify-between">
+        <div className="p-4 rounded-xl border border-slate-200 bg-white shadow-xs flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium text-[#475467]">Next Deadline / Round</p>
-            <h3 className="text-sm font-bold text-[#101828] mt-1 truncate">
+            <p className="text-xs font-medium text-slate-600">Next Deadline / Round</p>
+            <h3 className="text-sm font-bold text-slate-900 mt-1 truncate">
               {nextDeadline?.deadline || 'None upcoming'}
             </h3>
             <p className="text-xs text-amber-600 mt-0.5 truncate">
@@ -428,7 +428,7 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
 
       {/* Filter and Search Bar */}
       {activeView !== 'create' && (
-        <div className="p-3 bg-white rounded-xl border border-[#E4E7EC] flex flex-col md:flex-row items-center justify-between gap-3 shadow-2xs">
+        <div className="p-3 bg-white rounded-xl border border-slate-200 flex flex-col md:flex-row items-center justify-between gap-3 shadow-2xs">
           <div className="relative flex-1 w-full">
             <Search className="w-4 h-4 absolute left-3 top-2.5 text-gray-400" />
             <input
@@ -446,7 +446,7 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white text-[#344054] focus:outline-none"
+                className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white text-slate-700 focus:outline-none"
               >
                 <option value="ALL">All Statuses ({applications.length})</option>
                 {ALL_STATUSES.map((st) => (
@@ -462,7 +462,7 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
-                className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white text-[#344054] focus:outline-none"
+                className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white text-slate-700 focus:outline-none"
               >
                 <option value="DATE_DESC">Newest First</option>
                 <option value="DATE_ASC">Oldest First</option>
@@ -483,7 +483,7 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
             <Button
               size="sm"
               onClick={() => onNavigate?.('/career/jobs')}
-              className="bg-[#2563EB] text-white"
+              className="bg-blue-600 text-white"
             >
               Browse Jobs Discovery
             </Button>
@@ -499,7 +499,7 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
             return (
               <div key={col} className="p-3 bg-gray-50/70 rounded-xl border border-gray-200 min-w-[220px] space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-[#344054] tracking-wide">{col}</span>
+                  <span className="text-xs font-bold text-slate-700 tracking-wide">{col}</span>
                   <span className="text-xs font-bold text-gray-500 bg-white px-2 py-0.5 rounded border">
                     {colApps.length}
                   </span>
@@ -513,18 +513,18 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
                       className={`p-3.5 bg-white rounded-xl border transition-all cursor-pointer space-y-2 ${
                         selectedApp?.id === app.id
                           ? 'border-blue-500 ring-2 ring-blue-500/10 shadow-sm'
-                          : 'border-[#E4E7EC] hover:border-blue-400 shadow-2xs'
+                          : 'border-slate-200 hover:border-blue-400 shadow-2xs'
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-[#101828] truncate">{app.company_name}</span>
+                        <span className="text-xs font-bold text-slate-900 truncate">{app.company_name}</span>
                         {app.deadline && (
                           <span className="text-[10px] text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded font-medium">
                             {app.deadline}
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-[#475467] font-medium truncate">{app.role}</p>
+                      <p className="text-xs text-slate-600 font-medium truncate">{app.role}</p>
                       <p className="text-[11px] text-gray-400 flex items-center gap-1">
                         <MapPin className="w-3 h-3" /> {app.location}
                       </p>
@@ -535,7 +535,7 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
                           value={app.status}
                           onClick={(e) => e.stopPropagation()}
                           onChange={(e) => handleUpdateStatus(app.id, e.target.value as ApplicationStatus)}
-                          className="text-[10px] font-semibold border rounded px-1.5 py-0.5 bg-gray-50 text-[#344054]"
+                          className="text-[10px] font-semibold border rounded px-1.5 py-0.5 bg-gray-50 text-slate-700"
                         >
                           {ALL_STATUSES.map((st) => (
                             <option key={st} value={st}>
@@ -567,9 +567,9 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
 
       {/* List Table View */}
       {activeView === 'list' && filteredApps.length > 0 && (
-        <div className="bg-white rounded-2xl border border-[#E4E7EC] overflow-hidden shadow-xs">
+        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-[#344054]">
+            <table className="w-full text-left text-xs text-slate-700">
               <thead className="bg-gray-50 border-b border-gray-200 text-[11px] uppercase font-bold text-gray-500 tracking-wider">
                 <tr>
                   <th className="px-4 py-3">Company & Role</th>
@@ -591,7 +591,7 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
                     }`}
                   >
                     <td className="px-4 py-3 font-medium">
-                      <div className="font-bold text-[#101828]">{app.company_name}</div>
+                      <div className="font-bold text-slate-900">{app.company_name}</div>
                       <div className="text-gray-500 text-[11px]">{app.role}</div>
                     </td>
                     <td className="px-4 py-3 text-gray-500">{app.location}</td>
@@ -651,16 +651,16 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
 
       {/* Selected Application Detailed View (Timeline & Skill Gap) */}
       {selectedApp && activeView !== 'create' && (
-        <div className="p-6 rounded-2xl border border-[#E4E7EC] bg-white shadow-sm space-y-6">
+        <div className="p-6 rounded-2xl border border-slate-200 bg-white shadow-sm space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-4">
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-md">
                   {selectedApp.status}
                 </span>
-                <h3 className="text-xl font-bold text-[#101828]">{selectedApp.company_name}</h3>
+                <h3 className="text-xl font-bold text-slate-900">{selectedApp.company_name}</h3>
               </div>
-              <p className="text-xs text-[#475467] mt-1">
+              <p className="text-xs text-slate-600 mt-1">
                 {selectedApp.role} • {selectedApp.location} • Applied on {selectedApp.application_date}
                 {selectedApp.salary_range && ` • Compensation: ${selectedApp.salary_range}`}
               </p>
@@ -713,7 +713,7 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
                 {selectedApp.jd_analysis.required_skills.map((s, idx) => (
                   <div key={idx} className="p-2.5 bg-white rounded-lg border border-gray-200 space-y-1">
-                    <span className="text-xs font-bold text-[#101828] block">{s.name}</span>
+                    <span className="text-xs font-bold text-slate-900 block">{s.name}</span>
                     <span
                       className={`text-[10px] font-semibold px-2 py-0.5 rounded-full inline-block ${
                         s.evidence_status === 'EVIDENCE_AVAILABLE'
@@ -744,7 +744,7 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
           {/* Timeline Milestones and Add Milestone */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h4 className="text-xs font-bold text-[#344054] uppercase tracking-wider">
+              <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                 Application Timeline & Recruiter Milestones
               </h4>
               <span className="text-xs text-gray-400">
@@ -756,7 +756,7 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
               {selectedApp.timeline?.map((event) => (
                 <div key={event.id} className="p-3 bg-gray-50 rounded-lg flex items-center justify-between text-xs border border-gray-100">
                   <div>
-                    <span className="font-semibold text-[#101828]">{event.title}</span>
+                    <span className="font-semibold text-slate-900">{event.title}</span>
                     {event.notes && <p className="text-gray-500 text-[11px] mt-0.5">{event.notes}</p>}
                   </div>
                   <div className="flex items-center gap-2">
@@ -818,32 +818,32 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
 
       {/* Mode: Create Application */}
       {activeView === 'create' && (
-        <div className="p-6 rounded-xl border border-[#E4E7EC] bg-white shadow-sm space-y-4 max-w-2xl">
-          <h2 className="text-lg font-bold text-[#101828] flex items-center gap-2">
+        <div className="p-6 rounded-xl border border-slate-200 bg-white shadow-sm space-y-4 max-w-2xl">
+          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
             <Briefcase className="w-5 h-5 text-blue-600" />
             Add Internship / Job Application
           </h2>
           <form onSubmit={handleCreateApplication} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-[#344054] mb-1">Company Name *</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Company Name *</label>
                 <input
                   type="text"
                   placeholder="e.g. Google / Microsoft / Razorpay"
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-[#D0D5DD] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-[#344054] mb-1">Job Role *</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Job Role *</label>
                 <input
                   type="text"
                   placeholder="e.g. Software Engineering Intern"
                   value={role}
                   onChange={(e) => setRole(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-[#D0D5DD] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
@@ -851,56 +851,56 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-[#344054] mb-1">Location</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Location</label>
                 <input
                   type="text"
                   placeholder="e.g. Bengaluru / Hyderabad / Remote"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-[#D0D5DD] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-[#344054] mb-1">Application Deadline</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Application Deadline</label>
                 <input
                   type="date"
                   value={deadline}
                   onChange={(e) => setDeadline(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-[#D0D5DD] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-[#344054] mb-1">Posting URL</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Posting URL</label>
                 <input
                   type="url"
                   placeholder="https://careers..."
                   value={applicationUrl}
                   onChange={(e) => setApplicationUrl(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-[#D0D5DD] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-[#344054] mb-1">Stipend / CTC</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Stipend / CTC</label>
                 <input
                   type="text"
                   placeholder="e.g. ₹75,000 / month"
                   value={salaryRange}
                   onChange={(e) => setSalaryRange(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-[#D0D5DD] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="app-create-status" className="block text-xs font-semibold text-[#344054] mb-1">Where are you with this one?</label>
+              <label htmlFor="app-create-status" className="block text-xs font-semibold text-slate-700 mb-1">Where are you with this one?</label>
               <select
                 id="app-create-status"
                 value={createStatus}
                 onChange={(e) => setCreateStatus(e.target.value as ApplicationStatus)}
-                className="w-full px-3 py-2 text-sm border border-[#D0D5DD] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="SAVED">Saved, not applied yet</option>
                 <option value="APPLIED">I have applied</option>
@@ -909,14 +909,14 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#344054] mb-1">
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Job description (optional; skills it names are compared with your profile)
               </label>
               <textarea
                 placeholder="Paste key qualifications, tech stack, and responsibilities..."
                 value={jobDescription}
                 onChange={(e) => setJobDescription(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-[#D0D5DD] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 rows={4}
               />
             </div>
@@ -925,7 +925,7 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
               <Button type="button" variant="outline" onClick={() => setActiveView('kanban')}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSaving} className="bg-[#2563EB] text-white">
+              <Button type="submit" disabled={isSaving} className="bg-blue-600 text-white">
                 {isSaving ? 'Saving...' : 'Save to tracker'}
               </Button>
             </div>

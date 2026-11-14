@@ -164,13 +164,13 @@ export function StudyPlannerPage({ onNavigate }: StudyPlannerPageProps) {
               onClick={() => onNavigate?.('/study-planner/calendar')}
               className="gap-1.5"
             >
-              <CalendarIcon className="w-4 h-4 text-[#475467]" />
+              <CalendarIcon className="w-4 h-4 text-slate-600" />
               Calendar View
             </Button>
             <Button
               size="sm"
               onClick={() => setActiveTab(activeTab === 'create' ? 'today' : 'create')}
-              className="gap-1.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white"
+              className="gap-1.5 bg-blue-600 hover:bg-blue-700 text-white"
             >
               <Plus className="w-4 h-4" />
               {activeTab === 'create' ? 'View Tasks' : 'New Plan'}
@@ -181,24 +181,24 @@ export function StudyPlannerPage({ onNavigate }: StudyPlannerPageProps) {
 
       {/* Progress & Quick Stats Card */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="p-4 rounded-xl border border-[#E4E7EC] bg-white shadow-sm flex items-center justify-between">
+        <div className="p-4 rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium text-[#475467]">Today's Progress</p>
-            <h3 className="text-2xl font-bold text-[#101828] mt-1">{progressPercent}%</h3>
-            <p className="text-xs text-[#027A48] mt-0.5">{completedTasksCount} of {todayTasks.length} tasks completed</p>
+            <p className="text-xs font-medium text-slate-600">Today's Progress</p>
+            <h3 className="text-2xl font-bold text-slate-900 mt-1">{progressPercent}%</h3>
+            <p className="text-xs text-emerald-700 mt-0.5">{completedTasksCount} of {todayTasks.length} tasks completed</p>
           </div>
           <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
             <CheckCircle2 className="w-6 h-6" />
           </div>
         </div>
 
-        <div className="p-4 rounded-xl border border-[#E4E7EC] bg-white shadow-sm flex items-center justify-between">
+        <div className="p-4 rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium text-[#475467]">Active Plan</p>
-            <h3 className="text-sm font-bold text-[#101828] mt-1 line-clamp-1">
+            <p className="text-xs font-medium text-slate-600">Active Plan</p>
+            <h3 className="text-sm font-bold text-slate-900 mt-1 line-clamp-1">
               {activePlan?.title || 'Semester 6 Routine'}
             </h3>
-            <p className="text-xs text-[#475467] mt-0.5">
+            <p className="text-xs text-slate-600 mt-0.5">
               {activePlan ? `${activePlan.completed_hours}h / ${activePlan.total_hours_target}h logged` : 'No active plan'}
             </p>
           </div>
@@ -207,10 +207,10 @@ export function StudyPlannerPage({ onNavigate }: StudyPlannerPageProps) {
           </div>
         </div>
 
-        <div className="p-4 rounded-xl border border-[#E4E7EC] bg-white shadow-sm flex items-center justify-between">
+        <div className="p-4 rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium text-[#475467]">Remaining Today</p>
-            <h3 className="text-2xl font-bold text-[#101828] mt-1">
+            <p className="text-xs font-medium text-slate-600">Remaining Today</p>
+            <h3 className="text-2xl font-bold text-slate-900 mt-1">
               {todayTasks.filter((t) => t.status === 'PENDING').length}
             </h3>
             <p className="text-xs text-amber-600 mt-0.5">Tasks scheduled</p>
@@ -220,10 +220,10 @@ export function StudyPlannerPage({ onNavigate }: StudyPlannerPageProps) {
           </div>
         </div>
 
-        <div className="p-4 rounded-xl border border-[#E4E7EC] bg-white shadow-sm flex items-center justify-between">
+        <div className="p-4 rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium text-[#475467]">AI Recommendation</p>
-            <h3 className="text-xs font-bold text-[#101828] mt-1 line-clamp-2">
+            <p className="text-xs font-medium text-slate-600">AI Recommendation</p>
+            <h3 className="text-xs font-bold text-slate-900 mt-1 line-clamp-2">
               Focus on Normalization & B+ Trees
             </h3>
             <p className="text-xs text-purple-600 mt-0.5">Weakness recovery</p>
@@ -235,11 +235,11 @@ export function StudyPlannerPage({ onNavigate }: StudyPlannerPageProps) {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex items-center gap-2 border-b border-[#E4E7EC] pb-2 overflow-x-auto">
+      <div className="flex items-center gap-2 border-b border-slate-200 pb-2 overflow-x-auto">
         <button
           onClick={() => setActiveTab('today')}
           className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-            activeTab === 'today' ? 'bg-[#101828] text-white' : 'text-[#475467] hover:bg-gray-100'
+            activeTab === 'today' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-gray-100'
           }`}
         >
           Today's Plan
@@ -247,7 +247,7 @@ export function StudyPlannerPage({ onNavigate }: StudyPlannerPageProps) {
         <button
           onClick={() => setActiveTab('week')}
           className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-            activeTab === 'week' ? 'bg-[#101828] text-white' : 'text-[#475467] hover:bg-gray-100'
+            activeTab === 'week' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-gray-100'
           }`}
         >
           Weekly Overview
@@ -255,7 +255,7 @@ export function StudyPlannerPage({ onNavigate }: StudyPlannerPageProps) {
         <button
           onClick={() => setActiveTab('all')}
           className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-            activeTab === 'all' ? 'bg-[#101828] text-white' : 'text-[#475467] hover:bg-gray-100'
+            activeTab === 'all' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-gray-100'
           }`}
         >
           All Plans ({plans.length})
@@ -263,7 +263,7 @@ export function StudyPlannerPage({ onNavigate }: StudyPlannerPageProps) {
         <button
           onClick={() => setActiveTab('create')}
           className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-            activeTab === 'create' ? 'bg-[#101828] text-white' : 'text-[#475467] hover:bg-gray-100'
+            activeTab === 'create' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-gray-100'
           }`}
         >
           + Plan Generator
@@ -272,33 +272,33 @@ export function StudyPlannerPage({ onNavigate }: StudyPlannerPageProps) {
 
       {/* Create Plan Form */}
       {activeTab === 'create' && (
-        <div className="p-6 rounded-xl border border-[#E4E7EC] bg-white shadow-sm space-y-4 max-w-2xl">
-          <h2 className="text-lg font-bold text-[#101828] flex items-center gap-2">
+        <div className="p-6 rounded-xl border border-slate-200 bg-white shadow-sm space-y-4 max-w-2xl">
+          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-blue-600" />
             Generate Adaptive AI Study Schedule
           </h2>
-          <p className="text-xs text-[#475467]">
+          <p className="text-xs text-slate-600">
             StudyPlannerAgent balances course completion deadlines, pending quiz reviews, weak concepts, and university exam dates.
           </p>
           <form onSubmit={handleCreatePlan} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-[#344054] mb-1">Plan Title</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Plan Title</label>
               <input
                 type="text"
                 placeholder="e.g. DBMS Midterm & LeetCode Sprint"
                 value={newPlanTitle}
                 onChange={(e) => setNewPlanTitle(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-[#D0D5DD] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-[#344054] mb-1">Plan Scope</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Plan Scope</label>
                 <select
                   value={newPlanType}
                   onChange={(e) => setNewPlanType(e.target.value as any)}
-                  className="w-full px-3 py-2 text-sm border border-[#D0D5DD] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="DAILY">Daily Intensive</option>
                   <option value="WEEKLY">Weekly Sprint</option>
@@ -308,33 +308,33 @@ export function StudyPlannerPage({ onNavigate }: StudyPlannerPageProps) {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-[#344054] mb-1">Target Hours</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Target Hours</label>
                 <input
                   type="number"
                   min="1"
                   max="500"
                   value={newPlanTargetHours}
                   onChange={(e) => setNewPlanTargetHours(Number(e.target.value))}
-                  className="w-full px-3 py-2 text-sm border border-[#D0D5DD] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-[#344054] mb-1">Target Completion Date</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Target Completion Date</label>
               <input
                 type="date"
                 value={newPlanTargetDate}
                 onChange={(e) => setNewPlanTargetDate(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-[#D0D5DD] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-[#344054] mb-1">Target Goals / Notes</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Target Goals / Notes</label>
               <textarea
                 placeholder="Specific weak topics, exam chapters, or priority goals..."
                 value={newPlanDescription}
                 onChange={(e) => setNewPlanDescription(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-[#D0D5DD] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 rows={3}
               />
             </div>
@@ -342,7 +342,7 @@ export function StudyPlannerPage({ onNavigate }: StudyPlannerPageProps) {
               <Button type="button" variant="outline" onClick={() => setActiveTab('today')}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isCreating} className="bg-[#2563EB] text-white">
+              <Button type="submit" disabled={isCreating} className="bg-blue-600 text-white">
                 {isCreating ? 'Synthesizing Plan...' : 'Generate Plan'}
               </Button>
             </div>
@@ -354,11 +354,11 @@ export function StudyPlannerPage({ onNavigate }: StudyPlannerPageProps) {
       {activeTab === 'today' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-[#101828] flex items-center gap-2">
+            <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
               <Clock className="w-4 h-4 text-blue-600" />
               TODAY'S SCHEDULE
             </h2>
-            <span className="text-xs text-[#475467]">
+            <span className="text-xs text-slate-600">
               {new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}
             </span>
           </div>
@@ -381,7 +381,7 @@ export function StudyPlannerPage({ onNavigate }: StudyPlannerPageProps) {
                   className={`p-4 rounded-xl border transition-all duration-150 ${
                     task.status === 'COMPLETED'
                       ? 'bg-gray-50/80 border-gray-200 opacity-75'
-                      : 'bg-white border-[#E4E7EC] hover:border-blue-300 shadow-sm'
+                      : 'bg-white border-slate-200 hover:border-blue-300 shadow-sm'
                   }`}
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -401,16 +401,16 @@ export function StudyPlannerPage({ onNavigate }: StudyPlannerPageProps) {
                         >
                           {task.priority}
                         </span>
-                        <span className="text-xs text-[#475467] font-medium">{task.subject}</span>
+                        <span className="text-xs text-slate-600 font-medium">{task.subject}</span>
                       </div>
                       <h3
                         className={`text-sm font-semibold ${
-                          task.status === 'COMPLETED' ? 'line-through text-gray-500' : 'text-[#101828]'
+                          task.status === 'COMPLETED' ? 'line-through text-gray-500' : 'text-slate-900'
                         }`}
                       >
                         {task.title}
                       </h3>
-                      {task.notes && <p className="text-xs text-[#475467]">{task.notes}</p>}
+                      {task.notes && <p className="text-xs text-slate-600">{task.notes}</p>}
                       {task.ai_recommendation && (
                         <div className="inline-flex items-center gap-1.5 text-xs text-purple-700 bg-purple-50 px-2 py-1 rounded-md mt-1">
                           <Sparkles className="w-3.5 h-3.5 text-purple-600 shrink-0" />
@@ -473,12 +473,12 @@ export function StudyPlannerPage({ onNavigate }: StudyPlannerPageProps) {
 
       {/* Weekly Overview */}
       {activeTab === 'week' && (
-        <div className="p-5 rounded-xl border border-[#E4E7EC] bg-white shadow-sm space-y-4">
-          <h2 className="text-base font-bold text-[#101828]">Weekly Planned Milestones</h2>
+        <div className="p-5 rounded-xl border border-slate-200 bg-white shadow-sm space-y-4">
+          <h2 className="text-base font-bold text-slate-900">Weekly Planned Milestones</h2>
           <div className="grid grid-cols-1 md:grid-cols-7 gap-2">
             {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, idx) => (
               <div key={day} className="p-3 border rounded-lg bg-gray-50/50 space-y-2">
-                <span className="text-xs font-bold text-[#344054] block">{day}</span>
+                <span className="text-xs font-bold text-slate-700 block">{day}</span>
                 <div className="text-[11px] p-2 bg-white rounded border border-gray-200">
                   <p className="font-semibold text-blue-600">{idx % 2 === 0 ? 'DBMS / SQL' : 'DSA Trees'}</p>
                   <p className="text-gray-500">{idx % 2 === 0 ? '2h revision' : '1.5h drill'}</p>
@@ -493,17 +493,17 @@ export function StudyPlannerPage({ onNavigate }: StudyPlannerPageProps) {
       {activeTab === 'all' && (
         <div className="space-y-3">
           {plans.map((p) => (
-            <div key={p.id} className="p-4 rounded-xl border border-[#E4E7EC] bg-white shadow-sm">
+            <div key={p.id} className="p-4 rounded-xl border border-slate-200 bg-white shadow-sm">
               <div className="flex items-center justify-between gap-3">
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded">
                     {p.type}
                   </span>
-                  <h3 className="text-sm font-bold text-[#101828]">{p.title}</h3>
+                  <h3 className="text-sm font-bold text-slate-900">{p.title}</h3>
                 </div>
-                <p className="text-xs text-[#475467] mt-1">{p.description}</p>
-                <p className="text-xs text-[#344054] font-medium mt-1">
+                <p className="text-xs text-slate-600 mt-1">{p.description}</p>
+                <p className="text-xs text-slate-700 font-medium mt-1">
                   Target: {p.target_date} • {p.completed_hours}h completed of {p.total_hours_target}h target
                 </p>
               </div>
@@ -518,10 +518,10 @@ export function StudyPlannerPage({ onNavigate }: StudyPlannerPageProps) {
               </div>
               {expandedPlanId === p.id && (
                 <div className="mt-3 border-t border-gray-100 pt-3 space-y-2">
-                  {p.tasks.length === 0 && <p className="text-xs text-[#475467]">No tasks yet. Add the first one below.</p>}
+                  {p.tasks.length === 0 && <p className="text-xs text-slate-600">No tasks yet. Add the first one below.</p>}
                   {p.tasks.map((t) => (
                     <div key={t.id} className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                      <span className={t.status === 'COMPLETED' ? 'line-through text-[#98A2B3]' : 'text-[#101828]'}>
+                      <span className={t.status === 'COMPLETED' ? 'line-through text-slate-400' : 'text-slate-900'}>
                         {t.date} · {t.title}
                         {t.subject ? ` · ${t.subject}` : ''} · {t.duration_minutes} min
                       </span>
@@ -537,14 +537,14 @@ export function StudyPlannerPage({ onNavigate }: StudyPlannerPageProps) {
                   <form onSubmit={(e) => handleAddTask(e, p.id)} className="grid grid-cols-1 sm:grid-cols-5 gap-2 pt-2">
                     <input
                       aria-label="Task title"
-                      className="sm:col-span-2 border border-[#D0D5DD] rounded-md px-2 py-1.5 text-xs"
+                      className="sm:col-span-2 border border-slate-300 rounded-md px-2 py-1.5 text-xs"
                       placeholder="Task title"
                       value={taskTitle}
                       onChange={(e) => setTaskTitle(e.target.value)}
                     />
                     <input
                       aria-label="Subject"
-                      className="border border-[#D0D5DD] rounded-md px-2 py-1.5 text-xs"
+                      className="border border-slate-300 rounded-md px-2 py-1.5 text-xs"
                       placeholder="Subject (optional)"
                       value={taskSubject}
                       onChange={(e) => setTaskSubject(e.target.value)}
@@ -552,7 +552,7 @@ export function StudyPlannerPage({ onNavigate }: StudyPlannerPageProps) {
                     <input
                       aria-label="Date"
                       type="date"
-                      className="border border-[#D0D5DD] rounded-md px-2 py-1.5 text-xs"
+                      className="border border-slate-300 rounded-md px-2 py-1.5 text-xs"
                       value={taskDate}
                       onChange={(e) => setTaskDate(e.target.value)}
                     />
@@ -562,7 +562,7 @@ export function StudyPlannerPage({ onNavigate }: StudyPlannerPageProps) {
                         type="number"
                         min={5}
                         max={600}
-                        className="w-20 border border-[#D0D5DD] rounded-md px-2 py-1.5 text-xs"
+                        className="w-20 border border-slate-300 rounded-md px-2 py-1.5 text-xs"
                         value={taskMinutes}
                         onChange={(e) => setTaskMinutes(Number(e.target.value))}
                       />

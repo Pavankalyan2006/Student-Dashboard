@@ -34,17 +34,17 @@ export function ProfileCertificatesPage({ onNavigate }: { onNavigate: (path: str
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E4E7EC] pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
         <div className="flex items-center gap-3">
           <button
             onClick={() => onNavigate('/profile')}
-            className="p-2 text-[#475467] hover:text-[#101828] hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+            className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div>
-            <h1 className="text-xl font-bold text-[#101828]">Academic & Engineering Certificates</h1>
-            <p className="text-xs text-[#667085]">
+            <h1 className="text-xl font-bold text-slate-900">Academic & Engineering Certificates</h1>
+            <p className="text-xs text-slate-500">
               Cryptographically verified certificates earned upon complete, verifiable mastery of course and lab modules.
             </p>
           </div>
@@ -64,7 +64,7 @@ export function ProfileCertificatesPage({ onNavigate }: { onNavigate: (path: str
           ))}
         </div>
       ) : certificates.length === 0 ? (
-        <div className="p-12 text-center text-xs text-[#667085] bg-white rounded-2xl border border-[#E4E7EC] space-y-2">
+        <div className="p-12 text-center text-xs text-slate-500 bg-white rounded-2xl border border-slate-200 space-y-2">
           <Award className="h-8 w-8 mx-auto text-slate-300" />
           <p className="font-semibold text-slate-700">No certificates earned yet</p>
           <p className="text-[11px] text-slate-500 max-w-md mx-auto">
@@ -83,22 +83,22 @@ export function ProfileCertificatesPage({ onNavigate }: { onNavigate: (path: str
 
               <div className="space-y-3 relative z-10">
                 <div className="flex items-center justify-between">
-                  <span className="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-[#2563EB] border border-blue-200">
+                  <span className="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-600 border border-blue-200">
                     Verified Credential
                   </span>
-                  <span className="text-[10px] font-mono text-[#667085]">
+                  <span className="text-[10px] font-mono text-slate-500">
                     ID: {cert.id}
                   </span>
                 </div>
 
                 <div>
-                  <h3 className="text-base font-bold text-[#101828]">{cert.program_name}</h3>
-                  <p className="text-xs text-[#475467] mt-1">
+                  <h3 className="text-base font-bold text-slate-900">{cert.program_name}</h3>
+                  <p className="text-xs text-slate-600 mt-1">
                     Conferred upon <span className="font-semibold text-slate-900">{cert.student_name}</span>
                   </p>
                 </div>
 
-                <div className="pt-2 text-[11px] text-[#667085] space-y-1">
+                <div className="pt-2 text-[11px] text-slate-500 space-y-1">
                   <div className="flex items-center justify-between">
                     <span>Issued By:</span>
                     <span className="font-semibold text-slate-800">{cert.issuer}</span>
@@ -128,7 +128,7 @@ export function ProfileCertificatesPage({ onNavigate }: { onNavigate: (path: str
               <div className="pt-4 border-t border-slate-100 flex items-center justify-between gap-2 relative z-10">
                 <button
                   onClick={() => onNavigate(`/verify/certificate/${cert.id}`)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#2563EB] hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
                 >
                   <ExternalLink className="h-3.5 w-3.5" />
                   <span>Verify Public Page</span>
@@ -136,7 +136,7 @@ export function ProfileCertificatesPage({ onNavigate }: { onNavigate: (path: str
 
                 <button
                   onClick={() => handleCopyLink(cert.id)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#475467] hover:text-[#101828] hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
                 >
                   <Copy className="h-3.5 w-3.5" />
                   <span>Copy Link</span>

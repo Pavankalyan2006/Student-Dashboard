@@ -56,15 +56,15 @@ export function LanguageExploreView({
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-900/60 via-purple-900/40 to-slate-900 border border-indigo-800/40 p-6 sm:p-8">
+      <div className="relative overflow-hidden rounded-2xl surface-hero border border-indigo-200 p-6 sm:p-8">
         <div className="relative z-10 max-w-2xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/25 text-indigo-400 text-xs font-medium mb-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-600 text-xs font-medium mb-3">
             <Globe className="w-3.5 h-3.5" /> 150 Supported World & Regional Languages
           </div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
             Explore & Master Global Languages
           </h2>
-          <p className="text-sm text-slate-300 mt-2 leading-relaxed">
+          <p className="text-sm text-slate-700 mt-2 leading-relaxed">
             From Spanish, German, Japanese, and Korean to Hindi, Telugu, Tamil, Arabic, and 140+ world languages.
             Select any language to build real vocabulary, grammar, and conversational fluency.
           </p>
@@ -72,17 +72,17 @@ export function LanguageExploreView({
       </div>
 
       {/* Search and Filters Bar */}
-      <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 space-y-4">
+      <div className="bg-white border border-slate-200 rounded-2xl p-4 space-y-4">
         {/* Search Row */}
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Search by English name, native script, language code (e.g. Spanish, తెలుగు, ja, Devanagari)..."
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700/80 text-sm text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500 transition-colors"
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 transition-colors"
             />
           </div>
 
@@ -91,7 +91,7 @@ export function LanguageExploreView({
             <select
               value={selectedScript}
               onChange={(e) => onSelectScript(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700/80 text-sm text-slate-200 focus:outline-none focus:border-indigo-500"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-800 focus:outline-none focus:border-indigo-500"
             >
               <option value="ALL">All Writing Scripts</option>
               {scripts.filter((s) => s !== 'ALL').map((s) => (
@@ -107,7 +107,7 @@ export function LanguageExploreView({
             <select
               value={selectedCapability}
               onChange={(e) => onSelectCapability(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700/80 text-sm text-slate-200 focus:outline-none focus:border-indigo-500"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-800 focus:outline-none focus:border-indigo-500"
             >
               <option value="ALL">All Learning Capabilities</option>
               <option value="text_lessons">Interactive Lessons</option>
@@ -128,24 +128,24 @@ export function LanguageExploreView({
               className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
                 selectedRegion === reg
                   ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/30'
-                  : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-750'
+                  : 'bg-slate-50 text-slate-500 hover:text-slate-900 hover:bg-slate-750'
               }`}
             >
               {reg === 'ALL' ? '🌍 All Regions' : reg}
             </button>
           ))}
           <span className="text-xs text-slate-500 ml-auto shrink-0 pl-2">
-            Showing <strong className="text-slate-300">{languages.length}</strong> of {totalCount}
+            Showing <strong className="text-slate-700">{languages.length}</strong> of {totalCount}
           </span>
         </div>
       </div>
 
       {/* Language Cards Grid */}
       {languages.length === 0 ? (
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-12 text-center">
+        <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center">
           <Globe className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-          <h3 className="text-base font-semibold text-white">No languages matched your filter</h3>
-          <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+          <h3 className="text-base font-semibold text-slate-900">No languages matched your filter</h3>
+          <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
             Try adjusting your search terms, changing the region tab, or clearing writing script filters.
           </p>
         </div>
@@ -157,7 +157,7 @@ export function LanguageExploreView({
             return (
               <div
                 key={lang.code}
-                className="group bg-slate-900/90 border border-slate-800 hover:border-slate-700/80 rounded-2xl p-5 flex flex-col justify-between transition-all hover:shadow-xl hover:shadow-indigo-950/20"
+                className="group bg-white border border-slate-200 hover:border-slate-200 rounded-2xl p-5 flex flex-col justify-between transition-all hover:shadow-xl hover:shadow-indigo-950/20"
               >
                 <div>
                   {/* Card Header */}
@@ -166,17 +166,17 @@ export function LanguageExploreView({
                       <span className="text-3xl filter drop-shadow">{lang.flag_emoji}</span>
                       <div>
                         <div className="flex items-center gap-2">
-                          <h3 className="text-base font-bold text-white group-hover:text-indigo-400 transition-colors">
+                          <h3 className="text-base font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
                             {lang.name}
                           </h3>
                           {lang.direction === 'rtl' && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-mono">
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-50 text-amber-600 border border-amber-200 font-mono">
                               RTL
                             </span>
                           )}
                         </div>
-                        <div className="text-xs text-slate-400 flex items-center gap-1.5 mt-0.5">
-                          <span className="text-indigo-300 font-medium">{lang.native_name}</span>
+                        <div className="text-xs text-slate-500 flex items-center gap-1.5 mt-0.5">
+                          <span className="text-indigo-700 font-medium">{lang.native_name}</span>
                           <span>•</span>
                           <span className="text-slate-500 font-mono">{lang.code.toUpperCase()}</span>
                         </div>
@@ -185,7 +185,7 @@ export function LanguageExploreView({
 
                     <button
                       onClick={() => onOpenDetails(lang)}
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                      className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-colors"
                       title="View language details"
                     >
                       <Info className="w-4 h-4" />
@@ -194,12 +194,12 @@ export function LanguageExploreView({
 
                   {/* Sample Phrase Box */}
                   <div
-                    className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 mb-3"
+                    className="p-3 rounded-xl bg-white border border-slate-200 mb-3"
                     dir={lang.direction}
                   >
-                    <div className="text-xs font-medium text-slate-200 line-clamp-1">{lang.sample_phrase}</div>
+                    <div className="text-xs font-medium text-slate-800 line-clamp-1">{lang.sample_phrase}</div>
                     <div
-                      className="text-[11px] text-slate-400 mt-1 line-clamp-1"
+                      className="text-[11px] text-slate-500 mt-1 line-clamp-1"
                       dir="ltr"
                     >
                       "{lang.sample_translation}"
@@ -208,25 +208,25 @@ export function LanguageExploreView({
 
                   {/* Meta Tags: Region & Scripts */}
                   <div className="flex flex-wrap items-center gap-1.5 mb-3">
-                    <span className="text-[10px] px-2 py-0.5 rounded-md bg-slate-800 text-slate-300">
+                    <span className="text-[10px] px-2 py-0.5 rounded-md bg-slate-50 text-slate-700">
                       {lang.region}
                     </span>
-                    <span className="text-[10px] px-2 py-0.5 rounded-md bg-slate-800 text-slate-300">
+                    <span className="text-[10px] px-2 py-0.5 rounded-md bg-slate-50 text-slate-700">
                       {lang.scripts.join(', ')}
                     </span>
-                    <span className="text-[10px] px-2 py-0.5 rounded-md bg-slate-800 text-slate-300">
+                    <span className="text-[10px] px-2 py-0.5 rounded-md bg-slate-50 text-slate-700">
                       {lang.total_lessons_count} Lessons
                     </span>
                   </div>
 
                   {/* Honest Capability Matrix Badges */}
-                  <div className="flex items-center gap-2 text-[11px] text-slate-400 border-t border-slate-800/80 pt-3 mb-4">
+                  <div className="flex items-center gap-2 text-[11px] text-slate-500 border-t border-slate-200 pt-3 mb-4">
                     <span
                       className={`flex items-center gap-1 ${
                         lang.capabilities.text_lessons === 'SUPPORTED'
-                          ? 'text-emerald-400'
+                          ? 'text-emerald-600'
                           : lang.capabilities.text_lessons === 'LIMITED'
-                          ? 'text-amber-400'
+                          ? 'text-amber-600'
                           : 'text-slate-600'
                       }`}
                       title={`Lessons: ${lang.capabilities.text_lessons}`}
@@ -236,9 +236,9 @@ export function LanguageExploreView({
                     <span
                       className={`flex items-center gap-1 ${
                         lang.capabilities.tts_audio === 'SUPPORTED'
-                          ? 'text-emerald-400'
+                          ? 'text-emerald-600'
                           : lang.capabilities.tts_audio === 'LIMITED'
-                          ? 'text-amber-400'
+                          ? 'text-amber-600'
                           : 'text-slate-600'
                       }`}
                       title={`Audio: ${lang.capabilities.tts_audio}`}
@@ -248,9 +248,9 @@ export function LanguageExploreView({
                     <span
                       className={`flex items-center gap-1 ${
                         lang.capabilities.speech_recognition === 'SUPPORTED'
-                          ? 'text-emerald-400'
+                          ? 'text-emerald-600'
                           : lang.capabilities.speech_recognition === 'LIMITED'
-                          ? 'text-amber-400'
+                          ? 'text-amber-600'
                           : 'text-slate-600'
                       }`}
                       title={`Speech Recognition: ${lang.capabilities.speech_recognition}`}
@@ -260,9 +260,9 @@ export function LanguageExploreView({
                     <span
                       className={`flex items-center gap-1 ${
                         lang.capabilities.ai_conversation === 'SUPPORTED'
-                          ? 'text-emerald-400'
+                          ? 'text-emerald-600'
                           : lang.capabilities.ai_conversation === 'LIMITED'
-                          ? 'text-amber-400'
+                          ? 'text-amber-600'
                           : 'text-slate-600'
                       }`}
                       title={`AI Conversation: ${lang.capabilities.ai_conversation}`}
@@ -281,9 +281,9 @@ export function LanguageExploreView({
                   {isEnrolled ? (
                     <button
                       onClick={() => onGoToDashboard(lang.code)}
-                      className="w-full py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-750 text-indigo-400 text-xs font-semibold flex items-center justify-center gap-1.5 border border-indigo-500/20 transition-colors"
+                      className="w-full py-2 px-3 rounded-xl bg-slate-50 hover:bg-slate-750 text-indigo-600 text-xs font-semibold flex items-center justify-center gap-1.5 border border-indigo-200 transition-colors"
                     >
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Continue Learning
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Continue Learning
                       <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                   ) : (

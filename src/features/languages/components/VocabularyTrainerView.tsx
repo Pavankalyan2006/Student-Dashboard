@@ -93,10 +93,10 @@ export function VocabularyTrainerView({
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
       {/* Header Bar */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+      <div className="flex items-center justify-between border-b border-slate-200 pb-4">
         <button
           onClick={onBack}
-          className="flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors"
+          className="flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" /> Back to Dashboard
         </button>
@@ -111,7 +111,7 @@ export function VocabularyTrainerView({
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               filterMode === 'DUE'
                 ? 'bg-amber-600 text-white'
-                : 'bg-slate-800 text-slate-400 hover:text-white'
+                : 'bg-slate-50 text-slate-500 hover:text-slate-900'
             }`}
           >
             Due for Revision ({cards.filter((c) => !c.next_review_date || c.next_review_date <= todayStr).length})
@@ -125,7 +125,7 @@ export function VocabularyTrainerView({
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               filterMode === 'ALL'
                 ? 'bg-indigo-600 text-white'
-                : 'bg-slate-800 text-slate-400 hover:text-white'
+                : 'bg-slate-50 text-slate-500 hover:text-slate-900'
             }`}
           >
             All Saved ({cards.length})
@@ -135,10 +135,10 @@ export function VocabularyTrainerView({
 
       {/* Main Flashcard or Empty State */}
       {!currentCard ? (
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-12 text-center space-y-4">
-          <Award className="w-16 h-16 text-emerald-400 mx-auto animate-bounce" />
-          <h2 className="text-xl font-bold text-white">Deck Completed!</h2>
-          <p className="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">
+        <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center space-y-4">
+          <Award className="w-16 h-16 text-emerald-600 mx-auto animate-bounce" />
+          <h2 className="text-xl font-bold text-slate-900">Deck Completed!</h2>
+          <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
             You've reviewed all vocabulary cards scheduled for this session. Your retention intervals have been updated.
           </p>
           <div className="pt-2">
@@ -148,7 +148,7 @@ export function VocabularyTrainerView({
                 setCurrentIndex(0);
                 setIsFlipped(false);
               }}
-              className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-750 text-white text-xs font-semibold transition-colors"
+              className="px-5 py-2.5 rounded-xl bg-slate-50 hover:bg-slate-750 text-slate-900 text-xs font-semibold transition-colors"
             >
               Browse All Saved Words
             </button>
@@ -157,13 +157,13 @@ export function VocabularyTrainerView({
       ) : (
         <div className="space-y-4">
           {/* Card Counter & Bookmark */}
-          <div className="flex items-center justify-between text-xs text-slate-400">
+          <div className="flex items-center justify-between text-xs text-slate-500">
             <span className="font-mono">
               Card {currentIndex + 1} of {displayedCards.length}
             </span>
             <div className="flex items-center gap-2">
               {currentCard.is_mastered && (
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 font-medium">
                   ✓ Mastered
                 </span>
               )}
@@ -171,8 +171,8 @@ export function VocabularyTrainerView({
                 onClick={handleToggleBookmark}
                 className={`p-1.5 rounded-lg transition-colors ${
                   currentCard.is_bookmarked
-                    ? 'text-amber-400 bg-amber-500/10'
-                    : 'text-slate-500 hover:text-white'
+                    ? 'text-amber-600 bg-amber-50'
+                    : 'text-slate-500 hover:text-slate-900'
                 }`}
                 title="Bookmark card"
               >
@@ -184,11 +184,11 @@ export function VocabularyTrainerView({
           {/* 3D Flashcard Container */}
           <div
             onClick={() => setIsFlipped(!isFlipped)}
-            className="cursor-pointer min-h-[320px] rounded-3xl bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950/40 border border-slate-800 hover:border-slate-700/80 p-8 flex flex-col justify-between shadow-2xl transition-all relative select-none"
+            className="cursor-pointer min-h-[320px] rounded-3xl surface-hero border border-slate-200 hover:border-slate-200 p-8 flex flex-col justify-between shadow-2xl transition-all relative select-none"
           >
             {/* Top Row: Language Tag & Speaker */}
             <div className="flex items-center justify-between">
-              <span className="text-xs font-mono text-slate-400 flex items-center gap-1.5">
+              <span className="text-xs font-mono text-slate-500 flex items-center gap-1.5">
                 <span>{language.flag_emoji}</span> {language.name} • {currentCard.part_of_speech || 'Vocabulary'}
               </span>
 
@@ -198,7 +198,7 @@ export function VocabularyTrainerView({
                   e.stopPropagation();
                   playSpeech(currentCard.word);
                 }}
-                className="p-2 rounded-xl bg-slate-800 hover:bg-indigo-600 text-slate-300 hover:text-white transition-colors"
+                className="p-2 rounded-xl bg-slate-50 hover:bg-indigo-600 text-slate-700 hover:text-white transition-colors"
                 title="Speak target word"
               >
                 <Volume2 className="w-4 h-4" />
@@ -210,11 +210,11 @@ export function VocabularyTrainerView({
               {!isFlipped ? (
                 // Front: Target Word & Transliteration
                 <div className="space-y-2" dir={language.direction}>
-                  <div className="text-3xl sm:text-4xl font-extrabold text-white tracking-wide">
+                  <div className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-wide">
                     {currentCard.word}
                   </div>
                   {currentCard.transliteration && (
-                    <div className="text-sm font-mono text-indigo-400" dir="ltr">
+                    <div className="text-sm font-mono text-indigo-600" dir="ltr">
                       /{currentCard.transliteration}/
                     </div>
                   )}
@@ -225,14 +225,14 @@ export function VocabularyTrainerView({
               ) : (
                 // Back: Meaning, Example, Breakdown
                 <div className="space-y-3 animate-in fade-in">
-                  <div className="text-2xl font-bold text-emerald-400">{currentCard.translation}</div>
+                  <div className="text-2xl font-bold text-emerald-600">{currentCard.translation}</div>
                   {currentCard.example_sentence && (
-                    <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-800/80 max-w-md mx-auto text-left">
-                      <div className="text-xs font-semibold text-slate-200" dir={language.direction}>
+                    <div className="p-3 rounded-xl bg-white border border-slate-200 max-w-md mx-auto text-left">
+                      <div className="text-xs font-semibold text-slate-800" dir={language.direction}>
                         {currentCard.example_sentence}
                       </div>
                       {currentCard.example_translation && (
-                        <div className="text-[11px] text-slate-400 mt-1 italic">
+                        <div className="text-[11px] text-slate-500 mt-1 italic">
                           "{currentCard.example_translation}"
                         </div>
                       )}
@@ -252,20 +252,20 @@ export function VocabularyTrainerView({
           {/* SM-2 SuperMemo Rating Buttons (Revealed on flip) */}
           {isFlipped && (
             <div className="space-y-2 animate-in fade-in">
-              <div className="text-center text-xs text-slate-400 font-medium">How well did you remember this?</div>
+              <div className="text-center text-xs text-slate-500 font-medium">How well did you remember this?</div>
               <div className="grid grid-cols-4 gap-2">
                 {[
-                  { key: 'AGAIN', label: 'Again', desc: '< 1 day', color: 'border-rose-500/30 hover:bg-rose-950/30 text-rose-400' },
-                  { key: 'HARD', label: 'Hard', desc: '3 days', color: 'border-amber-500/30 hover:bg-amber-950/30 text-amber-400' },
-                  { key: 'GOOD', label: 'Good', desc: '4 days', color: 'border-blue-500/30 hover:bg-blue-950/30 text-blue-400' },
-                  { key: 'EASY', label: 'Easy', desc: '6+ days', color: 'border-emerald-500/30 hover:bg-emerald-950/30 text-emerald-400' },
+                  { key: 'AGAIN', label: 'Again', desc: '< 1 day', color: 'border-rose-200 hover:bg-rose-50 text-rose-600' },
+                  { key: 'HARD', label: 'Hard', desc: '3 days', color: 'border-amber-200 hover:bg-amber-50 text-amber-600' },
+                  { key: 'GOOD', label: 'Good', desc: '4 days', color: 'border-blue-200 hover:bg-blue-50 text-blue-600' },
+                  { key: 'EASY', label: 'Easy', desc: '6+ days', color: 'border-emerald-200 hover:bg-emerald-50 text-emerald-600' },
                 ].map((btn) => (
                   <button
                     key={btn.key}
                     type="button"
                     disabled={isSubmitting}
                     onClick={() => handleReview(btn.key as any)}
-                    className={`p-3 rounded-2xl bg-slate-900 border text-center transition-all ${btn.color} disabled:opacity-50`}
+                    className={`p-3 rounded-2xl bg-white border text-center transition-all ${btn.color} disabled:opacity-50`}
                   >
                     <div className="text-xs font-bold">{btn.label}</div>
                     <div className="text-[10px] text-slate-500 mt-0.5">{btn.desc}</div>

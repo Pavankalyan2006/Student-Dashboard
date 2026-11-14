@@ -74,7 +74,7 @@ export const MockInterviewsPage: React.FC<Props> = ({
   // 1. Report View
   if (viewingReport && activeSessionId) {
     return (
-      <div className="min-h-screen bg-[#F8FAFC]">
+      <div className="min-h-screen bg-slate-50">
         <MockInterviewReportView
           sessionId={activeSessionId}
           onNavigate={(p) => {
@@ -107,7 +107,7 @@ export const MockInterviewsPage: React.FC<Props> = ({
 
   // 3. Master Dashboard
   return (
-    <div className="min-h-screen bg-[#F8FAFC]">
+    <div className="min-h-screen bg-slate-50">
       <MockInterviewDashboard
         onStartNew={handleStartNew}
         onOpenSession={handleOpenSession}

@@ -263,7 +263,7 @@ export const ArchitectureCanvas: React.FC<ArchitectureCanvasProps> = ({
                 refY="4"
                 orient="auto"
               >
-                <polygon points="0 0, 8 4, 0 8" fill="#64748b" />
+                <polygon points="0 0, 8 4, 0 8" fill="#6A7387" />
               </marker>
             </defs>
 
@@ -298,7 +298,7 @@ export const ArchitectureCanvas: React.FC<ArchitectureCanvasProps> = ({
                       x={midX}
                       y={midY - 8}
                       textAnchor="middle"
-                      fill="#64748b"
+                      fill="#6A7387"
                       fontSize="10"
                       fontWeight="600"
                       className="select-none bg-white font-mono"

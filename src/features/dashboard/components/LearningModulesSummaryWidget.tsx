@@ -108,15 +108,15 @@ export function LearningModulesSummaryWidget({ onNavigate }: LearningModulesSumm
   }, []);
 
   return (
-    <div className="p-6 rounded-2xl border border-[#E4E7EC] bg-white shadow-sm space-y-5">
+    <div className="p-6 rounded-2xl border border-slate-200 bg-white shadow-sm space-y-5">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-3">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
             <Sparkles className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-base font-bold text-[#101828]">Integrated AI Learning Modules</h2>
-            <p className="text-xs text-[#475467]">
+            <h2 className="text-base font-bold text-slate-900">Integrated AI Learning Modules</h2>
+            <p className="text-xs text-slate-600">
               Real-time synchronization across your study schedule, practice labs, exams, and career pipeline.
             </p>
           </div>
@@ -137,8 +137,8 @@ export function LearningModulesSummaryWidget({ onNavigate }: LearningModulesSumm
               {data.todayTasksCount} Due
             </span>
           </div>
-          <h4 className="text-xs font-bold text-[#101828]">Today's Study Plan</h4>
-          <p className="text-[11px] text-[#475467]">Daily syllabus tasks</p>
+          <h4 className="text-xs font-bold text-slate-900">Today's Study Plan</h4>
+          <p className="text-[11px] text-slate-600">Daily syllabus tasks</p>
         </div>
 
         {/* 2. Exam Preparation */}
@@ -154,8 +154,8 @@ export function LearningModulesSummaryWidget({ onNavigate }: LearningModulesSumm
               {data.examDaysLeft !== null ? `${data.examDaysLeft}d left` : 'None'}
             </span>
           </div>
-          <h4 className="text-xs font-bold text-[#101828] truncate">{data.upcomingExamTitle || 'No upcoming exam'}</h4>
-          <p className="text-[11px] text-[#475467]">Curriculum readiness</p>
+          <h4 className="text-xs font-bold text-slate-900 truncate">{data.upcomingExamTitle || 'No upcoming exam'}</h4>
+          <p className="text-[11px] text-slate-600">Curriculum readiness</p>
         </div>
 
         {/* 3. Doubt Solver */}
@@ -171,8 +171,8 @@ export function LearningModulesSummaryWidget({ onNavigate }: LearningModulesSumm
               {data.openDoubtsCount} Active
             </span>
           </div>
-          <h4 className="text-xs font-bold text-[#101828]">Doubt Solver</h4>
-          <p className="text-[11px] text-[#475467]">AI conceptual proofs</p>
+          <h4 className="text-xs font-bold text-slate-900">Doubt Solver</h4>
+          <p className="text-[11px] text-slate-600">AI conceptual proofs</p>
         </div>
 
         {/* 4. Flashcards */}
@@ -188,8 +188,8 @@ export function LearningModulesSummaryWidget({ onNavigate }: LearningModulesSumm
               {data.dueFlashcardsCount} Due
             </span>
           </div>
-          <h4 className="text-xs font-bold text-[#101828]">Spaced Revision</h4>
-          <p className="text-[11px] text-[#475467]">Active recall drill</p>
+          <h4 className="text-xs font-bold text-slate-900">Spaced Revision</h4>
+          <p className="text-[11px] text-slate-600">Active recall drill</p>
         </div>
 
         {/* 5. SQL Lab */}
@@ -205,8 +205,8 @@ export function LearningModulesSummaryWidget({ onNavigate }: LearningModulesSumm
               Sandbox Live
             </span>
           </div>
-          <h4 className="text-xs font-bold text-[#101828]">SQL / DB Lab</h4>
-          <p className="text-[11px] text-[#475467]">Query editor & schema</p>
+          <h4 className="text-xs font-bold text-slate-900">SQL / DB Lab</h4>
+          <p className="text-[11px] text-slate-600">Query editor & schema</p>
         </div>
 
         {/* 6. AI/ML Lab */}
@@ -222,8 +222,8 @@ export function LearningModulesSummaryWidget({ onNavigate }: LearningModulesSumm
               {data.activeMLExpCount} Runs
             </span>
           </div>
-          <h4 className="text-xs font-bold text-[#101828]">AI/ML Experiments</h4>
-          <p className="text-[11px] text-[#475467]">Models & metrics</p>
+          <h4 className="text-xs font-bold text-slate-900">AI/ML Experiments</h4>
+          <p className="text-[11px] text-slate-600">Models & metrics</p>
         </div>
 
         {/* 7. System Design Lab */}
@@ -239,8 +239,8 @@ export function LearningModulesSummaryWidget({ onNavigate }: LearningModulesSumm
               Architectures
             </span>
           </div>
-          <h4 className="text-xs font-bold text-[#101828]">System Design Lab</h4>
-          <p className="text-[11px] text-[#475467]">Scale & tradeoffs</p>
+          <h4 className="text-xs font-bold text-slate-900">System Design Lab</h4>
+          <p className="text-[11px] text-slate-600">Scale & tradeoffs</p>
         </div>
 
         {/* 8. Lab Assistant */}
@@ -256,8 +256,8 @@ export function LearningModulesSummaryWidget({ onNavigate }: LearningModulesSumm
               Viva Voce
             </span>
           </div>
-          <h4 className="text-xs font-bold text-[#101828]">Lab Assistant</h4>
-          <p className="text-[11px] text-[#475467]">Exps & observation</p>
+          <h4 className="text-xs font-bold text-slate-900">Lab Assistant</h4>
+          <p className="text-[11px] text-slate-600">Exps & observation</p>
         </div>
 
         {/* 9. Knowledge Base */}
@@ -273,8 +273,8 @@ export function LearningModulesSummaryWidget({ onNavigate }: LearningModulesSumm
               Memory Graph
             </span>
           </div>
-          <h4 className="text-xs font-bold text-[#101828]">Knowledge Base</h4>
-          <p className="text-[11px] text-[#475467]">Semantic notes & docs</p>
+          <h4 className="text-xs font-bold text-slate-900">Knowledge Base</h4>
+          <p className="text-[11px] text-slate-600">Semantic notes & docs</p>
         </div>
 
         {/* 10. Internship Tracker */}
@@ -290,8 +290,8 @@ export function LearningModulesSummaryWidget({ onNavigate }: LearningModulesSumm
               {data.applicationsCount} Tracked
             </span>
           </div>
-          <h4 className="text-xs font-bold text-[#101828]">Internships / Apps</h4>
-          <p className="text-[11px] text-[#475467]">
+          <h4 className="text-xs font-bold text-slate-900">Internships / Apps</h4>
+          <p className="text-[11px] text-slate-600">
             {data.nextDeadlineCompany ? `${data.nextDeadlineCompany}${data.nextDeadlineDays !== null ? ` (${data.nextDeadlineDays}d)` : ''}` : 'No applications yet'}
           </p>
         </div>

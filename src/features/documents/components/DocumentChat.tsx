@@ -73,17 +73,17 @@ export function DocumentChat({
   ];
 
   return (
-    <div className={cn('flex flex-col h-full bg-white border-l border-[#E4E7EC]', className)}>
+    <div className={cn('flex flex-col h-full bg-white border-l border-slate-200', className)}>
       {/* Header with active page context badge */}
-      <div className="p-3 border-b border-[#E4E7EC] bg-slate-50/70 flex items-center justify-between">
+      <div className="p-3 border-b border-slate-200 bg-slate-50/70 flex items-center justify-between">
         <div className="flex items-center gap-2 min-w-0">
           <div className="h-7 w-7 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
             <Sparkles className="h-4 w-4" />
           </div>
           <div className="truncate">
-            <h3 className="text-xs font-bold text-[#101828] truncate">Document AI Assistant</h3>
-            <div className="flex items-center gap-1.5 text-[10px] text-[#667085]">
-              <span className="font-medium text-[#2563EB]">Focus: Page {currentPage}</span>
+            <h3 className="text-xs font-bold text-slate-900 truncate">Document AI Assistant</h3>
+            <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
+              <span className="font-medium text-blue-600">Focus: Page {currentPage}</span>
               {selectedPages.length > 0 && (
                 <span>· ({selectedPages.length} pages focused)</span>
               )}
@@ -124,8 +124,8 @@ export function DocumentChat({
                 className={cn(
                   'rounded-xl p-3 max-w-[92%] leading-relaxed shadow-2xs',
                   isUser
-                    ? 'bg-[#2563EB] text-white rounded-tr-xs'
-                    : 'bg-slate-50 text-[#101828] border border-[#E4E7EC] rounded-tl-xs'
+                    ? 'bg-blue-600 text-white rounded-tr-xs'
+                    : 'bg-slate-50 text-slate-900 border border-slate-200 rounded-tl-xs'
                 )}
               >
                 {/* Content */}
@@ -182,7 +182,7 @@ export function DocumentChat({
 
         {isGenerating && (
           <div className="flex items-center gap-2 text-xs text-slate-500 bg-slate-50 border border-slate-200 p-3 rounded-xl max-w-[80%]">
-            <RefreshCw className="h-3.5 w-3.5 animate-spin text-[#2563EB]" />
+            <RefreshCw className="h-3.5 w-3.5 animate-spin text-blue-600" />
             <span>Searching document and retrieving grounded pages...</span>
           </div>
         )}
@@ -194,7 +194,7 @@ export function DocumentChat({
           <button
             key={i}
             onClick={() => sendMessage(prompt, { currentPage, selectedPages })}
-            className="shrink-0 px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-600 hover:text-[#2563EB] hover:border-blue-300 transition-colors cursor-pointer"
+            className="shrink-0 px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-600 hover:text-blue-600 hover:border-blue-300 transition-colors cursor-pointer"
           >
             {prompt}
           </button>
@@ -202,7 +202,7 @@ export function DocumentChat({
       </div>
 
       {/* Input composer */}
-      <form onSubmit={handleSubmit} className="p-3 border-t border-[#E4E7EC] bg-white">
+      <form onSubmit={handleSubmit} className="p-3 border-t border-slate-200 bg-white">
         <div className="flex items-center gap-2">
           <input
             type="text"
@@ -210,13 +210,13 @@ export function DocumentChat({
             value={input}
             onChange={(e) => setInput(e.target.value)}
             disabled={isGenerating}
-            className="flex-1 px-3 py-2 text-xs rounded-lg border border-[#D0D5DD] bg-white focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]"
+            className="flex-1 px-3 py-2 text-xs rounded-lg border border-slate-300 bg-white focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
           />
           <Button
             type="submit"
             size="sm"
             disabled={!input.trim() || isGenerating}
-            className="h-8 w-8 p-0 bg-[#2563EB] hover:bg-[#1D4ED8] rounded-lg shrink-0"
+            className="h-8 w-8 p-0 bg-blue-600 hover:bg-blue-700 rounded-lg shrink-0"
             aria-label="Send message"
           >
             <Send className="h-3.5 w-3.5" />

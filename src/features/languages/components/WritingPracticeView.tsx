@@ -101,15 +101,15 @@ export function WritingPracticeView({ language, onBack }: WritingPracticeViewPro
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+      <div className="flex items-center justify-between border-b border-slate-200 pb-4">
         <button
           onClick={onBack}
-          className="flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors"
+          className="flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" /> Back to Dashboard
         </button>
-        <div className="text-xs text-slate-400">
-          Practicing in: <strong className="text-white">{language.name}</strong>
+        <div className="text-xs text-slate-500">
+          Practicing in: <strong className="text-slate-900">{language.name}</strong>
         </div>
       </div>
 
@@ -117,12 +117,12 @@ export function WritingPracticeView({ language, onBack }: WritingPracticeViewPro
         {/* Left Column: Editor & Prompts (7 cols) */}
         <div className="lg:col-span-7 space-y-4">
           {/* Prompt Selector */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                <PenTool className="w-3.5 h-3.5 text-emerald-400" /> Writing Assignment
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                <PenTool className="w-3.5 h-3.5 text-emerald-600" /> Writing Assignment
               </span>
-              <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">
+              <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-50 text-emerald-600 border border-emerald-200 font-mono">
                 {currentPrompt.level}
               </span>
             </div>
@@ -131,7 +131,7 @@ export function WritingPracticeView({ language, onBack }: WritingPracticeViewPro
               <select
                 value={selectedPromptType}
                 onChange={(e) => setSelectedPromptType(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-semibold text-white focus:outline-none focus:border-indigo-500"
+                className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-indigo-500"
               >
                 {prompts.map((p) => (
                   <option key={p.key} value={p.key}>
@@ -139,14 +139,14 @@ export function WritingPracticeView({ language, onBack }: WritingPracticeViewPro
                   </option>
                 ))}
               </select>
-              <p className="text-xs text-slate-300 leading-relaxed pt-1">{currentPrompt.prompt}</p>
+              <p className="text-xs text-slate-700 leading-relaxed pt-1">{currentPrompt.prompt}</p>
             </div>
           </div>
 
           {/* Submission Form */}
-          <form onSubmit={handleSubmit} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+          <form onSubmit={handleSubmit} className="bg-white border border-slate-200 rounded-2xl p-5 space-y-3">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-semibold text-slate-400">Your Response in {language.name}:</label>
+              <label className="text-xs font-semibold text-slate-500">Your Response in {language.name}:</label>
               <span className="text-[11px] text-slate-500 font-mono">
                 {studentText.trim().split(/\s+/).filter(Boolean).length} words
               </span>
@@ -157,7 +157,7 @@ export function WritingPracticeView({ language, onBack }: WritingPracticeViewPro
               value={studentText}
               onChange={(e) => setStudentText(e.target.value)}
               placeholder={`Write your sentences in ${language.name}... (e.g. ${language.sample_phrase})`}
-              className="w-full p-4 rounded-xl bg-slate-950/80 border border-slate-700/80 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 leading-relaxed"
+              className="w-full p-4 rounded-xl bg-white border border-slate-200 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 leading-relaxed"
               dir={language.direction}
             />
 
@@ -185,41 +185,41 @@ export function WritingPracticeView({ language, onBack }: WritingPracticeViewPro
         {/* Right Column: AI Feedback Panel (5 cols) */}
         <div className="lg:col-span-5 space-y-4">
           {!activeSubmission ? (
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center space-y-2">
-              <Sparkles className="w-10 h-10 text-indigo-400 mx-auto" />
-              <h4 className="text-sm font-bold text-white">AI Writing Evaluation</h4>
-              <p className="text-xs text-slate-400 leading-relaxed">
+            <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center space-y-2">
+              <Sparkles className="w-10 h-10 text-indigo-600 mx-auto" />
+              <h4 className="text-sm font-bold text-slate-900">AI Writing Evaluation</h4>
+              <p className="text-xs text-slate-500 leading-relaxed">
                 Submit an exercise to see real-time grammar, vocabulary, sentence clarity, and side-by-side corrected text.
               </p>
             </div>
           ) : (
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 animate-in fade-in">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                  <Award className="w-4 h-4 text-emerald-400" /> AI Coach Feedback
+            <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4 animate-in fade-in">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                  <Award className="w-4 h-4 text-emerald-600" /> AI Coach Feedback
                 </span>
-                <span className="text-sm font-extrabold text-emerald-400 font-mono">
+                <span className="text-sm font-extrabold text-emerald-600 font-mono">
                   {activeSubmission.ai_feedback?.overall_score || 88}/100
                 </span>
               </div>
 
               {/* Score Breakdown Cards */}
               <div className="grid grid-cols-3 gap-2 text-center">
-                <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800">
-                  <div className="text-xs text-slate-400">Grammar</div>
-                  <div className="text-sm font-bold text-indigo-400 font-mono mt-0.5">
+                <div className="p-2.5 rounded-xl bg-white border border-slate-200">
+                  <div className="text-xs text-slate-500">Grammar</div>
+                  <div className="text-sm font-bold text-indigo-600 font-mono mt-0.5">
                     {activeSubmission.ai_feedback?.grammar_score || 85}%
                   </div>
                 </div>
-                <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800">
-                  <div className="text-xs text-slate-400">Vocabulary</div>
-                  <div className="text-sm font-bold text-purple-400 font-mono mt-0.5">
+                <div className="p-2.5 rounded-xl bg-white border border-slate-200">
+                  <div className="text-xs text-slate-500">Vocabulary</div>
+                  <div className="text-sm font-bold text-purple-600 font-mono mt-0.5">
                     {activeSubmission.ai_feedback?.vocabulary_score || 90}%
                   </div>
                 </div>
-                <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800">
-                  <div className="text-xs text-slate-400">Clarity</div>
-                  <div className="text-sm font-bold text-emerald-400 font-mono mt-0.5">
+                <div className="p-2.5 rounded-xl bg-white border border-slate-200">
+                  <div className="text-xs text-slate-500">Clarity</div>
+                  <div className="text-sm font-bold text-emerald-600 font-mono mt-0.5">
                     {activeSubmission.ai_feedback?.clarity_score || 88}%
                   </div>
                 </div>
@@ -227,13 +227,13 @@ export function WritingPracticeView({ language, onBack }: WritingPracticeViewPro
 
               {/* Side-by-side / Comparison View */}
               <div className="space-y-2">
-                <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
                   Original vs Improved:
                 </div>
-                <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-800 text-xs text-slate-400 line-through">
+                <div className="p-3 rounded-xl bg-white border border-slate-200 text-xs text-slate-500 line-through">
                   "{activeSubmission.student_text}"
                 </div>
-                <div className="p-3 rounded-xl bg-emerald-950/20 border border-emerald-500/30 text-xs text-emerald-200 font-medium">
+                <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-700 font-medium">
                   "{activeSubmission.ai_feedback?.corrected_text || activeSubmission.student_text}"
                 </div>
               </div>
@@ -241,12 +241,12 @@ export function WritingPracticeView({ language, onBack }: WritingPracticeViewPro
               {/* Key Grammar Points */}
               {activeSubmission.ai_feedback?.grammar_points && (
                 <div className="space-y-1.5 pt-1">
-                  <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                  <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
                     Grammar Insights:
                   </div>
                   {activeSubmission.ai_feedback.grammar_points.map((pt, idx) => (
-                    <div key={idx} className="flex items-start gap-2 text-xs text-slate-300">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-indigo-400 shrink-0 mt-0.5" />
+                    <div key={idx} className="flex items-start gap-2 text-xs text-slate-700">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-indigo-600 shrink-0 mt-0.5" />
                       <span>{pt}</span>
                     </div>
                   ))}
@@ -255,7 +255,7 @@ export function WritingPracticeView({ language, onBack }: WritingPracticeViewPro
 
               {/* Positive Reinforcement */}
               {activeSubmission.ai_feedback?.positive_reinforcement && (
-                <div className="p-3 rounded-xl bg-indigo-950/20 border border-indigo-500/30 text-xs text-indigo-300">
+                <div className="p-3 rounded-xl bg-indigo-50 border border-indigo-200 text-xs text-indigo-700">
                   {activeSubmission.ai_feedback.positive_reinforcement}
                 </div>
               )}

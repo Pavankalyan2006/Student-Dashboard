@@ -71,27 +71,27 @@ export function ContextualTranslatorView({
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+      <div className="flex items-center justify-between border-b border-slate-200 pb-4">
         <button
           onClick={onBack}
-          className="flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors"
+          className="flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" /> Back to Dashboard
         </button>
-        <div className="text-xs text-slate-400">
+        <div className="text-xs text-slate-500">
           Contextual AI Translator • 150 Languages
         </div>
       </div>
 
       {/* Language Selector Controls */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
         {/* Source Language */}
         <div className="w-full sm:w-5/12">
-          <label className="text-[11px] font-semibold text-slate-400 block mb-1">Source Language:</label>
+          <label className="text-[11px] font-semibold text-slate-500 block mb-1">Source Language:</label>
           <select
             value={sourceCode}
             onChange={(e) => setSourceCode(e.target.value)}
-            className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-semibold text-white focus:outline-none focus:border-indigo-500"
+            className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-indigo-500"
           >
             <option value="en">English (English)</option>
             {allLanguages.map((l) => (
@@ -106,7 +106,7 @@ export function ContextualTranslatorView({
         <button
           type="button"
           onClick={handleSwap}
-          className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-300 hover:text-white transition-colors shrink-0"
+          className="p-2.5 rounded-xl bg-slate-50 hover:bg-slate-750 text-slate-700 hover:text-slate-900 transition-colors shrink-0"
           title="Swap source and target"
         >
           <ArrowRightLeft className="w-4 h-4" />
@@ -114,11 +114,11 @@ export function ContextualTranslatorView({
 
         {/* Target Language */}
         <div className="w-full sm:w-5/12">
-          <label className="text-[11px] font-semibold text-slate-400 block mb-1">Target Language:</label>
+          <label className="text-[11px] font-semibold text-slate-500 block mb-1">Target Language:</label>
           <select
             value={targetCode}
             onChange={(e) => setTargetCode(e.target.value)}
-            className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-semibold text-white focus:outline-none focus:border-indigo-500"
+            className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-indigo-500"
           >
             {allLanguages.map((l) => (
               <option key={l.code} value={l.code}>
@@ -131,14 +131,14 @@ export function ContextualTranslatorView({
       </div>
 
       {/* Input Text Box */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
-        <label className="text-xs font-semibold text-slate-400">Enter text or sentence to translate:</label>
+      <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-3">
+        <label className="text-xs font-semibold text-slate-500">Enter text or sentence to translate:</label>
         <textarea
           rows={3}
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
           placeholder="Type phrase, idiom, or conversation snippet..."
-          className="w-full p-3.5 rounded-xl bg-slate-950/80 border border-slate-700 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+          className="w-full p-3.5 rounded-xl bg-white border border-slate-200 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500"
         />
 
         <div className="flex items-center justify-between pt-1">
@@ -160,23 +160,23 @@ export function ContextualTranslatorView({
         <div className="space-y-4 animate-in fade-in">
           {/* Main Primary Translation */}
           <div
-            className="bg-gradient-to-br from-indigo-950/60 via-slate-900 to-slate-900 border border-indigo-800/40 rounded-2xl p-6 relative"
+            className="surface-hero border border-indigo-200 rounded-2xl p-6 relative"
             dir={targetLang.direction}
           >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <div className="text-2xl font-bold text-white leading-relaxed">
+                <div className="text-2xl font-bold text-slate-900 leading-relaxed">
                   {result.primary_translation}
                 </div>
                 {result.transliteration && (
-                  <div className="text-xs text-indigo-400 font-mono mt-1" dir="ltr">
+                  <div className="text-xs text-indigo-600 font-mono mt-1" dir="ltr">
                     /{result.transliteration}/
                   </div>
                 )}
               </div>
               <button
                 onClick={() => playSpeech(result.primary_translation)}
-                className="p-2.5 rounded-xl bg-indigo-600/30 text-indigo-300 hover:bg-indigo-600 hover:text-white transition-colors shrink-0"
+                className="p-2.5 rounded-xl bg-indigo-100 text-indigo-300 hover:bg-indigo-600 hover:text-white transition-colors shrink-0"
                 title="Speak translation"
                 dir="ltr"
               >
@@ -189,21 +189,21 @@ export function ContextualTranslatorView({
           {(result.formal_variant || result.informal_variant) && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {result.formal_variant && (
-                <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
-                  <div className="text-[11px] font-semibold text-indigo-400 uppercase tracking-wider mb-1">
+                <div className="p-3.5 rounded-xl bg-white border border-slate-200">
+                  <div className="text-[11px] font-semibold text-indigo-600 uppercase tracking-wider mb-1">
                     Formal / Respectful Address:
                   </div>
-                  <div className="text-xs text-white font-medium" dir={targetLang.direction}>
+                  <div className="text-xs text-slate-900 font-medium" dir={targetLang.direction}>
                     {result.formal_variant}
                   </div>
                 </div>
               )}
               {result.informal_variant && (
-                <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
-                  <div className="text-[11px] font-semibold text-purple-400 uppercase tracking-wider mb-1">
+                <div className="p-3.5 rounded-xl bg-white border border-slate-200">
+                  <div className="text-[11px] font-semibold text-purple-600 uppercase tracking-wider mb-1">
                     Informal / Casual Peer Address:
                   </div>
-                  <div className="text-xs text-white font-medium" dir={targetLang.direction}>
+                  <div className="text-xs text-slate-900 font-medium" dir={targetLang.direction}>
                     {result.informal_variant}
                   </div>
                 </div>
@@ -213,15 +213,15 @@ export function ContextualTranslatorView({
 
           {/* Morphological Word Breakdown */}
           {result.word_breakdown && result.word_breakdown.length > 0 && (
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
-              <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+            <div className="bg-white border border-slate-200 rounded-2xl p-5">
+              <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
                 Word-by-Word Breakdown
               </h4>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
                 {result.word_breakdown.map((item, i) => (
-                  <div key={i} className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80">
-                    <div className="text-xs font-bold text-white">{item.word}</div>
-                    <div className="text-[11px] text-indigo-300 mt-0.5">{item.meaning}</div>
+                  <div key={i} className="p-2.5 rounded-xl bg-white border border-slate-200">
+                    <div className="text-xs font-bold text-slate-900">{item.word}</div>
+                    <div className="text-[11px] text-indigo-700 mt-0.5">{item.meaning}</div>
                     {item.pos && <div className="text-[10px] text-slate-500 font-mono mt-0.5">{item.pos}</div>}
                   </div>
                 ))}
@@ -232,20 +232,20 @@ export function ContextualTranslatorView({
           {/* Grammar & Context Warnings */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {result.grammar_explanation && (
-              <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-                <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                  <BookOpen className="w-3.5 h-3.5 text-indigo-400" /> Grammatical Structure
+              <div className="p-4 rounded-xl bg-white border border-slate-200">
+                <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                  <BookOpen className="w-3.5 h-3.5 text-indigo-600" /> Grammatical Structure
                 </div>
-                <p className="text-xs text-slate-300 leading-relaxed">{result.grammar_explanation}</p>
+                <p className="text-xs text-slate-700 leading-relaxed">{result.grammar_explanation}</p>
               </div>
             )}
 
             {result.contextual_warning && (
-              <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-                <div className="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                  <AlertTriangle className="w-3.5 h-3.5 text-amber-400" /> Cultural Nuance & Idioms
+              <div className="p-4 rounded-xl bg-white border border-slate-200">
+                <div className="text-xs font-semibold text-amber-600 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-600" /> Cultural Nuance & Idioms
                 </div>
-                <p className="text-xs text-slate-300 leading-relaxed">{result.contextual_warning}</p>
+                <p className="text-xs text-slate-700 leading-relaxed">{result.contextual_warning}</p>
               </div>
             )}
           </div>

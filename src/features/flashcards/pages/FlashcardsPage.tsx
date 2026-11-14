@@ -274,7 +274,7 @@ export function FlashcardsPage({ onNavigate }: FlashcardsPageProps) {
 
         {/* Filter Tabs & Controls */}
         <div className="space-y-3">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-[#E4E7EC] pb-2">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-200 pb-2">
             {/* Filter Tabs */}
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
               {(
@@ -293,8 +293,8 @@ export function FlashcardsPage({ onNavigate }: FlashcardsPageProps) {
                   onClick={() => setActiveTab(tab.id)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
                     activeTab === tab.id
-                      ? 'bg-[#2563EB] text-white shadow-sm'
-                      : 'text-[#475467] hover:bg-gray-100'
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'text-slate-600 hover:bg-gray-100'
                   }`}
                 >
                   {tab.label}
@@ -310,13 +310,13 @@ export function FlashcardsPage({ onNavigate }: FlashcardsPageProps) {
             {/* Subject and Sort Dropdowns */}
             <div className="flex items-center gap-2 flex-wrap">
               {/* Subject Filter */}
-              <div className="flex items-center gap-1.5 text-xs text-[#344054]">
+              <div className="flex items-center gap-1.5 text-xs text-slate-700">
                 <Filter className="w-3.5 h-3.5 text-gray-400" />
                 <select
                   aria-label="Filter by subject"
                   value={selectedSubject}
                   onChange={(e) => setSelectedSubject(e.target.value)}
-                  className="px-2.5 py-1.5 text-xs rounded-xl border border-[#D0D5DD] bg-white text-[#344054] focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="px-2.5 py-1.5 text-xs rounded-xl border border-slate-300 bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
                   <option value="all">All Subjects</option>
                   {uniqueSubjects.map((sub) => (
@@ -328,13 +328,13 @@ export function FlashcardsPage({ onNavigate }: FlashcardsPageProps) {
               </div>
 
               {/* Sort Dropdown */}
-              <div className="flex items-center gap-1.5 text-xs text-[#344054]">
+              <div className="flex items-center gap-1.5 text-xs text-slate-700">
                 <ArrowUpDown className="w-3.5 h-3.5 text-gray-400" />
                 <select
                   aria-label="Sort decks"
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as any)}
-                  className="px-2.5 py-1.5 text-xs rounded-xl border border-[#D0D5DD] bg-white text-[#344054] focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="px-2.5 py-1.5 text-xs rounded-xl border border-slate-300 bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
                   <option value="recent">Recently Studied</option>
                   <option value="title">Deck Title A-Z</option>
@@ -345,7 +345,7 @@ export function FlashcardsPage({ onNavigate }: FlashcardsPageProps) {
             </div>
           </div>
 
-          <div className="flex items-center justify-between text-xs text-[#667085]">
+          <div className="flex items-center justify-between text-xs text-slate-500">
             <span>
               Showing {decks.length} {decks.length === 1 ? 'deck' : 'decks'}
               {searchQuery && ` matching "${searchQuery}"`}
@@ -357,7 +357,7 @@ export function FlashcardsPage({ onNavigate }: FlashcardsPageProps) {
         {loading && decks.length === 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 animate-pulse">
             {[...Array(6)].map((_, idx) => (
-              <div key={idx} className="p-6 rounded-2xl border border-[#E4E7EC] bg-white h-60" />
+              <div key={idx} className="p-6 rounded-2xl border border-slate-200 bg-white h-60" />
             ))}
           </div>
         ) : decks.length > 0 ? (
@@ -379,13 +379,13 @@ export function FlashcardsPage({ onNavigate }: FlashcardsPageProps) {
           </div>
         ) : (
           /* Empty State */
-          <div className="p-12 text-center rounded-3xl border-2 border-dashed border-[#E4E7EC] bg-white space-y-4 max-w-xl mx-auto my-8">
+          <div className="p-12 text-center rounded-3xl border-2 border-dashed border-slate-200 bg-white space-y-4 max-w-xl mx-auto my-8">
             <div className="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto shadow-sm">
               <Layers className="w-8 h-8" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-[#101828]">No Flashcard Decks Found</h3>
-              <p className="text-xs text-[#667085] mt-1 max-w-md mx-auto leading-relaxed">
+              <h3 className="text-lg font-bold text-slate-900">No Flashcard Decks Found</h3>
+              <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto leading-relaxed">
                 {searchQuery
                   ? `No decks or active recall cards matched "${searchQuery}". Try clearing search or filter constraints.`
                   : activeTab === 'ARCHIVED'
@@ -405,7 +405,7 @@ export function FlashcardsPage({ onNavigate }: FlashcardsPageProps) {
                   setCreateDefaultTab('ai');
                   setCreateModalOpen(true);
                 }}
-                className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs gap-1.5"
+                className="bg-blue-600 hover:bg-blue-700 text-white text-xs gap-1.5"
               >
                 <Sparkles className="w-3.5 h-3.5" />
                 Generate with AI

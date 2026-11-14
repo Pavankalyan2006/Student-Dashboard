@@ -63,17 +63,17 @@ export function ProfileActivityPage({ onNavigate }: { onNavigate: (path: string)
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E4E7EC] pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
         <div className="flex items-center gap-3">
           <button
             onClick={() => onNavigate('/profile')}
-            className="p-2 text-[#475467] hover:text-[#101828] hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+            className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div>
-            <h1 className="text-xl font-bold text-[#101828]">Learning History & Activity Log</h1>
-            <p className="text-xs text-[#667085]">
+            <h1 className="text-xl font-bold text-slate-900">Learning History & Activity Log</h1>
+            <p className="text-xs text-slate-500">
               Chronological log of verified courses, coding problems, quizzes, and research milestones.
             </p>
           </div>
@@ -81,7 +81,7 @@ export function ProfileActivityPage({ onNavigate }: { onNavigate: (path: string)
 
         <button
           onClick={loadActivities}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#475467] hover:text-[#101828] bg-white border border-[#E4E7EC] rounded-lg transition-colors cursor-pointer self-start sm:self-auto"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-lg transition-colors cursor-pointer self-start sm:self-auto"
         >
           <RefreshCw className="h-3.5 w-3.5" />
           <span>Refresh</span>
@@ -98,7 +98,7 @@ export function ProfileActivityPage({ onNavigate }: { onNavigate: (path: string)
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search activities by title or keyword..."
-            className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-[#D0D5DD] bg-white focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+            className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-600"
           />
         </div>
 
@@ -108,7 +108,7 @@ export function ProfileActivityPage({ onNavigate }: { onNavigate: (path: string)
           <select
             value={selectedType}
             onChange={(e) => setSelectedType(e.target.value)}
-            className="px-3 py-2 text-xs rounded-xl border border-[#D0D5DD] bg-white focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+            className="px-3 py-2 text-xs rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-600"
           >
             <option value="ALL">All Activity Types</option>
             <option value="COURSE_LESSON_COMPLETED">Course Lessons</option>
@@ -124,14 +124,14 @@ export function ProfileActivityPage({ onNavigate }: { onNavigate: (path: string)
       </div>
 
       {/* Activities List */}
-      <div className="bg-white rounded-2xl border border-[#E4E7EC] overflow-hidden shadow-2xs">
+      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-2xs">
         {loading ? (
-          <div className="p-8 text-center text-xs text-[#667085] space-y-2">
-            <RefreshCw className="h-5 w-5 animate-spin mx-auto text-[#2563EB]" />
+          <div className="p-8 text-center text-xs text-slate-500 space-y-2">
+            <RefreshCw className="h-5 w-5 animate-spin mx-auto text-blue-600" />
             <p>Loading activity history...</p>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="p-12 text-center text-xs text-[#667085]">
+          <div className="p-12 text-center text-xs text-slate-500">
             <Activity className="h-8 w-8 mx-auto text-slate-300 mb-2" />
             <p className="font-semibold text-slate-700">No activity recorded yet</p>
             <p className="text-[11px] text-slate-500 mt-1">
@@ -151,8 +151,8 @@ export function ProfileActivityPage({ onNavigate }: { onNavigate: (path: string)
 
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                    <h4 className="text-xs font-semibold text-[#101828] truncate">{item.title}</h4>
-                    <span className="text-[10px] text-[#98A2B3] tabular-nums shrink-0">
+                    <h4 className="text-xs font-semibold text-slate-900 truncate">{item.title}</h4>
+                    <span className="text-[10px] text-slate-400 tabular-nums shrink-0">
                       {new Date(item.created_at).toLocaleDateString([], {
                         month: 'short',
                         day: 'numeric',
@@ -164,10 +164,10 @@ export function ProfileActivityPage({ onNavigate }: { onNavigate: (path: string)
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2 mt-1.5">
-                    <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-slate-100 text-[#475467] font-medium">
+                    <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-medium">
                       {item.activity_type.replace(/_/g, ' ')}
                     </span>
-                    <span className="text-[10px] text-[#667085]">
+                    <span className="text-[10px] text-slate-500">
                       Entity: <span className="font-mono text-slate-700">{item.entity_type}</span>
                     </span>
                   </div>

@@ -72,17 +72,17 @@ export function DocumentSummaryPanel({
   };
 
   return (
-    <div className={cn('flex flex-col h-full bg-white border-l border-[#E4E7EC]', className)}>
+    <div className={cn('flex flex-col h-full bg-white border-l border-slate-200', className)}>
       {/* Panel Header */}
-      <div className="p-4 border-b border-[#E4E7EC] bg-slate-50/70">
+      <div className="p-4 border-b border-slate-200 bg-slate-50/70">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <div className="h-7 w-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
               <FileText className="h-4 w-4" />
             </div>
             <div>
-              <h3 className="text-xs font-bold text-[#101828]">Curriculum Summary</h3>
-              <p className="text-[10px] text-[#667085]">Structured AI Synthesis</p>
+              <h3 className="text-xs font-bold text-slate-900">Curriculum Summary</h3>
+              <p className="text-[10px] text-slate-500">Structured AI Synthesis</p>
             </div>
           </div>
 
@@ -90,7 +90,7 @@ export function DocumentSummaryPanel({
             size="sm"
             onClick={handleGenerate}
             disabled={isGenerating}
-            className="h-7 text-xs gap-1.5 bg-[#2563EB] hover:bg-[#1D4ED8]"
+            className="h-7 text-xs gap-1.5 bg-blue-600 hover:bg-blue-700"
           >
             {isGenerating ? (
               <RefreshCw className="h-3 w-3 animate-spin" />
@@ -161,7 +161,7 @@ export function DocumentSummaryPanel({
       <div className="flex-1 overflow-y-auto p-4 space-y-4 text-xs">
         {isLoading || isGenerating ? (
           <div className="flex flex-col items-center justify-center h-64 text-center">
-            <RefreshCw className="h-6 w-6 animate-spin text-[#2563EB] mb-2" />
+            <RefreshCw className="h-6 w-6 animate-spin text-blue-600 mb-2" />
             <p className="font-semibold text-slate-800">Synthesizing Document...</p>
             <p className="text-[11px] text-slate-500 mt-0.5">
               Extracting key concepts, formulas, and high-yield exam takeaways.
@@ -181,7 +181,7 @@ export function DocumentSummaryPanel({
             {summary.key_concepts && summary.key_concepts.length > 0 && (
               <div>
                 <h4 className="text-[11px] font-bold text-slate-900 uppercase tracking-wider mb-2 flex items-center gap-1">
-                  <CheckCircle className="h-3.5 w-3.5 text-[#2563EB]" />
+                  <CheckCircle className="h-3.5 w-3.5 text-blue-600" />
                   <span>Key Concepts</span>
                 </h4>
                 <ul className="space-y-1.5 pl-2 border-l-2 border-slate-200">
@@ -249,7 +249,7 @@ export function DocumentSummaryPanel({
                 disabled={isExportingNote}
                 className="w-full gap-1.5 border-slate-300 text-slate-800 hover:bg-slate-50"
               >
-                <FilePenLine className="h-3.5 w-3.5 text-[#2563EB]" />
+                <FilePenLine className="h-3.5 w-3.5 text-blue-600" />
                 <span>
                   {isExportingNote ? 'Saving to Notes...' : 'Save Summary to My Notes'}
                 </span>

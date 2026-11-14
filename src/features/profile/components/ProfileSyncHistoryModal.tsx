@@ -53,24 +53,24 @@ export const ProfileSyncHistoryModal: React.FC<ProfileSyncHistoryModalProps> = (
   if (!isOpen || !profile) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fadeIn">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl max-h-[85vh] shadow-2xl overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-50 backdrop-blur-sm animate-fadeIn">
+      <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-2xl max-h-[85vh] shadow-2xl overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/60">
+        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-white">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-slate-800 text-slate-300 border border-slate-700">
+            <div className="p-2 rounded-xl bg-slate-50 text-slate-700 border border-slate-200">
               <History className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-white text-base">Synchronization Audit Logs</h3>
-              <p className="text-xs text-slate-400">
+              <h3 className="font-bold text-slate-900 text-base">Synchronization Audit Logs</h3>
+              <p className="text-xs text-slate-500">
                 {profile.platform_name} (@{profile.username})
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -78,57 +78,57 @@ export const ProfileSyncHistoryModal: React.FC<ProfileSyncHistoryModalProps> = (
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
-          <div className="p-3 rounded-xl bg-slate-800/40 border border-slate-800 text-xs text-slate-300 flex items-start gap-2">
-            <Info className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 flex items-start gap-2">
+            <Info className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
             <p>
               Sync logs record every automated and on-demand synchronization attempt. Transparent reporting confirms what data was ingested and records any rate-limiting or network issues honestly.
             </p>
           </div>
 
           {isLoading ? (
-            <div className="py-12 flex flex-col items-center justify-center text-slate-400 text-xs gap-2">
-              <RefreshCw className="w-5 h-5 animate-spin text-indigo-400" />
+            <div className="py-12 flex flex-col items-center justify-center text-slate-500 text-xs gap-2">
+              <RefreshCw className="w-5 h-5 animate-spin text-indigo-600" />
               <span>Loading sync records...</span>
             </div>
           ) : history.length === 0 ? (
-            <div className="py-12 text-center text-slate-400 text-xs">
+            <div className="py-12 text-center text-slate-500 text-xs">
               <Clock className="w-8 h-8 text-slate-600 mx-auto mb-2" />
               <p>No synchronization runs recorded yet for this profile.</p>
-              <p className="text-slate-400 mt-1">Click "Sync" on the profile card to trigger the first sync.</p>
+              <p className="text-slate-500 mt-1">Click "Sync" on the profile card to trigger the first sync.</p>
             </div>
           ) : (
             <div className="space-y-3">
               {history.map((run) => (
                 <div
                   key={run.id}
-                  className="p-3.5 rounded-xl bg-slate-800/50 border border-slate-700/60 text-xs space-y-2"
+                  className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-2"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       {run.status === 'SUCCESS' && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-600 border border-emerald-200">
                           <CheckCircle2 className="w-3 h-3" />
                           Success
                         </span>
                       )}
                       {run.status === 'SKIPPED' && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-500/10 text-sky-400 border border-sky-500/30">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-50 text-sky-600 border border-sky-200">
                           <Info className="w-3 h-3" />
                           Manual Link Preserved
                         </span>
                       )}
                       {run.status === 'FAILED' && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/30">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-50 text-rose-600 border border-rose-200">
                           <AlertTriangle className="w-3 h-3" />
                           Failed
                         </span>
                       )}
-                      <span className="text-slate-400 font-mono text-[11px]">
+                      <span className="text-slate-500 font-mono text-[11px]">
                         {new Date(run.completed_at).toLocaleString()}
                       </span>
                     </div>
 
-                    <span className="text-[11px] text-slate-400">
+                    <span className="text-[11px] text-slate-500">
                       {run.records_updated} fields updated
                     </span>
                   </div>
@@ -138,7 +138,7 @@ export const ProfileSyncHistoryModal: React.FC<ProfileSyncHistoryModalProps> = (
                       {run.fields_updated.map((field) => (
                         <span
                           key={field}
-                          className="px-2 py-0.5 rounded bg-slate-700/60 text-[10px] text-slate-300 font-mono"
+                          className="px-2 py-0.5 rounded bg-slate-100 text-[10px] text-slate-700 font-mono"
                         >
                           {field}
                         </span>
@@ -147,7 +147,7 @@ export const ProfileSyncHistoryModal: React.FC<ProfileSyncHistoryModalProps> = (
                   )}
 
                   {run.error_message && (
-                    <p className="text-[11px] text-amber-300/90 italic pt-1 border-t border-slate-700/50">
+                    <p className="text-[11px] text-amber-300/90 italic pt-1 border-t border-slate-200">
                       {run.error_message}
                     </p>
                   )}
@@ -158,10 +158,10 @@ export const ProfileSyncHistoryModal: React.FC<ProfileSyncHistoryModalProps> = (
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-3.5 border-t border-slate-800 bg-slate-950/60 flex items-center justify-end">
+        <div className="px-6 py-3.5 border-t border-slate-200 bg-white flex items-center justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-colors"
+            className="px-4 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold transition-colors"
           >
             Close
           </button>

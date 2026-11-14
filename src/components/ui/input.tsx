@@ -18,19 +18,19 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
         <input
           type={type}
           className={cn(
-            'flex h-9 w-full rounded-lg border border-[#E4E7EC] bg-white px-3 py-1 text-sm text-[#101828] shadow-2xs transition-colors',
+            'flex h-9 w-full rounded-lg border border-slate-200 bg-white px-3 py-1 text-sm text-slate-900 shadow-2xs transition-colors',
             'file:border-0 file:bg-transparent file:text-sm file:font-medium',
-            'placeholder:text-[#98A2B3]',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:border-transparent',
+            'placeholder:text-slate-400',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:border-transparent',
             'disabled:cursor-not-allowed disabled:opacity-50',
             icon && 'pl-9',
-            error && 'border-[#DC2626] focus-visible:ring-[#DC2626]',
+            error && 'border-red-600 focus-visible:ring-red-600',
             className
           )}
           ref={ref}
           {...props}
         />
-        {error && <p className="mt-1 text-xs text-[#DC2626]">{error}</p>}
+        {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
       </div>
     );
   }
@@ -47,17 +47,17 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
       <div className="w-full">
         <textarea
           className={cn(
-            'flex min-h-[80px] w-full rounded-lg border border-[#E4E7EC] bg-white px-3 py-2 text-sm text-[#101828] shadow-2xs transition-colors',
-            'placeholder:text-[#98A2B3]',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:border-transparent',
+            'flex min-h-[80px] w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-2xs transition-colors',
+            'placeholder:text-slate-400',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:border-transparent',
             'disabled:cursor-not-allowed disabled:opacity-50',
-            error && 'border-[#DC2626] focus-visible:ring-[#DC2626]',
+            error && 'border-red-600 focus-visible:ring-red-600',
             className
           )}
           ref={ref}
           {...props}
         />
-        {error && <p className="mt-1 text-xs text-[#DC2626]">{error}</p>}
+        {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
       </div>
     );
   }

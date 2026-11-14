@@ -23,7 +23,7 @@ export const FlashcardHeader: React.FC<FlashcardHeaderProps> = ({
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl md:text-3xl font-extrabold text-[#101828] tracking-tight">
+            <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
               AI Flashcards
             </h1>
             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
@@ -31,7 +31,7 @@ export const FlashcardHeader: React.FC<FlashcardHeaderProps> = ({
               SM-2 Spaced Repetition
             </span>
           </div>
-          <p className="text-sm text-[#475467] mt-1">
+          <p className="text-sm text-slate-600 mt-1">
             Learn faster with active recall, curriculum-aligned decks, and personalized revision schedules.
           </p>
         </div>
@@ -52,7 +52,7 @@ export const FlashcardHeader: React.FC<FlashcardHeaderProps> = ({
             onClick={() => onCreateOpen('manual')}
             variant="outline"
             size="sm"
-            className="gap-1.5 text-xs font-semibold text-[#344054] border-[#D0D5DD] hover:bg-gray-50"
+            className="gap-1.5 text-xs font-semibold text-slate-700 border-slate-300 hover:bg-gray-50"
           >
             <Plus className="w-3.5 h-3.5" />
             Create Flashcards
@@ -62,7 +62,7 @@ export const FlashcardHeader: React.FC<FlashcardHeaderProps> = ({
             onClick={onStartReviewDue}
             disabled={dueCardsCount === 0}
             size="sm"
-            className="gap-1.5 text-xs font-semibold bg-[#2563EB] hover:bg-[#1D4ED8] text-white shadow-sm disabled:opacity-50"
+            className="gap-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-sm disabled:opacity-50"
           >
             <Play className="w-3.5 h-3.5 fill-current" />
             Start Review {dueCardsCount > 0 ? `(${dueCardsCount} Due)` : ''}
@@ -72,14 +72,14 @@ export const FlashcardHeader: React.FC<FlashcardHeaderProps> = ({
 
       {/* Search Input */}
       <div className="relative">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#667085]" />
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           aria-label="Search decks and cards"
           placeholder="Search decks, questions, answers, syllabus topics, or tags..."
-          className="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border border-[#D0D5DD] bg-white placeholder-[#667085] text-[#101828] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm"
+          className="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border border-slate-300 bg-white placeholder-slate-500 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm"
         />
         {searchQuery && (
           <button

@@ -672,7 +672,7 @@ class DatabaseStore {
         id: 'notif_1',
         student_id: defaultStudent.id,
         title: 'B.Tech AI Learning Workspace Ready',
-        message: 'Welcome to Phase 1 foundation. Explore the unified navigation, search, and AI assistant infrastructure.',
+        message: 'Welcome to your workspace. Explore the navigation, global search (Ctrl+K) and the AI tutor.',
         type: 'ai',
         is_read: false,
         link: '/dashboard',

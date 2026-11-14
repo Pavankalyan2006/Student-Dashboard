@@ -40,40 +40,40 @@ export function ProfileEditPage({ onNavigate }: { onNavigate: (path: string) => 
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-6">
-      <div className="flex items-center gap-3 border-b border-[#E4E7EC] pb-4">
+      <div className="flex items-center gap-3 border-b border-slate-200 pb-4">
         <button
           onClick={() => onNavigate('/profile')}
           aria-label="Back to profile"
-          className="p-2 text-[#475467] hover:text-[#101828] hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+          className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div>
-          <h1 className="text-xl font-semibold text-[#101828]">Edit profile</h1>
-          <p className="text-sm text-[#475467]">Changes here update your dashboard, tutor, recommendations and planner.</p>
+          <h1 className="text-xl font-semibold text-slate-900">Edit profile</h1>
+          <p className="text-sm text-slate-600">Changes here update your dashboard, tutor, recommendations and planner.</p>
         </div>
       </div>
 
       <ProfileManager />
 
-      <section className="rounded-xl border border-[#E4E7EC] bg-white p-5 space-y-3">
-        <h2 className="text-sm font-semibold text-[#101828]">Community bio</h2>
-        <p className="text-xs text-[#475467]">Shown on your public community profile when your privacy settings allow it.</p>
+      <section className="rounded-xl border border-slate-200 bg-white p-5 space-y-3">
+        <h2 className="text-sm font-semibold text-slate-900">Community bio</h2>
+        <p className="text-xs text-slate-600">Shown on your public community profile when your privacy settings allow it.</p>
         <textarea
           value={bio}
           onChange={(e) => setBio(e.target.value)}
           disabled={!loaded}
           rows={4}
           maxLength={500}
-          className="w-full rounded-lg border border-[#D0D5DD] px-3 py-2 text-sm"
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
           placeholder="A short introduction for other students"
         />
         <div className="flex items-center justify-between">
-          <span className="text-xs text-[#667085]">{bio.length}/500</span>
+          <span className="text-xs text-slate-500">{bio.length}/500</span>
           <button
             onClick={saveBio}
             disabled={saving || !loaded}
-            className="inline-flex items-center gap-2 rounded-lg bg-[#1570EF] px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
           >
             <Save className="h-4 w-4" /> {saving ? 'Saving…' : 'Save bio'}
           </button>

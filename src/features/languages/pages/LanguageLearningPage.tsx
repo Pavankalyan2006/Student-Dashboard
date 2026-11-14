@@ -200,7 +200,7 @@ export function LanguageLearningPage() {
       />
 
       {/* Top Navigation Tabs Bar */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-2 border-b border-slate-800 no-scrollbar mb-6">
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-2 border-b border-slate-200 no-scrollbar mb-6">
         {[
           { key: 'dashboard', label: 'Dashboard', icon: Globe },
           { key: 'explore', label: 'Explore 150+ Languages', icon: Plus },
@@ -225,7 +225,7 @@ export function LanguageLearningPage() {
               className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
                 isActive
                   ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
+                  : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
               }`}
             >
               <Icon className="w-3.5 h-3.5" />

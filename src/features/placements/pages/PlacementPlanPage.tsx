@@ -178,7 +178,7 @@ export const PlacementPlanPage: React.FC<Props> = ({ onNavigate }) => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F9FC] p-6 lg:p-10">
+    <div className="min-h-screen bg-slate-50 p-6 lg:p-10">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Navigation & Header */}
         <div>
@@ -191,7 +191,7 @@ export const PlacementPlanPage: React.FC<Props> = ({ onNavigate }) => {
           </button>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-extrabold text-[#0B1530] tracking-tight">
+              <h1 className="text-3xl font-extrabold text-navy-900 tracking-tight">
                 Personalized Placement Roadmap
               </h1>
               <p className="text-gray-600 mt-1">

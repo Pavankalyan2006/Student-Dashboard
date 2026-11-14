@@ -197,7 +197,7 @@ export function AddCourseModal({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-6">
         <DialogHeader>
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center text-[#2563EB]">
+            <div className="h-8 w-8 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600">
               <BookOpen className="h-4 w-4" />
             </div>
             <div>
@@ -263,7 +263,7 @@ export function AddCourseModal({
                   >
                     <div className="min-w-0 space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="font-mono font-bold text-[#2563EB] bg-blue-50 px-1.5 py-0.5 rounded text-[10px] border border-blue-100">
+                        <span className="font-mono font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded text-[10px] border border-blue-100">
                           {sub.code}
                         </span>
                         <h4 className="font-bold text-slate-900 truncate">{sub.name}</h4>

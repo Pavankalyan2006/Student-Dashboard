@@ -5,23 +5,23 @@ import { Card, CardHeader, CardTitle, CardContent } from '../../../components/ui
 
 export function Strengths({ strengths }: { strengths: SkillArea[] }) {
   return (
-    <Card className="border border-[#E4E7EC] bg-white flex flex-col justify-between">
+    <Card className="border border-slate-200 bg-white flex flex-col justify-between">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 text-emerald-600" />
-            <CardTitle className="text-sm font-bold text-[#101828]">Mastered Strengths</CardTitle>
+            <CardTitle className="text-sm font-bold text-slate-900">Mastered Strengths</CardTitle>
           </div>
           <span className="text-[10px] uppercase font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
             High Confidence
           </span>
         </div>
-        <p className="text-xs text-[#667085]">Consistent high scoring across assessments</p>
+        <p className="text-xs text-slate-500">Consistent high scoring across assessments</p>
       </CardHeader>
 
       <CardContent className="space-y-3">
         {strengths.length === 0 ? (
-          <div className="py-6 text-center text-xs text-[#667085]">
+          <div className="py-6 text-center text-xs text-slate-500">
             No verified strengths yet. Continue coursework to establish proficiency.
           </div>
         ) : (
@@ -37,7 +37,7 @@ export function Strengths({ strengths }: { strengths: SkillArea[] }) {
                   style={{ width: `${item.score}%` }}
                 />
               </div>
-              <div className="flex items-center justify-between pt-0.5 text-[10px] text-[#667085]">
+              <div className="flex items-center justify-between pt-0.5 text-[10px] text-slate-500">
                 <span>{item.subject}</span>
                 <span className="text-emerald-700 font-medium">Verified</span>
               </div>

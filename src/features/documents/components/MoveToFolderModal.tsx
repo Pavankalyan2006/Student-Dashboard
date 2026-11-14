@@ -103,7 +103,7 @@ export function MoveToFolderModal({
                 <div className="flex items-center gap-2.5">
                   <div
                     className="h-7 w-7 rounded-lg flex items-center justify-center text-white"
-                    style={{ backgroundColor: f.color || '#2563EB' }}
+                    style={{ backgroundColor: f.color || '#4654E0' }}
                   >
                     <Folder className="h-3.5 w-3.5" />
                   </div>

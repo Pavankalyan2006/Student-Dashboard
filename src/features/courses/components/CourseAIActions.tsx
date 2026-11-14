@@ -154,11 +154,11 @@ export function CourseAIActions({
   ];
 
   return (
-    <div className="flex flex-col h-full bg-white border-l border-[#E4E7EC] p-4 space-y-4 text-xs overflow-y-auto">
+    <div className="flex flex-col h-full bg-white border-l border-slate-200 p-4 space-y-4 text-xs overflow-y-auto">
       {/* Header */}
       <div className="flex items-center justify-between pb-3 border-b border-slate-100">
         <div className="flex items-center gap-2">
-          <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br from-[#2563EB] to-[#4F46E5] text-white">
+          <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 text-white">
             <Sparkles className="h-3.5 w-3.5" />
           </div>
           <div>
@@ -183,7 +183,7 @@ export function CourseAIActions({
           }}
           className="p-2 rounded-lg border border-slate-200 hover:border-blue-400 hover:bg-blue-50/40 text-left transition-colors flex items-center gap-1.5 text-[11px] font-semibold text-slate-700 cursor-pointer"
         >
-          <Code2 className="h-3.5 w-3.5 text-[#2563EB]" />
+          <Code2 className="h-3.5 w-3.5 text-blue-600" />
           <span>Coding Lab</span>
         </button>
 
@@ -207,7 +207,7 @@ export function CourseAIActions({
       {/* Loading state */}
       {isLoading && (
         <div className="p-6 text-center space-y-2 border border-blue-200 rounded-xl bg-blue-50/50">
-          <RefreshCw className="h-5 w-5 animate-spin mx-auto text-[#2563EB]" />
+          <RefreshCw className="h-5 w-5 animate-spin mx-auto text-blue-600" />
           <p className="font-bold text-blue-900 text-xs">Consulting AI Assistant...</p>
           <p className="text-[10px] text-blue-600">
             Calibrating response with {courseTitle} syllabus context
@@ -220,7 +220,7 @@ export function CourseAIActions({
         <div className="space-y-3 p-3.5 rounded-xl border border-blue-200 bg-blue-50/30">
           <div className="flex items-center justify-between border-b border-blue-200/60 pb-2">
             <span className="font-bold text-blue-950 capitalize flex items-center gap-1">
-              <Sparkles className="h-3.5 w-3.5 text-[#2563EB]" />
+              <Sparkles className="h-3.5 w-3.5 text-blue-600" />
               <span>{activeResult.action.replace(/_/g, ' ')}</span>
             </span>
 
@@ -275,7 +275,7 @@ export function CourseAIActions({
             variant="outline"
             size="sm"
             onClick={() => handleOpenInFullAgent(activeResult.action)}
-            className="w-full text-[11px] gap-1 text-[#2563EB]"
+            className="w-full text-[11px] gap-1 text-blue-600"
           >
             <span>Continue in Full AI Agent</span>
             <ExternalLink className="h-3 w-3" />
@@ -300,11 +300,11 @@ export function CourseAIActions({
               className="w-full p-2.5 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-slate-50 transition-all text-left space-y-0.5 cursor-pointer group shadow-2xs"
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5 font-bold text-slate-800 group-hover:text-[#2563EB] transition-colors text-[11px]">
+                <div className="flex items-center gap-1.5 font-bold text-slate-800 group-hover:text-blue-600 transition-colors text-[11px]">
                   <Icon className="h-3.5 w-3.5 text-blue-600" />
                   <span>{act.label}</span>
                 </div>
-                <ArrowRight className="h-3 w-3 text-slate-300 group-hover:text-[#2563EB] group-hover:translate-x-0.5 transition-transform" />
+                <ArrowRight className="h-3 w-3 text-slate-300 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-transform" />
               </div>
               <p className="text-[10px] text-slate-500 leading-snug line-clamp-1">{act.desc}</p>
             </button>

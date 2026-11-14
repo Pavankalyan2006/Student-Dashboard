@@ -45,7 +45,7 @@ export function DocumentUploadPage({ onNavigate }: DocumentUploadPageProps) {
         {/* Feature Cards / Information */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
           <div className="p-4 rounded-xl border border-slate-200 bg-white shadow-2xs">
-            <div className="h-8 w-8 rounded-lg bg-blue-50 text-[#2563EB] flex items-center justify-center mb-2">
+            <div className="h-8 w-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mb-2">
               <Zap className="h-4 w-4" />
             </div>
             <h4 className="text-xs font-bold text-slate-900">Text indexing</h4>

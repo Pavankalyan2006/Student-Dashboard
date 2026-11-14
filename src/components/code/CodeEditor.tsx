@@ -32,11 +32,11 @@ export function CodeEditor({
   const lines = value.split('\n');
 
   return (
-    <div className={cn('rounded-xl border border-slate-800 bg-[#0B1530] text-slate-100 overflow-hidden shadow-md', className)}>
+    <div className={cn('rounded-xl border border-slate-800 bg-navy-900 text-slate-100 overflow-hidden shadow-md', className)}>
       {/* Editor topbar */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-slate-800 bg-[#081024] text-xs">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-slate-800 bg-navy-950 text-xs">
         <div className="flex items-center gap-2">
-          <Code className="h-4 w-4 text-[#2563EB]" />
+          <Code className="h-4 w-4 text-blue-600" />
           <span className="font-mono text-slate-300">{filename}</span>
           <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">
             {language}

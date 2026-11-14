@@ -19,8 +19,26 @@ interface UiState {
   setAiInitialPrompt: (prompt: string) => void;
 }
 
+const COLLAPSE_KEY = 'btech.sidebarCollapsed';
+
+function readCollapsed(): boolean {
+  try {
+    return typeof window !== 'undefined' && window.localStorage.getItem(COLLAPSE_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function writeCollapsed(value: boolean) {
+  try {
+    window.localStorage.setItem(COLLAPSE_KEY, value ? '1' : '0');
+  } catch {
+    /* storage unavailable: the choice lasts for this session only */
+  }
+}
+
 export const useUiStore = create<UiState>((set) => ({
-  sidebarCollapsed: false,
+  sidebarCollapsed: readCollapsed(),
   mobileDrawerOpen: false,
   globalSearchOpen: false,
   searchInitialQuery: '',
@@ -28,8 +46,15 @@ export const useUiStore = create<UiState>((set) => ({
   activeWorkspaceTab: 'overview',
   aiInitialPrompt: '',
 
-  toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
-  setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
+  toggleSidebar: () =>
+    set((state) => {
+      writeCollapsed(!state.sidebarCollapsed);
+      return { sidebarCollapsed: !state.sidebarCollapsed };
+    }),
+  setSidebarCollapsed: (collapsed) => {
+    writeCollapsed(collapsed);
+    set({ sidebarCollapsed: collapsed });
+  },
   setMobileDrawerOpen: (open) => set({ mobileDrawerOpen: open }),
   setGlobalSearchOpen: (open, initialQuery = '') =>
     set({ globalSearchOpen: open, searchInitialQuery: initialQuery }),

@@ -26,7 +26,7 @@ const ALL_PAGES = [
   '/exams', '/interviews', '/assessment/gate-preparation', '/projects', '/github', '/research', '/knowledge', '/career',
   '/resume', '/mock-interviews', '/applications', '/placement', '/integrations', '/profile/external', '/career/jobs',
   '/community', '/community/questions', '/community/discussions', '/community/resources', '/progress', '/goals',
-  '/profile', '/profile/edit', '/notifications', '/profile/settings', '/settings', '/sandbox', '/pilot-feedback',
+  '/profile', '/profile/edit', '/notifications', '/profile/settings', '/settings', '/sandbox',
 ];
 const PAGES = process.env.PAGES ? process.env.PAGES.split(',') : ALL_PAGES;
 const DANGER = /log ?out|sign ?out|delete (my )?account|deactivate|close account|erase all|delete all my/i;

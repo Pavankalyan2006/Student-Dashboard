@@ -122,7 +122,7 @@ export const CareerDashboardPage: React.FC<CareerDashboardPageProps> = ({ onNavi
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
       {/* 1. Header Banner with 8 Quick-Navigation Anchors */}
-      <div className="p-6 rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950 text-white shadow-sm border border-slate-800 space-y-4">
+      <div className="p-6 rounded-2xl hero-brand text-white shadow-sm border border-slate-800 space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-xl bg-purple-600/30 border border-purple-500/40 text-purple-300">

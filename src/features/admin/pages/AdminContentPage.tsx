@@ -111,7 +111,7 @@ export function AdminContentPage() {
       </div>
 
       {/* Search Bar */}
-      <div className="p-4 rounded-2xl bg-[#0D1836] border border-[#1A284D] flex items-center gap-3">
+      <div className="p-4 rounded-2xl bg-navy-900 border border-navy-700 flex items-center gap-3">
         <Search className="h-4 w-4 text-slate-400" />
         <input
           type="text"
@@ -133,7 +133,7 @@ export function AdminContentPage() {
           {filteredCourses.map((c) => (
             <div
               key={c.id}
-              className="p-5 rounded-2xl bg-[#0D1836] border border-[#1A284D] hover:border-amber-500/40 transition-all flex flex-col justify-between"
+              className="p-5 rounded-2xl bg-navy-900 border border-navy-700 hover:border-amber-500/40 transition-all flex flex-col justify-between"
             >
               <div>
                 <div className="flex items-center justify-between gap-2 mb-2">
@@ -150,7 +150,7 @@ export function AdminContentPage() {
                 </p>
               </div>
 
-              <div className="pt-3 border-t border-[#182649] flex items-center justify-between text-[11px] text-slate-400">
+              <div className="pt-3 border-t border-navy-700 flex items-center justify-between text-[11px] text-slate-400">
                 <span className="flex items-center gap-1">
                   <GraduationCap className="h-3.5 w-3.5 text-amber-400" />
                   Sem {c.semester}
@@ -169,7 +169,7 @@ export function AdminContentPage() {
       {/* Create Course Modal */}
       {createDialogOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="max-w-lg w-full bg-[#0D1836] border border-[#1A284D] rounded-2xl p-6 shadow-2xl space-y-4">
+          <div className="max-w-lg w-full bg-navy-900 border border-navy-700 rounded-2xl p-6 shadow-2xl space-y-4">
             <h3 className="text-base font-bold text-white">Create Academic Course</h3>
             <p className="text-xs text-slate-400">
               Add a new course curriculum module to the platform catalog.
@@ -184,7 +184,7 @@ export function AdminContentPage() {
                   placeholder="e.g. Distributed Consensus & Cloud Storage"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full mt-1 p-2.5 rounded-xl bg-[#081024] border border-[#1E2E55] text-white focus:outline-none focus:border-amber-500"
+                  className="w-full mt-1 p-2.5 rounded-xl bg-navy-950 border border-navy-700 text-white focus:outline-none focus:border-amber-500"
                 />
               </div>
 
@@ -197,7 +197,7 @@ export function AdminContentPage() {
                     placeholder="e.g. CS602"
                     value={formData.code}
                     onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                    className="w-full mt-1 p-2.5 rounded-xl bg-[#081024] border border-[#1E2E55] text-white focus:outline-none focus:border-amber-500"
+                    className="w-full mt-1 p-2.5 rounded-xl bg-navy-950 border border-navy-700 text-white focus:outline-none focus:border-amber-500"
                   />
                 </div>
                 <div>
@@ -205,7 +205,7 @@ export function AdminContentPage() {
                   <select
                     value={formData.semester}
                     onChange={(e) => setFormData({ ...formData, semester: parseInt(e.target.value, 10) })}
-                    className="w-full mt-1 p-2.5 rounded-xl bg-[#081024] border border-[#1E2E55] text-white focus:outline-none focus:border-amber-500"
+                    className="w-full mt-1 p-2.5 rounded-xl bg-navy-950 border border-navy-700 text-white focus:outline-none focus:border-amber-500"
                   >
                     {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
                       <option key={s} value={s}>Semester {s}</option>
@@ -220,7 +220,7 @@ export function AdminContentPage() {
                   type="text"
                   value={formData.branch}
                   onChange={(e) => setFormData({ ...formData, branch: e.target.value })}
-                  className="w-full mt-1 p-2.5 rounded-xl bg-[#081024] border border-[#1E2E55] text-white focus:outline-none focus:border-amber-500"
+                  className="w-full mt-1 p-2.5 rounded-xl bg-navy-950 border border-navy-700 text-white focus:outline-none focus:border-amber-500"
                 />
               </div>
 
@@ -231,7 +231,7 @@ export function AdminContentPage() {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Overview of syllabus, theoretical foundations, and lab assignments..."
-                  className="w-full mt-1 p-2.5 rounded-xl bg-[#081024] border border-[#1E2E55] text-white focus:outline-none focus:border-amber-500"
+                  className="w-full mt-1 p-2.5 rounded-xl bg-navy-950 border border-navy-700 text-white focus:outline-none focus:border-amber-500"
                 />
               </div>
 
@@ -239,7 +239,7 @@ export function AdminContentPage() {
                 <button
                   type="button"
                   onClick={() => setCreateDialogOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-[#14234B] text-slate-300 hover:text-white"
+                  className="px-4 py-2 rounded-xl bg-navy-800 text-slate-300 hover:text-white"
                 >
                   Cancel
                 </button>

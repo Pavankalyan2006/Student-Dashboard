@@ -194,7 +194,7 @@ export const GitHubDashboardPage: React.FC<GitHubDashboardPageProps> = ({ onNavi
   return (
     <div className="min-h-screen bg-slate-50 p-6 md:p-8 space-y-8">
       {/* Hero Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 p-8 text-white shadow-2xl">
+      <div className="relative overflow-hidden rounded-3xl hero-brand p-8 text-white">
         <div className="relative z-10 max-w-4xl space-y-4">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-500/20 text-indigo-200 text-xs font-semibold border border-indigo-400/30">
             <FolderGit2 className="w-4 h-4 text-indigo-400" />
@@ -987,7 +987,7 @@ export const GitHubDashboardPage: React.FC<GitHubDashboardPageProps> = ({ onNavi
       {isConnectModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
           <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
-            <div className="p-6 bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between">
+            <div className="p-6 hero-brand text-white flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-indigo-300">
                   <FolderGit2 className="w-5 h-5" />

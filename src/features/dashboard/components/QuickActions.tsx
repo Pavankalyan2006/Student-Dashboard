@@ -24,11 +24,11 @@ export function QuickActions({ onNavigate }: { onNavigate: (path: string) => voi
             onClick={() => onNavigate(act.path)}
             className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold shrink-0 cursor-pointer transition-all shadow-2xs border ${
               act.isAi
-                ? 'bg-gradient-to-r from-[#2563EB] to-[#4F46E5] text-white border-transparent hover:opacity-95'
-                : 'bg-white text-slate-800 border-[#E4E7EC] hover:bg-slate-50 hover:border-slate-300'
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-transparent hover:opacity-95'
+                : 'bg-white text-slate-800 border-slate-200 hover:bg-slate-50 hover:border-slate-300'
             }`}
           >
-            <Icon className={`h-3.5 w-3.5 ${act.isAi ? 'text-white' : 'text-[#2563EB]'}`} />
+            <Icon className={`h-3.5 w-3.5 ${act.isAi ? 'text-white' : 'text-blue-600'}`} />
             <span>{act.label}</span>
           </button>
         );

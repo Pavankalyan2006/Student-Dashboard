@@ -17,7 +17,7 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({
   const template = templateOverride || resume.template || 'TECHNICAL';
   const customConfig = resume.custom_template_config;
   const isCustom = template === 'CUSTOM_UPLOADED' && Boolean(customConfig);
-  const accentColor = isCustom ? (customConfig?.styling.accent_color || '#1E40AF') : undefined;
+  const accentColor = isCustom ? (customConfig?.styling.accent_color || '#2F389E') : undefined;
 
   // Section order
   const order = resume.section_order || [

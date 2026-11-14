@@ -225,7 +225,7 @@ export const KnowledgeBasePage: React.FC<KnowledgeBasePageProps> = ({ onNavigate
   const isOnboarding = stats?.is_onboarding ?? (documents.length === 0 && collections.length === 0);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-4 sm:p-6 lg:p-8 space-y-6">
+    <div className="min-h-screen bg-white text-slate-900 p-4 sm:p-6 lg:p-8 space-y-6">
       {/* 1. Header with Stats & KPI Cards */}
       <KnowledgeDashboardHeader
         stats={stats}
@@ -244,13 +244,13 @@ export const KnowledgeBasePage: React.FC<KnowledgeBasePageProps> = ({ onNavigate
       />
 
       {/* 2. Top-level Tab Bar */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-1.5 flex items-center gap-1 overflow-x-auto shadow-md">
+      <div className="bg-white border border-slate-200 rounded-2xl p-1.5 flex items-center gap-1 overflow-x-auto shadow-md">
         <button
           onClick={() => switchTab('OVERVIEW')}
           className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
             activeTab === 'OVERVIEW'
               ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800'
+              : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
           }`}
         >
           <BookOpen className="w-3.5 h-3.5" />
@@ -262,7 +262,7 @@ export const KnowledgeBasePage: React.FC<KnowledgeBasePageProps> = ({ onNavigate
           className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
             activeTab === 'COLLECTIONS'
               ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800'
+              : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
           }`}
         >
           <Folder className="w-3.5 h-3.5" />
@@ -274,7 +274,7 @@ export const KnowledgeBasePage: React.FC<KnowledgeBasePageProps> = ({ onNavigate
           className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
             activeTab === 'DOCUMENTS'
               ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800'
+              : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
           }`}
         >
           <FileText className="w-3.5 h-3.5" />
@@ -286,7 +286,7 @@ export const KnowledgeBasePage: React.FC<KnowledgeBasePageProps> = ({ onNavigate
           className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
             activeTab === 'SEARCH'
               ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800'
+              : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
           }`}
         >
           <Search className="w-3.5 h-3.5" />
@@ -298,7 +298,7 @@ export const KnowledgeBasePage: React.FC<KnowledgeBasePageProps> = ({ onNavigate
           className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
             activeTab === 'QA'
               ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800'
+              : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
           }`}
         >
           <HelpCircle className="w-3.5 h-3.5" />
@@ -310,7 +310,7 @@ export const KnowledgeBasePage: React.FC<KnowledgeBasePageProps> = ({ onNavigate
           className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
             activeTab === 'STUDY_MATERIALS'
               ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800'
+              : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
           }`}
         >
           <Sparkles className="w-3.5 h-3.5" />
@@ -322,7 +322,7 @@ export const KnowledgeBasePage: React.FC<KnowledgeBasePageProps> = ({ onNavigate
           className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
             activeTab === 'BOOKMARKS'
               ? 'bg-amber-600 text-white shadow-md shadow-amber-600/20'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800'
+              : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
           }`}
         >
           <Bookmark className="w-3.5 h-3.5" />
@@ -334,7 +334,7 @@ export const KnowledgeBasePage: React.FC<KnowledgeBasePageProps> = ({ onNavigate
           className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
             activeTab === 'RESOURCES'
               ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800'
+              : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
           }`}
         >
           <Link className="w-3.5 h-3.5" />
@@ -362,13 +362,13 @@ export const KnowledgeBasePage: React.FC<KnowledgeBasePageProps> = ({ onNavigate
                 {/* Left 2 Cols: Collections Grid */}
                 <div className="lg:col-span-2 space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-base font-bold text-white flex items-center gap-2">
-                      <Folder className="w-4 h-4 text-indigo-400" />
+                    <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                      <Folder className="w-4 h-4 text-indigo-600" />
                       <span>Subject Folders & Collections</span>
                     </h3>
                     <button
                       onClick={() => switchTab('COLLECTIONS')}
-                      className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold flex items-center gap-1"
+                      className="text-xs text-indigo-600 hover:text-indigo-700 font-semibold flex items-center gap-1"
                     >
                       <span>View All ({collections.length})</span>
                       <ArrowRight className="w-3 h-3" />
@@ -397,12 +397,12 @@ export const KnowledgeBasePage: React.FC<KnowledgeBasePageProps> = ({ onNavigate
                 {/* Right 1 Col: Quick Feature Shortcuts & Recent Documents */}
                 <div className="space-y-4">
                   {/* AI Quick Prompts Card */}
-                  <div className="bg-gradient-to-br from-indigo-950/60 to-slate-900 border border-indigo-500/20 rounded-2xl p-5 shadow-lg space-y-3">
-                    <div className="flex items-center gap-2 text-indigo-300">
+                  <div className="surface-hero border border-indigo-200 rounded-2xl p-5 shadow-lg space-y-3">
+                    <div className="flex items-center gap-2 text-indigo-700">
                       <Sparkles className="w-4 h-4" />
                       <h4 className="text-sm font-bold">Ask AI Academic Tutor</h4>
                     </div>
-                    <p className="text-xs text-slate-300 leading-relaxed">
+                    <p className="text-xs text-slate-700 leading-relaxed">
                       Have a doubt in your syllabus? Ask questions grounded in your uploaded lecture slides and reference books.
                     </p>
                     <button
@@ -414,12 +414,12 @@ export const KnowledgeBasePage: React.FC<KnowledgeBasePageProps> = ({ onNavigate
                   </div>
 
                   {/* Study Deck Generator Card */}
-                  <div className="bg-gradient-to-br from-purple-950/60 to-slate-900 border border-purple-500/20 rounded-2xl p-5 shadow-lg space-y-3">
-                    <div className="flex items-center gap-2 text-purple-300">
+                  <div className="surface-hero border border-purple-200 rounded-2xl p-5 shadow-lg space-y-3">
+                    <div className="flex items-center gap-2 text-purple-700">
                       <BookOpen className="w-4 h-4" />
                       <h4 className="text-sm font-bold">Active Recall Flashcards</h4>
                     </div>
-                    <p className="text-xs text-slate-300 leading-relaxed">
+                    <p className="text-xs text-slate-700 leading-relaxed">
                       Turn dense textbooks and exam papers into spaced-repetition flashcard sets and interactive practice quizzes.
                     </p>
                     <button
@@ -435,13 +435,13 @@ export const KnowledgeBasePage: React.FC<KnowledgeBasePageProps> = ({ onNavigate
               {/* Recent Documents Section */}
               <div className="pt-2">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-base font-bold text-white flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-indigo-400" />
+                  <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-indigo-600" />
                     <span>Recent Academic Documents</span>
                   </h3>
                   <button
                     onClick={() => switchTab('DOCUMENTS')}
-                    className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold flex items-center gap-1"
+                    className="text-xs text-indigo-600 hover:text-indigo-700 font-semibold flex items-center gap-1"
                   >
                     <span>View All ({documents.length})</span>
                     <ArrowRight className="w-3 h-3" />
@@ -476,8 +476,8 @@ export const KnowledgeBasePage: React.FC<KnowledgeBasePageProps> = ({ onNavigate
               {stats?.course_knowledge_bases && stats.course_knowledge_bases.length > 0 && (
                 <div className="pt-2">
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-base font-bold text-white flex items-center gap-2">
-                      <BookOpen className="w-4 h-4 text-emerald-400" />
+                    <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                      <BookOpen className="w-4 h-4 text-emerald-600" />
                       <span>Course Knowledge Bases</span>
                     </h3>
                     <span className="text-xs text-slate-500">
@@ -492,20 +492,20 @@ export const KnowledgeBasePage: React.FC<KnowledgeBasePageProps> = ({ onNavigate
                           if (ckb.collection_id) setSelectedCollectionId(ckb.collection_id);
                           switchTab('DOCUMENTS');
                         }}
-                        className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 hover:border-emerald-500/40 cursor-pointer transition group"
+                        className="p-4 rounded-xl bg-white border border-slate-200 hover:border-emerald-200 cursor-pointer transition group"
                       >
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs font-bold text-emerald-400">{ckb.code || 'COURSE'}</span>
-                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-400">
+                          <span className="text-xs font-bold text-emerald-600">{ckb.code || 'COURSE'}</span>
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-50 text-slate-500">
                             {ckb.docCount} document{ckb.docCount === 1 ? '' : 's'}
                           </span>
                         </div>
-                        <h4 className="text-sm font-semibold text-white group-hover:text-emerald-300 transition truncate">
+                        <h4 className="text-sm font-semibold text-slate-900 group-hover:text-emerald-700 transition truncate">
                           {ckb.title}
                         </h4>
-                        <div className="flex items-center justify-between mt-3 text-xs text-slate-400">
+                        <div className="flex items-center justify-between mt-3 text-xs text-slate-500">
                           <span>{ckb.collectionCount} collection{ckb.collectionCount === 1 ? '' : 's'}</span>
-                          <span className="text-emerald-400 group-hover:translate-x-1 transition flex items-center gap-0.5">
+                          <span className="text-emerald-600 group-hover:translate-x-1 transition flex items-center gap-0.5">
                             Browse &rarr;
                           </span>
                         </div>
@@ -517,32 +517,32 @@ export const KnowledgeBasePage: React.FC<KnowledgeBasePageProps> = ({ onNavigate
 
               {/* Processing Queue & Document Status */}
               {stats?.processing_queue && stats.processing_queue.length > 0 && (
-                <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-md">
+                <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-md">
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-amber-400" />
+                    <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-amber-600" />
                       <span>Document Processing & Vector Ingestion Queue</span>
                     </h3>
-                    <span className="text-xs text-amber-400 font-semibold">{stats.processing_queue.length} Tasks</span>
+                    <span className="text-xs text-amber-600 font-semibold">{stats.processing_queue.length} Tasks</span>
                   </div>
                   <div className="space-y-2">
                     {stats.processing_queue.map((q) => (
                       <div
                         key={q.id}
-                        className="flex items-center justify-between p-3 rounded-xl bg-slate-800/60 border border-slate-700/60 text-xs"
+                        className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs"
                       >
                         <div className="flex items-center gap-2.5 truncate">
-                          <FileText className="w-4 h-4 text-indigo-400 shrink-0" />
-                          <span className="text-white font-medium truncate">{q.title || q.original_filename}</span>
+                          <FileText className="w-4 h-4 text-indigo-600 shrink-0" />
+                          <span className="text-slate-900 font-medium truncate">{q.title || q.original_filename}</span>
                         </div>
                         <div className="flex items-center gap-3 shrink-0">
                           <span
                             className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
                               q.status === 'PROCESSING'
-                                ? 'bg-indigo-500/10 text-indigo-400 animate-pulse border border-indigo-500/20'
+                                ? 'bg-indigo-50 text-indigo-600 animate-pulse border border-indigo-200'
                                 : q.status === 'FAILED'
-                                ? 'bg-red-500/10 text-red-400 border border-red-500/20'
-                                : 'bg-slate-700 text-slate-300'
+                                ? 'bg-red-50 text-red-600 border border-red-200'
+                                : 'bg-slate-100 text-slate-700'
                             }`}
                           >
                             {q.status}
@@ -562,13 +562,13 @@ export const KnowledgeBasePage: React.FC<KnowledgeBasePageProps> = ({ onNavigate
                 {/* Left: Recent External Resources */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-base font-bold text-white flex items-center gap-2">
-                      <Link className="w-4 h-4 text-cyan-400" />
+                    <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                      <Link className="w-4 h-4 text-cyan-600" />
                       <span>Recently Saved Academic Resources</span>
                     </h3>
                     <button
                       onClick={() => switchTab('RESOURCES')}
-                      className="text-xs text-cyan-400 hover:text-cyan-300 font-semibold flex items-center gap-1"
+                      className="text-xs text-cyan-600 hover:text-cyan-700 font-semibold flex items-center gap-1"
                     >
                       <span>View All ({resources.length})</span>
                       <ArrowRight className="w-3 h-3" />
@@ -579,18 +579,18 @@ export const KnowledgeBasePage: React.FC<KnowledgeBasePageProps> = ({ onNavigate
                       {stats.recent_resources.map((r) => (
                         <div
                           key={r.id}
-                          className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between gap-3 text-xs"
+                          className="p-3.5 rounded-xl bg-white border border-slate-200 flex items-center justify-between gap-3 text-xs"
                         >
                           <div className="truncate flex-1">
-                            <h5 className="font-semibold text-white truncate">{r.title}</h5>
-                            <span className="text-[11px] text-slate-400">{r.type} • {r.description || 'General'}</span>
+                            <h5 className="font-semibold text-slate-900 truncate">{r.title}</h5>
+                            <span className="text-[11px] text-slate-500">{r.type} • {r.description || 'General'}</span>
                           </div>
                           {r.url && (
                             <a
                               href={r.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-xs text-indigo-400 hover:text-indigo-300 shrink-0 font-medium"
+                              className="text-xs text-indigo-600 hover:text-indigo-700 shrink-0 font-medium"
                             >
                               Open Link &rarr;
                             </a>
@@ -599,7 +599,7 @@ export const KnowledgeBasePage: React.FC<KnowledgeBasePageProps> = ({ onNavigate
                       ))}
                     </div>
                   ) : (
-                    <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 text-center text-xs text-slate-500">
+                    <div className="p-4 rounded-xl bg-white border border-slate-200 text-center text-xs text-slate-500">
                       No external URLs saved yet. Click "Add Resource" to save lecture videos or documentation.
                     </div>
                   )}
@@ -608,13 +608,13 @@ export const KnowledgeBasePage: React.FC<KnowledgeBasePageProps> = ({ onNavigate
                 {/* Right: Recent Questions & Next Actions */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-base font-bold text-white flex items-center gap-2">
-                      <MessageSquare className="w-4 h-4 text-purple-400" />
+                    <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                      <MessageSquare className="w-4 h-4 text-purple-600" />
                       <span>Recent AI Inquiries & Suggestions</span>
                     </h3>
                     <button
                       onClick={() => switchTab('QA')}
-                      className="text-xs text-purple-400 hover:text-purple-300 font-semibold flex items-center gap-1"
+                      className="text-xs text-purple-600 hover:text-purple-700 font-semibold flex items-center gap-1"
                     >
                       <span>Open Tutor &rarr;</span>
                     </button>
@@ -626,24 +626,24 @@ export const KnowledgeBasePage: React.FC<KnowledgeBasePageProps> = ({ onNavigate
                         <div
                           key={q.id}
                           onClick={() => handleTriggerAskAi(undefined, q.question)}
-                          className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-purple-500/40 cursor-pointer transition flex items-center justify-between gap-3 text-xs group"
+                          className="p-3.5 rounded-xl bg-white border border-slate-200 hover:border-purple-200 cursor-pointer transition flex items-center justify-between gap-3 text-xs group"
                         >
-                          <span className="text-slate-300 group-hover:text-white font-medium truncate flex-1">
+                          <span className="text-slate-700 group-hover:text-slate-900 font-medium truncate flex-1">
                             "{q.question}"
                           </span>
-                          <span className="text-[10px] text-purple-400 shrink-0">
+                          <span className="text-[10px] text-purple-600 shrink-0">
                             Ask Again &rarr;
                           </span>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2">
-                      <div className="flex items-center gap-2 text-indigo-400 text-xs font-semibold">
+                    <div className="p-4 rounded-xl bg-white border border-slate-200 space-y-2">
+                      <div className="flex items-center gap-2 text-indigo-600 text-xs font-semibold">
                         <Lightbulb className="w-4 h-4" />
                         <span>Suggested Academic Actions</span>
                       </div>
-                      <ul className="text-xs text-slate-400 space-y-1.5 list-disc list-inside">
+                      <ul className="text-xs text-slate-500 space-y-1.5 list-disc list-inside">
                         <li>Upload your semester lecture notes (PDF, DOCX, Code)</li>
                         <li>Organize notes into course collections like DBMS or OS</li>
                         <li>Ask AI to synthesize complex topics with real page citations</li>
@@ -727,18 +727,18 @@ export const KnowledgeBasePage: React.FC<KnowledgeBasePageProps> = ({ onNavigate
 
       {/* TAB 6: FLASHCARDS & STUDY MATERIALS */}
       {activeTab === 'STUDY_MATERIALS' && (
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 text-center max-w-xl mx-auto space-y-4">
-          <div className="w-12 h-12 rounded-2xl bg-purple-500/10 text-purple-400 flex items-center justify-center mx-auto">
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 text-center max-w-xl mx-auto space-y-4">
+          <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center mx-auto">
             <Sparkles className="w-6 h-6" />
           </div>
-          <h3 className="text-lg font-bold text-white">Generate Flashcard Decks & Practice Quizzes</h3>
-          <p className="text-xs text-slate-400 leading-relaxed">
+          <h3 className="text-lg font-bold text-slate-900">Generate Flashcard Decks & Practice Quizzes</h3>
+          <p className="text-xs text-slate-500 leading-relaxed">
             Select any uploaded document to automatically generate structured revision flashcards,
             multiple-choice quizzes with explanations, executive summaries, or formula cheat sheets.
           </p>
           <button
             onClick={() => handleTriggerStudyMaterial()}
-            className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white text-xs font-semibold rounded-xl transition shadow-lg shadow-purple-600/25"
+            className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 text-white text-xs font-semibold rounded-xl transition shadow-lg shadow-purple-600/25"
           >
             Launch Study Deck Generator
           </button>

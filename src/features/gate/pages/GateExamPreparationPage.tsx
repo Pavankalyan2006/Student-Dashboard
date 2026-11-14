@@ -257,40 +257,40 @@ export const GateExamPreparationPage: React.FC<GateExamPreparationPageProps> = (
   const bookmarkedSet = new Set(bookmarks.map((b) => b.question_id));
 
   return (
-    <div className="min-h-screen bg-[#0A0D14] text-slate-100 flex flex-col">
+    <div className="min-h-screen bg-white text-slate-900 flex flex-col">
       {/* Top Breadcrumb & Page Header */}
-      <header className="border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-md sticky top-0 z-20">
+      <header className="border-b border-slate-200 bg-white backdrop-blur-md sticky top-0 z-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3">
           {/* Breadcrumb & Title */}
           <div className="space-y-1">
-            <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
               <span
                 onClick={() => onNavigate && onNavigate('/dashboard')}
-                className="hover:text-slate-200 cursor-pointer transition-colors"
+                className="hover:text-slate-800 cursor-pointer transition-colors"
               >
                 Dashboard
               </span>
               <ChevronRight className="w-3.5 h-3.5 text-slate-600" />
-              <span className="text-slate-400">Assessment</span>
+              <span className="text-slate-500">Assessment</span>
               <ChevronRight className="w-3.5 h-3.5 text-slate-600" />
-              <span className="text-indigo-400 font-semibold flex items-center gap-1">
+              <span className="text-indigo-600 font-semibold flex items-center gap-1">
                 <GraduationCap className="w-3.5 h-3.5" />
                 GATE Exam Preparation
               </span>
             </div>
             <div className="flex items-center gap-3">
-              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
+              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 flex items-center gap-2">
                 GATE Exam Preparation
               </h1>
               {profile && (
                 <button
                   onClick={() => setIsPaperSelectorOpen(true)}
-                  className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 hover:bg-indigo-500/30 transition-all flex items-center gap-1.5"
+                  className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 transition-all flex items-center gap-1.5"
                   title="Click to change target paper"
                 >
                   <BookOpen className="w-3 h-3" />
                   GATE {profile.target_paper} ({profile.exam_cycle})
-                  <span className="text-[10px] text-indigo-400 underline ml-0.5">Change</span>
+                  <span className="text-[10px] text-indigo-600 underline ml-0.5">Change</span>
                 </button>
               )}
             </div>
@@ -305,16 +305,16 @@ export const GateExamPreparationPage: React.FC<GateExamPreparationPageProps> = (
               }}
               variant="outline"
               size="sm"
-              className="bg-indigo-600/10 border-indigo-500/40 text-indigo-300 hover:bg-indigo-600/25 flex items-center gap-1.5 text-xs font-semibold"
+              className="bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100 flex items-center gap-1.5 text-xs font-semibold"
             >
-              <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+              <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
               Ask GateGuru AI
             </Button>
             <Button
               onClick={() => setIsPaperSelectorOpen(true)}
               variant="outline"
               size="sm"
-              className="bg-slate-800/80 border-slate-700 text-slate-200 hover:bg-slate-800 text-xs font-medium"
+              className="bg-slate-50 border-slate-200 text-slate-800 hover:bg-slate-50 text-xs font-medium"
             >
               Paper Settings
             </Button>
@@ -323,7 +323,7 @@ export const GateExamPreparationPage: React.FC<GateExamPreparationPageProps> = (
               variant="ghost"
               size="sm"
               disabled={loading}
-              className="text-slate-400 hover:text-white p-2"
+              className="text-slate-500 hover:text-slate-900 p-2"
               title="Refresh preparation metrics"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -332,7 +332,7 @@ export const GateExamPreparationPage: React.FC<GateExamPreparationPageProps> = (
         </div>
 
         {/* Tab Navigation Bar */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-1 sm:gap-2 overflow-x-auto no-scrollbar border-t border-slate-800/60 pt-1">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-1 sm:gap-2 overflow-x-auto no-scrollbar border-t border-slate-200 pt-1">
           {[
             { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
             { id: 'syllabus', label: 'Syllabus Explorer', icon: BookOpen },
@@ -352,8 +352,8 @@ export const GateExamPreparationPage: React.FC<GateExamPreparationPageProps> = (
                 }}
                 className={`flex items-center gap-2 px-3.5 py-2.5 text-xs sm:text-sm font-semibold border-b-2 transition-all whitespace-nowrap ${
                   isActive
-                    ? 'border-indigo-500 text-indigo-400 bg-indigo-500/10'
-                    : 'border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                    ? 'border-indigo-500 text-indigo-600 bg-indigo-50'
+                    : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-200'
                 }`}
               >
                 <Icon className={`w-4 h-4 ${isActive ? 'text-indigo-400' : 'text-slate-400'}`} />
@@ -369,7 +369,7 @@ export const GateExamPreparationPage: React.FC<GateExamPreparationPageProps> = (
         {loading && !dashboardData ? (
           <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-3">
             <RefreshCw className="w-8 h-8 text-indigo-500 animate-spin" />
-            <p className="text-sm font-medium text-slate-400">Loading GATE Preparation Workspace...</p>
+            <p className="text-sm font-medium text-slate-500">Loading GATE Preparation Workspace...</p>
           </div>
         ) : viewingResult ? (
           <GateTestResultView

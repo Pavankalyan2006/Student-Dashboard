@@ -52,7 +52,7 @@ export function ResizableWorkspace({
     <div
       ref={containerRef}
       className={cn(
-        'relative flex flex-col md:flex-row h-full w-full rounded-xl border border-[#E4E7EC] overflow-hidden bg-white shadow-xs',
+        'relative flex flex-col md:flex-row h-full w-full rounded-xl border border-slate-200 overflow-hidden bg-white shadow-xs',
         className
       )}
     >
@@ -67,10 +67,10 @@ export function ResizableWorkspace({
       {/* Resize Handle Divider */}
       <div
         onMouseDown={handleMouseDown}
-        className="hidden md:flex w-2.5 items-center justify-center bg-slate-100 hover:bg-[#2563EB]/15 transition-colors cursor-col-resize select-none shrink-0 group z-10"
+        className="hidden md:flex w-2.5 items-center justify-center bg-slate-100 hover:bg-blue-600/15 transition-colors cursor-col-resize select-none shrink-0 group z-10"
         title="Drag to resize panels"
       >
-        <div className="h-8 w-1 rounded-full bg-slate-300 group-hover:bg-[#2563EB] transition-colors" />
+        <div className="h-8 w-1 rounded-full bg-slate-300 group-hover:bg-blue-600 transition-colors" />
       </div>
 
       {/* Right / Bottom Panel */}

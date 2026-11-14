@@ -158,7 +158,7 @@ export const MockInterviewDashboard: React.FC<Props> = ({
   return (
     <div className="max-w-7xl mx-auto space-y-8 p-6 lg:p-10">
       {/* Top Banner */}
-      <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white rounded-3xl p-8 shadow-xl relative overflow-hidden">
+      <div className="hero-brand text-white rounded-3xl p-8 relative overflow-hidden">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2 max-w-2xl">
             <div className="flex items-center gap-2">

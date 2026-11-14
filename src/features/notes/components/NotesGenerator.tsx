@@ -163,24 +163,24 @@ export function NotesGenerator({
   };
 
   return (
-    <Card className="border border-[#E4E7EC] bg-white shadow-sm overflow-hidden">
-      <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50/40 border-b border-[#E4E7EC] pb-4">
+    <Card className="border border-slate-200 bg-white shadow-sm overflow-hidden">
+      <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50/40 border-b border-slate-200 pb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#2563EB] text-white shadow-sm">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white shadow-sm">
               <Sparkles className="h-5 w-5" />
             </div>
             <div>
-              <CardTitle className="text-base font-semibold text-[#101828]">
+              <CardTitle className="text-base font-semibold text-slate-900">
                 AI Notes Generator
               </CardTitle>
-              <p className="text-xs text-[#475467]">
+              <p className="text-xs text-slate-600">
                 Generate structured, exam-calibrated academic notes with formulas & code.
               </p>
             </div>
           </div>
           {onCancel && (
-            <Button variant="ghost" size="sm" onClick={onCancel} className="text-xs text-[#475467]">
+            <Button variant="ghost" size="sm" onClick={onCancel} className="text-xs text-slate-600">
               Cancel
             </Button>
           )}
@@ -191,15 +191,15 @@ export function NotesGenerator({
         {generateMutation.isPending ? (
           <div className="py-12 flex flex-col items-center justify-center text-center space-y-5">
             <div className="relative">
-              <RefreshCw className="h-10 w-10 text-[#2563EB] animate-spin" />
+              <RefreshCw className="h-10 w-10 text-blue-600 animate-spin" />
               <div className="absolute inset-0 flex items-center justify-center">
-                <Sparkles className="h-4 w-4 text-[#2563EB]" />
+                <Sparkles className="h-4 w-4 text-blue-600" />
               </div>
             </div>
 
             <div className="max-w-md space-y-2">
-              <h4 className="text-sm font-semibold text-[#101828]">Generating Academic Notes</h4>
-              <p className="text-xs text-[#475467] font-mono transition-all duration-300">
+              <h4 className="text-sm font-semibold text-slate-900">Generating Academic Notes</h4>
+              <p className="text-xs text-slate-600 font-mono transition-all duration-300">
                 {GENERATION_STAGES[activeStageIndex]}
               </p>
             </div>
@@ -210,7 +210,7 @@ export function NotesGenerator({
                 <div
                   key={idx}
                   className={`h-1.5 flex-1 mx-0.5 rounded-full transition-colors duration-300 ${
-                    idx <= activeStageIndex ? 'bg-[#2563EB]' : 'bg-[#E4E7EC]'
+                    idx <= activeStageIndex ? 'bg-blue-600' : 'bg-slate-200'
                   }`}
                 />
               ))}
@@ -220,7 +220,7 @@ export function NotesGenerator({
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Source Tab Picker */}
             <div>
-              <label className="block text-xs font-semibold text-[#101828] mb-2">
+              <label className="block text-xs font-semibold text-slate-900 mb-2">
                 Knowledge Source
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -239,8 +239,8 @@ export function NotesGenerator({
                       onClick={() => setSourceType(s.id as NoteSourceType)}
                       className={`flex items-center justify-center gap-2 p-2.5 rounded-lg border text-xs font-medium transition-all ${
                         isSelected
-                          ? 'border-[#2563EB] bg-blue-50/60 text-[#2563EB] shadow-xs'
-                          : 'border-[#E4E7EC] bg-white text-[#475467] hover:border-[#D0D5DD] hover:bg-slate-50'
+                          ? 'border-blue-600 bg-blue-50/60 text-blue-600 shadow-xs'
+                          : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
                       }`}
                     >
                       <Icon className="h-3.5 w-3.5 shrink-0" />
@@ -254,7 +254,7 @@ export function NotesGenerator({
             {/* Source Input Fields */}
             {sourceType === 'topic' && (
               <div>
-                <label className="block text-xs font-semibold text-[#101828] mb-1.5">
+                <label className="block text-xs font-semibold text-slate-900 mb-1.5">
                   What do you want to create notes about?
                 </label>
                 <input
@@ -263,9 +263,9 @@ export function NotesGenerator({
                   onChange={(e) => setTopic(e.target.value)}
                   placeholder="e.g. Normalization in DBMS, B-Trees & B+ Trees, Paging in OS..."
                   required
-                  className="w-full h-10 px-3 rounded-lg border border-[#D0D5DD] text-xs text-[#101828] placeholder-[#98A2B3] focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-transparent transition"
+                  className="w-full h-10 px-3 rounded-lg border border-slate-300 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition"
                 />
-                <p className="text-[11px] text-[#475467] mt-1">
+                <p className="text-[11px] text-slate-600 mt-1">
                   Type any engineering subject, theorem, algorithm, or syllabus topic.
                 </p>
               </div>
@@ -274,14 +274,14 @@ export function NotesGenerator({
             {sourceType === 'lesson' && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-[#101828] mb-1.5">
+                  <label className="block text-xs font-semibold text-slate-900 mb-1.5">
                     Select Course
                   </label>
                   <select
                     value={selectedCourseId}
                     onChange={(e) => setSelectedCourseId(e.target.value)}
                     required
-                    className="w-full h-10 px-3 rounded-lg border border-[#D0D5DD] text-xs text-[#101828] bg-white focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+                    className="w-full h-10 px-3 rounded-lg border border-slate-300 text-xs text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-600"
                   >
                     <option value="">-- Choose Course --</option>
                     {courses.map((c) => (
@@ -293,7 +293,7 @@ export function NotesGenerator({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-[#101828] mb-1.5">
+                  <label className="block text-xs font-semibold text-slate-900 mb-1.5">
                     Select Curriculum Lesson
                   </label>
                   <select
@@ -301,7 +301,7 @@ export function NotesGenerator({
                     onChange={(e) => setSelectedLessonId(e.target.value)}
                     required
                     disabled={!selectedCourseId || courseLessons.length === 0}
-                    className="w-full h-10 px-3 rounded-lg border border-[#D0D5DD] text-xs text-[#101828] bg-white focus:outline-none focus:ring-2 focus:ring-[#2563EB] disabled:bg-slate-50 disabled:text-slate-400"
+                    className="w-full h-10 px-3 rounded-lg border border-slate-300 text-xs text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:bg-slate-50 disabled:text-slate-400"
                   >
                     <option value="">-- Choose Lesson --</option>
                     {courseLessons.map((l) => (
@@ -316,11 +316,11 @@ export function NotesGenerator({
 
             {sourceType === 'document' && (
               <div>
-                <label className="block text-xs font-semibold text-[#101828] mb-1.5">
+                <label className="block text-xs font-semibold text-slate-900 mb-1.5">
                   Select Uploaded Document
                 </label>
                 {studentDocs.length === 0 ? (
-                  <div className="p-3 border border-dashed border-[#D0D5DD] rounded-lg text-xs text-[#475467] text-center">
+                  <div className="p-3 border border-dashed border-slate-300 rounded-lg text-xs text-slate-600 text-center">
                     No documents uploaded yet. You can upload documents in the Documents module, or generate from Topic or Course.
                   </div>
                 ) : (
@@ -328,7 +328,7 @@ export function NotesGenerator({
                     value={selectedDocId}
                     onChange={(e) => setSelectedDocId(e.target.value)}
                     required
-                    className="w-full h-10 px-3 rounded-lg border border-[#D0D5DD] text-xs text-[#101828] bg-white focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+                    className="w-full h-10 px-3 rounded-lg border border-slate-300 text-xs text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-600"
                   >
                     <option value="">-- Choose Verified Document --</option>
                     {studentDocs.map((doc) => (
@@ -344,7 +344,7 @@ export function NotesGenerator({
             {sourceType === 'selected_content' && (
               <div className="space-y-3">
                 <div>
-                  <label className="block text-xs font-semibold text-[#101828] mb-1.5">
+                  <label className="block text-xs font-semibold text-slate-900 mb-1.5">
                     Topic / Concept Title (Optional)
                   </label>
                   <input
@@ -352,11 +352,11 @@ export function NotesGenerator({
                     value={topic}
                     onChange={(e) => setTopic(e.target.value)}
                     placeholder="e.g. Master Theorem Regularity Condition"
-                    className="w-full h-9 px-3 rounded-lg border border-[#D0D5DD] text-xs text-[#101828] focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+                    className="w-full h-9 px-3 rounded-lg border border-slate-300 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-[#101828] mb-1.5">
+                  <label className="block text-xs font-semibold text-slate-900 mb-1.5">
                     Paste Lecture Excerpt or Text Snippet
                   </label>
                   <textarea
@@ -365,20 +365,20 @@ export function NotesGenerator({
                     onChange={(e) => setSelectedContent(e.target.value)}
                     placeholder="Paste textbook definitions, lecture transcript excerpts, or problem statements..."
                     required
-                    className="w-full p-3 rounded-lg border border-[#D0D5DD] text-xs text-[#101828] focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+                    className="w-full p-3 rounded-lg border border-slate-300 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
                   />
                 </div>
               </div>
             )}
 
             {/* Note Parameters: Level, Type, Depth */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-[#F2F4F7]">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-100">
               {/* Target Level */}
               <div>
-                <label className="block text-xs font-semibold text-[#101828] mb-1.5">
+                <label className="block text-xs font-semibold text-slate-900 mb-1.5">
                   Academic Depth
                 </label>
-                <div className="flex rounded-lg border border-[#D0D5DD] p-0.5 bg-[#F9FAFB]">
+                <div className="flex rounded-lg border border-slate-300 p-0.5 bg-slate-50">
                   {(['BEGINNER', 'INTERMEDIATE', 'ADVANCED'] as StudentLevel[]).map((lvl) => (
                     <button
                       key={lvl}
@@ -386,8 +386,8 @@ export function NotesGenerator({
                       onClick={() => setLevel(lvl)}
                       className={`flex-1 py-1 text-[11px] font-medium rounded transition-all ${
                         level === lvl
-                          ? 'bg-white text-[#101828] shadow-xs'
-                          : 'text-[#475467] hover:text-[#101828]'
+                          ? 'bg-white text-slate-900 shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900'
                       }`}
                     >
                       {lvl.charAt(0) + lvl.slice(1).toLowerCase()}
@@ -398,13 +398,13 @@ export function NotesGenerator({
 
               {/* Note Type */}
               <div>
-                <label className="block text-xs font-semibold text-[#101828] mb-1.5">
+                <label className="block text-xs font-semibold text-slate-900 mb-1.5">
                   Note Purpose
                 </label>
                 <select
                   value={noteType}
                   onChange={(e) => setNoteType(e.target.value as NoteType)}
-                  className="w-full h-8 px-2 rounded-lg border border-[#D0D5DD] text-xs text-[#101828] bg-white focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+                  className="w-full h-8 px-2 rounded-lg border border-slate-300 text-xs text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-600"
                 >
                   <option value="STUDY_NOTES">Study Notes (Concepts + Examples)</option>
                   <option value="EXAM_NOTES">Exam Notes (Formulas + GATE Tips)</option>
@@ -416,10 +416,10 @@ export function NotesGenerator({
 
               {/* Content Length */}
               <div>
-                <label className="block text-xs font-semibold text-[#101828] mb-1.5">
+                <label className="block text-xs font-semibold text-slate-900 mb-1.5">
                   Length Density
                 </label>
-                <div className="flex rounded-lg border border-[#D0D5DD] p-0.5 bg-[#F9FAFB]">
+                <div className="flex rounded-lg border border-slate-300 p-0.5 bg-slate-50">
                   {(['SHORT', 'MEDIUM', 'DETAILED'] as NoteLength[]).map((len) => (
                     <button
                       key={len}
@@ -427,8 +427,8 @@ export function NotesGenerator({
                       onClick={() => setLength(len)}
                       className={`flex-1 py-1 text-[11px] font-medium rounded transition-all ${
                         length === len
-                          ? 'bg-white text-[#101828] shadow-xs'
-                          : 'text-[#475467] hover:text-[#101828]'
+                          ? 'bg-white text-slate-900 shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900'
                       }`}
                     >
                       {len.charAt(0) + len.slice(1).toLowerCase()}
@@ -441,7 +441,7 @@ export function NotesGenerator({
             {/* Optional Tags */}
             {!compact && (
               <div>
-                <label className="block text-xs font-semibold text-[#101828] mb-1">
+                <label className="block text-xs font-semibold text-slate-900 mb-1">
                   Tags (Comma separated)
                 </label>
                 <input
@@ -449,7 +449,7 @@ export function NotesGenerator({
                   value={tagsInput}
                   onChange={(e) => setTagsInput(e.target.value)}
                   placeholder="e.g. DBMS, Semester4, GatePrep"
-                  className="w-full h-8 px-3 rounded-lg border border-[#D0D5DD] text-xs text-[#101828] placeholder-[#98A2B3] focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+                  className="w-full h-8 px-3 rounded-lg border border-slate-300 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600"
                 />
               </div>
             )}
@@ -470,7 +470,7 @@ export function NotesGenerator({
                   (sourceType === 'document' && !selectedDocId) ||
                   (sourceType === 'selected_content' && !selectedContent.trim())
                 }
-                className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs h-9 px-4 font-medium flex items-center gap-1.5 shadow-xs"
+                className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-9 px-4 font-medium flex items-center gap-1.5 shadow-xs"
               >
                 <Sparkles className="h-3.5 w-3.5" />
                 Generate Notes

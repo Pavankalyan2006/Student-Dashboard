@@ -385,7 +385,7 @@ export const PlacementAssessmentModal: React.FC<Props> = ({
           {stage === 'RESULTS' && assessmentResult && (
             <div className="space-y-6">
               {/* Score Header Card */}
-              <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white p-6 rounded-2xl text-center space-y-2 shadow-md">
+              <div className="hero-brand text-white p-6 rounded-2xl text-center space-y-2 shadow-md">
                 <div className="inline-flex p-3 bg-white/10 rounded-full mb-1">
                   <Award className="h-8 w-8 text-amber-300" />
                 </div>

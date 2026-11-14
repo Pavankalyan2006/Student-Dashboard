@@ -117,7 +117,7 @@ export function CourseFilters({
               onClick={() => onChange({ category: cat.key, page: 1 })}
               className={`px-3 py-1.5 rounded-full text-xs font-semibold shrink-0 cursor-pointer transition-all border ${
                 isActive
-                  ? 'bg-[#2563EB] text-white border-transparent shadow-xs'
+                  ? 'bg-blue-600 text-white border-transparent shadow-xs'
                   : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:border-slate-300'
               }`}
             >
@@ -279,7 +279,7 @@ export function CourseFilters({
                 aria-pressed={viewMode === 'grid'}
                 className={`p-1.5 rounded-md transition-colors cursor-pointer ${
                   viewMode === 'grid'
-                    ? 'bg-white text-[#2563EB] shadow-xs'
+                    ? 'bg-white text-blue-600 shadow-xs'
                     : 'text-slate-400 hover:text-slate-700'
                 }`}
               >
@@ -292,7 +292,7 @@ export function CourseFilters({
                 aria-pressed={viewMode === 'list'}
                 className={`p-1.5 rounded-md transition-colors cursor-pointer ${
                   viewMode === 'list'
-                    ? 'bg-white text-[#2563EB] shadow-xs'
+                    ? 'bg-white text-blue-600 shadow-xs'
                     : 'text-slate-400 hover:text-slate-700'
                 }`}
               >
@@ -330,7 +330,7 @@ export function CourseFilters({
               aria-label="Grid view"
               aria-pressed={viewMode === 'grid'}
               className={`p-1.5 rounded-md transition-colors ${
-                viewMode === 'grid' ? 'bg-white text-[#2563EB] shadow-xs' : 'text-slate-400'
+                viewMode === 'grid' ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-400'
               }`}
             >
               <LayoutGrid className="h-3.5 w-3.5" />
@@ -341,7 +341,7 @@ export function CourseFilters({
               aria-label="List view"
               aria-pressed={viewMode === 'list'}
               className={`p-1.5 rounded-md transition-colors ${
-                viewMode === 'list' ? 'bg-white text-[#2563EB] shadow-xs' : 'text-slate-400'
+                viewMode === 'list' ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-400'
               }`}
             >
               <List className="h-3.5 w-3.5" />

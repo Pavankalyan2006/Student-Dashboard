@@ -13,16 +13,16 @@ export function ContinueLearning({
 }) {
   if (!item) {
     return (
-      <Card className="p-6 border-dashed border-[#E4E7EC] bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <Card className="p-6 border-dashed border-slate-200 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1">
-          <div className="flex items-center gap-2 text-xs font-semibold text-[#2563EB]">
+          <div className="flex items-center gap-2 text-xs font-semibold text-blue-600">
             <BookOpen className="h-4 w-4" />
             <span>Start Your First Course</span>
           </div>
-          <h3 className="text-sm sm:text-base font-bold text-[#101828]">
+          <h3 className="text-sm sm:text-base font-bold text-slate-900">
             No active coursework in progress
           </h3>
-          <p className="text-xs text-[#475467] leading-relaxed max-w-md">
+          <p className="text-xs text-slate-600 leading-relaxed max-w-md">
             Enroll in Semester 1-8 core engineering subjects, DAA, AI, or Systems to begin tracking your lessons.
           </p>
         </div>
@@ -35,23 +35,23 @@ export function ContinueLearning({
   }
 
   return (
-    <Card className="p-5 sm:p-6 border border-[#E4E7EC] bg-white hover:border-blue-200 transition-colors shadow-2xs">
+    <Card className="p-5 sm:p-6 border border-slate-200 bg-white hover:border-blue-200 transition-colors shadow-2xs">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         {/* Left: Course details */}
         <div className="space-y-2.5 flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-blue-50 text-[#2563EB] border border-blue-200">
+            <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-200">
               Continue Learning
             </span>
-            <span className="text-xs text-[#667085]">·</span>
-            <span className="text-xs text-[#667085] truncate">{item.category}</span>
+            <span className="text-xs text-slate-500">·</span>
+            <span className="text-xs text-slate-500 truncate">{item.category}</span>
           </div>
 
           <div>
-            <h3 className="text-base sm:text-lg font-bold text-[#101828] truncate">
+            <h3 className="text-base sm:text-lg font-bold text-slate-900 truncate">
               {item.course_name}
             </h3>
-            <div className="flex items-center gap-2 text-xs text-[#475467] mt-0.5">
+            <div className="flex items-center gap-2 text-xs text-slate-600 mt-0.5">
               <span className="font-semibold text-slate-800">Current Lesson:</span>
               <span className="truncate">{item.lesson_title}</span>
             </div>
@@ -60,21 +60,21 @@ export function ContinueLearning({
           {/* Progress bar */}
           <div className="space-y-1.5 max-w-lg">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-[#667085]">
+              <span className="text-slate-500">
                 Lesson {item.completed_lessons} of {item.total_lessons} completed
               </span>
-              <span className="font-bold text-[#101828] tabular-nums">{item.progress}%</span>
+              <span className="font-bold text-slate-900 tabular-nums">{item.progress}%</span>
             </div>
             <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-[#2563EB] to-[#4F46E5] rounded-full transition-all duration-500"
+                className="h-full bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full transition-all duration-500"
                 style={{ width: `${item.progress}%` }}
               />
             </div>
           </div>
 
           {/* Up next footer */}
-          <div className="flex items-center gap-1.5 text-[11px] text-[#667085]">
+          <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
             <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
             <span>Up next:</span>
             <span className="font-medium text-slate-700 truncate">{item.next_topic}</span>

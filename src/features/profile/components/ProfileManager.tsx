@@ -32,22 +32,22 @@ export function ProfileCompletionCard({ onOpen }: { onOpen?: (tab: ProfileSectio
   if (!data) return null;
   const c = data.completion;
   return (
-    <div className="rounded-2xl border border-[#E4E7EC] bg-white p-5">
+    <div className="rounded-2xl border border-slate-200 bg-white p-5">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-[#101828]">Profile completion</h3>
-        <span className="text-lg font-bold text-[#2563EB]">{c.overall_percentage}%</span>
+        <h3 className="text-sm font-semibold text-slate-900">Profile completion</h3>
+        <span className="text-lg font-bold text-blue-600">{c.overall_percentage}%</span>
       </div>
-      <div className="h-2 rounded-full bg-[#F2F4F7] overflow-hidden mb-4" role="progressbar" aria-valuenow={c.overall_percentage} aria-valuemin={0} aria-valuemax={100}>
-        <div className="h-full bg-[#2563EB]" style={{ width: `${c.overall_percentage}%` }} />
+      <div className="h-2 rounded-full bg-slate-100 overflow-hidden mb-4" role="progressbar" aria-valuenow={c.overall_percentage} aria-valuemin={0} aria-valuemax={100}>
+        <div className="h-full bg-blue-600" style={{ width: `${c.overall_percentage}%` }} />
       </div>
       <ul className="space-y-2">
         {c.sections.map((s) => (
           <li key={s.key} className="flex flex-wrap items-center gap-2 text-sm">
-            <span className={`w-2 h-2 rounded-full ${s.percentage === 100 ? 'bg-[#12B76A]' : s.complete ? 'bg-[#F79009]' : 'bg-[#F04438]'}`} />
-            <span className="text-[#344054]">{s.label}</span>
-            <span className="text-xs text-[#667085]">{s.percentage}%</span>
+            <span className={`w-2 h-2 rounded-full ${s.percentage === 100 ? 'bg-emerald-500' : s.complete ? 'bg-amber-500' : 'bg-[#F04438]'}`} />
+            <span className="text-slate-700">{s.label}</span>
+            <span className="text-xs text-slate-500">{s.percentage}%</span>
             {s.action && onOpen && (
-              <button className="ml-auto text-xs text-[#2563EB] hover:underline" onClick={() => onOpen(TABS.find((t) => t.completion === s.key)!.key)}>
+              <button className="ml-auto text-xs text-blue-600 hover:underline" onClick={() => onOpen(TABS.find((t) => t.completion === s.key)!.key)}>
                 {s.action.label}
               </button>
             )}
@@ -74,14 +74,14 @@ export function ProfileManager({ initialTab = 'identity' }: { initialTab?: Profi
 
   if (isLoading) {
     return (
-      <div className="flex items-center text-sm text-[#667085] p-6">
+      <div className="flex items-center text-sm text-slate-500 p-6">
         <Loader2 className="w-4 h-4 animate-spin mr-2" /> Loading profile…
       </div>
     );
   }
   if (error || !data) {
     return (
-      <div className="rounded-xl border border-[#FECDCA] bg-[#FEF3F2] p-4 text-sm text-[#B42318]">
+      <div className="rounded-xl border border-[#FECDCA] bg-[#FEF3F2] p-4 text-sm text-red-700">
         Could not load your profile. <Button size="sm" variant="outline" onClick={() => refetch()}>Retry</Button>
       </div>
     );
@@ -115,15 +115,15 @@ export function ProfileManager({ initialTab = 'identity' }: { initialTab?: Profi
   const props = { profile: data.profile, errors, onChange: setDraft };
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-6 min-w-0">
-      <div className="min-w-0 rounded-2xl border border-[#E4E7EC] bg-white">
-        <div role="tablist" aria-label="Profile sections" className="flex flex-wrap gap-1 border-b border-[#EAECF0] p-2">
+      <div className="min-w-0 rounded-2xl border border-slate-200 bg-white">
+        <div role="tablist" aria-label="Profile sections" className="flex flex-wrap gap-1 border-b border-slate-200 p-2">
           {TABS.map((t) => (
             <button
               key={t.key}
               role="tab"
               aria-selected={tab === t.key}
               onClick={() => setTab(t.key)}
-              className={`px-3 py-1.5 rounded-lg text-sm ${tab === t.key ? 'bg-[#EFF4FF] text-[#1D4ED8] font-medium' : 'text-[#475467] hover:bg-[#F2F4F7]'}`}
+              className={`px-3 py-1.5 rounded-lg text-sm ${tab === t.key ? 'bg-blue-50 text-blue-700 font-medium' : 'text-slate-600 hover:bg-slate-100'}`}
             >
               {t.label}
             </button>
@@ -138,7 +138,7 @@ export function ProfileManager({ initialTab = 'identity' }: { initialTab?: Profi
           {tab === 'learning' && <LearningForm {...props} />}
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <Button isLoading={update.isPending} onClick={save}>Save changes</Button>
-            <span className="text-xs text-[#98A2B3]">
+            <span className="text-xs text-slate-400">
               Last saved {data.profile.account.last_profile_update ? new Date(data.profile.account.last_profile_update).toLocaleString() : 'never'}
             </span>
           </div>
@@ -170,12 +170,12 @@ export function ProfileRecommendationsPanel({ module, title, onNavigate }: { mod
   if (state.loading || !d) return null;
   const go = (path: string) => (onNavigate ? onNavigate(path) : (window.location.href = path));
   return (
-    <section aria-label={title || 'Recommended for you'} className="rounded-2xl border border-[#E4E7EC] bg-white p-4" data-testid={`profile-recs-${module}`}>
+    <section aria-label={title || 'Recommended for you'} className="rounded-2xl border border-slate-200 bg-white p-4" data-testid={`profile-recs-${module}`}>
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-sm font-semibold text-[#101828]">{title || 'Recommended for you'}</h3>
-        <button className="text-xs text-[#2563EB] hover:underline" onClick={() => go('/profile/edit')}>Edit profile</button>
+        <h3 className="text-sm font-semibold text-slate-900">{title || 'Recommended for you'}</h3>
+        <button className="text-xs text-blue-600 hover:underline" onClick={() => go('/profile/edit')}>Edit profile</button>
       </div>
-      <p className="text-xs text-[#667085] mb-2">{d.summary}</p>
+      <p className="text-xs text-slate-500 mb-2">{d.summary}</p>
       {d.items.length === 0 ? (
         d.missing_profile_data.length > 0 && (
           <Button size="sm" variant="outline" onClick={() => go('/profile/edit')}>
@@ -186,17 +186,17 @@ export function ProfileRecommendationsPanel({ module, title, onNavigate }: { mod
         <ul className="space-y-1.5">
           {d.items.slice(0, 6).map((it: any) => (
             <li key={it.id} className="flex items-start gap-2 text-sm">
-              <span className={`mt-0.5 text-[10px] px-1.5 py-0.5 rounded ${it.kind === 'MANDATORY' ? 'bg-[#FEF0C7] text-[#93370D]' : 'bg-[#EFF4FF] text-[#1D4ED8]'}`}>
+              <span className={`mt-0.5 text-[10px] px-1.5 py-0.5 rounded ${it.kind === 'MANDATORY' ? 'bg-[#FEF0C7] text-amber-800' : 'bg-blue-50 text-blue-700'}`}>
                 {it.kind === 'MANDATORY' ? (module === 'courses' ? 'Your subject' : 'Selected') : 'Suggested'}
               </span>
               <span className="flex-1">
                 {/* A link back to the page the student is already on would do nothing when clicked. */}
                 {it.link && it.link !== window.location.pathname ? (
-                  <button className="text-left text-[#101828] hover:text-[#2563EB]" onClick={() => go(it.link)}>{it.title}</button>
+                  <button className="text-left text-slate-900 hover:text-blue-600" onClick={() => go(it.link)}>{it.title}</button>
                 ) : (
-                  <span className="text-[#101828]">{it.title}</span>
+                  <span className="text-slate-900">{it.title}</span>
                 )}
-                <span className="block text-[11px] text-[#667085]">{it.reason}</span>
+                <span className="block text-[11px] text-slate-500">{it.reason}</span>
               </span>
             </li>
           ))}

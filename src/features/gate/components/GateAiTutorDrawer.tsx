@@ -107,31 +107,31 @@ How can I help you today?`,
   ];
 
   return (
-    <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-slate-900 border-l border-slate-800 shadow-2xl flex flex-col">
+    <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-white border-l border-slate-200 shadow-2xl flex flex-col">
       {/* Header */}
-      <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/80">
+      <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-white">
         <div className="flex items-center gap-2.5">
-          <div className="p-2 bg-indigo-500/10 text-indigo-400 rounded-lg">
+          <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
             <Sparkles className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="font-bold text-sm text-white flex items-center gap-1.5">
+            <h3 className="font-bold text-sm text-slate-900 flex items-center gap-1.5">
               GateGuru AI Study Assistant
-              <span className="px-1.5 py-0.5 rounded-sm text-[10px] bg-indigo-500/20 text-indigo-300 font-mono">
+              <span className="px-1.5 py-0.5 rounded-sm text-[10px] bg-indigo-50 text-indigo-700 font-mono">
                 {profile?.target_paper || 'CS'}
               </span>
             </h3>
-            <p className="text-[11px] text-slate-400">Context-Aware GATE Professor & Numerical Solver</p>
+            <p className="text-[11px] text-slate-500">Context-Aware GATE Professor & Numerical Solver</p>
           </div>
         </div>
 
-        <button onClick={onClose} className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800">
+        <button onClick={onClose} className="p-1.5 text-slate-500 hover:text-slate-900 rounded-lg hover:bg-slate-50">
           <X className="w-5 h-5" />
         </button>
       </div>
 
       {/* Mode Switcher */}
-      <div className="px-4 py-2 bg-slate-950/60 border-b border-slate-800 flex items-center gap-1.5 text-xs overflow-x-auto">
+      <div className="px-4 py-2 bg-white border-b border-slate-200 flex items-center gap-1.5 text-xs overflow-x-auto">
         <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider shrink-0">Mode:</span>
         {[
           { id: 'CONCEPT', label: 'Concept' },
@@ -145,7 +145,7 @@ How can I help you today?`,
             className={`px-2 py-1 rounded-md text-[11px] font-semibold transition-colors shrink-0 cursor-pointer ${
               mode === m.id
                 ? 'bg-indigo-600 text-white'
-                : 'bg-slate-800 text-slate-400 hover:text-slate-200'
+                : 'bg-slate-50 text-slate-500 hover:text-slate-800'
             }`}
           >
             {m.label}
@@ -161,10 +161,10 @@ How can I help you today?`,
             className={`p-4 rounded-2xl leading-relaxed whitespace-pre-line ${
               msg.sender === 'user'
                 ? 'bg-indigo-600 text-white ml-8 shadow-xs'
-                : 'bg-slate-950/80 border border-slate-800 text-slate-200 mr-4 font-sans'
+                : 'bg-white border border-slate-200 text-slate-800 mr-4 font-sans'
             }`}
           >
-            <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 mb-1">
+            <div className="flex items-center justify-between text-[10px] font-bold text-slate-500 mb-1">
               <span>{msg.sender === 'user' ? 'You' : 'GateGuru Professor'}</span>
               <span>{msg.timestamp}</span>
             </div>
@@ -173,13 +173,13 @@ How can I help you today?`,
 
             {/* Follow-up Question Suggestions */}
             {msg.follow_up_questions && msg.follow_up_questions.length > 0 && (
-              <div className="mt-3 pt-2.5 border-t border-slate-800/80 space-y-1">
-                <span className="text-[10px] font-bold text-indigo-400 block">Suggested Follow-ups:</span>
+              <div className="mt-3 pt-2.5 border-t border-slate-200 space-y-1">
+                <span className="text-[10px] font-bold text-indigo-600 block">Suggested Follow-ups:</span>
                 {msg.follow_up_questions.map((fq, i) => (
                   <button
                     key={i}
                     onClick={() => handleSend(fq)}
-                    className="text-[11px] text-slate-300 hover:text-indigo-300 block text-left underline cursor-pointer"
+                    className="text-[11px] text-slate-700 hover:text-indigo-700 block text-left underline cursor-pointer"
                   >
                     • {fq}
                   </button>
@@ -190,8 +190,8 @@ How can I help you today?`,
         ))}
 
         {loading && (
-          <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-indigo-300 flex items-center gap-2">
-            <Sparkles className="w-4 h-4 animate-spin text-indigo-400" />
+          <div className="p-3 bg-white border border-slate-200 rounded-xl text-xs text-indigo-700 flex items-center gap-2">
+            <Sparkles className="w-4 h-4 animate-spin text-indigo-600" />
             <span>GateGuru is analyzing derivation and formulas...</span>
           </div>
         )}
@@ -199,12 +199,12 @@ How can I help you today?`,
         {/* Quick Prompts on initial conversation */}
         {messages.length === 1 && (
           <div className="space-y-2 pt-2">
-            <span className="text-[11px] font-bold text-slate-400 block">Sample GATE Questions & Derivations:</span>
+            <span className="text-[11px] font-bold text-slate-500 block">Sample GATE Questions & Derivations:</span>
             {quickPrompts.map((qp, idx) => (
               <button
                 key={idx}
                 onClick={() => handleSend(qp)}
-                className="w-full text-left p-2.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-indigo-500/40 text-slate-300 hover:text-white transition-all text-xs"
+                className="w-full text-left p-2.5 rounded-xl bg-white border border-slate-200 hover:border-indigo-200 text-slate-700 hover:text-slate-900 transition-all text-xs"
               >
                 {qp}
               </button>
@@ -214,7 +214,7 @@ How can I help you today?`,
       </div>
 
       {/* Input Footer */}
-      <div className="p-4 border-t border-slate-800 bg-slate-950/80 space-y-2">
+      <div className="p-4 border-t border-slate-200 bg-white space-y-2">
         <div className="relative">
           <textarea
             rows={2}
@@ -227,7 +227,7 @@ How can I help you today?`,
               }
             }}
             placeholder="Ask a technical concept, formula derivation, or past GATE problem..."
-            className="w-full p-2.5 pr-10 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-100 placeholder-slate-500 focus:outline-hidden focus:border-indigo-500 resize-none"
+            className="w-full p-2.5 pr-10 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-hidden focus:border-indigo-500 resize-none"
           />
           <button
             onClick={() => handleSend()}

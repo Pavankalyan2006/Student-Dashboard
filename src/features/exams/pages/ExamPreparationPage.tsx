@@ -200,7 +200,7 @@ export function ExamPreparationPage({ onNavigate }: ExamPreparationPageProps) {
           <Button
             size="sm"
             onClick={() => setActiveTab(activeTab === 'create' ? 'overview' : 'create')}
-            className="gap-1.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white"
+            className="gap-1.5 bg-blue-600 hover:bg-blue-700 text-white"
           >
             <Plus className="w-4 h-4" />
             {activeTab === 'create' ? 'Dashboard' : 'Register New Exam'}
@@ -211,10 +211,10 @@ export function ExamPreparationPage({ onNavigate }: ExamPreparationPageProps) {
       {/* Primary Exam Cards & Countdown */}
       {selectedExam && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="p-4 rounded-xl border border-[#E4E7EC] bg-white shadow-sm flex items-center justify-between">
+          <div className="p-4 rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-[#475467]">Countdown</p>
-              <h3 className="text-2xl font-bold text-[#101828] mt-1">
+              <p className="text-xs font-medium text-slate-600">Countdown</p>
+              <h3 className="text-2xl font-bold text-slate-900 mt-1">
                 {getDaysRemaining(selectedExam.exam_date)} Days
               </h3>
               <p className="text-xs text-amber-600 mt-0.5">Date: {selectedExam.exam_date}</p>
@@ -224,10 +224,10 @@ export function ExamPreparationPage({ onNavigate }: ExamPreparationPageProps) {
             </div>
           </div>
 
-          <div className="p-4 rounded-xl border border-[#E4E7EC] bg-white shadow-sm flex items-center justify-between">
+          <div className="p-4 rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-[#475467]">Readiness Score</p>
-              <h3 className="text-2xl font-bold text-[#101828] mt-1">{selectedExam.readiness_score}%</h3>
+              <p className="text-xs font-medium text-slate-600">Readiness Score</p>
+              <h3 className="text-2xl font-bold text-slate-900 mt-1">{selectedExam.readiness_score}%</h3>
               <p className="text-xs text-emerald-600 mt-0.5">From your topic confidence, weighted by topic</p>
             </div>
             <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
@@ -235,11 +235,11 @@ export function ExamPreparationPage({ onNavigate }: ExamPreparationPageProps) {
             </div>
           </div>
 
-          <div className="p-4 rounded-xl border border-[#E4E7EC] bg-white shadow-sm flex items-center justify-between">
+          <div className="p-4 rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-[#475467]">Syllabus Units</p>
-              <h3 className="text-2xl font-bold text-[#101828] mt-1">{selectedExam.topics?.length || 0} Topics</h3>
-              <p className="text-xs text-[#475467] mt-0.5">
+              <p className="text-xs font-medium text-slate-600">Syllabus Units</p>
+              <h3 className="text-2xl font-bold text-slate-900 mt-1">{selectedExam.topics?.length || 0} Topics</h3>
+              <p className="text-xs text-slate-600 mt-0.5">
                 {selectedExam.topics?.filter((t) => t.confidence === 'WEAK').length || 0} need reinforcement
               </p>
             </div>
@@ -248,13 +248,13 @@ export function ExamPreparationPage({ onNavigate }: ExamPreparationPageProps) {
             </div>
           </div>
 
-          <div className="p-4 rounded-xl border border-[#E4E7EC] bg-white shadow-sm flex items-center justify-between">
+          <div className="p-4 rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-[#475467]">Mock Tests</p>
-              <h3 className="text-2xl font-bold text-[#101828] mt-1">
+              <p className="text-xs font-medium text-slate-600">Mock Tests</p>
+              <h3 className="text-2xl font-bold text-slate-900 mt-1">
                 {selectedExam.last_mock_score ? `${selectedExam.last_mock_score}%` : 'Not Attempted'}
               </h3>
-              <p className="text-xs text-[#027A48] mt-0.5">{selectedExam.mock_tests_count} practice drills taken</p>
+              <p className="text-xs text-emerald-700 mt-0.5">{selectedExam.mock_tests_count} practice drills taken</p>
             </div>
             <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
               <FileCheck className="w-6 h-6" />
@@ -264,11 +264,11 @@ export function ExamPreparationPage({ onNavigate }: ExamPreparationPageProps) {
       )}
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-[#E4E7EC] pb-2 overflow-x-auto">
+      <div className="flex items-center gap-2 border-b border-slate-200 pb-2 overflow-x-auto">
         <button
           onClick={() => setActiveTab('overview')}
           className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-            activeTab === 'overview' ? 'bg-[#101828] text-white' : 'text-[#475467] hover:bg-gray-100'
+            activeTab === 'overview' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-gray-100'
           }`}
         >
           Exam Dashboard
@@ -276,7 +276,7 @@ export function ExamPreparationPage({ onNavigate }: ExamPreparationPageProps) {
         <button
           onClick={() => setActiveTab('topics')}
           className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-            activeTab === 'topics' ? 'bg-[#101828] text-white' : 'text-[#475467] hover:bg-gray-100'
+            activeTab === 'topics' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-gray-100'
           }`}
         >
           Topics & Weightage
@@ -284,7 +284,7 @@ export function ExamPreparationPage({ onNavigate }: ExamPreparationPageProps) {
         <button
           onClick={() => setActiveTab('revision')}
           className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-            activeTab === 'revision' ? 'bg-[#101828] text-white' : 'text-[#475467] hover:bg-gray-100'
+            activeTab === 'revision' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-gray-100'
           }`}
         >
           Revision Plan
@@ -292,7 +292,7 @@ export function ExamPreparationPage({ onNavigate }: ExamPreparationPageProps) {
         <button
           onClick={() => setActiveTab('create')}
           className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-            activeTab === 'create' ? 'bg-[#101828] text-white' : 'text-[#475467] hover:bg-gray-100'
+            activeTab === 'create' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-gray-100'
           }`}
         >
           + Add Exam
@@ -302,13 +302,13 @@ export function ExamPreparationPage({ onNavigate }: ExamPreparationPageProps) {
       {/* Tab 1: Overview */}
       {activeTab === 'overview' && selectedExam && (
         <div className="space-y-6">
-          <div className="p-5 rounded-xl border border-[#E4E7EC] bg-white shadow-sm space-y-4">
+          <div className="p-5 rounded-xl border border-slate-200 bg-white shadow-sm space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">
                   {selectedExam.subject} • {selectedExam.category}
                 </span>
-                <h2 className="text-xl font-bold text-[#101828] mt-1">{selectedExam.title}</h2>
+                <h2 className="text-xl font-bold text-slate-900 mt-1">{selectedExam.title}</h2>
               </div>
               <div className="flex items-center gap-2">
                 <Button
@@ -332,7 +332,7 @@ export function ExamPreparationPage({ onNavigate }: ExamPreparationPageProps) {
 
             {/* Readiness progress bar */}
             <div className="space-y-1.5">
-              <div className="flex justify-between text-xs font-semibold text-[#344054]">
+              <div className="flex justify-between text-xs font-semibold text-slate-700">
                 <span>Curriculum Readiness Indicator</span>
                 <span>{selectedExam.readiness_score}% Readiness</span>
               </div>
@@ -342,7 +342,7 @@ export function ExamPreparationPage({ onNavigate }: ExamPreparationPageProps) {
                   style={{ width: `${selectedExam.readiness_score}%` }}
                 />
               </div>
-              <p className="text-[11px] text-[#475467] italic">
+              <p className="text-[11px] text-slate-600 italic">
                 Notice: Readiness scores indicate past quiz and practice performance. The platform does not guarantee examination grades.
               </p>
             </div>
@@ -384,22 +384,22 @@ export function ExamPreparationPage({ onNavigate }: ExamPreparationPageProps) {
       {/* Tab 2: Topics Breakdown */}
       {activeTab === 'topics' && selectedExam && (
         <div className="space-y-3">
-          <h3 className="text-sm font-bold text-[#101828]">Syllabus Topics & Mastery Rubric</h3>
+          <h3 className="text-sm font-bold text-slate-900">Syllabus Topics & Mastery Rubric</h3>
           <div className="space-y-2">
             {selectedExam.topics?.map((topic) => (
               <div
                 key={topic.id}
-                className="p-3.5 rounded-xl border border-[#E4E7EC] bg-white flex items-center justify-between shadow-sm"
+                className="p-3.5 rounded-xl border border-slate-200 bg-white flex items-center justify-between shadow-sm"
               >
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-bold text-gray-500">{topic.unit}</span>
-                    <h4 className="text-sm font-semibold text-[#101828]">{topic.name}</h4>
+                    <h4 className="text-sm font-semibold text-slate-900">{topic.name}</h4>
                     <span className="text-xs px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full font-medium" title="Topics are weighted equally unless set otherwise">
                       ~{topic.weightage_percent}% Weightage
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-[#475467]">
+                  <div className="flex items-center gap-2 text-xs text-slate-600">
                     <span>Status: {topic.status}</span>
                     <span>•</span>
                     <span
@@ -420,7 +420,7 @@ export function ExamPreparationPage({ onNavigate }: ExamPreparationPageProps) {
                     aria-label={`Confidence for ${topic.name}`}
                     value={topic.confidence}
                     onChange={(e) => handleTopicUpdate(topic.id, { confidence: e.target.value })}
-                    className="text-xs border border-[#D0D5DD] rounded-lg px-2 py-1 bg-white"
+                    className="text-xs border border-slate-300 rounded-lg px-2 py-1 bg-white"
                   >
                     <option value="WEAK">Weak</option>
                     <option value="DEVELOPING">Developing</option>
@@ -430,7 +430,7 @@ export function ExamPreparationPage({ onNavigate }: ExamPreparationPageProps) {
                     aria-label={`Status for ${topic.name}`}
                     value={topic.status}
                     onChange={(e) => handleTopicUpdate(topic.id, { status: e.target.value })}
-                    className="text-xs border border-[#D0D5DD] rounded-lg px-2 py-1 bg-white"
+                    className="text-xs border border-slate-300 rounded-lg px-2 py-1 bg-white"
                   >
                     <option value="NOT_STARTED">Not started</option>
                     <option value="IN_PROGRESS">In progress</option>
@@ -454,12 +454,12 @@ export function ExamPreparationPage({ onNavigate }: ExamPreparationPageProps) {
 
       {/* Tab 3: Revision Plan */}
       {activeTab === 'revision' && (
-        <div className="p-5 rounded-xl border border-[#E4E7EC] bg-white shadow-sm space-y-4">
-          <h3 className="text-base font-bold text-[#101828] flex items-center gap-2">
+        <div className="p-5 rounded-xl border border-slate-200 bg-white shadow-sm space-y-4">
+          <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-purple-600" />
             Revision Plan
           </h3>
-          <p className="text-xs text-[#475467]">
+          <p className="text-xs text-slate-600">
             Built from your exam date, available prep hours and topic confidence (weakest and heaviest topics first).
             It is a plain schedule, not AI-generated. Up to the next 14 days are shown.
           </p>
@@ -475,7 +475,7 @@ export function ExamPreparationPage({ onNavigate }: ExamPreparationPageProps) {
               <div key={idx} className="p-3 border rounded-lg bg-gray-50/60 flex items-center justify-between">
                 <div>
                   <span className="text-xs font-bold text-blue-600">{step.time}</span>
-                  <p className="text-sm font-semibold text-[#101828] mt-0.5">{step.task}</p>
+                  <p className="text-sm font-semibold text-slate-900 mt-0.5">{step.task}</p>
                 </div>
                 <span className="text-xs font-medium text-gray-500 bg-white px-2.5 py-1 rounded border">
                   {step.dur}
@@ -488,41 +488,41 @@ export function ExamPreparationPage({ onNavigate }: ExamPreparationPageProps) {
 
       {/* Tab 4: Create Exam Form */}
       {activeTab === 'create' && (
-        <div className="p-6 rounded-xl border border-[#E4E7EC] bg-white shadow-sm space-y-4 max-w-2xl">
-          <h2 className="text-lg font-bold text-[#101828] flex items-center gap-2">
+        <div className="p-6 rounded-xl border border-slate-200 bg-white shadow-sm space-y-4 max-w-2xl">
+          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
             <GraduationCap className="w-5 h-5 text-blue-600" />
             Register University / Placement Exam Target
           </h2>
           <form onSubmit={handleCreateExam} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-[#344054] mb-1">Exam Title</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Exam Title</label>
               <input
                 type="text"
                 placeholder="e.g. Operating Systems End-Semester Final"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-[#D0D5DD] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-[#344054] mb-1">Subject</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Subject</label>
                 <input
                   type="text"
                   placeholder="e.g. Operating Systems"
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-[#D0D5DD] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-[#344054] mb-1">Category</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Category</label>
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value as any)}
-                  className="w-full px-3 py-2 text-sm border border-[#D0D5DD] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="UNIVERSITY">University Exam</option>
                   <option value="SEMESTER">Semester Exam</option>
@@ -536,33 +536,33 @@ export function ExamPreparationPage({ onNavigate }: ExamPreparationPageProps) {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-[#344054] mb-1">Exam Date</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Exam Date</label>
                 <input
                   type="date"
                   value={examDate}
                   onChange={(e) => setExamDate(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-[#D0D5DD] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-[#344054] mb-1">Available Prep Hours</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Available Prep Hours</label>
                 <input
                   type="number"
                   value={prepHours}
                   onChange={(e) => setPrepHours(Number(e.target.value))}
-                  className="w-full px-3 py-2 text-sm border border-[#D0D5DD] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-[#344054] mb-1">
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Syllabus Topics (Comma separated)
               </label>
               <textarea
                 placeholder="Process Scheduling, Deadlocks & Banker's Algo, Virtual Memory & Paging, File Systems"
                 value={syllabus}
                 onChange={(e) => setSyllabus(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-[#D0D5DD] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 rows={3}
               />
             </div>
@@ -570,7 +570,7 @@ export function ExamPreparationPage({ onNavigate }: ExamPreparationPageProps) {
               <Button type="button" variant="outline" onClick={() => setActiveTab('overview')}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting} className="bg-[#2563EB] text-white">
+              <Button type="submit" disabled={isSubmitting} className="bg-blue-600 text-white">
                 {isSubmitting ? 'Analyzing Curriculum...' : 'Register Exam Target'}
               </Button>
             </div>

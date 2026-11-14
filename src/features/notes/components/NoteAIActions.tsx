@@ -130,32 +130,32 @@ Can you help me understand the core theoretical trade-offs and edge cases for th
       )}
 
       {activeTab === 'summary' && summaryData && (
-        <Card className="border border-[#E4E7EC] bg-white shadow-sm">
-          <CardHeader className="bg-slate-50 border-b border-[#E4E7EC] py-3 px-4 flex flex-row items-center justify-between">
+        <Card className="border border-slate-200 bg-white shadow-sm">
+          <CardHeader className="bg-slate-50 border-b border-slate-200 py-3 px-4 flex flex-row items-center justify-between">
             <div className="flex items-center gap-2">
-              <FileText className="h-4 w-4 text-[#2563EB]" />
-              <CardTitle className="text-xs font-semibold text-[#101828]">Executive Summary</CardTitle>
+              <FileText className="h-4 w-4 text-blue-600" />
+              <CardTitle className="text-xs font-semibold text-slate-900">Executive Summary</CardTitle>
             </div>
             <button
               type="button"
               onClick={() => setActiveTab('actions')}
-              className="text-xs text-[#98A2B3] hover:text-[#101828]"
+              className="text-xs text-slate-400 hover:text-slate-900"
             >
               Back
             </button>
           </CardHeader>
           <CardContent className="p-4 space-y-3">
-            <p className="text-xs text-[#344054] leading-relaxed bg-blue-50/50 p-3 rounded-lg border border-blue-100/60">
+            <p className="text-xs text-slate-700 leading-relaxed bg-blue-50/50 p-3 rounded-lg border border-blue-100/60">
               {summaryData.summary}
             </p>
             <div>
-              <h5 className="text-[11px] font-semibold text-[#101828] uppercase tracking-wider mb-1.5">
+              <h5 className="text-[11px] font-semibold text-slate-900 uppercase tracking-wider mb-1.5">
                 Key Takeaways:
               </h5>
-              <ul className="space-y-1.5 text-xs text-[#344054]">
+              <ul className="space-y-1.5 text-xs text-slate-700">
                 {summaryData.key_takeaways.map((item, idx) => (
                   <li key={idx} className="flex items-start gap-1.5">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-[#2563EB] shrink-0 mt-0.5" />
+                    <CheckCircle2 className="h-3.5 w-3.5 text-blue-600 shrink-0 mt-0.5" />
                     <span>{item}</span>
                   </li>
                 ))}
@@ -166,11 +166,11 @@ Can you help me understand the core theoretical trade-offs and edge cases for th
       )}
 
       {activeTab === 'explain' && (
-        <Card className="border border-[#E4E7EC] bg-white shadow-sm">
-          <CardHeader className="bg-slate-50 border-b border-[#E4E7EC] py-3 px-4 flex flex-row items-center justify-between">
+        <Card className="border border-slate-200 bg-white shadow-sm">
+          <CardHeader className="bg-slate-50 border-b border-slate-200 py-3 px-4 flex flex-row items-center justify-between">
             <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-[#2563EB]" />
-              <CardTitle className="text-xs font-semibold text-[#101828]">Explain Concept Section</CardTitle>
+              <Sparkles className="h-4 w-4 text-blue-600" />
+              <CardTitle className="text-xs font-semibold text-slate-900">Explain Concept Section</CardTitle>
             </div>
             <button
               type="button"
@@ -178,7 +178,7 @@ Can you help me understand the core theoretical trade-offs and edge cases for th
                 setActiveTab('actions');
                 setExplanationResult(null);
               }}
-              className="text-xs text-[#98A2B3] hover:text-[#101828]"
+              className="text-xs text-slate-400 hover:text-slate-900"
             >
               Back
             </button>
@@ -187,7 +187,7 @@ Can you help me understand the core theoretical trade-offs and edge cases for th
             {!explanationResult ? (
               <form onSubmit={handleExplainSection} className="space-y-3">
                 <div>
-                  <label className="block text-[11px] font-medium text-[#475467] mb-1">
+                  <label className="block text-[11px] font-medium text-slate-600 mb-1">
                     Section Heading
                   </label>
                   <input
@@ -196,11 +196,11 @@ Can you help me understand the core theoretical trade-offs and edge cases for th
                     onChange={(e) => setSectionTitle(e.target.value)}
                     placeholder="e.g. 2NF Partial Dependencies"
                     required
-                    className="w-full h-8 px-2.5 rounded border border-[#D0D5DD] text-xs text-[#101828] focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                    className="w-full h-8 px-2.5 rounded border border-slate-300 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-600"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-medium text-[#475467] mb-1">
+                  <label className="block text-[11px] font-medium text-slate-600 mb-1">
                     Excerpt / Concept Text
                   </label>
                   <textarea
@@ -209,7 +209,7 @@ Can you help me understand the core theoretical trade-offs and edge cases for th
                     onChange={(e) => setSectionText(e.target.value)}
                     placeholder="Paste the paragraph or formula you want explained..."
                     required
-                    className="w-full p-2 rounded border border-[#D0D5DD] text-xs text-[#101828] focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                    className="w-full p-2 rounded border border-slate-300 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-600"
                   />
                 </div>
                 <div className="flex justify-end">
@@ -217,7 +217,7 @@ Can you help me understand the core theoretical trade-offs and edge cases for th
                     type="submit"
                     size="sm"
                     disabled={explainMutation.isPending || !sectionTitle || !sectionText}
-                    className="bg-[#2563EB] text-white text-xs h-8 px-3"
+                    className="bg-blue-600 text-white text-xs h-8 px-3"
                   >
                     {explainMutation.isPending ? 'Explaining...' : 'Explain with AI'}
                   </Button>
@@ -225,14 +225,14 @@ Can you help me understand the core theoretical trade-offs and edge cases for th
               </form>
             ) : (
               <div className="space-y-3">
-                <div className="p-3 bg-blue-50/60 rounded-lg border border-blue-100 text-xs text-[#1E3A8A] leading-relaxed whitespace-pre-line">
+                <div className="p-3 bg-blue-50/60 rounded-lg border border-blue-100 text-xs text-blue-900 leading-relaxed whitespace-pre-line">
                   {explanationResult}
                 </div>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setExplanationResult(null)}
-                  className="w-full text-xs text-[#475467]"
+                  className="w-full text-xs text-slate-600"
                 >
                   Explain Another Section
                 </Button>
@@ -244,11 +244,11 @@ Can you help me understand the core theoretical trade-offs and edge cases for th
 
       {/* Main AI Actions Card */}
       {activeTab === 'actions' && (
-        <Card className="border border-[#E4E7EC] bg-white shadow-sm overflow-hidden">
-          <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50/30 border-b border-[#E4E7EC] py-3 px-4">
+        <Card className="border border-slate-200 bg-white shadow-sm overflow-hidden">
+          <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50/30 border-b border-slate-200 py-3 px-4">
             <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-[#2563EB]" />
-              <CardTitle className="text-xs font-semibold text-[#101828]">
+              <Sparkles className="h-4 w-4 text-blue-600" />
+              <CardTitle className="text-xs font-semibold text-slate-900">
                 AI Learning Assistant Actions
               </CardTitle>
             </div>
@@ -257,7 +257,7 @@ Can you help me understand the core theoretical trade-offs and edge cases for th
           <CardContent className="p-4 space-y-4">
             {/* Quick Study Generators */}
             <div className="space-y-2">
-              <h5 className="text-[11px] font-semibold text-[#475467] uppercase tracking-wider">
+              <h5 className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider">
                 Study & Recall Tools
               </h5>
               <div className="grid grid-cols-1 gap-2">
@@ -265,13 +265,13 @@ Can you help me understand the core theoretical trade-offs and edge cases for th
                   type="button"
                   onClick={handleFlashcards}
                   disabled={flashcardsMutation.isPending}
-                  className="flex items-center justify-between p-2.5 rounded-lg border border-[#E4E7EC] hover:border-[#2563EB] hover:bg-blue-50/40 text-left transition group"
+                  className="flex items-center justify-between p-2.5 rounded-lg border border-slate-200 hover:border-blue-600 hover:bg-blue-50/40 text-left transition group"
                 >
-                  <div className="flex items-center gap-2 text-xs font-medium text-[#101828]">
-                    <Layers className="h-4 w-4 text-[#2563EB]" />
+                  <div className="flex items-center gap-2 text-xs font-medium text-slate-900">
+                    <Layers className="h-4 w-4 text-blue-600" />
                     <span>Generate Flashcards</span>
                   </div>
-                  <span className="text-[11px] text-[#475467] group-hover:text-[#2563EB]">
+                  <span className="text-[11px] text-slate-600 group-hover:text-blue-600">
                     {flashcardsMutation.isPending ? 'Generating...' : 'Recall Deck →'}
                   </span>
                 </button>
@@ -280,13 +280,13 @@ Can you help me understand the core theoretical trade-offs and edge cases for th
                   type="button"
                   onClick={handleQuiz}
                   disabled={quizMutation.isPending}
-                  className="flex items-center justify-between p-2.5 rounded-lg border border-[#E4E7EC] hover:border-[#2563EB] hover:bg-blue-50/40 text-left transition group"
+                  className="flex items-center justify-between p-2.5 rounded-lg border border-slate-200 hover:border-blue-600 hover:bg-blue-50/40 text-left transition group"
                 >
-                  <div className="flex items-center gap-2 text-xs font-medium text-[#101828]">
-                    <HelpCircle className="h-4 w-4 text-[#2563EB]" />
+                  <div className="flex items-center gap-2 text-xs font-medium text-slate-900">
+                    <HelpCircle className="h-4 w-4 text-blue-600" />
                     <span>Generate Practice Quiz</span>
                   </div>
-                  <span className="text-[11px] text-[#475467] group-hover:text-[#2563EB]">
+                  <span className="text-[11px] text-slate-600 group-hover:text-blue-600">
                     {quizMutation.isPending ? 'Generating...' : 'MCQs →'}
                   </span>
                 </button>
@@ -295,13 +295,13 @@ Can you help me understand the core theoretical trade-offs and edge cases for th
                   type="button"
                   onClick={handleSummarize}
                   disabled={summarizeMutation.isPending}
-                  className="flex items-center justify-between p-2.5 rounded-lg border border-[#E4E7EC] hover:border-[#2563EB] hover:bg-blue-50/40 text-left transition group"
+                  className="flex items-center justify-between p-2.5 rounded-lg border border-slate-200 hover:border-blue-600 hover:bg-blue-50/40 text-left transition group"
                 >
-                  <div className="flex items-center gap-2 text-xs font-medium text-[#101828]">
-                    <FileText className="h-4 w-4 text-[#2563EB]" />
+                  <div className="flex items-center gap-2 text-xs font-medium text-slate-900">
+                    <FileText className="h-4 w-4 text-blue-600" />
                     <span>Executive Summary</span>
                   </div>
-                  <span className="text-[11px] text-[#475467] group-hover:text-[#2563EB]">
+                  <span className="text-[11px] text-slate-600 group-hover:text-blue-600">
                     {summarizeMutation.isPending ? 'Summarizing...' : 'Takeaways →'}
                   </span>
                 </button>
@@ -309,13 +309,13 @@ Can you help me understand the core theoretical trade-offs and edge cases for th
                 <button
                   type="button"
                   onClick={() => setActiveTab('explain')}
-                  className="flex items-center justify-between p-2.5 rounded-lg border border-[#E4E7EC] hover:border-[#2563EB] hover:bg-blue-50/40 text-left transition group"
+                  className="flex items-center justify-between p-2.5 rounded-lg border border-slate-200 hover:border-blue-600 hover:bg-blue-50/40 text-left transition group"
                 >
-                  <div className="flex items-center gap-2 text-xs font-medium text-[#101828]">
-                    <Zap className="h-4 w-4 text-[#2563EB]" />
+                  <div className="flex items-center gap-2 text-xs font-medium text-slate-900">
+                    <Zap className="h-4 w-4 text-blue-600" />
                     <span>Explain Specific Section</span>
                   </div>
-                  <span className="text-[11px] text-[#475467] group-hover:text-[#2563EB]">
+                  <span className="text-[11px] text-slate-600 group-hover:text-blue-600">
                     Interactive →
                   </span>
                 </button>
@@ -323,19 +323,19 @@ Can you help me understand the core theoretical trade-offs and edge cases for th
             </div>
 
             {/* AI Agent Deep Integration */}
-            <div className="pt-3 border-t border-[#F2F4F7]">
+            <div className="pt-3 border-t border-slate-100">
               <div className="p-3 bg-gradient-to-br from-blue-50/70 to-slate-50 border border-blue-100 rounded-lg space-y-2">
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-[#101828]">
-                  <Bot className="h-4 w-4 text-[#2563EB]" />
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-900">
+                  <Bot className="h-4 w-4 text-blue-600" />
                   <span>Ask AI Learning Agent</span>
                 </div>
-                <p className="text-[11px] text-[#475467] leading-relaxed">
+                <p className="text-[11px] text-slate-600 leading-relaxed">
                   Bridge this note directly into your personal AI learning chat with full syllabus context.
                 </p>
                 <Button
                   size="sm"
                   onClick={handleAskAIAgent}
-                  className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs h-7.5 font-medium flex items-center justify-center gap-1.5"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs h-7.5 font-medium flex items-center justify-center gap-1.5"
                 >
                   <MessageSquare className="h-3.5 w-3.5" />
                   Chat about this Note
@@ -344,8 +344,8 @@ Can you help me understand the core theoretical trade-offs and edge cases for th
             </div>
 
             {/* Note Regeneration & Tuning */}
-            <div className="pt-3 border-t border-[#F2F4F7] space-y-2">
-              <h5 className="text-[11px] font-semibold text-[#475467] uppercase tracking-wider">
+            <div className="pt-3 border-t border-slate-100 space-y-2">
+              <h5 className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider">
                 Refine Note Perspective
               </h5>
               <div className="grid grid-cols-2 gap-1.5">
@@ -360,7 +360,7 @@ Can you help me understand the core theoretical trade-offs and edge cases for th
                     type="button"
                     disabled={regenerateMutation.isPending}
                     onClick={() => handleRegenerate(s.id)}
-                    className="p-1.5 text-[11px] text-[#344054] bg-[#F9FAFB] hover:bg-blue-50/60 hover:text-[#2563EB] rounded border border-[#E4E7EC] text-center transition"
+                    className="p-1.5 text-[11px] text-slate-700 bg-slate-50 hover:bg-blue-50/60 hover:text-blue-600 rounded border border-slate-200 text-center transition"
                   >
                     {regenerateMutation.isPending ? 'Refining...' : s.label}
                   </button>

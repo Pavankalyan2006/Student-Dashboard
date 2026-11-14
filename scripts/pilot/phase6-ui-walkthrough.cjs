@@ -16,7 +16,7 @@ const PAGES = [
   '/exams', '/interviews', '/assessment/gate-preparation', '/projects', '/github', '/research', '/knowledge', '/career',
   '/resume', '/mock-interviews', '/applications', '/placement', '/integrations', '/profile/external', '/career/jobs',
   '/community', '/community/questions', '/community/discussions', '/community/resources', '/progress', '/goals',
-  '/profile', '/profile/edit', '/notifications', '/profile/settings', '/settings', '/sandbox', '/pilot-feedback',
+  '/profile', '/profile/edit', '/notifications', '/profile/settings', '/settings', '/sandbox',
 ];
 
 (async () => {
@@ -109,7 +109,7 @@ const PAGES = [
         error_screen: /something went wrong|page not found|404/i.test(document.body.innerText.slice(0, 3000)),
         redirected_to: location.pathname,
       })).catch(() => ({}));
-      if (w === 390 && ['/dashboard', '/profile', '/coding', '/quiz', '/settings', '/community/questions', '/pilot-feedback'].includes(path)) {
+      if (w === 390 && ['/dashboard', '/profile', '/coding', '/quiz', '/settings', '/community/questions'].includes(path)) {
         await p.screenshot({ path: `${OUT}/shots/page${path.replace(/\//g, '-')}-${w}.png` }).catch(() => {});
       }
       report.pages.push({ width: w, path, load_ms: ms, ...info, page_errors: errs, console_errors: cons, api_5xx: bad, load_error: loadErr });

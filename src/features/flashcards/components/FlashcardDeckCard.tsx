@@ -96,7 +96,7 @@ export const FlashcardDeckCard: React.FC<FlashcardDeckCardProps> = ({
       className={`p-5 rounded-2xl border transition-all duration-200 flex flex-col justify-between shadow-sm bg-white hover:shadow-md ${
         deck.is_archived
           ? 'border-gray-200 opacity-75 bg-gray-50/50'
-          : 'border-[#E4E7EC] hover:border-blue-400'
+          : 'border-slate-200 hover:border-blue-400'
       }`}
     >
       <div className="space-y-3">
@@ -127,7 +127,7 @@ export const FlashcardDeckCard: React.FC<FlashcardDeckCardProps> = ({
                 <MoreVertical className="w-4 h-4" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 bg-white shadow-lg border border-[#E4E7EC] rounded-xl p-1">
+            <DropdownMenuContent align="end" className="w-48 bg-white shadow-lg border border-slate-200 rounded-xl p-1">
               <DropdownMenuItem onClick={() => onStudy(deck)} className="text-xs font-medium cursor-pointer">
                 <Play className="w-3.5 h-3.5 mr-2 text-blue-600" />
                 Study Deck
@@ -172,11 +172,11 @@ export const FlashcardDeckCard: React.FC<FlashcardDeckCardProps> = ({
         <div>
           <h3
             onClick={() => onOpenDetail(deck)}
-            className="text-base font-bold text-[#101828] hover:text-blue-600 cursor-pointer line-clamp-1 transition-colors"
+            className="text-base font-bold text-slate-900 hover:text-blue-600 cursor-pointer line-clamp-1 transition-colors"
           >
             {deck.title}
           </h3>
-          <p className="text-xs text-[#475467] line-clamp-2 mt-1 leading-relaxed">
+          <p className="text-xs text-slate-600 line-clamp-2 mt-1 leading-relaxed">
             {deck.description || 'Curriculum flashcards designed for targeted active recall and retention.'}
           </p>
         </div>
@@ -198,7 +198,7 @@ export const FlashcardDeckCard: React.FC<FlashcardDeckCardProps> = ({
 
       <div className="mt-4 pt-3 border-t border-gray-100 space-y-3">
         {/* Progress & Due Counts */}
-        <div className="flex items-center justify-between text-xs font-medium text-[#475467]">
+        <div className="flex items-center justify-between text-xs font-medium text-slate-600">
           <span className="flex items-center gap-1">
             <Layers className="w-3.5 h-3.5 text-gray-400" />
             {deck.total_cards} {deck.total_cards === 1 ? 'card' : 'cards'}
@@ -239,7 +239,7 @@ export const FlashcardDeckCard: React.FC<FlashcardDeckCardProps> = ({
             size="sm"
             onClick={() => onStudy(deck)}
             disabled={deck.total_cards === 0}
-            className="flex-1 text-xs font-semibold bg-[#2563EB] hover:bg-[#1D4ED8] text-white gap-1.5 shadow-sm disabled:opacity-50"
+            className="flex-1 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white gap-1.5 shadow-sm disabled:opacity-50"
           >
             <Play className="w-3.5 h-3.5 fill-current" />
             {deck.due_count > 0 ? 'Review Due' : 'Study'}
@@ -249,7 +249,7 @@ export const FlashcardDeckCard: React.FC<FlashcardDeckCardProps> = ({
             size="sm"
             variant="outline"
             onClick={() => onOpenDetail(deck)}
-            className="text-xs font-semibold text-[#344054] border-[#D0D5DD] hover:bg-gray-50"
+            className="text-xs font-semibold text-slate-700 border-slate-300 hover:bg-gray-50"
           >
             Open Deck
           </Button>

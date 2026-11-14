@@ -151,22 +151,22 @@ export const KnowledgeStudyMaterialModal: React.FC<KnowledgeStudyMaterialModalPr
   const selectedDoc = documents.find((d) => d.id === documentId);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white backdrop-blur-sm animate-fade-in">
+      <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-purple-600 to-pink-600 flex items-center justify-center text-white shadow-md">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-violet-600 flex items-center justify-center text-white shadow-md">
               <Sparkles className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white">AI Study Deck & Practice Lab</h2>
-              <p className="text-xs text-slate-400">Generate interactive revision aids from your notes</p>
+              <h2 className="text-lg font-bold text-slate-900">AI Study Deck & Practice Lab</h2>
+              <p className="text-xs text-slate-500">Generate interactive revision aids from your notes</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -175,17 +175,17 @@ export const KnowledgeStudyMaterialModal: React.FC<KnowledgeStudyMaterialModalPr
         {/* Modal Body */}
         <div className="p-6 overflow-y-auto space-y-6 flex-1">
           {/* Configuration controls */}
-          <div className="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4 space-y-4">
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* Document Selector */}
               <div>
-                <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">
                   Source Document
                 </label>
                 <select
                   value={documentId}
                   onChange={(e) => setDocumentId(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs focus:outline-none focus:border-indigo-500"
                 >
                   {documents.length === 0 && <option value="">No documents uploaded</option>}
                   {documents.map((d) => (
@@ -198,13 +198,13 @@ export const KnowledgeStudyMaterialModal: React.FC<KnowledgeStudyMaterialModalPr
 
               {/* Material Type Selector */}
               <div>
-                <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">
                   Study Format
                 </label>
                 <select
                   value={materialType}
                   onChange={(e) => setMaterialType(e.target.value as StudyMaterialType)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs focus:outline-none focus:border-indigo-500"
                 >
                   <option value="FLASHCARDS">Interactive Flashcards</option>
                   <option value="QUIZ">Self-Assessment Quiz (MCQ)</option>
@@ -221,12 +221,12 @@ export const KnowledgeStudyMaterialModal: React.FC<KnowledgeStudyMaterialModalPr
                 value={topicFocus}
                 onChange={(e) => setTopicFocus(e.target.value)}
                 placeholder="Optional topic focus (e.g. 'Virtual Memory' or 'Time Complexity')..."
-                className="flex-1 px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-indigo-500"
+                className="flex-1 px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 text-xs focus:outline-none focus:border-indigo-500"
               />
               <button
                 onClick={handleGenerate}
                 disabled={generating || !documentId}
-                className="px-5 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 disabled:opacity-50 text-white text-xs font-semibold rounded-xl transition shadow-md shadow-purple-600/25 shrink-0"
+                className="px-5 py-2 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 disabled:opacity-50 text-white text-xs font-semibold rounded-xl transition shadow-md shadow-purple-600/25 shrink-0"
               >
                 {generating ? 'Synthesizing...' : 'Generate Deck'}
               </button>
@@ -237,8 +237,8 @@ export const KnowledgeStudyMaterialModal: React.FC<KnowledgeStudyMaterialModalPr
           {generating && (
             <div className="py-12 text-center">
               <div className="w-10 h-10 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-              <p className="text-sm font-semibold text-white">Generating {materialType.toLowerCase()}...</p>
-              <p className="text-xs text-slate-400 mt-1">Analyzing pages and extracting high-yield concepts</p>
+              <p className="text-sm font-semibold text-slate-900">Generating {materialType.toLowerCase()}...</p>
+              <p className="text-xs text-slate-500 mt-1">Analyzing pages and extracting high-yield concepts</p>
             </div>
           )}
 
@@ -246,9 +246,9 @@ export const KnowledgeStudyMaterialModal: React.FC<KnowledgeStudyMaterialModalPr
           {generatedMaterial && !generating && (
             <div className="space-y-4">
               {/* Material Title Banner */}
-              <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                <h3 className="text-base font-bold text-white">{generatedMaterial.title}</h3>
-                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                <h3 className="text-base font-bold text-slate-900">{generatedMaterial.title}</h3>
+                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-purple-50 text-purple-600 border border-purple-200">
                   {generatedMaterial.type}
                 </span>
               </div>
@@ -259,12 +259,12 @@ export const KnowledgeStudyMaterialModal: React.FC<KnowledgeStudyMaterialModalPr
                 generatedMaterial.content.flashcards.length > 0 && (
                   <div className="space-y-4">
                     {/* Card Counter & Progress */}
-                    <div className="flex items-center justify-between text-xs text-slate-400">
+                    <div className="flex items-center justify-between text-xs text-slate-500">
                       <span>
                         Card {currentFlashcardIndex + 1} of{' '}
                         {generatedMaterial.content.flashcards.length}
                       </span>
-                      <span className="text-indigo-400 font-medium">Click card to flip</span>
+                      <span className="text-indigo-600 font-medium">Click card to flip</span>
                     </div>
 
                     {/* Flip Card Container */}
@@ -274,19 +274,19 @@ export const KnowledgeStudyMaterialModal: React.FC<KnowledgeStudyMaterialModalPr
                       return (
                         <div
                           onClick={() => setIsFlipped(!isFlipped)}
-                          className="min-h-[220px] p-6 rounded-2xl bg-gradient-to-b from-slate-800/90 to-slate-800/40 border border-slate-700 hover:border-purple-500/50 transition cursor-pointer shadow-xl flex flex-col justify-between text-center select-none"
+                          className="min-h-[220px] p-6 rounded-2xl surface-hero border border-slate-200 hover:border-purple-200 transition cursor-pointer shadow-xl flex flex-col justify-between text-center select-none"
                         >
                           <div className="flex items-center justify-between text-[11px]">
-                            <span className="px-2 py-0.5 rounded bg-slate-700/80 text-slate-300 font-medium">
+                            <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-medium">
                               {card.topic || 'Core Concept'}
                             </span>
                             <span
                               className={`px-2 py-0.5 rounded font-bold ${
                                 card.difficulty === 'HARD'
-                                  ? 'text-red-400 bg-red-500/10'
+                                  ? 'text-red-600 bg-red-50'
                                   : card.difficulty === 'MEDIUM'
-                                  ? 'text-amber-400 bg-amber-500/10'
-                                  : 'text-emerald-400 bg-emerald-500/10'
+                                  ? 'text-amber-600 bg-amber-50'
+                                  : 'text-emerald-600 bg-emerald-50'
                               }`}
                             >
                               {card.difficulty || 'MEDIUM'}
@@ -296,19 +296,19 @@ export const KnowledgeStudyMaterialModal: React.FC<KnowledgeStudyMaterialModalPr
                           <div className="my-auto py-4">
                             {!isFlipped ? (
                               <div>
-                                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-2">
+                                <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block mb-2">
                                   Question
                                 </span>
-                                <h4 className="text-lg font-bold text-white px-4 leading-snug">
+                                <h4 className="text-lg font-bold text-slate-900 px-4 leading-snug">
                                   {card.question}
                                 </h4>
                               </div>
                             ) : (
                               <div className="animate-fade-in">
-                                <span className="text-[11px] font-semibold text-purple-400 uppercase tracking-wider block mb-2">
+                                <span className="text-[11px] font-semibold text-purple-600 uppercase tracking-wider block mb-2">
                                   Answer & Rationale
                                 </span>
-                                <p className="text-sm font-medium text-slate-200 px-4 leading-relaxed">
+                                <p className="text-sm font-medium text-slate-800 px-4 leading-relaxed">
                                   {card.answer}
                                 </p>
                               </div>
@@ -331,7 +331,7 @@ export const KnowledgeStudyMaterialModal: React.FC<KnowledgeStudyMaterialModalPr
                           setCurrentFlashcardIndex((prev) => Math.max(0, prev - 1));
                         }}
                         disabled={currentFlashcardIndex === 0}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-slate-300 text-xs font-semibold transition"
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 disabled:opacity-40 text-slate-700 text-xs font-semibold transition"
                       >
                         <ChevronLeft className="w-4 h-4" />
                         <span>Previous</span>
@@ -366,12 +366,12 @@ export const KnowledgeStudyMaterialModal: React.FC<KnowledgeStudyMaterialModalPr
                 generatedMaterial.content.quiz_questions.length > 0 && (
                   <div className="space-y-4">
                     {/* Score Tally Banner */}
-                    <div className="flex items-center justify-between text-xs text-slate-400 bg-slate-800/40 p-2.5 rounded-xl border border-slate-700/50">
+                    <div className="flex items-center justify-between text-xs text-slate-500 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
                       <span>
                         Question {currentQuizIndex + 1} of{' '}
                         {generatedMaterial.content.quiz_questions.length}
                       </span>
-                      <span className="flex items-center gap-1.5 text-emerald-400 font-bold">
+                      <span className="flex items-center gap-1.5 text-emerald-600 font-bold">
                         <Award className="w-4 h-4" /> Score: {quizScore} /{' '}
                         {Object.keys(answeredMap).length}
                       </span>
@@ -383,8 +383,8 @@ export const KnowledgeStudyMaterialModal: React.FC<KnowledgeStudyMaterialModalPr
                       const isAnswered = selectedIdx !== undefined;
 
                       return (
-                        <div className="p-5 rounded-2xl bg-slate-800/60 border border-slate-700 space-y-4">
-                          <h4 className="text-sm font-bold text-white leading-snug">
+                        <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4">
+                          <h4 className="text-sm font-bold text-slate-900 leading-snug">
                             {q.question}
                           </h4>
 
@@ -395,16 +395,16 @@ export const KnowledgeStudyMaterialModal: React.FC<KnowledgeStudyMaterialModalPr
                               const isSelected = selectedIdx === idx;
 
                               let btnStyle =
-                                'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-300';
+                                'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700';
                               if (isAnswered) {
                                 if (isCorrect) {
                                   btnStyle =
-                                    'bg-emerald-500/20 border-emerald-500/50 text-emerald-300 font-semibold';
+                                    'bg-emerald-100 border-emerald-200 text-emerald-700 font-semibold';
                                 } else if (isSelected) {
                                   btnStyle =
-                                    'bg-red-500/20 border-red-500/50 text-red-300 font-semibold';
+                                    'bg-red-100 border-red-200 text-red-700 font-semibold';
                                 } else {
-                                  btnStyle = 'bg-slate-800/40 border-slate-700/40 text-slate-500';
+                                  btnStyle = 'bg-slate-50 border-slate-200 text-slate-500';
                                 }
                               }
 
@@ -417,10 +417,10 @@ export const KnowledgeStudyMaterialModal: React.FC<KnowledgeStudyMaterialModalPr
                                 >
                                   <span>{opt}</span>
                                   {isAnswered && isCorrect && (
-                                    <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0 ml-2" />
+                                    <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0 ml-2" />
                                   )}
                                   {isAnswered && isSelected && !isCorrect && (
-                                    <XCircle className="w-4 h-4 text-red-400 shrink-0 ml-2" />
+                                    <XCircle className="w-4 h-4 text-red-600 shrink-0 ml-2" />
                                   )}
                                 </button>
                               );
@@ -429,8 +429,8 @@ export const KnowledgeStudyMaterialModal: React.FC<KnowledgeStudyMaterialModalPr
 
                           {/* Pedagogical Explanation */}
                           {isAnswered && (
-                            <div className="p-3.5 rounded-xl bg-slate-800 border border-slate-700 text-xs text-slate-300 space-y-1 animate-fade-in">
-                              <span className="font-bold text-white block">Explanation:</span>
+                            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 space-y-1 animate-fade-in">
+                              <span className="font-bold text-slate-900 block">Explanation:</span>
                               <p className="leading-relaxed">{q.explanation}</p>
                             </div>
                           )}
@@ -463,13 +463,13 @@ export const KnowledgeStudyMaterialModal: React.FC<KnowledgeStudyMaterialModalPr
 
               {/* 3. SUMMARY VIEW */}
               {generatedMaterial.type === 'SUMMARY' && (
-                <div className="p-5 rounded-2xl bg-slate-800/60 border border-slate-700 space-y-4">
+                <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4">
                   {generatedMaterial.content.summary && (
                     <div>
-                      <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">
                         Executive Synthesis
                       </span>
-                      <p className="text-xs sm:text-sm text-slate-200 leading-relaxed">
+                      <p className="text-xs sm:text-sm text-slate-800 leading-relaxed">
                         {generatedMaterial.content.summary}
                       </p>
                     </div>
@@ -477,10 +477,10 @@ export const KnowledgeStudyMaterialModal: React.FC<KnowledgeStudyMaterialModalPr
 
                   {generatedMaterial.content.key_takeaways && (
                     <div>
-                      <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
+                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
                         Key Engineering Takeaways
                       </span>
-                      <ul className="list-disc list-inside space-y-1 text-xs text-slate-300">
+                      <ul className="list-disc list-inside space-y-1 text-xs text-slate-700">
                         {generatedMaterial.content.key_takeaways.map((t, i) => (
                           <li key={i}>{t}</li>
                         ))}
@@ -490,14 +490,14 @@ export const KnowledgeStudyMaterialModal: React.FC<KnowledgeStudyMaterialModalPr
 
                   {generatedMaterial.content.prerequisites && (
                     <div>
-                      <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
+                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
                         Prerequisites
                       </span>
                       <div className="flex flex-wrap gap-1.5">
                         {generatedMaterial.content.prerequisites.map((p, i) => (
                           <span
                             key={i}
-                            className="px-2 py-0.5 rounded bg-slate-700 text-slate-300 text-xs"
+                            className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-xs"
                           >
                             {p}
                           </span>
@@ -515,20 +515,20 @@ export const KnowledgeStudyMaterialModal: React.FC<KnowledgeStudyMaterialModalPr
                     {generatedMaterial.content.formula_sheet.map((f, i) => (
                       <div
                         key={i}
-                        className="p-4 rounded-xl bg-slate-800/60 border border-slate-700 space-y-2"
+                        className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2"
                       >
                         <div className="flex items-center justify-between text-xs">
-                          <span className="font-bold text-white">{f.name}</span>
+                          <span className="font-bold text-slate-900">{f.name}</span>
                           {f.complexity && (
-                            <span className="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 font-mono text-[11px] font-semibold">
+                            <span className="px-2 py-0.5 rounded bg-indigo-50 text-indigo-600 font-mono text-[11px] font-semibold">
                               {f.complexity}
                             </span>
                           )}
                         </div>
-                        <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800 font-mono text-xs text-cyan-300 overflow-x-auto">
+                        <div className="p-2.5 rounded-lg bg-white border border-slate-200 font-mono text-xs text-cyan-700 overflow-x-auto">
                           {f.formula}
                         </div>
-                        <p className="text-xs text-slate-400">{f.description}</p>
+                        <p className="text-xs text-slate-500">{f.description}</p>
                         {f.variables && (
                           <p className="text-[11px] text-slate-500 italic">
                             Variables: {f.variables}
@@ -543,7 +543,7 @@ export const KnowledgeStudyMaterialModal: React.FC<KnowledgeStudyMaterialModalPr
         </div>
 
         {/* Footer */}
-        <div className="flex flex-wrap items-center justify-between gap-2 px-6 py-4 border-t border-slate-800 bg-slate-900/60">
+        <div className="flex flex-wrap items-center justify-between gap-2 px-6 py-4 border-t border-slate-200 bg-white">
           <div className="flex flex-wrap items-center gap-2">
             {generatedMaterial && (
               <>
@@ -551,7 +551,7 @@ export const KnowledgeStudyMaterialModal: React.FC<KnowledgeStudyMaterialModalPr
                   type="button"
                   onClick={handleSaveToNotes}
                   disabled={savingNote}
-                  className="px-3.5 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 text-xs font-semibold rounded-xl transition flex items-center gap-1.5"
+                  className="px-3.5 py-1.5 bg-indigo-100 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-semibold rounded-xl transition flex items-center gap-1.5"
                 >
                   <FileText className="w-3.5 h-3.5" />
                   <span>{savedNoteMsg || (savingNote ? 'Saving...' : 'Save to Notes')}</span>
@@ -562,7 +562,7 @@ export const KnowledgeStudyMaterialModal: React.FC<KnowledgeStudyMaterialModalPr
                     type="button"
                     onClick={handleSaveToFlashcards}
                     disabled={savingFlashcards}
-                    className="px-3.5 py-1.5 bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/30 text-xs font-semibold rounded-xl transition flex items-center gap-1.5"
+                    className="px-3.5 py-1.5 bg-purple-100 hover:bg-purple-100 text-purple-700 border border-purple-200 text-xs font-semibold rounded-xl transition flex items-center gap-1.5"
                   >
                     <Sparkles className="w-3.5 h-3.5" />
                     <span>{savedFlashcardsMsg || (savingFlashcards ? 'Exporting...' : 'Export Deck')}</span>
@@ -574,7 +574,7 @@ export const KnowledgeStudyMaterialModal: React.FC<KnowledgeStudyMaterialModalPr
                     type="button"
                     onClick={handleSaveToQuiz}
                     disabled={savingQuiz}
-                    className="px-3.5 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 text-xs font-semibold rounded-xl transition flex items-center gap-1.5"
+                    className="px-3.5 py-1.5 bg-emerald-100 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-semibold rounded-xl transition flex items-center gap-1.5"
                   >
                     <Award className="w-3.5 h-3.5" />
                     <span>{savedQuizMsg || (savingQuiz ? 'Saving...' : 'Save as Practice Quiz')}</span>
@@ -586,7 +586,7 @@ export const KnowledgeStudyMaterialModal: React.FC<KnowledgeStudyMaterialModalPr
 
           <button
             onClick={onClose}
-            className="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl transition"
+            className="px-5 py-2 bg-slate-50 hover:bg-slate-100 text-slate-800 text-xs font-semibold rounded-xl transition"
           >
             Close Deck
           </button>

@@ -95,7 +95,7 @@ export function DocumentCard({
     <>
       <div
         className={cn(
-          'group relative flex flex-col justify-between rounded-xl border border-[#E4E7EC] bg-white p-4 shadow-xs transition-all duration-200 hover:shadow-md hover:border-[#2563EB]/40',
+          'group relative flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-xs transition-all duration-200 hover:shadow-md hover:border-blue-600/40',
           document.status === 'FAILED' && 'border-rose-200 bg-rose-50/20'
         )}
       >
@@ -179,9 +179,9 @@ export function DocumentCard({
           {/* Title and description */}
           <div
             onClick={() => (onPreview ? onPreview(document) : onOpen(document.id))}
-            className="cursor-pointer group-hover:text-[#2563EB] transition-colors"
+            className="cursor-pointer group-hover:text-blue-600 transition-colors"
           >
-            <h3 className="text-sm font-semibold text-[#101828] line-clamp-2 leading-snug group-hover:text-[#2563EB]">
+            <h3 className="text-sm font-semibold text-slate-900 line-clamp-2 leading-snug group-hover:text-blue-600">
               {document.title}
             </h3>
             {document.course_title && (
@@ -193,8 +193,8 @@ export function DocumentCard({
         </div>
 
         {/* Metadata footer */}
-        <div className="mt-4 pt-3 border-t border-[#F2F4F7] space-y-2">
-          <div className="flex items-center justify-between text-[11px] text-[#475467]">
+        <div className="mt-4 pt-3 border-t border-slate-100 space-y-2">
+          <div className="flex items-center justify-between text-[11px] text-slate-600">
             <div className="flex items-center gap-1">
               <BookOpen className="h-3.5 w-3.5 text-slate-400" />
               <span>{document.page_count > 0 ? `${document.page_count} pages` : 'Analyzing'}</span>

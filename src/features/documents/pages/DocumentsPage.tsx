@@ -215,7 +215,7 @@ export function DocumentsPage({ onNavigate }: DocumentsPageProps) {
             <Button
               size="sm"
               onClick={() => setIsUploadModalOpen(true)}
-              className="gap-1.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-xs shadow-xs"
+              className="gap-1.5 bg-blue-600 hover:bg-blue-700 text-xs shadow-xs"
             >
               <UploadCloud className="h-4 w-4" />
               <span>Upload Document</span>
@@ -527,7 +527,7 @@ export function DocumentsPage({ onNavigate }: DocumentsPageProps) {
           <div className="flex items-center gap-2 flex-1">
             <div
               className="h-5 w-5 rounded-md flex items-center justify-center text-white"
-              style={{ backgroundColor: currentFolder.color || '#2563EB' }}
+              style={{ backgroundColor: currentFolder.color || '#4654E0' }}
             >
               <Folder className="h-3 w-3" />
             </div>
@@ -652,7 +652,7 @@ export function DocumentsPage({ onNavigate }: DocumentsPageProps) {
                     <div className="flex items-center justify-between gap-2 mb-3">
                       <div
                         className="h-10 w-10 rounded-xl flex items-center justify-center text-white shadow-xs"
-                        style={{ backgroundColor: f.color || '#2563EB' }}
+                        style={{ backgroundColor: f.color || '#4654E0' }}
                       >
                         <Folder className="h-5 w-5" />
                       </div>
@@ -777,8 +777,8 @@ export function DocumentsPage({ onNavigate }: DocumentsPageProps) {
         <>
           {isDocsLoading ? (
             <div className="flex flex-col items-center justify-center p-16 text-center">
-              <RefreshCw className="h-8 w-8 animate-spin text-[#2563EB] mb-3" />
-              <p className="text-xs font-medium text-[#475467]">Loading your study documents...</p>
+              <RefreshCw className="h-8 w-8 animate-spin text-blue-600 mb-3" />
+              <p className="text-xs font-medium text-slate-600">Loading your study documents...</p>
             </div>
           ) : displayedDocuments.length === 0 ? (
             <DocumentEmptyState

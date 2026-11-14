@@ -152,17 +152,17 @@ export function CommunityQuestionsPage({
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E4E7EC] pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
         <div className="flex items-center gap-3">
           <button
             onClick={() => onNavigate('/community')}
-            className="p-2 text-[#475467] hover:text-[#101828] hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+            className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div>
-            <h1 className="text-xl font-bold text-[#101828]">Student Questions & Answers</h1>
-            <p className="text-xs text-[#667085]">
+            <h1 className="text-xl font-bold text-slate-900">Student Questions & Answers</h1>
+            <p className="text-xs text-slate-500">
               Get peer answers on engineering problems, debugging roadblocks, and conceptual proofs.
             </p>
           </div>
@@ -170,7 +170,7 @@ export function CommunityQuestionsPage({
 
         <button
           onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] rounded-xl transition-colors shadow-2xs cursor-pointer self-start sm:self-auto"
+          className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors shadow-2xs cursor-pointer self-start sm:self-auto"
         >
           <Plus className="h-4 w-4" />
           <span>Ask a Question</span>
@@ -186,14 +186,14 @@ export function CommunityQuestionsPage({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search questions by topic, algorithm, or keyword..."
-            className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-[#D0D5DD] bg-white focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+            className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-600"
           />
         </div>
 
         <select
           value={selectedTopic}
           onChange={(e) => setSelectedTopic(e.target.value)}
-          className="px-3 py-2 text-xs rounded-xl border border-[#D0D5DD] bg-white focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+          className="px-3 py-2 text-xs rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-600"
         >
           <option value="ALL">All Academic Topics</option>
           {topics.map((t) => (
@@ -205,13 +205,13 @@ export function CommunityQuestionsPage({
       </div>
 
       {/* Questions List */}
-      <div className="bg-white rounded-2xl border border-[#E4E7EC] shadow-2xs overflow-hidden">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center text-xs text-[#667085] animate-pulse">
+          <div className="p-8 text-center text-xs text-slate-500 animate-pulse">
             Loading questions...
           </div>
         ) : filtered.length === 0 ? (
-          <div className="p-12 text-center text-xs text-[#667085] space-y-2">
+          <div className="p-12 text-center text-xs text-slate-500 space-y-2">
             <HelpCircle className="h-8 w-8 mx-auto text-slate-300" />
             <p className="font-semibold text-slate-700">No questions found</p>
             <p className="text-[11px] text-slate-500">
@@ -227,7 +227,7 @@ export function CommunityQuestionsPage({
                 className="p-5 hover:bg-slate-50/70 transition-colors cursor-pointer group space-y-2"
               >
                 <div className="flex items-start justify-between gap-4">
-                  <h3 className="text-sm font-bold text-[#101828] group-hover:text-[#2563EB] transition-colors leading-snug">
+                  <h3 className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors leading-snug">
                     {q.title}
                   </h3>
 
@@ -238,17 +238,17 @@ export function CommunityQuestionsPage({
                         <span>Accepted Answer</span>
                       </span>
                     )}
-                    <span className="text-[11px] font-semibold text-[#475467] bg-slate-100 px-2 py-0.5 rounded">
+                    <span className="text-[11px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
                       {q.answer_count} {q.answer_count === 1 ? 'answer' : 'answers'}
                     </span>
                   </div>
                 </div>
 
-                <p className="text-xs text-[#475467] line-clamp-2 leading-relaxed">
+                <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
                   {q.description}
                 </p>
 
-                <div className="flex flex-wrap items-center justify-between gap-2 pt-2 text-[11px] text-[#667085]">
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-2 text-[11px] text-slate-500">
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-slate-800">{q.author_name}</span>
                     <span>·</span>
@@ -264,7 +264,7 @@ export function CommunityQuestionsPage({
                     {q.tags?.map((tag) => (
                       <span
                         key={tag}
-                        className="px-2 py-0.2 rounded-md bg-blue-50 text-[#2563EB] text-[10px] font-medium"
+                        className="px-2 py-0.2 rounded-md bg-blue-50 text-blue-600 text-[10px] font-medium"
                       >
                         #{tag}
                       </span>
@@ -280,11 +280,11 @@ export function CommunityQuestionsPage({
       {/* Ask Question Modal with AI Advisory Assistance */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl border border-[#E4E7EC] p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto space-y-5 shadow-2xl">
+          <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto space-y-5 shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
-                <h2 className="text-base font-bold text-[#101828]">Ask a Community Question</h2>
-                <p className="text-xs text-[#667085]">
+                <h2 className="text-base font-bold text-slate-900">Ask a Community Question</h2>
+                <p className="text-xs text-slate-500">
                   Use markdown, code blocks, or math formulas. Review before posting.
                 </p>
               </div>
@@ -298,7 +298,7 @@ export function CommunityQuestionsPage({
 
             <form onSubmit={handleCreateQuestion} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-[#344054] mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Question Title (clear and specific)
                 </label>
                 <input
@@ -307,17 +307,17 @@ export function CommunityQuestionsPage({
                   onChange={(e) => setNewTitle(e.target.value)}
                   placeholder="e.g. Why does AVL Tree rotation maintain O(log N) balance after deletion?"
                   required
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#D0D5DD] focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600"
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-[#344054] mb-1">Topic</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Topic</label>
                   <select
                     value={newTopicId}
                     onChange={(e) => setNewTopicId(e.target.value)}
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-[#D0D5DD] bg-white focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-600"
                   >
                     {topics.map((t) => (
                       <option key={t.id} value={t.id}>
@@ -328,7 +328,7 @@ export function CommunityQuestionsPage({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-[#344054] mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
                     Tags (comma separated)
                   </label>
                   <input
@@ -336,13 +336,13 @@ export function CommunityQuestionsPage({
                     value={newTagsText}
                     onChange={(e) => setNewTagsText(e.target.value)}
                     placeholder="e.g. avl, tree, dsa"
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-[#D0D5DD] focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#344054] mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Question Description (Supports Markdown, formulas, code)
                 </label>
                 <textarea
@@ -351,22 +351,22 @@ export function CommunityQuestionsPage({
                   onChange={(e) => setNewDescription(e.target.value)}
                   placeholder="Provide all context, code snippets, or error traces. Describe what you have attempted..."
                   required
-                  className="w-full px-3 py-2 text-xs font-mono rounded-xl border border-[#D0D5DD] focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+                  className="w-full px-3 py-2 text-xs font-mono rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600"
                 />
               </div>
 
               {/* Optional AI Question Assistance Advisory */}
               <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-[#101828]">
-                    <Sparkles className="h-4 w-4 text-[#4F46E5]" />
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900">
+                    <Sparkles className="h-4 w-4 text-indigo-600" />
                     <span>AI Question Advisory Assistance</span>
                   </div>
                   <button
                     type="button"
                     onClick={handleGetAiAssistance}
                     disabled={aiLoading}
-                    className="text-[11px] font-semibold text-[#4F46E5] hover:underline cursor-pointer disabled:opacity-50"
+                    className="text-[11px] font-semibold text-indigo-600 hover:underline cursor-pointer disabled:opacity-50"
                   >
                     {aiLoading ? 'Analyzing...' : 'Run Clarity & Tag Suggestions'}
                   </button>
@@ -374,20 +374,20 @@ export function CommunityQuestionsPage({
 
                 {aiFeedback && (
                   <div className="space-y-2 pt-2 border-t border-slate-200 text-xs">
-                    <p className="text-[#344054]">
+                    <p className="text-slate-700">
                       <span className="font-semibold text-slate-900">Feedback: </span>
                       {aiFeedback.clarity_feedback}
                     </p>
 
                     {aiFeedback.suggested_tags?.length > 0 && (
                       <div className="flex items-center gap-1.5 flex-wrap pt-1">
-                        <span className="text-[11px] text-[#667085]">Click to add tags:</span>
+                        <span className="text-[11px] text-slate-500">Click to add tags:</span>
                         {aiFeedback.suggested_tags.map((tg) => (
                           <button
                             key={tg}
                             type="button"
                             onClick={() => handleApplyAiTags(tg)}
-                            className="px-2 py-0.5 rounded bg-blue-100 text-[#2563EB] text-[10px] font-semibold hover:bg-blue-200 cursor-pointer"
+                            className="px-2 py-0.5 rounded bg-blue-100 text-blue-600 text-[10px] font-semibold hover:bg-blue-200 cursor-pointer"
                           >
                             +{tg}
                           </button>
@@ -402,14 +402,14 @@ export function CommunityQuestionsPage({
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 text-xs font-semibold text-[#475467] hover:bg-slate-100 rounded-xl cursor-pointer"
+                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-5 py-2 text-xs font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] rounded-xl shadow-2xs cursor-pointer disabled:opacity-50"
+                  className="px-5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-2xs cursor-pointer disabled:opacity-50"
                 >
                   {submitting ? 'Submitting...' : 'Post Question'}
                 </button>

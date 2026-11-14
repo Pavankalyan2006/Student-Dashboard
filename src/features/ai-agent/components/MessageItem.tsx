@@ -111,7 +111,7 @@ export function MessageItem({
       {/* Avatar Icon */}
       <div className="shrink-0 mt-1">
         {isAssistant ? (
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#2563EB] to-[#4F46E5] text-white shadow-xs">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-xs">
             <Sparkles className="h-4 w-4" />
           </div>
         ) : (
@@ -236,7 +236,7 @@ export function MessageItem({
               {hasCode && (
                 <button
                   onClick={() => onNavigate?.('/placements/coding')}
-                  className="inline-flex items-center gap-1 px-2 py-1 rounded bg-blue-50 border border-blue-200 hover:bg-blue-100 text-[#2563EB] text-[11px] font-semibold transition-colors cursor-pointer"
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded bg-blue-50 border border-blue-200 hover:bg-blue-100 text-blue-600 text-[11px] font-semibold transition-colors cursor-pointer"
                   title="Open in isolated Coding Lab"
                 >
                   <Code2 className="h-3 w-3" />

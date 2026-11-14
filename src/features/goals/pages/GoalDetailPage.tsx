@@ -100,24 +100,24 @@ export function GoalDetailPage({
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E4E7EC] pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
         <div className="flex items-center gap-3">
           <button
             onClick={() => onNavigate('/goals')}
-            className="p-2 text-[#475467] hover:text-[#101828] hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+            className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div>
             <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-[#2563EB] border border-blue-200">
+              <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-600 border border-blue-200">
                 {goal.category}
               </span>
-              <span className="text-xs text-[#667085]">
+              <span className="text-xs text-slate-500">
                 Target: {new Date(goal.target_date).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
               </span>
             </div>
-            <h1 className="text-xl font-bold text-[#101828] mt-1">{goal.title}</h1>
+            <h1 className="text-xl font-bold text-slate-900 mt-1">{goal.title}</h1>
           </div>
         </div>
 
@@ -125,7 +125,7 @@ export function GoalDetailPage({
           <select
             value={goal.status}
             onChange={(e) => handleStatusChange(e.target.value)}
-            className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-[#D0D5DD] bg-white cursor-pointer"
+            className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-300 bg-white cursor-pointer"
           >
             <option value="ACTIVE">ACTIVE</option>
             <option value="COMPLETED">COMPLETED</option>
@@ -144,34 +144,34 @@ export function GoalDetailPage({
       </div>
 
       {/* Progress Overview Card */}
-      <div className="bg-white rounded-2xl border border-[#E4E7EC] p-6 shadow-2xs space-y-4">
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-2xs space-y-4">
         <div className="flex justify-between items-center text-sm">
           <div>
-            <span className="text-[#667085] text-xs">Current Completion: </span>
-            <span className="font-bold text-[#101828]">
+            <span className="text-slate-500 text-xs">Current Completion: </span>
+            <span className="font-bold text-slate-900">
               {goal.current_value} / {goal.target_value} {goal.unit}
             </span>
           </div>
-          <span className="text-lg font-bold text-[#2563EB] tabular-nums">{pct}%</span>
+          <span className="text-lg font-bold text-blue-600 tabular-nums">{pct}%</span>
         </div>
 
         <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
           <div
-            className="bg-[#2563EB] h-3 rounded-full transition-all duration-500"
+            className="bg-blue-600 h-3 rounded-full transition-all duration-500"
             style={{ width: `${pct}%` }}
           />
         </div>
 
         {goal.description && (
-          <p className="text-xs text-[#475467] leading-relaxed pt-2 border-t border-slate-100">
+          <p className="text-xs text-slate-600 leading-relaxed pt-2 border-t border-slate-100">
             {goal.description}
           </p>
         )}
       </div>
 
       {/* Milestones Checklist */}
-      <div className="bg-white rounded-2xl border border-[#E4E7EC] p-6 shadow-2xs space-y-4">
-        <h2 className="text-sm font-bold text-[#101828]">Target Milestones Checklist</h2>
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-2xs space-y-4">
+        <h2 className="text-sm font-bold text-slate-900">Target Milestones Checklist</h2>
 
         <div className="space-y-2">
           {goal.milestones.map((ms) => (
@@ -181,13 +181,13 @@ export function GoalDetailPage({
               className="flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer transition-colors"
             >
               {ms.is_completed ? (
-                <CheckSquare className="h-4 w-4 text-[#2563EB] shrink-0" />
+                <CheckSquare className="h-4 w-4 text-blue-600 shrink-0" />
               ) : (
                 <Square className="h-4 w-4 text-slate-400 shrink-0" />
               )}
               <span
                 className={`text-xs font-medium ${
-                  ms.is_completed ? 'line-through text-slate-400' : 'text-[#101828]'
+                  ms.is_completed ? 'line-through text-slate-400' : 'text-slate-900'
                 }`}
               >
                 {ms.title}
@@ -199,10 +199,10 @@ export function GoalDetailPage({
 
       {/* Correlated Platform Recommendations */}
       {recs.length > 0 && (
-        <div className="bg-white rounded-2xl border border-[#E4E7EC] p-6 shadow-2xs space-y-4">
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-2xs space-y-4">
           <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-[#2563EB]" />
-            <h2 className="text-sm font-bold text-[#101828]">
+            <Sparkles className="h-4 w-4 text-blue-600" />
+            <h2 className="text-sm font-bold text-slate-900">
               Recommended Platform Resources for this Goal
             </h2>
           </div>
@@ -215,12 +215,12 @@ export function GoalDetailPage({
                 className="p-3.5 rounded-xl border border-slate-200 hover:border-blue-300 hover:bg-slate-50/50 transition-all cursor-pointer space-y-1.5 group"
               >
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold text-[#101828] group-hover:text-[#2563EB] transition-colors">
+                  <h4 className="text-xs font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
                     {rec.title}
                   </h4>
                   <ExternalLink className="h-3 w-3 text-slate-400 group-hover:text-blue-600" />
                 </div>
-                <p className="text-[11px] text-[#475467] leading-relaxed">{rec.reason}</p>
+                <p className="text-[11px] text-slate-600 leading-relaxed">{rec.reason}</p>
               </div>
             ))}
           </div>

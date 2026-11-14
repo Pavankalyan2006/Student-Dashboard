@@ -143,7 +143,7 @@ export const MockInterviewSetupModal: React.FC<Props> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm overflow-y-auto">
       <div className="relative w-full max-w-3xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-8">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white p-6">
+        <div className="hero-brand text-white p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <span className="p-2.5 bg-blue-500/20 border border-blue-400/30 rounded-xl text-blue-300">

@@ -38,28 +38,35 @@ export function ProfileMenu({ onNavigate }: { onNavigate: (url: string) => void 
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
-          className="flex items-center gap-2 rounded-lg p-1 hover:bg-slate-100 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]"
+          className="flex items-center gap-2 rounded-lg p-1 transition-colors hover:bg-slate-100 xl:pr-2.5"
           aria-label="Student profile menu"
         >
-          <Avatar className="h-8 w-8 ring-1 ring-[#E4E7EC]">
+          <Avatar className="h-8 w-8 ring-1 ring-slate-200">
             {student?.avatar_url && <AvatarImage src={student.avatar_url} alt={student.name} />}
-            <AvatarFallback>{getInitials(student?.name)}</AvatarFallback>
+            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-violet-600 text-[11px] font-bold text-white">
+              {getInitials(student?.name)}
+            </AvatarFallback>
           </Avatar>
+          {student?.name && (
+            <span className="hidden max-w-[140px] truncate text-[13px] font-semibold text-slate-800 xl:inline">
+              {student.display_name || student.name.split(' ')[0]}
+            </span>
+          )}
         </button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent className="w-56 p-1.5 shadow-lg border border-[#E4E7EC] bg-white" align="end">
+      <DropdownMenuContent className="w-64 p-1.5 shadow-lg border border-slate-200 bg-white" align="end" sideOffset={8}>
         {/* Profile Card Summary */}
         <div className="px-2.5 py-2">
           <div className="flex items-center justify-between">
-            <h4 className="text-xs font-semibold text-[#101828] truncate">{student?.display_name || student?.name || 'B.Tech Student'}</h4>
+            <h4 className="text-[13px] font-semibold text-slate-900 truncate">{student?.display_name || student?.name || 'Signed in'}</h4>
           </div>
           {student?.display_name && student?.name && student.display_name !== student.name && (
-            <p className="text-[10px] text-[#475467] truncate">{student.name}</p>
+            <p className="text-[10px] text-slate-600 truncate">{student.name}</p>
           )}
-          <p className="text-[11px] text-[#667085] truncate">{student?.email || 'student@btech.edu'}</p>
+          {student?.email && <p className="text-xs text-slate-500 truncate">{student.email}</p>}
           {student?.branch && (
-            <div className="mt-1 text-[10px] font-medium text-[#475467] bg-slate-50 p-1 rounded border border-slate-100 truncate">
+            <div className="mt-1 text-[10px] font-medium text-slate-600 bg-slate-50 p-1 rounded border border-slate-100 truncate">
               {student.branch} · Sem {student.semester}
             </div>
           )}

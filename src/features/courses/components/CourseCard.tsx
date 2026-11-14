@@ -110,7 +110,7 @@ export function CourseCard({
   // ---------------- LIST VIEW LAYOUT ----------------
   if (layout === 'list') {
     return (
-      <Card className="group overflow-hidden rounded-xl border border-[#E4E7EC] bg-white hover:border-slate-300 hover:shadow-sm transition-all p-4">
+      <Card className="group overflow-hidden rounded-xl border border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm transition-all p-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           {/* Left: Thumbnail & Info */}
           <div className="flex items-start gap-4 min-w-0 flex-1">
@@ -131,7 +131,7 @@ export function CourseCard({
 
             <div className="space-y-1.5 min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="font-mono font-bold text-xs text-[#2563EB] bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
+                <span className="font-mono font-bold text-xs text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
                   {course.code}
                 </span>
                 <span className="text-[11px] text-slate-500">
@@ -147,24 +147,24 @@ export function CourseCard({
 
               <h3
                 onClick={() => onNavigate(`/courses/${course.id}`)}
-                className="text-sm font-bold text-[#101828] group-hover:text-[#2563EB] transition-colors truncate cursor-pointer"
+                className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors truncate cursor-pointer"
               >
                 {course.title}
               </h3>
 
-              <p className="text-xs text-[#475467] line-clamp-1">
+              <p className="text-xs text-slate-600 line-clamp-1">
                 {course.short_description || course.description}
               </p>
 
               {/* Metadata row */}
-              <div className="flex flex-wrap items-center gap-3 text-[11px] text-[#667085] pt-0.5">
+              <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-500 pt-0.5">
                 <span className="flex items-center gap-1">
                   <Layers className="h-3 w-3 text-slate-400" />
                   <span>{course.total_chapters || 1} units</span>
                 </span>
                 <span>·</span>
                 <span className="flex items-center gap-1">
-                  <BookOpen className="h-3 w-3 text-[#2563EB]" />
+                  <BookOpen className="h-3 w-3 text-blue-600" />
                   <span>{course.total_lessons} lessons</span>
                 </span>
                 <span>·</span>
@@ -193,7 +193,7 @@ export function CourseCard({
 
               {/* Next recommended lesson */}
               {course.next_recommended_lesson && course.is_enrolled && (
-                <div className="flex items-center gap-1.5 text-[11px] text-[#2563EB] pt-0.5">
+                <div className="flex items-center gap-1.5 text-[11px] text-blue-600 pt-0.5">
                   <Compass className="h-3 w-3 shrink-0" />
                   <span className="font-medium text-slate-600">Next lesson:</span>
                   <span
@@ -216,13 +216,13 @@ export function CourseCard({
               <div className="w-28 space-y-1">
                 <div className="flex items-center justify-between text-[11px]">
                   <span className="text-slate-500">Progress</span>
-                  <span className="font-bold text-[#101828] tabular-nums">
+                  <span className="font-bold text-slate-900 tabular-nums">
                     {course.progress_percentage}%
                   </span>
                 </div>
                 <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
                   <div
-                    className="h-full bg-[#2563EB] rounded-full transition-all duration-300"
+                    className="h-full bg-blue-600 rounded-full transition-all duration-300"
                     style={{ width: `${course.progress_percentage}%` }}
                   />
                 </div>
@@ -352,7 +352,7 @@ export function CourseCard({
 
   // ---------------- GRID VIEW LAYOUT (DEFAULT) ----------------
   return (
-    <Card className="group overflow-hidden rounded-2xl border border-[#E4E7EC] bg-white hover:border-slate-300 hover:shadow-md transition-all flex flex-col justify-between">
+    <Card className="group overflow-hidden rounded-2xl border border-slate-200 bg-white hover:border-slate-300 hover:shadow-md transition-all flex flex-col justify-between">
       {/* Thumbnail with overlay tags */}
       <div className="relative aspect-video w-full overflow-hidden bg-slate-100">
         <img
@@ -483,12 +483,12 @@ export function CourseCard({
 
           <h3
             onClick={() => onNavigate(`/courses/${course.id}`)}
-            className="text-sm font-bold text-[#101828] group-hover:text-[#2563EB] transition-colors line-clamp-1 cursor-pointer"
+            className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-1 cursor-pointer"
           >
             {course.title}
           </h3>
 
-          <p className="text-xs text-[#475467] leading-relaxed line-clamp-2">
+          <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">
             {course.short_description || course.description}
           </p>
 
@@ -502,28 +502,28 @@ export function CourseCard({
 
           {/* Next recommended lesson */}
           {course.next_recommended_lesson && course.is_enrolled && (
-            <div className="flex items-center gap-1.5 text-[11px] text-[#2563EB] bg-blue-50/60 p-1.5 rounded-lg border border-blue-100">
+            <div className="flex items-center gap-1.5 text-[11px] text-blue-600 bg-blue-50/60 p-1.5 rounded-lg border border-blue-100">
               <Compass className="h-3 w-3 shrink-0" />
               <span className="text-slate-600 truncate">
-                Next: <strong className="text-[#2563EB]">{course.next_recommended_lesson.title}</strong>
+                Next: <strong className="text-blue-600">{course.next_recommended_lesson.title}</strong>
               </span>
             </div>
           )}
         </div>
 
         {/* Progress or Lessons/Duration Metadata */}
-        <div className="space-y-2 pt-2 border-t border-slate-100 text-xs text-[#667085]">
+        <div className="space-y-2 pt-2 border-t border-slate-100 text-xs text-slate-500">
           {course.is_enrolled && course.progress_percentage !== undefined ? (
             <div className="space-y-1.5">
               <div className="flex items-center justify-between text-[11px]">
                 <span className="font-medium text-slate-700">Course Progress</span>
-                <span className="font-bold text-[#101828] tabular-nums">
+                <span className="font-bold text-slate-900 tabular-nums">
                   {course.progress_percentage}%
                 </span>
               </div>
               <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
                 <div
-                  className="h-full bg-[#2563EB] rounded-full transition-all duration-500"
+                  className="h-full bg-blue-600 rounded-full transition-all duration-500"
                   style={{ width: `${course.progress_percentage}%` }}
                 />
               </div>
@@ -543,7 +543,7 @@ export function CourseCard({
                 <span>{course.total_chapters || 1} units</span>
               </span>
               <span className="flex items-center gap-1">
-                <BookOpen className="h-3 w-3 text-[#2563EB]" />
+                <BookOpen className="h-3 w-3 text-blue-600" />
                 <span>{course.total_lessons} lessons</span>
               </span>
               <span className="flex items-center gap-1">

@@ -53,7 +53,7 @@ export function AdminSecurityPage() {
 
         <button
           onClick={loadData}
-          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#14234B] hover:bg-[#1C3168] border border-[#233870] text-xs font-medium text-slate-200 transition-colors self-start sm:self-auto cursor-pointer"
+          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-navy-800 hover:bg-navy-700 border border-navy-600 text-xs font-medium text-slate-200 transition-colors self-start sm:self-auto cursor-pointer"
         >
           <RefreshCw className={cn('h-3.5 w-3.5', isLoading && 'animate-spin')} />
           Refresh Audit
@@ -62,7 +62,7 @@ export function AdminSecurityPage() {
 
       {/* Security Status Banners */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-        <div className="p-4 rounded-2xl bg-[#0D1836] border border-[#1A284D] flex items-center gap-3">
+        <div className="p-4 rounded-2xl bg-navy-900 border border-navy-700 flex items-center gap-3">
           <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-400">
             <Lock className="h-5 w-5" />
           </div>
@@ -72,7 +72,7 @@ export function AdminSecurityPage() {
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-[#0D1836] border border-[#1A284D] flex items-center gap-3">
+        <div className="p-4 rounded-2xl bg-navy-900 border border-navy-700 flex items-center gap-3">
           <div className="p-3 rounded-xl bg-cyan-500/10 text-cyan-400">
             <ShieldCheck className="h-5 w-5" />
           </div>
@@ -82,7 +82,7 @@ export function AdminSecurityPage() {
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-[#0D1836] border border-[#1A284D] flex items-center gap-3">
+        <div className="p-4 rounded-2xl bg-navy-900 border border-navy-700 flex items-center gap-3">
           <div className="p-3 rounded-xl bg-purple-500/10 text-purple-400">
             <Activity className="h-5 w-5" />
           </div>
@@ -94,7 +94,7 @@ export function AdminSecurityPage() {
       </div>
 
       {/* Rate Limit Rules */}
-      <div className="p-6 rounded-2xl bg-[#0D1836] border border-[#1A284D] space-y-4">
+      <div className="p-6 rounded-2xl bg-navy-900 border border-navy-700 space-y-4">
         <h3 className="font-bold text-white text-base flex items-center gap-2">
           <Sliders className="h-5 w-5 text-amber-400" />
           Configured Rate Limit Rules
@@ -102,7 +102,7 @@ export function AdminSecurityPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {rateLimits.map((rl) => (
-            <div key={rl.id} className="p-3.5 rounded-xl bg-[#081024] border border-[#182649] space-y-2 text-xs">
+            <div key={rl.id} className="p-3.5 rounded-xl bg-navy-950 border border-navy-700 space-y-2 text-xs">
               <div className="flex items-center justify-between">
                 <code className="text-amber-300 font-mono text-[11px] font-bold">{rl.endpoint_pattern}</code>
                 <span className="text-[10px] text-emerald-400 font-bold">ACTIVE</span>
@@ -116,8 +116,8 @@ export function AdminSecurityPage() {
       </div>
 
       {/* Security Events Table */}
-      <div className="rounded-2xl bg-[#0D1836] border border-[#1A284D] overflow-hidden space-y-3">
-        <div className="p-4 bg-[#0A132C] border-b border-[#1A284D] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="rounded-2xl bg-navy-900 border border-navy-700 overflow-hidden space-y-3">
+        <div className="p-4 bg-navy-950 border-b border-navy-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h3 className="font-bold text-white text-sm">Security Incident Feed</h3>
             <p className="text-xs text-slate-400">Logged security policy violations and administrative security events.</p>
@@ -132,7 +132,7 @@ export function AdminSecurityPage() {
                   'px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer',
                   severityFilter === sev
                     ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 font-semibold'
-                    : 'bg-[#081024] text-slate-400 hover:text-white border border-[#182649]'
+                    : 'bg-navy-950 text-slate-400 hover:text-white border border-navy-700'
                 )}
               >
                 {sev || 'ALL'}
@@ -143,7 +143,7 @@ export function AdminSecurityPage() {
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-[#0A132C] text-slate-400 uppercase tracking-wider text-[10px]">
+            <thead className="bg-navy-950 text-slate-400 uppercase tracking-wider text-[10px]">
               <tr>
                 <th className="py-3 px-4">Event Type</th>
                 <th className="py-3 px-4">Severity</th>
@@ -153,7 +153,7 @@ export function AdminSecurityPage() {
                 <th className="py-3 px-4 text-right">Timestamp</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#162345]">
+            <tbody className="divide-y divide-navy-800">
               {events.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-8 text-center text-slate-500">
@@ -162,7 +162,7 @@ export function AdminSecurityPage() {
                 </tr>
               ) : (
                 events.map((ev) => (
-                  <tr key={ev.id} className="hover:bg-[#111E42]/50">
+                  <tr key={ev.id} className="hover:bg-navy-800/50">
                     <td className="py-3 px-4 font-semibold text-white">{ev.event_type}</td>
                     <td className="py-3 px-4">
                       <span

@@ -39,13 +39,13 @@ export function CourseResources({
   };
 
   return (
-    <Card className="border border-[#E4E7EC] bg-white">
+    <Card className="border border-slate-200 bg-white">
       <CardHeader className="pb-3 flex flex-row items-center justify-between">
         <div>
-          <CardTitle className="text-sm font-bold text-[#101828]">
+          <CardTitle className="text-sm font-bold text-slate-900">
             Course Resources &amp; Documents
           </CardTitle>
-          <p className="text-xs text-[#667085]">
+          <p className="text-xs text-slate-500">
             Verified lecture materials, linked notes, and reference files
           </p>
         </div>
@@ -65,7 +65,7 @@ export function CourseResources({
         {resources.length === 0 ? (
           <div className="py-6 text-center space-y-2">
             <LinkIcon className="h-6 w-6 text-slate-300 mx-auto" />
-            <p className="text-xs text-[#667085]">
+            <p className="text-xs text-slate-500">
               No documents or notes linked to this course yet.
             </p>
             {onOpenLinkModal && (
@@ -92,7 +92,7 @@ export function CourseResources({
               >
                 <div className="p-1.5 rounded-lg bg-slate-100 shrink-0">{getIcon(res.type)}</div>
                 <div className="min-w-0">
-                  <div className="font-semibold text-slate-900 group-hover:text-[#2563EB] transition-colors truncate">
+                  <div className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors truncate">
                     {res.title}
                   </div>
                   <div className="flex items-center gap-2 text-[10px] text-slate-500">
@@ -119,7 +119,7 @@ export function CourseResources({
                 <button
                   type="button"
                   onClick={() => onNavigate(res.url)}
-                  className="flex items-center gap-1 font-semibold text-[#2563EB] text-[11px] hover:underline cursor-pointer px-1 py-0.5"
+                  className="flex items-center gap-1 font-semibold text-blue-600 text-[11px] hover:underline cursor-pointer px-1 py-0.5"
                 >
                   <span>Open</span>
                   <ExternalLink className="h-3 w-3" />

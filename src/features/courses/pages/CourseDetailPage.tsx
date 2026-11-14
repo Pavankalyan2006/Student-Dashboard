@@ -258,9 +258,9 @@ export function CourseDetailPage({
         <div className="lg:col-span-2 space-y-6">
           {/* Learning Objectives Card */}
           {course.learning_objectives && course.learning_objectives.length > 0 && (
-            <Card className="border border-[#E4E7EC] bg-white p-5 space-y-3.5">
-              <h3 className="text-sm font-bold text-[#101828] flex items-center gap-2">
-                <FileCheck className="h-4 w-4 text-[#2563EB]" />
+            <Card className="border border-slate-200 bg-white p-5 space-y-3.5">
+              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <FileCheck className="h-4 w-4 text-blue-600" />
                 <span>What You Will Learn in This Course</span>
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs text-slate-700">
@@ -299,13 +299,13 @@ export function CourseDetailPage({
             <TabsContent value="curriculum" className="space-y-4 pt-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Layers className="h-4 w-4 text-[#2563EB]" />
-                  <h3 className="text-base font-bold text-[#101828]">
+                  <Layers className="h-4 w-4 text-blue-600" />
+                  <h3 className="text-base font-bold text-slate-900">
                     Course Curriculum &amp; Units
                   </h3>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-[#667085] tabular-nums">
+                  <span className="text-xs text-slate-500 tabular-nums">
                     {course.chapters.length} Units · {course.total_lessons} Lessons
                   </span>
                   {course.is_custom && (
@@ -346,7 +346,7 @@ export function CourseDetailPage({
                     return (
                       <Card
                         key={chapter.id}
-                        className="border border-[#E4E7EC] bg-white overflow-hidden"
+                        className="border border-slate-200 bg-white overflow-hidden"
                       >
                         <div
                           onClick={() => toggleChapter(chapter.id)}
@@ -412,10 +412,10 @@ export function CourseDetailPage({
                                     {lesson.is_completed ? (
                                       <CheckCircle2 className="h-4 w-4 text-emerald-600 fill-emerald-100 shrink-0" />
                                     ) : (
-                                      <Play className="h-3.5 w-3.5 text-slate-400 group-hover:text-[#2563EB] shrink-0" />
+                                      <Play className="h-3.5 w-3.5 text-slate-400 group-hover:text-blue-600 shrink-0" />
                                     )}
                                     <div className="min-w-0">
-                                      <span className="font-semibold text-slate-900 group-hover:text-[#2563EB] transition-colors truncate block">
+                                      <span className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors truncate block">
                                         {lesson.title}
                                       </span>
                                       {lesson.description && (
@@ -430,7 +430,7 @@ export function CourseDetailPage({
                                     <span className="text-[11px] font-mono text-slate-400">
                                       {lesson.estimated_minutes} min
                                     </span>
-                                    <ArrowRight className="h-3.5 w-3.5 text-slate-300 group-hover:text-[#2563EB] group-hover:translate-x-0.5 transition-transform" />
+                                    <ArrowRight className="h-3.5 w-3.5 text-slate-300 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-transform" />
                                   </div>
                                 </div>
                               ))
@@ -552,7 +552,7 @@ export function CourseDetailPage({
               <div className="p-4 rounded-xl bg-gradient-to-br from-indigo-50/80 to-blue-50/40 border border-indigo-200 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-[#4F46E5]" />
+                    <Sparkles className="h-4 w-4 text-indigo-600" />
                     <h3 className="text-sm font-bold text-indigo-950">
                       Context-Aware AI Assistant
                     </h3>
@@ -592,7 +592,7 @@ export function CourseDetailPage({
                       onClick={() => handleRunAiAction(btn.action)}
                       className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
                         aiAction === btn.action && aiResult
-                          ? 'bg-[#2563EB] text-white border-transparent'
+                          ? 'bg-blue-600 text-white border-transparent'
                           : 'bg-white text-slate-700 border-slate-200 hover:border-blue-400 hover:bg-blue-50/50'
                       }`}
                     >
@@ -605,7 +605,7 @@ export function CourseDetailPage({
               {/* AI Result Card */}
               {isAiLoading ? (
                 <div className="p-8 text-center text-xs text-slate-500 border rounded-xl bg-white space-y-2">
-                  <RefreshCw className="h-5 w-5 animate-spin mx-auto text-[#2563EB]" />
+                  <RefreshCw className="h-5 w-5 animate-spin mx-auto text-blue-600" />
                   <p className="font-semibold text-slate-700">
                     Generating academic response with course context...
                   </p>
@@ -614,7 +614,7 @@ export function CourseDetailPage({
                 <Card className="border border-slate-200 bg-white p-5 space-y-4 text-xs">
                   <div className="flex items-center justify-between border-b pb-2">
                     <div className="flex items-center gap-1.5 font-bold text-slate-900">
-                      <Sparkles className="h-4 w-4 text-[#2563EB]" />
+                      <Sparkles className="h-4 w-4 text-blue-600" />
                       <span className="capitalize">{aiResult.action.replace(/_/g, ' ')}</span>
                     </div>
                     {aiResult.is_fallback && (
@@ -665,7 +665,7 @@ export function CourseDetailPage({
         {/* Right Rail Column (1 col) */}
         <div className="space-y-6">
           {/* Prerequisites */}
-          <Card className="border border-[#E4E7EC] bg-white p-5 space-y-3">
+          <Card className="border border-slate-200 bg-white p-5 space-y-3">
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
               Prerequisites
             </h4>
@@ -689,7 +689,7 @@ export function CourseDetailPage({
           {/* AI Learning Assistant Banner */}
           <Card className="border border-indigo-200 bg-gradient-to-br from-indigo-50/70 to-blue-50/40 p-5 space-y-3 text-xs">
             <div className="flex items-center gap-2 font-bold text-indigo-950">
-              <Sparkles className="h-4 w-4 text-[#4F46E5]" />
+              <Sparkles className="h-4 w-4 text-indigo-600" />
               <span>Ask AI About This Course</span>
             </div>
             <p className="text-slate-600 leading-relaxed text-[11px]">
@@ -709,7 +709,7 @@ export function CourseDetailPage({
 
           {/* Related Courses */}
           {course.related_courses && course.related_courses.length > 0 && (
-            <Card className="border border-[#E4E7EC] bg-white p-5 space-y-3">
+            <Card className="border border-slate-200 bg-white p-5 space-y-3">
               <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
                 Related Engineering Subjects
               </h4>
@@ -721,10 +721,10 @@ export function CourseDetailPage({
                     className="p-2.5 rounded-xl border border-slate-100 hover:border-slate-300 hover:bg-slate-50/70 transition-all cursor-pointer text-xs group"
                   >
                     <div className="flex items-center justify-between text-[10px] text-slate-400 mb-0.5">
-                      <span className="font-mono font-bold text-[#2563EB]">{rel.code}</span>
+                      <span className="font-mono font-bold text-blue-600">{rel.code}</span>
                       <span>{rel.difficulty}</span>
                     </div>
-                    <div className="font-semibold text-slate-900 group-hover:text-[#2563EB] transition-colors truncate">
+                    <div className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors truncate">
                       {rel.title}
                     </div>
                   </div>

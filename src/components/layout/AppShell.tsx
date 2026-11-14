@@ -5,6 +5,7 @@ import { GlobalSearch } from '../navigation/GlobalSearch';
 import { useUiStore } from '../../store/uiStore';
 import { Toaster } from 'sonner';
 import { cn } from '../../lib/utils';
+import { AppFooter } from './AppFooter';
 
 export interface AppShellProps {
   currentPath: string;
@@ -14,42 +15,53 @@ export interface AppShellProps {
 
 export function AppShell({ currentPath, onNavigate, children }: AppShellProps) {
   const sidebarCollapsed = useUiStore((s) => s.sidebarCollapsed);
+  const routeKey = currentPath.split(/[?#]/)[0];
 
   return (
-    <div className="min-h-screen bg-[#F7F9FC] text-[#101828]">
-      {/* Sidebar (Desktop + Mobile Drawer) */}
+    <div className="min-h-screen bg-canvas text-slate-900">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[60] focus:rounded-lg focus:bg-white focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-slate-900 focus:shadow-lg"
+      >
+        Skip to content
+      </a>
+
       {/* App navigation is not printed: the resume preview prints (and saves as PDF) through the browser. */}
       <div className="print:hidden">
         <Sidebar currentPath={currentPath} onNavigate={onNavigate} />
       </div>
 
-      {/* Main Workspace Frame */}
       <div
         className={cn(
-          'flex flex-col min-h-screen transition-all duration-300 ease-in-out',
-          sidebarCollapsed ? 'lg:pl-[72px]' : 'lg:pl-[260px]',
+          'flex min-h-screen min-w-0 flex-col transition-[padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
+          sidebarCollapsed ? 'lg:pl-[76px]' : 'lg:pl-[272px]',
           'print:pl-0'
         )}
       >
-        {/* Topbar Navigation */}
         <Topbar currentPath={currentPath} onNavigate={onNavigate} />
 
-        {/* Page Viewport Content */}
-        <main className="flex-1 w-full p-4 sm:p-6 lg:p-8 print:p-0">
+        <main
+          id="main-content"
+          key={routeKey}
+          className="mx-auto w-full min-w-0 max-w-[1440px] flex-1 animate-page-in px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-8 print:max-w-none print:p-0"
+        >
           {children}
         </main>
+
+        <AppFooter onNavigate={onNavigate} />
       </div>
 
       {/* Global Search Dialog (Ctrl+K) */}
       <GlobalSearch onNavigate={onNavigate} />
 
-      {/* Global Toast Notification System */}
       <Toaster
         position="top-right"
+        closeButton
         toastOptions={{
-          style: {
-            fontFamily: "'Inter', sans-serif",
-            fontSize: '13px',
+          classNames: {
+            toast: 'rounded-xl border border-slate-200 shadow-lg font-sans',
+            title: 'text-[13px] font-semibold text-slate-900',
+            description: 'text-xs text-slate-600',
           },
         }}
       />

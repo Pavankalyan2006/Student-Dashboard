@@ -4,105 +4,126 @@ import { useUiStore } from '../../store/uiStore';
 import { AskAIButton } from './AskAIButton';
 import { NotificationBell } from './NotificationBell';
 import { ProfileMenu } from './ProfileMenu';
+import { findActiveNavItem, findSectionForItem } from './navConfig';
 
 export interface TopbarProps {
   currentPath: string;
   onNavigate: (path: string) => void;
 }
 
+interface Crumb {
+  label: string;
+  href?: string;
+}
+
+/** Readable label for a URL segment; ids and long hashes are shortened rather than shown raw. */
+function labelForSegment(seg: string): string {
+  const decoded = decodeURIComponent(seg);
+  if (/^[0-9a-f-]{16,}$/i.test(decoded) || /^[a-z]+_[A-Za-z0-9]{6,}$/.test(decoded)) return 'Details';
+  return decoded
+    .split('-')
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+}
+
+export function buildBreadcrumbs(currentPath: string): Crumb[] {
+  const path = (currentPath.split(/[?#]/)[0] || '/').replace(/\/+$/, '') || '/';
+  if (path === '/' || path === '/dashboard') return [{ label: 'Overview' }, { label: 'Dashboard' }];
+
+  const item = findActiveNavItem(path);
+  const section = findSectionForItem(item);
+  if (!item || !section) {
+    const segs = path.split('/').filter(Boolean);
+    return [{ label: 'Workspace', href: '/dashboard' }, ...segs.map((s) => ({ label: labelForSegment(s) }))];
+  }
+
+  const crumbs: Crumb[] = [{ label: section.title }];
+  const isItemRoot = path === item.href || (item.match ?? []).includes(path);
+  crumbs.push(isItemRoot ? { label: item.name } : { label: item.name, href: item.href });
+  if (!isItemRoot) {
+    const base = [item.href, ...(item.match ?? [])].find((p) => path.startsWith(p + '/')) ?? item.href;
+    const rest = path.slice(base.length).split('/').filter(Boolean);
+    const last = rest[rest.length - 1];
+    if (last) crumbs.push({ label: labelForSegment(last) });
+  }
+  return crumbs;
+}
+
 export function Topbar({ currentPath, onNavigate }: TopbarProps) {
   const { setMobileDrawerOpen, setGlobalSearchOpen } = useUiStore();
-
-  // Generate breadcrumb titles from currentPath
-  const getBreadcrumbs = () => {
-    if (currentPath === '/' || currentPath === '/dashboard') {
-      return [{ label: 'Dashboard', href: '/dashboard' }];
-    }
-
-    const segments = currentPath.split('/').filter(Boolean);
-    const crumbs = [{ label: 'Workspace', href: '/dashboard' }];
-
-    let accPath = '';
-    segments.forEach((seg) => {
-      accPath += `/${seg}`;
-      const formatted = seg
-        .split('-')
-        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-        .join(' ');
-      crumbs.push({ label: formatted, href: accPath });
-    });
-
-    return crumbs;
-  };
-
-  const breadcrumbs = getBreadcrumbs();
+  const breadcrumbs = buildBreadcrumbs(currentPath);
+  const title = breadcrumbs[breadcrumbs.length - 1]?.label ?? 'Dashboard';
 
   return (
-    <header className="print:hidden sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-[#E4E7EC] bg-white/95 px-4 sm:px-6 backdrop-blur-md">
-      {/* Left zone: Mobile trigger & Breadcrumbs */}
-      <div className="flex items-center gap-3 min-w-0">
+    <header className="print:hidden sticky top-0 z-30 flex h-16 w-full items-center gap-3 border-b border-slate-200/80 bg-white/85 px-4 backdrop-blur-xl supports-[backdrop-filter]:bg-white/75 sm:px-6 lg:px-8">
+      {/* Left: drawer trigger + location */}
+      <div className="flex min-w-0 flex-1 items-center gap-2.5">
         <button
+          type="button"
           onClick={() => setMobileDrawerOpen(true)}
-          className="p-2 text-[#475467] hover:text-[#101828] hover:bg-slate-100 rounded-lg lg:hidden cursor-pointer"
-          aria-label="Open navigation sidebar"
+          className="-ml-1.5 rounded-lg p-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900 lg:hidden"
+          aria-label="Open navigation"
         >
           <Menu className="h-5 w-5" />
         </button>
 
-        {/* Breadcrumb nav */}
-        <nav aria-label="Breadcrumbs" className="hidden sm:flex items-center gap-1.5 text-xs text-[#667085]">
-          {breadcrumbs.map((crumb, idx) => {
-            const isLast = idx === breadcrumbs.length - 1;
-            return (
-              <React.Fragment key={crumb.href}>
-                {idx > 0 && <ChevronRight className="h-3.5 w-3.5 text-slate-300" />}
-                {isLast ? (
-                  <span className="font-semibold text-[#101828] truncate">{crumb.label}</span>
-                ) : (
-                  <button
-                    onClick={() => onNavigate(crumb.href)}
-                    className="hover:text-[#101828] transition-colors truncate cursor-pointer"
+        <div className="min-w-0">
+          <nav aria-label="Breadcrumb" className="hidden items-center gap-1 text-xs text-slate-500 sm:flex">
+            {breadcrumbs.slice(0, -1).map((crumb, idx) => (
+              <React.Fragment key={`${crumb.label}-${idx}`}>
+                {idx > 0 && <ChevronRight className="h-3 w-3 text-slate-300" aria-hidden="true" />}
+                {crumb.href ? (
+                  <a
+                    href={crumb.href}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      onNavigate(crumb.href!);
+                    }}
+                    className="truncate hover:text-slate-900"
                   >
                     {crumb.label}
-                  </button>
+                  </a>
+                ) : (
+                  <span className="truncate">{crumb.label}</span>
                 )}
               </React.Fragment>
-            );
-          })}
-        </nav>
+            ))}
+          </nav>
+          <p className="truncate font-display text-[15px] font-semibold leading-tight tracking-tight text-slate-900" aria-current="page">
+            {title}
+          </p>
+        </div>
       </div>
 
-      {/* Center zone: Global Search Input Trigger */}
-      <div className="flex-1 max-w-md mx-4 hidden md:block">
+      {/* Center: global search */}
+      <div className="hidden w-full max-w-sm md:block lg:max-w-md">
         <button
+          type="button"
           onClick={() => setGlobalSearchOpen(true)}
-          className="w-full flex items-center justify-between px-3 py-1.5 rounded-lg border border-[#E4E7EC] bg-slate-50/70 text-xs text-[#667085] hover:bg-white hover:border-slate-300 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]"
+          className="flex w-full items-center gap-2.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-[13px] text-slate-500 transition-colors hover:border-slate-300 hover:bg-white"
         >
-          <div className="flex items-center gap-2 truncate">
-            <Search className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-            <span className="truncate">Search courses, documents, projects...</span>
-          </div>
-          <kbd className="hidden lg:inline-flex items-center gap-0.5 rounded border border-[#E4E7EC] bg-white px-1.5 py-0.5 text-[10px] font-mono text-[#667085] shadow-2xs">
-            Ctrl+K
+          <Search className="h-4 w-4 shrink-0 text-slate-400" />
+          <span className="flex-1 truncate text-left">Search courses, notes, documents…</span>
+          <kbd className="hidden items-center rounded-md border border-slate-200 bg-white px-1.5 py-0.5 font-mono text-[10px] font-medium text-slate-500 lg:inline-flex">
+            Ctrl K
           </kbd>
         </button>
       </div>
 
-      {/* Right zone: Mobile Search Icon + Ask AI + Notification Bell + Profile Menu */}
-      <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
-        {/* Mobile search trigger */}
+      {/* Right: actions */}
+      <div className="flex shrink-0 items-center gap-1.5 sm:gap-2.5">
         <button
+          type="button"
           onClick={() => setGlobalSearchOpen(true)}
-          className="p-2 text-[#475467] hover:text-[#101828] hover:bg-slate-100 rounded-lg md:hidden cursor-pointer"
-          aria-label="Open search dialog"
+          className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900 md:hidden"
+          aria-label="Search"
         >
-          <Search className="h-4 w-4" />
+          <Search className="h-[18px] w-[18px]" />
         </button>
-
         <AskAIButton onClick={() => onNavigate('/ai-agent')} />
-
         <NotificationBell onNavigate={onNavigate} />
-
+        <span className="mx-0.5 hidden h-6 w-px bg-slate-200 sm:block" aria-hidden="true" />
         <ProfileMenu onNavigate={onNavigate} />
       </div>
     </header>

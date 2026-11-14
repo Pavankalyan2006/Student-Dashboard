@@ -113,23 +113,23 @@ export function HowItWorksPage({ onNavigate }: HowItWorksPageProps) {
   return (
     <PublicLayout currentPath="/how-it-works" onNavigate={onNavigate}>
       {/* Header */}
-      <section className="bg-white border-b border-[#E4E7EC] py-14 sm:py-20 text-center">
+      <section className="bg-white border-b border-slate-200 py-14 sm:py-20 text-center">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/80 text-[#2563EB] text-xs font-semibold mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/80 text-blue-600 text-xs font-semibold mb-4">
             <Sparkles className="h-3.5 w-3.5" />
             <span>The Complete 12-Step Architecture</span>
           </div>
-          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-[#101828]">
+          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900">
             How the Platform Works
           </h1>
-          <p className="mt-4 text-base sm:text-lg text-[#475467] max-w-2xl mx-auto leading-relaxed">
+          <p className="mt-4 text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
             Follow the exact workflow from initial onboarding through semester mastery, practical laboratories, and tier-1 career placement.
           </p>
         </div>
       </section>
 
       {/* 12 Steps List */}
-      <section className="py-16 sm:py-24 bg-[#F7F9FC]">
+      <section className="py-16 sm:py-24 bg-slate-50">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="space-y-8">
             {steps.map((step, idx) => {
@@ -137,14 +137,14 @@ export function HowItWorksPage({ onNavigate }: HowItWorksPageProps) {
               return (
                 <div
                   key={idx}
-                  className="bg-white rounded-2xl border border-[#E4E7EC] p-6 sm:p-8 shadow-xs hover:border-blue-300 transition-all flex flex-col sm:flex-row gap-6 items-start"
+                  className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-xs hover:border-blue-300 transition-all flex flex-col sm:flex-row gap-6 items-start"
                 >
                   {/* Step Badge */}
                   <div className="flex sm:flex-col items-center gap-3 shrink-0">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#2563EB] to-[#4F46E5] text-white flex items-center justify-center font-black text-lg shadow-md">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center font-black text-lg shadow-md">
                       {step.num}
                     </div>
-                    <div className="p-2 rounded-xl bg-blue-50 text-[#2563EB] hidden sm:flex">
+                    <div className="p-2 rounded-xl bg-blue-50 text-blue-600 hidden sm:flex">
                       <Icon className="h-5 w-5" />
                     </div>
                   </div>
@@ -152,14 +152,14 @@ export function HowItWorksPage({ onNavigate }: HowItWorksPageProps) {
                   {/* Step Content */}
                   <div className="space-y-2 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="text-lg font-bold text-[#101828]">
+                      <h3 className="text-lg font-bold text-slate-900">
                         Step {idx + 1}: {step.title}
                       </h3>
-                      <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-[#475467] border border-slate-200">
+                      <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
                         {step.badge}
                       </span>
                     </div>
-                    <p className="text-sm text-[#475467] leading-relaxed">
+                    <p className="text-sm text-slate-600 leading-relaxed">
                       {step.desc}
                     </p>
                   </div>
@@ -169,24 +169,24 @@ export function HowItWorksPage({ onNavigate }: HowItWorksPageProps) {
           </div>
 
           {/* Bottom Action */}
-          <div className="mt-16 text-center bg-white p-8 sm:p-12 rounded-3xl border border-[#E4E7EC] shadow-sm space-y-4">
-            <h3 className="text-xl sm:text-2xl font-bold text-[#101828]">
+          <div className="mt-16 text-center bg-white p-8 sm:p-12 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+            <h3 className="text-xl sm:text-2xl font-bold text-slate-900">
               Begin Your Personalized Learning Journey Today
             </h3>
-            <p className="text-xs sm:text-sm text-[#475467] max-w-xl mx-auto">
+            <p className="text-xs sm:text-sm text-slate-600 max-w-xl mx-auto">
               No generic courses, no mock data, no administrative surveillance. Just pure engineering excellence tailored to your syllabus.
             </p>
             <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
               <Button
                 onClick={() => onNavigate('/register')}
-                className="w-full sm:w-auto bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold text-xs px-8 py-3.5 rounded-xl shadow-md cursor-pointer"
+                className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-8 py-3.5 rounded-xl shadow-md cursor-pointer"
               >
                 Create Account & Start Step 1
               </Button>
               <Button
                 variant="outline"
                 onClick={() => onNavigate('/login')}
-                className="w-full sm:w-auto border-slate-300 text-[#344054] font-semibold text-xs px-6 py-3.5 rounded-xl cursor-pointer"
+                className="w-full sm:w-auto border-slate-300 text-slate-700 font-semibold text-xs px-6 py-3.5 rounded-xl cursor-pointer"
               >
                 Sign In to Existing Account
               </Button>

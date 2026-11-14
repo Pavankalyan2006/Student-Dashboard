@@ -104,8 +104,8 @@ export function DocumentWorkspacePage({
 
   if (isLoading) {
     return (
-      <div className="h-[calc(100vh-4rem)] flex flex-col items-center justify-center bg-[#F7F9FC]">
-        <RefreshCw className="h-8 w-8 animate-spin text-[#2563EB] mb-3" />
+      <div className="h-[calc(100vh-4rem)] flex flex-col items-center justify-center bg-slate-50">
+        <RefreshCw className="h-8 w-8 animate-spin text-blue-600 mb-3" />
         <p className="text-xs font-semibold text-slate-700">Opening Document AI Workspace...</p>
         <p className="text-[11px] text-slate-400 mt-1">
           Loading vectorized pages and curriculum citations.
@@ -116,7 +116,7 @@ export function DocumentWorkspacePage({
 
   if (isError || !document) {
     return (
-      <div className="h-[calc(100vh-4rem)] flex flex-col items-center justify-center p-6 text-center bg-[#F7F9FC]">
+      <div className="h-[calc(100vh-4rem)] flex flex-col items-center justify-center p-6 text-center bg-slate-50">
         <div className="h-12 w-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mb-3">
           <AlertTriangle className="h-6 w-6" />
         </div>
@@ -175,12 +175,12 @@ export function DocumentWorkspacePage({
       )}
 
       {/* Mobile Tab Switcher */}
-      <div className="flex sm:hidden border-b border-[#E4E7EC] bg-slate-50 text-xs">
+      <div className="flex sm:hidden border-b border-slate-200 bg-slate-50 text-xs">
         <button
           onClick={() => setMobileTab('viewer')}
           className={`flex-1 py-2 font-medium text-center border-b-2 ${
             mobileTab === 'viewer'
-              ? 'border-[#2563EB] text-[#2563EB] font-bold bg-white'
+              ? 'border-blue-600 text-blue-600 font-bold bg-white'
               : 'border-transparent text-slate-500'
           }`}
         >
@@ -190,7 +190,7 @@ export function DocumentWorkspacePage({
           onClick={() => setMobileTab('ai')}
           className={`flex-1 py-2 font-medium text-center border-b-2 ${
             mobileTab === 'ai'
-              ? 'border-[#2563EB] text-[#2563EB] font-bold bg-white'
+              ? 'border-blue-600 text-blue-600 font-bold bg-white'
               : 'border-transparent text-slate-500'
           }`}
         >
@@ -240,7 +240,7 @@ export function DocumentWorkspacePage({
           )}
 
           {rightPanel === 'notes' && (
-            <div className="flex flex-col h-full w-full bg-white border-l border-[#E4E7EC] p-6 text-center justify-center">
+            <div className="flex flex-col h-full w-full bg-white border-l border-slate-200 p-6 text-center justify-center">
               <div className="h-12 w-12 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center mx-auto mb-3">
                 <FilePenLine className="h-6 w-6" />
               </div>
@@ -252,7 +252,7 @@ export function DocumentWorkspacePage({
               <div className="mt-6 flex flex-col gap-2 max-w-xs mx-auto w-full">
                 <Button
                   onClick={() => handleGenerateNotes(currentPage)}
-                  className="bg-[#2563EB] hover:bg-[#1D4ED8] gap-1.5"
+                  className="bg-blue-600 hover:bg-blue-700 gap-1.5"
                 >
                   <FilePenLine className="h-4 w-4" />
                   <span>Generate from Page {currentPage}</span>

@@ -76,41 +76,41 @@ export function AboutPage({ onNavigate }: AboutPageProps) {
   return (
     <PublicLayout currentPath="/about" onNavigate={onNavigate}>
       {/* Hero Header */}
-      <section className="bg-white border-b border-[#E4E7EC] py-14 sm:py-20">
+      <section className="bg-white border-b border-slate-200 py-14 sm:py-20">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/80 text-[#2563EB] text-xs font-semibold mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/80 text-blue-600 text-xs font-semibold mb-4">
             <Sparkles className="h-3.5 w-3.5" />
             <span>Mission & Philosophy</span>
           </div>
-          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-[#101828]">
+          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900">
             Built Exclusively for B.Tech Engineering Students
           </h1>
-          <p className="mt-4 text-base sm:text-lg text-[#475467] max-w-2xl mx-auto leading-relaxed">
+          <p className="mt-4 text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
             The comprehensive academic and career platform engineered to transform undergraduate engineering education from passive lecture attendance into verified mastery and career readiness.
           </p>
         </div>
       </section>
 
       {/* Target Users & Purpose */}
-      <section className="py-14 sm:py-20 bg-[#F7F9FC] border-b border-[#E4E7EC]">
+      <section className="py-14 sm:py-20 bg-slate-50 border-b border-slate-200">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
             <div className="space-y-4">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-[#2563EB]">Our Purpose</h2>
-              <p className="text-2xl sm:text-3xl font-bold tracking-tight text-[#101828]">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-blue-600">Our Purpose</h2>
+              <p className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
                 Bridging University Academics with Real Engineering Excellence
               </p>
-              <p className="text-sm text-[#475467] leading-relaxed">
+              <p className="text-sm text-slate-600 leading-relaxed">
                 Undergraduate engineering students face a challenging duality: maintaining a competitive SGPA / CGPA in university semester exams while independently mastering modern software engineering, coding problems, and system architecture for competitive placements.
               </p>
-              <p className="text-sm text-[#475467] leading-relaxed">
+              <p className="text-sm text-slate-600 leading-relaxed">
                 The B.Tech AI Learning Platform resolves this fragmentation. By integrating your active semester curriculum with personalized AI agents, isolated coding sandboxes, and structured placement modules, students build both top academic grades and tier-1 industry capabilities under one unified system.
               </p>
             </div>
 
-            <div className="bg-white p-8 rounded-2xl border border-[#E4E7EC] shadow-sm space-y-4">
-              <h3 className="font-bold text-base text-[#101828]">Who the Platform is Designed For:</h3>
-              <ul className="space-y-3 text-xs text-[#475467]">
+            <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+              <h3 className="font-bold text-base text-slate-900">Who the Platform is Designed For:</h3>
+              <ul className="space-y-3 text-xs text-slate-600">
                 <li className="flex items-start gap-2">
                   <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
                   <span><strong>Computer Science & Engineering (CSE)</strong>: Data Structures, Operating Systems, DBMS, Compilers, Computer Networks, and Full Stack development.</span>
@@ -138,11 +138,11 @@ export function AboutPage({ onNavigate }: AboutPageProps) {
       </section>
 
       {/* Core Design Principles */}
-      <section className="py-14 sm:py-20 bg-white border-b border-[#E4E7EC]">
+      <section className="py-14 sm:py-20 bg-white border-b border-slate-200">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-14">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-[#4F46E5]">Engineering Standards</h2>
-            <p className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight text-[#101828]">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-indigo-600">Engineering Standards</h2>
+            <p className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
               Our Five Core Architectural Principles
             </p>
           </div>
@@ -151,12 +151,12 @@ export function AboutPage({ onNavigate }: AboutPageProps) {
             {designPrinciples.map((principle, idx) => {
               const Icon = principle.icon;
               return (
-                <div key={idx} className="p-6 rounded-2xl border border-[#E4E7EC] bg-[#F7F9FC] space-y-3">
-                  <div className="p-2.5 rounded-xl bg-blue-50 text-[#2563EB] w-fit">
+                <div key={idx} className="p-6 rounded-2xl border border-slate-200 bg-slate-50 space-y-3">
+                  <div className="p-2.5 rounded-xl bg-blue-50 text-blue-600 w-fit">
                     <Icon className="h-5 w-5" />
                   </div>
-                  <h3 className="font-bold text-sm text-[#101828]">{principle.title}</h3>
-                  <p className="text-xs text-[#475467] leading-relaxed">{principle.desc}</p>
+                  <h3 className="font-bold text-sm text-slate-900">{principle.title}</h3>
+                  <p className="text-xs text-slate-600 leading-relaxed">{principle.desc}</p>
                 </div>
               );
             })}
@@ -165,21 +165,21 @@ export function AboutPage({ onNavigate }: AboutPageProps) {
       </section>
 
       {/* Five Functional Pillars */}
-      <section className="py-14 sm:py-20 bg-[#F7F9FC] border-b border-[#E4E7EC]">
+      <section className="py-14 sm:py-20 bg-slate-50 border-b border-slate-200">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-14">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-[#2563EB]">Platform Scope</h2>
-            <p className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight text-[#101828]">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-blue-600">Platform Scope</h2>
+            <p className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
               Five Integrated Pillars of the Engineering Platform
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {pillars.map((pillar, idx) => (
-              <div key={idx} className="bg-white p-6 rounded-2xl border border-[#E4E7EC] shadow-xs space-y-2">
-                <span className="text-xs font-black text-[#2563EB]">PILLAR 0{idx + 1}</span>
-                <h3 className="font-bold text-base text-[#101828]">{pillar.title}</h3>
-                <p className="text-xs text-[#475467] leading-relaxed">{pillar.desc}</p>
+              <div key={idx} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-2">
+                <span className="text-xs font-black text-blue-600">PILLAR 0{idx + 1}</span>
+                <h3 className="font-bold text-base text-slate-900">{pillar.title}</h3>
+                <p className="text-xs text-slate-600 leading-relaxed">{pillar.desc}</p>
               </div>
             ))}
           </div>
@@ -189,23 +189,23 @@ export function AboutPage({ onNavigate }: AboutPageProps) {
       {/* Call to Action */}
       <section className="py-16 bg-white text-center">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-[#101828]">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
             Experience a Truly Personalized Engineering Platform
           </h2>
-          <p className="text-sm text-[#475467]">
+          <p className="text-sm text-slate-600">
             Register in under 2 minutes, configure your current semester subjects, and unlock your custom AI learning OS.
           </p>
           <div className="flex items-center justify-center gap-4">
             <Button
               onClick={() => onNavigate('/register')}
-              className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold text-xs px-6 py-3 rounded-xl shadow-md cursor-pointer"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-6 py-3 rounded-xl shadow-md cursor-pointer"
             >
               Get Started (Sign Up)
             </Button>
             <Button
               variant="outline"
               onClick={() => onNavigate('/how-it-works')}
-              className="border-slate-300 text-[#344054] font-semibold text-xs px-6 py-3 rounded-xl cursor-pointer"
+              className="border-slate-300 text-slate-700 font-semibold text-xs px-6 py-3 rounded-xl cursor-pointer"
             >
               Learn the 12-Step Workflow
             </Button>

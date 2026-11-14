@@ -1,8 +1,7 @@
 import * as React from 'react';
 import { PageContainer, PageHeader, ModulePlaceholderCard } from '../components/layout/PageComponents';
-import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { Bot, ArrowRight, Layers, Database } from 'lucide-react';
+import { Bot } from 'lucide-react';
 
 export interface ModuleConfig {
   title: string;
@@ -368,26 +367,22 @@ export const MODULE_REGISTRY: Record<string, ModuleConfig> = {
 
 export function ModulePlaceholderPage({ path, onNavigate }: { path: string; onNavigate: (url: string) => void }) {
   const config = MODULE_REGISTRY[path] || {
-    title: 'Platform Module',
-    description: 'B.Tech learning platform component.',
-    phaseNumber: 2,
-    features: ['API route ready', 'State management prepared', 'Responsive shell integrated'],
+    title: 'Learning module',
+    description: 'This part of your workspace is not available yet.',
+    phaseNumber: 0,
+    features: [],
   };
 
+  // Student-facing: no roadmap phases, API routes or internal status labels are shown here.
   return (
     <PageContainer>
       <PageHeader
         title={config.title}
         description={config.description}
-        badge={
-          <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
-            Phase {config.phaseNumber} Roadmap
-          </span>
-        }
         actions={
           <Button variant="ai" size="sm" onClick={() => onNavigate('/ai-agent')} className="gap-1.5">
             <Bot className="h-3.5 w-3.5" />
-            <span>Consult AI Agent</span>
+            <span>Ask the AI tutor</span>
           </Button>
         }
       />
@@ -397,31 +392,9 @@ export function ModulePlaceholderPage({ path, onNavigate }: { path: string; onNa
         phaseNumber={config.phaseNumber}
         description={config.description}
         features={config.features}
-        actionLabel="Launch AI Learning Agent"
-        onAction={() => onNavigate('/ai-agent')}
+        actionLabel="Back to dashboard"
+        onAction={() => onNavigate('/dashboard')}
       />
-
-      {config.stats && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
-          {config.stats.map((s, idx) => (
-            <Card key={idx} className="p-4">
-              <div className="text-xs font-medium text-slate-500">{s.label}</div>
-              <div className="text-xl font-bold text-slate-900 mt-1 tabular-nums">{s.value}</div>
-              <div className="text-[11px] text-emerald-600 mt-0.5 font-medium">Schema verified</div>
-            </Card>
-          ))}
-          <Card className="p-4">
-            <div className="text-xs font-medium text-slate-500">API Endpoint</div>
-            <div className="text-sm font-mono font-semibold text-[#2563EB] mt-1">/api/v1{path}</div>
-            <div className="text-[11px] text-slate-500 mt-0.5">Route mapped</div>
-          </Card>
-          <Card className="p-4">
-            <div className="text-xs font-medium text-slate-500">Security Model</div>
-            <div className="text-sm font-semibold text-slate-900 mt-1">Student Isolated</div>
-            <div className="text-[11px] text-slate-500 mt-0.5">RBAC Verified</div>
-          </Card>
-        </div>
-      )}
     </PageContainer>
   );
 }

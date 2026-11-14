@@ -124,7 +124,7 @@ export function NotificationsPage({ onNavigate }: { onNavigate: (path: string) =
       return <Calendar className="h-4 w-4 text-amber-600" />;
     }
     if (t.includes('QUESTION') || t.includes('ANSWER')) {
-      return <HelpCircle className="h-4 w-4 text-[#2563EB]" />;
+      return <HelpCircle className="h-4 w-4 text-blue-600" />;
     }
     if (t.includes('DISCUSSION') || t.includes('COMMUNITY')) {
       return <MessageSquare className="h-4 w-4 text-emerald-600" />;
@@ -132,27 +132,27 @@ export function NotificationsPage({ onNavigate }: { onNavigate: (path: string) =
     if (t.includes('STUDY') || t.includes('REVISION')) {
       return <BookOpen className="h-4 w-4 text-blue-600" />;
     }
-    return <Sparkles className="h-4 w-4 text-[#4F46E5]" />;
+    return <Sparkles className="h-4 w-4 text-indigo-600" />;
   };
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E4E7EC] pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-xl sm:text-2xl font-bold text-[#101828]">Notification Center</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Notification Center</h1>
             {unreadCount > 0 ? (
-              <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-100 text-[#2563EB] font-bold">
+              <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-600 font-bold">
                 {unreadCount} unread
               </span>
             ) : (
-              <span className="text-xs px-2.5 py-0.5 rounded-full bg-slate-100 text-[#475467] font-medium">
+              <span className="text-xs px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 font-medium">
                 Caught up
               </span>
             )}
           </div>
-          <p className="text-xs sm:text-sm text-[#667085] mt-1">
+          <p className="text-xs sm:text-sm text-slate-500 mt-1">
             Real alerts for academic deadlines, goal milestones, spaced revisions, assessment updates, and community activity.
           </p>
         </div>
@@ -161,7 +161,7 @@ export function NotificationsPage({ onNavigate }: { onNavigate: (path: string) =
           <button
             onClick={handleScanReminders}
             disabled={scanningReminders}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#D0D5DD] bg-white text-xs font-semibold text-[#344054] hover:bg-slate-50 transition-colors cursor-pointer disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer disabled:opacity-50"
             title="Scan upcoming goal target dates and study tasks for reminders"
           >
             <Clock className={`h-3.5 w-3.5 ${scanningReminders ? 'animate-spin' : ''}`} />
@@ -171,7 +171,7 @@ export function NotificationsPage({ onNavigate }: { onNavigate: (path: string) =
           {unreadCount > 0 && (
             <button
               onClick={handleMarkAllRead}
-              className="text-xs font-semibold text-[#2563EB] hover:bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-200 transition-colors cursor-pointer"
+              className="text-xs font-semibold text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-200 transition-colors cursor-pointer"
             >
               Mark all read
             </button>
@@ -179,7 +179,7 @@ export function NotificationsPage({ onNavigate }: { onNavigate: (path: string) =
 
           <button
             onClick={() => onNavigate('/profile/settings?tab=notifications')}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#475467] hover:text-[#101828] hover:bg-slate-100 rounded-lg border border-[#E4E7EC] cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg border border-slate-200 cursor-pointer"
             title="Configure delivery channels and category preferences"
           >
             <Settings className="h-3.5 w-3.5" />
@@ -212,7 +212,7 @@ export function NotificationsPage({ onNavigate }: { onNavigate: (path: string) =
           <button
             onClick={() => setUnreadOnly(false)}
             className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
-              !unreadOnly ? 'bg-white text-[#101828] shadow-2xs' : 'text-[#667085] hover:text-[#101828]'
+              !unreadOnly ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-500 hover:text-slate-900'
             }`}
           >
             All
@@ -220,7 +220,7 @@ export function NotificationsPage({ onNavigate }: { onNavigate: (path: string) =
           <button
             onClick={() => setUnreadOnly(true)}
             className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
-              unreadOnly ? 'bg-white text-[#2563EB] shadow-2xs' : 'text-[#667085] hover:text-[#101828]'
+              unreadOnly ? 'bg-white text-blue-600 shadow-2xs' : 'text-slate-500 hover:text-slate-900'
             }`}
           >
             Unread Only {unreadCount > 0 && `(${unreadCount})`}
@@ -229,10 +229,10 @@ export function NotificationsPage({ onNavigate }: { onNavigate: (path: string) =
       </div>
 
       {/* Main Notification Card List */}
-      <div className="bg-white rounded-2xl border border-[#E4E7EC] shadow-2xs overflow-hidden">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
         {loading ? (
-          <div className="p-12 text-center text-xs text-[#667085] flex flex-col items-center justify-center gap-3">
-            <RefreshCw className="h-6 w-6 animate-spin text-[#2563EB]" />
+          <div className="p-12 text-center text-xs text-slate-500 flex flex-col items-center justify-center gap-3">
+            <RefreshCw className="h-6 w-6 animate-spin text-blue-600" />
             <span className="font-medium">Loading notifications...</span>
           </div>
         ) : error ? (
@@ -247,7 +247,7 @@ export function NotificationsPage({ onNavigate }: { onNavigate: (path: string) =
             </button>
           </div>
         ) : notifications.length === 0 ? (
-          <div className="p-14 text-center text-xs text-[#667085] space-y-3">
+          <div className="p-14 text-center text-xs text-slate-500 space-y-3">
             <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto text-slate-400">
               <Bell className="h-6 w-6" />
             </div>
@@ -279,14 +279,14 @@ export function NotificationsPage({ onNavigate }: { onNavigate: (path: string) =
                 <div className="flex-1 min-w-0 space-y-1">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2 truncate">
-                      <h3 className="text-xs sm:text-sm font-bold text-[#101828] truncate">
+                      <h3 className="text-xs sm:text-sm font-bold text-slate-900 truncate">
                         {item.title}
                       </h3>
                       {!item.is_read && (
-                        <span className="h-2 w-2 rounded-full bg-[#2563EB] shrink-0" />
+                        <span className="h-2 w-2 rounded-full bg-blue-600 shrink-0" />
                       )}
                     </div>
-                    <span className="text-[11px] text-[#98A2B3] tabular-nums shrink-0">
+                    <span className="text-[11px] text-slate-400 tabular-nums shrink-0">
                       {new Date(item.created_at).toLocaleDateString([], {
                         month: 'short',
                         day: 'numeric',
@@ -296,12 +296,12 @@ export function NotificationsPage({ onNavigate }: { onNavigate: (path: string) =
                     </span>
                   </div>
 
-                  <p className="text-xs text-[#475467] leading-relaxed line-clamp-2">
+                  <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">
                     {item.message}
                   </p>
 
                   {item.link && (
-                    <div className="flex items-center gap-1 text-[11px] font-semibold text-[#2563EB] pt-1">
+                    <div className="flex items-center gap-1 text-[11px] font-semibold text-blue-600 pt-1">
                       <span>Open destination</span>
                       <ExternalLink className="h-3 w-3" />
                     </div>

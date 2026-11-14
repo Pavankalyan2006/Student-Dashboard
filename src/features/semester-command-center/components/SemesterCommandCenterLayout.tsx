@@ -48,38 +48,38 @@ export function SemesterCommandCenterLayout({
   return (
     <div className="space-y-6">
       {/* Top Semester Context Banner */}
-      <div className="bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm">
+      <div className="surface-hero border border-slate-200 rounded-2xl p-5 shadow-sm">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shrink-0">
+            <div className="w-12 h-12 rounded-xl bg-indigo-100 border border-indigo-200 flex items-center justify-center text-indigo-600 shrink-0">
               <GraduationCap className="w-6 h-6" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-xl font-bold text-white tracking-tight">Academic Semester Command Center</h1>
-                <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-semibold">
+                <h1 className="text-xl font-bold text-slate-900 tracking-tight">Academic Semester Command Center</h1>
+                <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-200 font-semibold">
                   {config ? `Semester ${config.semester_number} • ${config.branch}` : 'Semester not set up'}
                 </span>
               </div>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-slate-500 mt-0.5">
                 Semester-long academic intelligence orchestrating syllabus, slip tests, minor examinations, and end-sem strategy.
               </p>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 self-stretch md:self-auto justify-between md:justify-end border-t md:border-t-0 pt-3 md:pt-0 border-slate-800">
-            <div className="flex items-center gap-2 bg-slate-950/70 border border-slate-800 px-3 py-1.5 rounded-lg text-xs">
-              <Clock className="w-3.5 h-3.5 text-indigo-400" />
-              <span className="text-slate-400">Week:</span>
-              <span className="font-bold text-white">
+          <div className="flex flex-wrap items-center gap-3 self-stretch md:self-auto justify-between md:justify-end border-t md:border-t-0 pt-3 md:pt-0 border-slate-200">
+            <div className="flex items-center gap-2 bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-xs">
+              <Clock className="w-3.5 h-3.5 text-indigo-600" />
+              <span className="text-slate-500">Week:</span>
+              <span className="font-bold text-slate-900">
                 {config ? `${config.current_week} of ${config.total_teaching_weeks}` : '—'}
               </span>
             </div>
 
-            <div className="flex items-center gap-2 bg-slate-950/70 border border-slate-800 px-3 py-1.5 rounded-lg text-xs">
-              <Target className="w-3.5 h-3.5 text-emerald-400" />
-              <span className="text-slate-400">Target SGPA:</span>
-              <span className="font-bold text-emerald-400">{config?.target_gpa ?? '—'}</span>
+            <div className="flex items-center gap-2 bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-xs">
+              <Target className="w-3.5 h-3.5 text-emerald-600" />
+              <span className="text-slate-500">Target SGPA:</span>
+              <span className="font-bold text-emerald-600">{config?.target_gpa ?? '—'}</span>
             </div>
 
             <Button
@@ -95,15 +95,15 @@ export function SemesterCommandCenterLayout({
 
         {/* Current Active Phase Indicator */}
         {currentPhase && (
-          <div className="mt-4 pt-3 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-xs">
-            <div className="flex items-center gap-2 text-slate-300">
+          <div className="mt-4 pt-3 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div className="flex items-center gap-2 text-slate-700">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-slate-400">Current Phase:</span>
-              <span className="font-semibold text-white">{currentPhase.name}</span>
+              <span className="text-slate-500">Current Phase:</span>
+              <span className="font-semibold text-slate-900">{currentPhase.name}</span>
               <span className="text-slate-500">•</span>
-              <span className="text-slate-400">{currentPhase.description}</span>
+              <span className="text-slate-500">{currentPhase.description}</span>
             </div>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-indigo-300 border border-slate-700">
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-50 text-indigo-700 border border-slate-200">
               Focus Mode: {currentPhase.focus_mode}
             </span>
           </div>
@@ -111,7 +111,7 @@ export function SemesterCommandCenterLayout({
       </div>
 
       {/* Secondary Horizontal Nav Tabs */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-slate-800 scrollbar-none">
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-slate-200 scrollbar-none">
         {navTabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = currentTab === tab.id;
@@ -122,7 +122,7 @@ export function SemesterCommandCenterLayout({
               className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${
                 isActive
                   ? 'bg-indigo-600 text-white shadow-xs font-semibold'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                  : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
               }`}
             >
               <Icon className="w-3.5 h-3.5" />
@@ -130,7 +130,7 @@ export function SemesterCommandCenterLayout({
               {tab.badge && (
                 <span
                   className={`text-[9px] px-1.5 py-0.2 rounded font-mono ${
-                    isActive ? 'bg-indigo-700 text-white' : 'bg-slate-800 text-indigo-400 border border-indigo-500/20'
+                    isActive ? 'bg-indigo-700 text-white' : 'bg-slate-50 text-indigo-600 border border-indigo-200'
                   }`}
                 >
                   {tab.badge}

@@ -37,10 +37,10 @@ export function ChartCard({
   description,
   data,
   type = 'area',
-  color = '#2563EB',
+  color = '#4654E0',
   dataKey = 'value',
   secondaryDataKey,
-  secondaryColor = '#4F46E5',
+  secondaryColor = '#574FDD',
   unit = '',
   className,
 }: ChartCardProps) {
@@ -61,27 +61,27 @@ export function ChartCard({
                     <stop offset="95%" stopColor={color} stopOpacity={0.0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EFF1F6" />
                 <XAxis
                   dataKey="label"
                   tickLine={false}
                   axisLine={false}
-                  tick={{ fontSize: 11, fill: '#667085' }}
+                  tick={{ fontSize: 11, fill: '#6A7387' }}
                 />
                 <YAxis
                   tickLine={false}
                   axisLine={false}
-                  tick={{ fontSize: 11, fill: '#667085' }}
+                  tick={{ fontSize: 11, fill: '#6A7387' }}
                   tickFormatter={(v) => `${v}${unit}`}
                 />
                 <Tooltip
                   content={({ active, payload, label }) => {
                     if (active && payload && payload.length) {
                       return (
-                        <div className="rounded-lg border border-[#E4E7EC] bg-white p-2.5 shadow-sm text-xs">
-                          <div className="font-semibold text-[#101828] mb-1">{label}</div>
+                        <div className="rounded-lg border border-slate-200 bg-white p-2.5 shadow-sm text-xs">
+                          <div className="font-semibold text-slate-900 mb-1">{label}</div>
                           {payload.map((entry, idx) => (
-                            <div key={idx} className="flex items-center gap-2 tabular-nums text-[#475467]">
+                            <div key={idx} className="flex items-center gap-2 tabular-nums text-slate-600">
                               <span
                                 className="h-2 w-2 rounded-full"
                                 style={{ backgroundColor: entry.color }}
@@ -118,26 +118,26 @@ export function ChartCard({
               </AreaChart>
             ) : (
               <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EFF1F6" />
                 <XAxis
                   dataKey="label"
                   tickLine={false}
                   axisLine={false}
-                  tick={{ fontSize: 11, fill: '#667085' }}
+                  tick={{ fontSize: 11, fill: '#6A7387' }}
                 />
                 <YAxis
                   tickLine={false}
                   axisLine={false}
-                  tick={{ fontSize: 11, fill: '#667085' }}
+                  tick={{ fontSize: 11, fill: '#6A7387' }}
                   tickFormatter={(v) => `${v}${unit}`}
                 />
                 <Tooltip
                   content={({ active, payload, label }) => {
                     if (active && payload && payload.length) {
                       return (
-                        <div className="rounded-lg border border-[#E4E7EC] bg-white p-2.5 shadow-sm text-xs">
-                          <div className="font-semibold text-[#101828] mb-1">{label}</div>
-                          <div className="text-[#475467] tabular-nums">
+                        <div className="rounded-lg border border-slate-200 bg-white p-2.5 shadow-sm text-xs">
+                          <div className="font-semibold text-slate-900 mb-1">{label}</div>
+                          <div className="text-slate-600 tabular-nums">
                             Score: {payload[0]?.value}
                             {unit}
                           </div>

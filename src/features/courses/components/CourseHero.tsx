@@ -60,8 +60,8 @@ export function CourseHero({
   };
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0B1530] via-[#101E42] to-[#1C2E5D] text-white p-6 sm:p-8 border border-[#1E2E55] shadow-lg">
-      <div className="absolute top-0 right-0 -mt-10 -mr-10 h-64 w-64 rounded-full bg-[#2563EB]/20 blur-3xl pointer-events-none" />
+    <div className="relative overflow-hidden rounded-2xl hero-brand text-white p-6 sm:p-8 border border-navy-700">
+      <div className="absolute top-0 right-0 -mt-10 -mr-10 h-64 w-64 rounded-full bg-blue-600/20 blur-3xl pointer-events-none" />
 
       {/* Top Breadcrumb & Actions Bar */}
       <div className="relative z-10 flex items-center justify-between pb-4 border-b border-white/10 mb-5 text-xs">
@@ -175,18 +175,18 @@ export function CourseHero({
         {/* Quick Metrics */}
         <div className="flex flex-wrap items-center gap-4 text-xs text-slate-300 pt-1">
           <span className="flex items-center gap-1.5">
-            <BookOpen className="h-4 w-4 text-[#38BDF8]" />
+            <BookOpen className="h-4 w-4 text-sky-400" />
             <span>
               {course.chapters.length} Units · {course.total_lessons} Lessons
             </span>
           </span>
           <span className="flex items-center gap-1.5">
-            <Clock className="h-4 w-4 text-[#38BDF8]" />
+            <Clock className="h-4 w-4 text-sky-400" />
             <span>~{hours} Hours Total Content</span>
           </span>
           {course.instructor && (
             <span className="flex items-center gap-1.5">
-              <User className="h-4 w-4 text-[#38BDF8]" />
+              <User className="h-4 w-4 text-sky-400" />
               <span>{course.instructor}</span>
             </span>
           )}
@@ -211,7 +211,7 @@ export function CourseHero({
             </div>
             <div className="w-full h-2 rounded-full bg-white/10 overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-[#2563EB] to-[#38BDF8] rounded-full transition-all duration-500"
+                className="h-full bg-gradient-to-r from-blue-600 to-sky-400 rounded-full transition-all duration-500"
                 style={{ width: `${course.progress_percentage}%` }}
               />
             </div>
@@ -222,7 +222,7 @@ export function CourseHero({
         {course.next_recommended_lesson && course.enrollment && (
           <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-blue-500/15 border border-blue-400/30 max-w-md text-xs">
             <div className="flex items-center gap-2 min-w-0">
-              <Compass className="h-4 w-4 text-[#38BDF8] shrink-0" />
+              <Compass className="h-4 w-4 text-sky-400 shrink-0" />
               <div className="min-w-0">
                 <span className="text-slate-300 text-[10px] block font-semibold uppercase tracking-wider">
                   Recommended Next
@@ -236,7 +236,7 @@ export function CourseHero({
               onClick={() =>
                 onNavigate(`/courses/${course.id}/learn/${course.next_recommended_lesson?.id}`)
               }
-              className="text-[#38BDF8] font-bold hover:underline shrink-0 flex items-center gap-1 cursor-pointer"
+              className="text-sky-400 font-bold hover:underline shrink-0 flex items-center gap-1 cursor-pointer"
             >
               <span>Jump In</span>
               <ArrowRight className="h-3 w-3" />
@@ -267,7 +267,7 @@ export function CourseHero({
               variant="primary"
               size="lg"
               onClick={onEnroll}
-              className="gap-2 shadow-sm font-bold bg-[#2563EB] hover:bg-blue-600"
+              className="gap-2 shadow-sm font-bold bg-blue-600 hover:bg-blue-600"
             >
               <span>Enroll &amp; Start Learning</span>
               <ArrowRight className="h-4 w-4" />

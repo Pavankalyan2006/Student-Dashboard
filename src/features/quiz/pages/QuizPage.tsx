@@ -108,7 +108,7 @@ export const QuizPage: React.FC<QuizPageProps> = ({ onNavigate }) => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white rounded-2xl p-6 sm:p-8 shadow-md">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 hero-brand text-white rounded-2xl p-6 sm:p-8 shadow-md">
         <div>
           <div className="flex items-center gap-2 mb-2 text-blue-300 font-semibold text-xs tracking-wider uppercase">
             <BrainCircuit className="w-4 h-4 text-blue-400" />

@@ -335,8 +335,8 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
         {/* Top Header */}
         <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
           <div>
-            <h2 className="text-xl font-bold text-[#101828]">Create Flashcards</h2>
-            <p className="text-xs text-[#475467] mt-0.5">
+            <h2 className="text-xl font-bold text-slate-900">Create Flashcards</h2>
+            <p className="text-xs text-slate-600 mt-0.5">
               Choose your preferred method to build active recall revision decks.
             </p>
           </div>
@@ -357,8 +357,8 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
             }}
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all whitespace-nowrap ${
               activeTab === 'manual'
-                ? 'bg-[#2563EB] text-white shadow-sm'
-                : 'text-[#475467] hover:bg-gray-100'
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'text-slate-600 hover:bg-gray-100'
             }`}
           >
             <Plus className="w-3.5 h-3.5" />
@@ -372,8 +372,8 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
             }}
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all whitespace-nowrap ${
               activeTab === 'ai'
-                ? 'bg-[#2563EB] text-white shadow-sm'
-                : 'text-[#475467] hover:bg-gray-100'
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'text-slate-600 hover:bg-gray-100'
             }`}
           >
             <Sparkles className="w-3.5 h-3.5 text-purple-400" />
@@ -387,8 +387,8 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
             }}
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all whitespace-nowrap ${
               activeTab === 'notes'
-                ? 'bg-[#2563EB] text-white shadow-sm'
-                : 'text-[#475467] hover:bg-gray-100'
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'text-slate-600 hover:bg-gray-100'
             }`}
           >
             <FileText className="w-3.5 h-3.5 text-amber-500" />
@@ -402,8 +402,8 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
             }}
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all whitespace-nowrap ${
               activeTab === 'course'
-                ? 'bg-[#2563EB] text-white shadow-sm'
-                : 'text-[#475467] hover:bg-gray-100'
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'text-slate-600 hover:bg-gray-100'
             }`}
           >
             <BookOpen className="w-3.5 h-3.5 text-emerald-500" />
@@ -420,7 +420,7 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
             <form onSubmit={handleSubmitManual} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-[#344054] mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
                     Deck Title <span className="text-rose-500">*</span>
                   </label>
                   <input
@@ -428,13 +428,13 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
                     value={manualTitle}
                     onChange={(e) => setManualTitle(e.target.value)}
                     placeholder="e.g. Operating Systems: Synchronization Primitives"
-                    className="w-full px-3 py-2 text-xs border border-[#D0D5DD] rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-[#344054] mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
                     Subject / Branch <span className="text-rose-500">*</span>
                   </label>
                   <input
@@ -442,7 +442,7 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
                     value={manualSubject}
                     onChange={(e) => setManualSubject(e.target.value)}
                     placeholder="e.g. Operating Systems"
-                    className="w-full px-3 py-2 text-xs border border-[#D0D5DD] rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     required
                   />
                 </div>
@@ -450,24 +450,24 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-[#344054] mb-1">Description (Optional)</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Description (Optional)</label>
                   <input
                     type="text"
                     value={manualDescription}
                     onChange={(e) => setManualDescription(e.target.value)}
                     placeholder="Brief scope of topics covered in this deck..."
-                    className="w-full px-3 py-2 text-xs border border-[#D0D5DD] rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-[#344054] mb-1">Tags (Comma-separated)</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Tags (Comma-separated)</label>
                   <input
                     type="text"
                     value={manualTags}
                     onChange={(e) => setManualTags(e.target.value)}
                     placeholder="e.g. Sem 4, Mutex, Deadlocks, GATE"
-                    className="w-full px-3 py-2 text-xs border border-[#D0D5DD] rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
                 </div>
               </div>
@@ -475,7 +475,7 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
               {/* Cards List in Form */}
               <div className="pt-2 space-y-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold text-[#101828] uppercase tracking-wider">
+                  <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
                     Deck Flashcards ({manualCards.length})
                   </h4>
                   <Button
@@ -496,7 +496,7 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
                     className="p-4 rounded-2xl border border-gray-200 bg-gray-50/50 space-y-3 relative group"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-[#344054]">Card #{idx + 1}</span>
+                      <span className="text-xs font-bold text-slate-700">Card #{idx + 1}</span>
                       {manualCards.length > 1 && (
                         <button
                           type="button"
@@ -515,7 +515,7 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
                         value={card.front}
                         onChange={(e) => handleUpdateManualCard(idx, 'front', e.target.value)}
                         placeholder="Front: Clear question, definition prompt, or concept check..."
-                        className="w-full px-3 py-2 text-xs border border-[#D0D5DD] rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
                         required
                       />
                     </div>
@@ -526,7 +526,7 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
                         onChange={(e) => handleUpdateManualCard(idx, 'back', e.target.value)}
                         placeholder="Back: Direct answer, explanation, formulas, or code..."
                         rows={2}
-                        className="w-full px-3 py-2 text-xs border border-[#D0D5DD] rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
                         required
                       />
                     </div>
@@ -572,7 +572,7 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="text-xs bg-[#2563EB] hover:bg-[#1D4ED8] text-white px-6"
+                  className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-6"
                 >
                   {isSubmitting ? 'Saving Deck...' : 'Save Deck to Library'}
                 </Button>
@@ -588,7 +588,7 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
               {!previewCards ? (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-xs font-semibold text-[#344054] mb-1">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
                       Topic or Concept <span className="text-rose-500">*</span>
                     </label>
                     <input
@@ -596,29 +596,29 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
                       value={aiTopic}
                       onChange={(e) => setAiTopic(e.target.value)}
                       placeholder="e.g. Bellman-Ford Shortest Path Algorithm, Virtual Memory Paging, ACID Properties"
-                      className="w-full px-3 py-2 text-xs border border-[#D0D5DD] rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     />
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-semibold text-[#344054] mb-1">Subject Area</label>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Subject Area</label>
                       <input
                         type="text"
                         value={aiSubject}
                         onChange={(e) => setAiSubject(e.target.value)}
                         placeholder="e.g. Data Structures, Operating Systems, Computer Networks"
-                        className="w-full px-3 py-2 text-xs border border-[#D0D5DD] rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-[#344054] mb-1">Difficulty Level</label>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Difficulty Level</label>
                       <select
                         aria-label="Difficulty"
                         value={aiDifficulty}
                         onChange={(e) => setAiDifficulty(e.target.value as any)}
-                        className="w-full px-3 py-2 text-xs border border-[#D0D5DD] rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
                       >
                         <option value="BEGINNER">Beginner (Foundations & Terms)</option>
                         <option value="INTERMEDIATE">Intermediate (Engineering Core)</option>
@@ -629,12 +629,12 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-semibold text-[#344054] mb-1">Card Style</label>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Card Style</label>
                       <select
                         aria-label="Card style"
                         value={aiStyle}
                         onChange={(e) => setAiStyle(e.target.value as any)}
-                        className="w-full px-3 py-2 text-xs border border-[#D0D5DD] rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
                       >
                         <option value="MIXED">Mixed (Balanced Recall)</option>
                         <option value="DEFINITION">Definitions & Core Laws</option>
@@ -645,7 +645,7 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-[#344054] mb-1">
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
                         Number of Cards: <span className="font-bold text-blue-600">{aiCount}</span>
                       </label>
                       <input
@@ -663,7 +663,7 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
                     <Button
                       onClick={handleGenerateAI}
                       disabled={isGenerating || !aiTopic.trim()}
-                      className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold py-2.5 gap-2 shadow-sm"
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2.5 gap-2 shadow-sm"
                     >
                       <Sparkles className="w-4 h-4" />
                       {isGenerating ? 'AI Generating Active Recall Cards...' : 'Generate Flashcards'}
@@ -675,8 +675,8 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="text-sm font-bold text-[#101828]">{previewTitle}</h4>
-                      <p className="text-xs text-[#475467]">
+                      <h4 className="text-sm font-bold text-slate-900">{previewTitle}</h4>
+                      <p className="text-xs text-slate-600">
                         Review the generated cards. You can edit or remove cards before saving to your library.
                       </p>
                     </div>
@@ -722,7 +722,7 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
                               prev?.map((c, i) => (i === idx ? { ...c, front: val } : c)) || []
                             );
                           }}
-                          className="w-full text-xs font-bold text-[#101828] bg-white border border-gray-200 rounded-lg p-2 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                          className="w-full text-xs font-bold text-slate-900 bg-white border border-gray-200 rounded-lg p-2 focus:ring-1 focus:ring-blue-500 focus:outline-none"
                         />
 
                         <textarea
@@ -734,7 +734,7 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
                               prev?.map((c, i) => (i === idx ? { ...c, back: val } : c)) || []
                             );
                           }}
-                          className="w-full text-xs text-[#475467] bg-white border border-gray-200 rounded-lg p-2 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                          className="w-full text-xs text-slate-600 bg-white border border-gray-200 rounded-lg p-2 focus:ring-1 focus:ring-blue-500 focus:outline-none"
                         />
                       </div>
                     ))}
@@ -748,7 +748,7 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
                       size="sm"
                       onClick={() => handleSavePreviewDeck('AI_GENERATED')}
                       disabled={isSubmitting || previewCards.length === 0}
-                      className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold px-6"
+                      className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-6"
                     >
                       {isSubmitting ? 'Saving Deck...' : `Save ${previewCards.length} Cards to Library`}
                     </Button>
@@ -766,7 +766,7 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
               {!previewCards ? (
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
-                    <label className="text-xs font-semibold text-[#344054]">Source Material Type:</label>
+                    <label className="text-xs font-semibold text-slate-700">Source Material Type:</label>
                     <div className="flex gap-2">
                       <button
                         type="button"
@@ -795,13 +795,13 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
 
                   {selectedSourceType === 'NOTE' ? (
                     <div>
-                      <label className="block text-xs font-semibold text-[#344054] mb-1">Select Note</label>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Select Note</label>
                       {savedNotes.length > 0 ? (
                         <select
                           aria-label="Note"
                           value={selectedNoteId}
                           onChange={(e) => setSelectedNoteId(e.target.value)}
-                          className="w-full px-3 py-2 text-xs border border-[#D0D5DD] rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                          className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
                         >
                           {savedNotes.map((n) => (
                             <option key={n.id} value={n.id}>
@@ -817,7 +817,7 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
                     </div>
                   ) : (
                     <div>
-                      <label className="block text-xs font-semibold text-[#344054] mb-1">
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
                         Select Document (PDF / DOCX / TXT)
                       </label>
                       {savedDocs.length > 0 ? (
@@ -825,7 +825,7 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
                           aria-label="Document"
                           value={selectedDocId}
                           onChange={(e) => setSelectedDocId(e.target.value)}
-                          className="w-full px-3 py-2 text-xs border border-[#D0D5DD] rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                          className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
                         >
                           {savedDocs.map((d) => (
                             <option key={d.id} value={d.id}>
@@ -845,7 +845,7 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
                     <Button
                       onClick={handleGenerateFromMaterial}
                       disabled={isGenerating || (selectedSourceType === 'NOTE' ? !selectedNoteId : !selectedDocId)}
-                      className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold py-2.5 gap-2 shadow-sm"
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2.5 gap-2 shadow-sm"
                     >
                       <Sparkles className="w-4 h-4" />
                       {isGenerating ? 'Synthesizing Grounded Flashcards...' : 'Extract Flashcards from Material'}
@@ -856,8 +856,8 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="text-sm font-bold text-[#101828]">{previewTitle}</h4>
-                      <p className="text-xs text-[#475467]">
+                      <h4 className="text-sm font-bold text-slate-900">{previewTitle}</h4>
+                      <p className="text-xs text-slate-600">
                         Grounded in: {selectedSourceType === 'NOTE' ? 'Saved Study Note' : 'Indexed Document'}
                       </p>
                     </div>
@@ -872,8 +872,8 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
                         <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded">
                           Card #{idx + 1}
                         </span>
-                        <p className="text-xs font-bold text-[#101828]">{card.front}</p>
-                        <p className="text-xs text-[#475467]">{card.back}</p>
+                        <p className="text-xs font-bold text-slate-900">{card.front}</p>
+                        <p className="text-xs text-slate-600">{card.back}</p>
                       </div>
                     ))}
                   </div>
@@ -888,7 +888,7 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
                           previewTitle
                         )
                       }
-                      className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold px-6"
+                      className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-6"
                     >
                       Save to Deck Library
                     </Button>
@@ -906,7 +906,7 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
               {!previewCards ? (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-xs font-semibold text-[#344054] mb-1">Select Enrolled Course</label>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Select Enrolled Course</label>
                     {enrolledCourses.length > 0 ? (
                       <select
                         aria-label="Course"
@@ -921,7 +921,7 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
                             setSelectedChapterId('');
                           }
                         }}
-                        className="w-full px-3 py-2 text-xs border border-[#D0D5DD] rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
                       >
                         {enrolledCourses.map((c) => (
                           <option key={c.id} value={c.id}>
@@ -938,7 +938,7 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
 
                   {selectedCourseId && (
                     <div>
-                      <label className="block text-xs font-semibold text-[#344054] mb-1">
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
                         Select Chapter / Syllabus Unit (Optional)
                       </label>
                       {enrolledCourses.find((c) => c.id === selectedCourseId)?.chapters?.length > 0 ? (
@@ -946,7 +946,7 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
                           aria-label="Chapter"
                           value={selectedChapterId}
                           onChange={(e) => setSelectedChapterId(e.target.value)}
-                          className="w-full px-3 py-2 text-xs border border-[#D0D5DD] rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                          className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
                         >
                           <option value="">All Units & Chapters</option>
                           {enrolledCourses
@@ -967,7 +967,7 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
                     <Button
                       onClick={handleGenerateFromCourse}
                       disabled={isGenerating || !selectedCourseId}
-                      className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold py-2.5 gap-2 shadow-sm"
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2.5 gap-2 shadow-sm"
                     >
                       <Sparkles className="w-4 h-4" />
                       {isGenerating ? 'Extracting Syllabus Active Recall Cards...' : 'Generate Syllabus Flashcards'}
@@ -978,8 +978,8 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="text-sm font-bold text-[#101828]">{previewTitle}</h4>
-                      <p className="text-xs text-[#475467]">Grounded in official course syllabus</p>
+                      <h4 className="text-sm font-bold text-slate-900">{previewTitle}</h4>
+                      <p className="text-xs text-slate-600">Grounded in official course syllabus</p>
                     </div>
                     <Button variant="outline" size="sm" onClick={() => setPreviewCards(null)}>
                       Back
@@ -992,8 +992,8 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
                         <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
                           Card #{idx + 1}
                         </span>
-                        <p className="text-xs font-bold text-[#101828]">{card.front}</p>
-                        <p className="text-xs text-[#475467]">{card.back}</p>
+                        <p className="text-xs font-bold text-slate-900">{card.front}</p>
+                        <p className="text-xs text-slate-600">{card.back}</p>
                       </div>
                     ))}
                   </div>
@@ -1004,7 +1004,7 @@ export const CreateFlashcardsModal: React.FC<CreateFlashcardsModalProps> = ({
                       onClick={() =>
                         handleSavePreviewDeck('COURSE', selectedCourseId, previewTitle)
                       }
-                      className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold px-6"
+                      className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-6"
                     >
                       Save to Deck Library
                     </Button>

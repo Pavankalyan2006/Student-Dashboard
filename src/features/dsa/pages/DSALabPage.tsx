@@ -319,7 +319,7 @@ export const DSALabPage: React.FC<DSALabPageProps> = ({ onNavigate }) => {
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-7 animate-fade-in">
       {/* Hero Header Strip */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-blue-700 via-indigo-700 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl">
+      <div className="relative overflow-hidden hero-brand rounded-3xl p-6 sm:p-8 text-white">
         <div className="relative z-10 space-y-4 max-w-3xl">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-mono">
             <Trophy className="w-3.5 h-3.5 text-amber-300" />

@@ -104,14 +104,14 @@ export function ConversationSidebar({
         }}
         className={`group relative flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
           isSelected
-            ? 'bg-blue-50/80 text-[#2563EB] border border-blue-200/80 shadow-2xs font-semibold'
+            ? 'bg-blue-50/80 text-blue-600 border border-blue-200/80 shadow-2xs font-semibold'
             : 'text-slate-700 hover:bg-slate-100/80 hover:text-slate-900 border border-transparent'
         }`}
       >
         <div className="flex items-center gap-2.5 min-w-0 flex-1 pr-1">
           <MessageSquare
             className={`h-3.5 w-3.5 shrink-0 ${
-              isSelected ? 'text-[#2563EB]' : 'text-slate-400 group-hover:text-slate-600'
+              isSelected ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-600'
             }`}
           />
 
@@ -189,12 +189,12 @@ export function ConversationSidebar({
   };
 
   return (
-    <div className="flex flex-col h-full bg-white border-r border-[#E4E7EC] overflow-hidden">
+    <div className="flex flex-col h-full bg-white border-r border-slate-200 overflow-hidden">
       {/* Top Header & New Chat button */}
-      <div className="p-3 border-b border-[#E4E7EC] space-y-2.5">
+      <div className="p-3 border-b border-slate-200 space-y-2.5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-[#4F46E5]" />
+            <Sparkles className="h-4 w-4 text-indigo-600" />
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">
               Learning Chats
             </h3>
@@ -231,7 +231,7 @@ export function ConversationSidebar({
             onChange={(e) => onSearchChange(e.target.value)}
             aria-label="Search conversations"
             placeholder="Search conversations..."
-            className="w-full pl-8 pr-2.5 py-1.5 bg-slate-50 border border-[#E4E7EC] rounded-lg text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#2563EB] focus:bg-white transition-all"
+            className="w-full pl-8 pr-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:bg-white transition-all"
           />
         </div>
         {/* Filter Tabs */}
@@ -239,7 +239,7 @@ export function ConversationSidebar({
           <button
             onClick={() => setActiveTab('all')}
             className={`flex-1 py-1 rounded-md text-center transition-all cursor-pointer ${
-              activeTab === 'all' ? 'bg-white text-[#2563EB] shadow-2xs font-semibold' : 'hover:text-slate-900'
+              activeTab === 'all' ? 'bg-white text-blue-600 shadow-2xs font-semibold' : 'hover:text-slate-900'
             }`}
           >
             All
@@ -247,7 +247,7 @@ export function ConversationSidebar({
           <button
             onClick={() => setActiveTab('pinned')}
             className={`flex-1 py-1 rounded-md text-center transition-all cursor-pointer ${
-              activeTab === 'pinned' ? 'bg-white text-[#2563EB] shadow-2xs font-semibold' : 'hover:text-slate-900'
+              activeTab === 'pinned' ? 'bg-white text-blue-600 shadow-2xs font-semibold' : 'hover:text-slate-900'
             }`}
           >
             Pinned
@@ -255,7 +255,7 @@ export function ConversationSidebar({
           <button
             onClick={() => setActiveTab('archived')}
             className={`flex-1 py-1 rounded-md text-center transition-all cursor-pointer ${
-              activeTab === 'archived' ? 'bg-white text-[#2563EB] shadow-2xs font-semibold' : 'hover:text-slate-900'
+              activeTab === 'archived' ? 'bg-white text-blue-600 shadow-2xs font-semibold' : 'hover:text-slate-900'
             }`}
           >
             Archived

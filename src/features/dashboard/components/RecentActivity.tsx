@@ -23,20 +23,20 @@ export function RecentActivity({
   };
 
   return (
-    <Card className="border border-[#E4E7EC] bg-white">
+    <Card className="border border-slate-200 bg-white">
       <CardHeader className="flex flex-row items-center justify-between pb-3">
         <div className="flex items-center gap-2">
-          <History className="h-4 w-4 text-[#2563EB]" />
+          <History className="h-4 w-4 text-blue-600" />
           <div>
-            <CardTitle className="text-sm font-bold text-[#101828]">Recent Activity</CardTitle>
-            <p className="text-xs text-[#667085]">Latest learning actions across your workspace</p>
+            <CardTitle className="text-sm font-bold text-slate-900">Recent Activity</CardTitle>
+            <p className="text-xs text-slate-500">Latest learning actions across your workspace</p>
           </div>
         </div>
       </CardHeader>
 
       <CardContent className="space-y-2.5">
         {activities.length === 0 ? (
-          <div className="py-6 text-center text-xs text-[#667085]">
+          <div className="py-6 text-center text-xs text-slate-500">
             No recent activity recorded yet.
           </div>
         ) : (
@@ -51,16 +51,16 @@ export function RecentActivity({
                   {getIcon(act.type)}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h5 className="text-xs font-semibold text-[#101828] group-hover:text-[#2563EB] transition-colors truncate">
+                  <h5 className="text-xs font-semibold text-slate-900 group-hover:text-blue-600 transition-colors truncate">
                     {act.title}
                   </h5>
-                  <span className="text-[10px] text-[#667085] tabular-nums block">
+                  <span className="text-[10px] text-slate-500 tabular-nums block">
                     {act.formatted_time}
                   </span>
                 </div>
               </div>
 
-              <ArrowRight className="h-3.5 w-3.5 text-slate-300 group-hover:text-[#2563EB] group-hover:translate-x-0.5 transition-all shrink-0" />
+              <ArrowRight className="h-3.5 w-3.5 text-slate-300 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all shrink-0" />
             </div>
           ))
         )}

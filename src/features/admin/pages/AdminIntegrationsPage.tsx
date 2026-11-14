@@ -91,7 +91,7 @@ export function AdminIntegrationsPage() {
 
         <button
           onClick={loadData}
-          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#14234B] hover:bg-[#1C3168] border border-[#233870] text-xs font-medium text-slate-200 transition-colors self-start sm:self-auto cursor-pointer"
+          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-navy-800 hover:bg-navy-700 border border-navy-600 text-xs font-medium text-slate-200 transition-colors self-start sm:self-auto cursor-pointer"
         >
           <RefreshCw className="h-3.5 w-3.5" />
           Refresh Status
@@ -100,7 +100,7 @@ export function AdminIntegrationsPage() {
 
       {/* GitHub Integration Card */}
       {github && (
-        <div className="p-6 rounded-2xl bg-[#0D1836] border border-[#1A284D] space-y-4">
+        <div className="p-6 rounded-2xl bg-navy-900 border border-navy-700 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-3 rounded-xl bg-slate-800 text-white">
@@ -137,20 +137,20 @@ export function AdminIntegrationsPage() {
             </button>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-[#182649] text-xs">
-            <div className="p-3 rounded-xl bg-[#081024]">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-navy-700 text-xs">
+            <div className="p-3 rounded-xl bg-navy-950">
               <span className="text-slate-500 text-[10px] uppercase font-semibold">API Health</span>
               <p className="font-semibold text-emerald-400 mt-0.5">{github.api_health}</p>
             </div>
-            <div className="p-3 rounded-xl bg-[#081024]">
+            <div className="p-3 rounded-xl bg-navy-950">
               <span className="text-slate-500 text-[10px] uppercase font-semibold">Rate Limit Remaining</span>
               <p className="font-semibold text-white mt-0.5">{github.rate_limit_remaining} / 5000</p>
             </div>
-            <div className="p-3 rounded-xl bg-[#081024]">
+            <div className="p-3 rounded-xl bg-navy-950">
               <span className="text-slate-500 text-[10px] uppercase font-semibold">Connected Students</span>
               <p className="font-semibold text-cyan-400 mt-0.5">{github.total_connected_students}</p>
             </div>
-            <div className="p-3 rounded-xl bg-[#081024]">
+            <div className="p-3 rounded-xl bg-navy-950">
               <span className="text-slate-500 text-[10px] uppercase font-semibold">Repos Analyzed</span>
               <p className="font-semibold text-amber-400 mt-0.5">{github.total_repositories_analyzed}</p>
             </div>
@@ -159,7 +159,7 @@ export function AdminIntegrationsPage() {
       )}
 
       {/* Research Providers */}
-      <div className="p-6 rounded-2xl bg-[#0D1836] border border-[#1A284D] space-y-4">
+      <div className="p-6 rounded-2xl bg-navy-900 border border-navy-700 space-y-4">
         <h3 className="text-base font-bold text-white flex items-center gap-2">
           <Search className="h-5 w-5 text-indigo-400" />
           Academic Research Providers
@@ -169,7 +169,7 @@ export function AdminIntegrationsPage() {
           {research.map((r) => (
             <div
               key={r.id}
-              className="p-4 rounded-xl bg-[#081024] border border-[#182649] space-y-3"
+              className="p-4 rounded-xl bg-navy-950 border border-navy-700 space-y-3"
             >
               <div className="flex items-start justify-between">
                 <div>
@@ -200,26 +200,26 @@ export function AdminIntegrationsPage() {
 
       {/* Object Storage */}
       {storage && (
-        <div className="p-6 rounded-2xl bg-[#0D1836] border border-[#1A284D] space-y-4">
+        <div className="p-6 rounded-2xl bg-navy-900 border border-navy-700 space-y-4">
           <h3 className="text-base font-bold text-white flex items-center gap-2">
             <HardDrive className="h-5 w-5 text-amber-400" />
             Document & Attachment Storage Vault
           </h3>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
-            <div className="p-4 rounded-xl bg-[#081024]">
+            <div className="p-4 rounded-xl bg-navy-950">
               <span className="text-slate-500 uppercase text-[10px] font-semibold">Driver</span>
               <p className="text-white font-semibold mt-1">{storage.storage_driver} File System</p>
             </div>
-            <div className="p-4 rounded-xl bg-[#081024]">
+            <div className="p-4 rounded-xl bg-navy-950">
               <span className="text-slate-500 uppercase text-[10px] font-semibold">Total Objects</span>
               <p className="text-white font-semibold mt-1">{storage.total_objects} stored records</p>
             </div>
-            <div className="p-4 rounded-xl bg-[#081024]">
+            <div className="p-4 rounded-xl bg-navy-950">
               <span className="text-slate-500 uppercase text-[10px] font-semibold">Total Size</span>
               <p className="text-cyan-400 font-semibold mt-1">{(storage.total_bytes / (1024 * 1024)).toFixed(2)} MB</p>
             </div>
-            <div className="p-4 rounded-xl bg-[#081024]">
+            <div className="p-4 rounded-xl bg-navy-950">
               <span className="text-slate-500 uppercase text-[10px] font-semibold">Failed Uploads</span>
               <p className="text-emerald-400 font-semibold mt-1">{storage.failed_uploads_count}</p>
             </div>
