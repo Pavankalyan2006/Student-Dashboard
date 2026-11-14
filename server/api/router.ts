@@ -31,6 +31,7 @@ import { bookmarksRouter } from './routes/bookmarks';
 import { communityRouter } from './routes/community';
 import { certificatesRouter } from './routes/certificates';
 import { insightsRouter } from './routes/insights';
+import { discoverRouter } from './routes/discover';
 import { adminRouter } from './routes/admin';
 
 import { learningModulesRouter } from './routes/learningModules';
@@ -77,6 +78,7 @@ apiV1Router.use('/', bookmarksRouter);
 apiV1Router.use('/', communityRouter);
 apiV1Router.use('/', certificatesRouter);
 apiV1Router.use('/', insightsRouter);
+apiV1Router.use('/', discoverRouter);
 apiV1Router.use('/', learningModulesRouter);
 apiV1Router.use('/', externalIntegrationsRouter);
 apiV1Router.use('/', semesterCommandCenterRouter);

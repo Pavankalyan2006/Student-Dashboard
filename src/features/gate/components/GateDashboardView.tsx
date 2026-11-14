@@ -342,7 +342,7 @@ export const GateDashboardView: React.FC<GateDashboardViewProps> = ({
                   <div className="text-[10px] text-indigo-600 font-mono uppercase">{att.subject}</div>
                   <div className="font-medium text-slate-800 mt-0.5 truncate">{att.statement}</div>
                   <div className="text-[10px] text-slate-500 mt-1 flex items-center gap-2">
-                    <span>Spent: {att.time_spent_seconds}s</span>
+                    <span>{att.time_spent_seconds ? `Spent: ${att.time_spent_seconds}s` : "Time not recorded"}</span>
                     <span>•</span>
                     <span>{new Date(att.attempted_at).toLocaleDateString()}</span>
                   </div>

@@ -64,7 +64,15 @@ export const communityProfileApi = {
   },
 
   async getAchievements(): Promise<(Achievement & { is_earned: boolean; earned_at?: string })[]> {
-    return apiClient.request<any[]>('/profile/achievements');
+    // The API returns { all, earned }; the page needs one list with each badge marked earned or not.
+    const data = await apiClient.request<any>('/profile/achievements');
+    if (Array.isArray(data)) return data;
+    const earned = new Map<string, any>((data?.earned || []).map((e: any) => [e.achievement_id, e]));
+    return (data?.all || []).map((a: any) => ({
+      ...a,
+      is_earned: earned.has(a.id),
+      earned_at: earned.get(a.id)?.earned_at,
+    }));
   },
 
   async getCertificates(): Promise<Certificate[]> {

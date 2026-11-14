@@ -9,7 +9,7 @@ import { requestIdMiddleware } from './middleware/requestId';
 import { requestLogger } from './middleware/logger';
 import { authenticate } from './middleware/auth';
 import { errorHandler } from './middleware/errorHandler';
-import { globalRateLimiter } from './middleware/rateLimiter';
+import { globalRateLimiter, aiGenerationRateLimiter } from './middleware/rateLimiter';
 import { maintenanceMiddleware } from './middleware/maintenance';
 import { apiV1Router } from './api/router';
 import { onboardingStores } from './services/onboardingService';
@@ -273,6 +273,7 @@ export async function createApp(options: CreateAppOptions = {}): Promise<express
   // Maintenance mode and global rate limiting for API routes
   app.use('/api', maintenanceMiddleware);
   app.use('/api', globalRateLimiter);
+  app.use('/api', aiGenerationRateLimiter);
 
   // Mount API V1 routes
   app.use('/api/v1', apiV1Router);

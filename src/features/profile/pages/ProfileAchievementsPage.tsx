@@ -99,8 +99,8 @@ export function ProfileAchievementsPage({ onNavigate }: { onNavigate: (path: str
               }`}
             >
               <div className="flex items-start justify-between">
-                <span className="text-2xl p-2.5 rounded-xl bg-purple-50 border border-purple-100">
-                  {item.icon || '🏅'}
+                <span className="p-2.5 rounded-xl bg-purple-50 border border-purple-100 text-purple-600" aria-hidden="true">
+                  <Award className="h-6 w-6" />
                 </span>
                 {item.is_earned ? (
                   <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
@@ -122,7 +122,7 @@ export function ProfileAchievementsPage({ onNavigate }: { onNavigate: (path: str
 
               <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
                 <span className="text-slate-500 font-mono text-[10px]">
-                  Criteria: {item.criteria.threshold} {item.criteria.type.replace(/_/g, ' ')}
+                  Goal: {item.criteria?.threshold ?? 1} × {String(item.criteria?.event_type || item.criteria?.type || 'activity').replace(/_/g, ' ').toLowerCase()}
                 </span>
                 {item.is_earned && item.earned_at && (
                   <span className="text-purple-700 font-medium">

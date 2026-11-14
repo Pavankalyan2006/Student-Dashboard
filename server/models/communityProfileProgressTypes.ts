@@ -117,7 +117,8 @@ export type ActivityEventType =
   | 'SKILL_ASSESSMENT_COMPLETED'
   | 'CERTIFICATE_EARNED'
   | 'GIT_LESSON_COMPLETED'
-  | 'GIT_EXERCISE_COMPLETED';
+  | 'GIT_EXERCISE_COMPLETED'
+  | 'MISTAKE_REVIEWED';
 
 export interface StudentActivity {
   id: string;

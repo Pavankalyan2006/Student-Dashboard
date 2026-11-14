@@ -160,7 +160,7 @@ export class GateService {
       is_correct: isCorrect,
       marks_awarded: marksAwarded > 0 ? marksAwarded : 0,
       negative_deducted: negativeDeducted,
-      time_spent_seconds: timeSpentSeconds || 60,
+      time_spent_seconds: timeSpentSeconds || 0, // 0 = not recorded; never assume a time
       attempted_at: new Date().toISOString(),
     };
 

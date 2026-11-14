@@ -15,42 +15,61 @@ import {
   Info,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useStudentProfile } from '../../profile/hooks/useStudentProfile';
+
+/** The catalogue role that matches one of the student's own target roles, if any. */
+export function roleForTargets(roles: { id: string; name: string }[], targets: string[]): string | undefined {
+  for (const t of targets) {
+    const w = t.trim().toLowerCase();
+    if (!w) continue;
+    const hit = roles.find((r) => r.name.toLowerCase() === w) || roles.find((r) => r.name.toLowerCase().includes(w) || w.includes(r.name.toLowerCase().replace(/\s*\(.*\)$/, '')));
+    if (hit) return hit.id;
+  }
+  return undefined;
+}
 
 interface SkillGapPageProps {
   onNavigate: (path: string) => void;
   initialRoleId?: string;
 }
 
-export const SkillGapPage: React.FC<SkillGapPageProps> = ({ onNavigate, initialRoleId = 'role_sde' }) => {
+export const SkillGapPage: React.FC<SkillGapPageProps> = ({ onNavigate, initialRoleId }) => {
   const [roles, setRoles] = useState<CareerRole[]>([]);
-  const [selectedRoleId, setSelectedRoleId] = useState<string>(initialRoleId);
+  // A role in the URL wins; otherwise the page opens on the student's own target role from their profile.
+  const [selectedRoleId, setSelectedRoleId] = useState<string>(initialRoleId || '');
   const [gaps, setGaps] = useState<SkillGapAnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  const loadData = async (roleId: string) => {
-    try {
-      setIsLoading(true);
-      const [allRoles, gapData] = await Promise.all([
-        careerApi.listRoles(),
-        skillsApi.getSkillGaps(roleId),
-      ]);
-      setRoles(allRoles);
-      setGaps(gapData);
-    } catch (err: any) {
-      toast.error('Failed to load skill gap data');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const profile = useStudentProfile();
 
   useEffect(() => {
-    if (initialRoleId && initialRoleId !== selectedRoleId) {
-      setSelectedRoleId(initialRoleId);
-    }
+    careerApi
+      .listRoles()
+      .then(setRoles)
+      .catch(() => toast.error('Failed to load career roles'));
+  }, []);
+
+  useEffect(() => {
+    if (initialRoleId) setSelectedRoleId(initialRoleId);
   }, [initialRoleId]);
 
   useEffect(() => {
-    loadData(selectedRoleId);
+    if (selectedRoleId || !roles.length || !(profile.isFetched || profile.isError)) return;
+    const targets = profile.data?.profile?.career.target_roles ?? [];
+    setSelectedRoleId(roleForTargets(roles, targets) || 'role_sde');
+  }, [roles, profile.isFetched, profile.isError, selectedRoleId]);
+
+  useEffect(() => {
+    if (!selectedRoleId) return;
+    let cancelled = false;
+    setIsLoading(true);
+    skillsApi
+      .getSkillGaps(selectedRoleId)
+      .then((g) => !cancelled && setGaps(g))
+      .catch(() => toast.error('Failed to load skill gap data'))
+      .finally(() => !cancelled && setIsLoading(false));
+    return () => {
+      cancelled = true;
+    };
   }, [selectedRoleId]);
 
   if (isLoading || !gaps) {
