@@ -102,8 +102,10 @@ export const QuizCard: React.FC<QuizCardProps> = ({ quiz, lastAttemptScore, onNa
 
           {onDelete && (
             <button
+              type="button"
               onClick={() => onDelete(quiz.id)}
               className="text-slate-400 hover:text-red-500 p-2 text-xs transition-colors shrink-0"
+              aria-label={`Delete ${quiz.title}`}
               title="Delete Quiz"
             >
               ✕

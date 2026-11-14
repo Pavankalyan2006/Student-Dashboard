@@ -66,6 +66,19 @@ export function ProfileManager({ initialTab = 'identity' }: { initialTab?: Profi
   const [draft, setDraft] = React.useState<Record<string, unknown>>({});
   const [errors, setErrors] = React.useState<FieldErrors>({});
   const [formKey, setFormKey] = React.useState(0);
+  const panelRef = React.useRef<HTMLDivElement>(null);
+
+  // From the completion checklist: open the section, bring the form into view and focus its first field,
+  // so the click visibly does something even when that section is already open.
+  const openSection = React.useCallback((key: ProfileSectionKey) => {
+    setTab(key);
+    window.requestAnimationFrame(() => {
+      const panel = panelRef.current;
+      if (!panel) return;
+      panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      panel.querySelector<HTMLElement>('input:not([type=hidden]):not([disabled]), select, textarea')?.focus({ preventScroll: true });
+    });
+  }, []);
 
   React.useEffect(() => {
     setErrors({});
@@ -115,7 +128,7 @@ export function ProfileManager({ initialTab = 'identity' }: { initialTab?: Profi
   const props = { profile: data.profile, errors, onChange: setDraft };
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-6 min-w-0">
-      <div className="min-w-0 rounded-2xl border border-slate-200 bg-white">
+      <div ref={panelRef} className="min-w-0 scroll-mt-24 rounded-2xl border border-slate-200 bg-white">
         <div role="tablist" aria-label="Profile sections" className="flex flex-wrap gap-1 border-b border-slate-200 p-2">
           {TABS.map((t) => (
             <button
@@ -144,7 +157,7 @@ export function ProfileManager({ initialTab = 'identity' }: { initialTab?: Profi
           </div>
         </div>
       </div>
-      <ProfileCompletionCard onOpen={setTab} />
+      <ProfileCompletionCard onOpen={openSection} />
     </div>
   );
 }
