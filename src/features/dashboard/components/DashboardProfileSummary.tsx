@@ -23,6 +23,10 @@ export function DashboardProfileSummary({ profile, onNavigate }: { profile: Dash
     profile.academic_year ? `Year ${profile.academic_year}` : null,
   ].filter(Boolean).join(' · ');
   const subjects = (profile.subjects || []).filter(Boolean);
+  // The profile stores short-term goals as free text; accept a list too.
+  const goals = Array.isArray(profile.short_term_goals)
+    ? profile.short_term_goals.filter(Boolean).slice(0, 2).join(' · ')
+    : (profile.short_term_goals || '').trim();
   return (
     <section className="rounded-2xl border border-[#E4E7EC] bg-white p-5 grid gap-4 md:grid-cols-3" aria-label="Your academic profile">
       <div className="space-y-1">
@@ -34,7 +38,7 @@ export function DashboardProfileSummary({ profile, onNavigate }: { profile: Dash
       <div className="space-y-1">
         <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[#475467]"><Target className="h-4 w-4" /> Goals</div>
         <p className="text-sm font-medium text-[#101828]">{profile.target_roles?.length ? profile.target_roles.join(', ') : 'No target role set'}</p>
-        {profile.short_term_goals?.length ? <p className="text-xs text-[#475467]">{profile.short_term_goals.slice(0, 2).join(' · ')}</p> : null}
+        {goals ? <p className="text-xs text-[#475467] line-clamp-2">{goals}</p> : null}
         {profile.weekly_study_hours ? <p className="text-xs text-[#475467]">{profile.weekly_study_hours} study hours a week</p> : null}
       </div>
       <div className="space-y-2">

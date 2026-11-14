@@ -150,7 +150,8 @@ export interface DashboardProfileContext {
   subjects?: string[];
   expected_graduation_year?: number | null;
   target_roles?: string[];
-  short_term_goals?: string[];
+  /** Free text from the profile's career section (older data may hold a list). */
+  short_term_goals?: string | string[] | null;
   weekly_study_hours?: number | null;
   completion_percentage: number;
   incomplete_sections: string[];
