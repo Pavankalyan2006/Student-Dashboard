@@ -3,14 +3,24 @@ import { db } from '../../db/database';
 import { requireAuth } from '../../middleware/auth';
 import { NotFoundError } from '../../core/exceptions';
 import { NotificationService } from '../../services/notificationService';
+import { NOTIFICATION_CATEGORIES, LEAD_DAYS } from '../../services/notificationCategories';
 
 export const notificationsRouter = Router();
+
+const lastReminderScan = new Map<string, number>();
 
 // GET /api/v1/notifications
 notificationsRouter.get('/notifications', requireAuth, async (req, res, next) => {
   try {
     const studentId = req.user!.userId;
     const { unreadOnly, category, limit } = req.query;
+    // Phase 7: reminders are checked at most once an hour per student, when the list is opened.
+    // Each reminder has a key, so a check never repeats one that was already sent.
+    const last = lastReminderScan.get(studentId) || 0;
+    if (Date.now() - last > 60 * 60 * 1000) {
+      lastReminderScan.set(studentId, Date.now());
+      await NotificationService.generateReminders(studentId).catch(() => undefined);
+    }
     let notifications = await db.getNotifications(studentId);
 
     if (String(unreadOnly) === 'true') {
@@ -41,6 +51,18 @@ notificationsRouter.get('/notifications', requireAuth, async (req, res, next) =>
   } catch (err) {
     next(err);
   }
+});
+
+// GET /api/v1/notifications/categories (Phase 7): the reminder categories a student can switch on or off.
+notificationsRouter.get('/notifications/categories', requireAuth, (_req, res) => {
+  res.json({
+    success: true,
+    data: {
+      categories: NOTIFICATION_CATEGORIES,
+      lead_days: LEAD_DAYS,
+      delivery: { in_app: true, email: false, email_note: 'Email delivery is not connected on this deployment, so reminders appear in the app only.' },
+    },
+  });
 });
 
 // GET /api/v1/notifications/preferences

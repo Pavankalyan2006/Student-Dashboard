@@ -422,7 +422,14 @@ export type NotificationType =
   | 'RESEARCH_PROCESSED'
   | 'GITHUB_ANALYSIS_COMPLETE'
   | 'PROJECT_UPDATE'
-  | 'SYSTEM';
+  | 'SYSTEM'
+  // Phase 7 reminder categories
+  | 'DEADLINE_REMINDER'
+  | 'EXAM_REMINDER'
+  | 'STUDY_PLAN_REMINDER'
+  | 'REVISION_REMINDER'
+  | 'TEAM_UPDATE'
+  | 'INTERVIEW_REMINDER';
 
 export interface NotificationItem {
   id: string;
@@ -453,6 +460,8 @@ export interface NotificationPreference {
   in_app: boolean;
   in_app_enabled?: boolean;
   categories?: Record<string, boolean>;
+  /** Phase 7: how many days ahead reminders are sent (1-14, default 3). */
+  reminder_lead_days?: number;
   study_reminders?: boolean;
   revision_reminders?: boolean;
   goal_deadlines?: boolean;

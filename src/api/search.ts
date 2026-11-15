@@ -3,18 +3,15 @@ import { apiClient } from './client';
 export type SearchType =
   | 'all'
   | 'courses'
-  | 'lessons'
+  | 'topics'
   | 'notes'
   | 'documents'
-  | 'doubts'
-  | 'flashcards'
-  | 'labs'
-  | 'knowledge'
-  | 'applications'
   | 'projects'
-  | 'dsa'
-  | 'coding'
-  | 'ai'
+  | 'research'
+  | 'previous_papers'
+  | 'code'
+  | 'conversations'
+  | 'opportunities'
   | 'community';
 
 export interface SearchResultItem {
@@ -24,6 +21,10 @@ export interface SearchResultItem {
   type: SearchType;
   url: string;
   tags: string[];
+  /** Phase 7: where the result came from, e.g. "Your documents · page 3". */
+  source?: string;
+  matched_in?: string;
+  private?: boolean;
 }
 
 export interface SearchResponse {
@@ -32,6 +33,8 @@ export interface SearchResponse {
   page: number;
   limit: number;
   totalPages: number;
+  counts?: Partial<Record<SearchType, number>>;
+  sources_failed?: string[];
 }
 
 export const searchApi = {

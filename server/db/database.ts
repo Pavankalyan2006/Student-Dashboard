@@ -8344,7 +8344,10 @@ print(power_mod(2, 10, 1000))  # Output: 24
       is_read: false,
       link: data.link,
       created_at: notif.created_at,
-    });
+      // Kept so a reminder for the same record and date is not sent twice.
+      entity_type: data.entity_type,
+      entity_id: data.entity_id,
+    } as any);
 
     return notif;
   }

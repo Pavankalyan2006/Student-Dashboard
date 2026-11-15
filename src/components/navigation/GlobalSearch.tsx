@@ -76,32 +76,32 @@ export function GlobalSearch({ onNavigate }: { onNavigate: (url: string) => void
   const categories: { id: SearchType; label: string }[] = [
     { id: 'all', label: 'All' },
     { id: 'courses', label: 'Courses' },
+    { id: 'topics', label: 'Subjects & topics' },
     { id: 'notes', label: 'Notes' },
     { id: 'documents', label: 'Documents' },
-    { id: 'doubts', label: 'Doubts' },
-    { id: 'flashcards', label: 'Flashcards' },
-    { id: 'labs', label: 'Labs' },
-    { id: 'knowledge', label: 'Knowledge' },
-    { id: 'applications', label: 'Applications' },
-    { id: 'dsa', label: 'DSA' },
-    { id: 'coding', label: 'Coding' },
     { id: 'projects', label: 'Projects' },
+    { id: 'research', label: 'Research' },
+    { id: 'previous_papers', label: 'Previous papers' },
+    { id: 'code', label: 'Code' },
+    { id: 'conversations', label: 'AI chats' },
+    { id: 'opportunities', label: 'Opportunities' },
+    { id: 'community', label: 'Community' },
   ];
+
 
   const getIcon = (type: string) => {
     switch (type) {
       case 'courses': return <BookOpen className="h-4 w-4 text-blue-600" />;
       case 'notes': return <FileText className="h-4 w-4 text-emerald-600" />;
       case 'documents': return <Files className="h-4 w-4 text-purple-600" />;
-      case 'doubts': return <HelpCircle className="h-4 w-4 text-purple-600" />;
-      case 'flashcards': return <BookOpen className="h-4 w-4 text-amber-600" />;
-      case 'labs': return <Code2 className="h-4 w-4 text-blue-600" />;
-      case 'knowledge': return <BookOpen className="h-4 w-4 text-indigo-600" />;
-      case 'applications': return <Hammer className="h-4 w-4 text-emerald-600" />;
-      case 'dsa': return <Binary className="h-4 w-4 text-amber-600" />;
-      case 'coding': return <Code2 className="h-4 w-4 text-teal-600" />;
+      case 'topics': return <Binary className="h-4 w-4 text-indigo-600" />;
+      case 'research': return <BookOpen className="h-4 w-4 text-violet-600" />;
+      case 'previous_papers': return <FileText className="h-4 w-4 text-amber-600" />;
+      case 'code': return <Code2 className="h-4 w-4 text-teal-600" />;
+      case 'conversations': return <Bot className="h-4 w-4 text-blue-600" />;
+      case 'opportunities': return <Hammer className="h-4 w-4 text-emerald-600" />;
+      case 'community': return <HelpCircle className="h-4 w-4 text-purple-600" />;
       case 'projects': return <Hammer className="h-4 w-4 text-indigo-600" />;
-      case 'ai': return <Bot className="h-4 w-4 text-blue-600" />;
       default: return <Search className="h-4 w-4 text-slate-400" />;
     }
   };
@@ -163,6 +163,7 @@ export function GlobalSearch({ onNavigate }: { onNavigate: (url: string) => void
               )}
             >
               {cat.label}
+              {query.trim() && cat.id !== 'all' && data?.counts?.[cat.id] ? <span className="ml-1 text-[10px] text-slate-400">{data.counts[cat.id]}</span> : null}
             </button>
           ))}
         </div>
@@ -235,9 +236,16 @@ export function GlobalSearch({ onNavigate }: { onNavigate: (url: string) => void
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-2">
                         <h4 className={cn('truncate text-xs font-semibold', active === i ? 'text-blue-700' : 'text-slate-900')}>{item.title}</h4>
-                        <span className="shrink-0 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium capitalize text-slate-600">{item.type}</span>
+                        <span className="shrink-0 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-600">{categories.find((c) => c.id === item.type)?.label || item.type}</span>
                       </div>
-                      {item.description && <p className="mt-0.5 line-clamp-1 text-[11px] leading-relaxed text-slate-600">{item.description}</p>}
+                      {item.source && (
+                        <p className="mt-0.5 text-[10px] text-slate-500">
+                          {item.source}
+                          {item.matched_in && item.matched_in !== 'title' && !item.source.includes(item.matched_in) ? ` · matched in ${item.matched_in}` : ''}
+                          {item.private ? ' · only you can see this' : ''}
+                        </p>
+                      )}
+                      {item.description && <p className="mt-0.5 line-clamp-2 text-[11px] leading-relaxed text-slate-600">{item.description}</p>}
                       {item.tags.length > 0 && (
                         <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                           {item.tags.slice(0, 4).map((tag) => (
@@ -257,6 +265,12 @@ export function GlobalSearch({ onNavigate }: { onNavigate: (url: string) => void
             )
           )}
         </div>
+
+        {query.trim() && data?.sources_failed && data.sources_failed.length > 0 && (
+          <p className="px-4 py-1.5 text-[11px] text-amber-700 bg-amber-50 border-t border-amber-100">
+            Could not search: {data.sources_failed.join(', ')}. Results from those may be missing.
+          </p>
+        )}
 
         {/* Footer shortcuts */}
         <div className="flex items-center justify-between px-4 py-2.5 border-t border-slate-200 bg-slate-50 text-[11px] text-slate-500">
