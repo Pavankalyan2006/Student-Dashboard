@@ -1,3 +1,4 @@
+import { SANDBOX_NOTE } from '../../../lib/browserSandbox';
 import React from 'react';
 import { useCodingEditorStore } from '../stores/codingEditorStore';
 import {
@@ -25,6 +26,7 @@ export const CodeOutputPanel: React.FC<CodeOutputPanelProps> = ({
 }) => {
   const result = useCodingEditorStore((s) => s.executionResult);
   const isExecuting = useCodingEditorStore((s) => s.isExecuting);
+  const runNote = useCodingEditorStore((s) => s.runNote);
   const outputTab = useCodingEditorStore((s) => s.outputTab);
   const setOutputTab = useCodingEditorStore((s) => s.setOutputTab);
   const stdin = useCodingEditorStore((s) => s.stdin);
@@ -123,7 +125,12 @@ export const CodeOutputPanel: React.FC<CodeOutputPanelProps> = ({
             <div className="flex items-center gap-1">
               <span>Exit Code: {result.exit_code}</span>
             </div>
-            {(result as any).isolation && (result as any).isolation !== 'namespace' && (
+            {(result as any).isolation === 'browser' && (
+              <span className="px-1.5 py-0.5 rounded bg-emerald-900/40 text-emerald-300" title={SANDBOX_NOTE}>
+                Ran in your browser
+              </span>
+            )}
+            {(result as any).isolation && (result as any).isolation !== 'namespace' && (result as any).isolation !== 'browser' && (
               <span
                 className="px-1.5 py-0.5 rounded bg-amber-900/40 text-amber-300"
                 title="This server could not isolate the program from the host. Do not run untrusted code here."
@@ -140,7 +147,7 @@ export const CodeOutputPanel: React.FC<CodeOutputPanelProps> = ({
         {isExecuting ? (
           <div className="flex flex-col items-center justify-center h-full gap-2 text-slate-400">
             <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-            <p className="text-xs" role="status">Running code...</p>
+            <p className="text-xs" role="status">{runNote || 'Running code...'}</p>
           </div>
         ) : outputTab === 'output' ? (
           <div>

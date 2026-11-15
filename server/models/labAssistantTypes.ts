@@ -90,6 +90,8 @@ export interface LabExperimentDetail {
   actual_output?: string;
   execution_status?: 'SUCCESS' | 'ERROR' | 'UNTESTED';
   execution_duration_ms?: number;
+  /** Where the last recorded run happened: the server sandbox or the student's browser sandbox. */
+  execution_place?: 'server' | 'browser';
   result_conclusion: string;
   conclusion?: string; // Backwards-compatible alias
   viva_questions: VivaQuestionItem[];

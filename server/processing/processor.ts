@@ -6,6 +6,12 @@ import { VectorStore } from '../rag/vectorStore';
 import { EmbeddingService } from '../rag/embeddings';
 import { DocumentProcessingStatus } from '../models/types';
 import { logger } from '../core/logging';
+import { NotFoundError, ValidationError } from '../core/exceptions';
+
+/** File types whose text can be recognised in the browser (scanned PDFs and photos of pages). */
+export const OCR_EXTENSIONS = ['pdf', 'png', 'jpg', 'jpeg', 'webp'];
+export const OCR_MAX_PAGES = 200;
+export const OCR_MAX_PAGE_CHARS = 30_000;
 
 export class DocumentProcessingService {
   /**
@@ -63,43 +69,28 @@ export class DocumentProcessingService {
         { filename: document.original_filename }
       );
 
-      // Save extracted pages to database
-      const createdPages = await db.createDocumentPages(
-        documentId,
-        studentId,
-        parsed.pages.map((p) => ({
-          page_number: p.pageNumber,
-          text: p.text,
-          metadata: {
-            headings: p.headings || [],
-            ...p.metadata,
-          },
-        }))
-      );
-
-      // Update document page count and author if discovered
-      await db.updateDocument(documentId, studentId, {
-        page_count: parsed.pageCount || createdPages.length,
+      // A scan has no text of its own. If the student already had its text recognised (OCR) in their
+      // browser, those pages are kept rather than replaced by empty ones.
+      const previous = (document as any).metadata?.text_source === 'ocr' && !parsed.pages.some((p) => p.text.trim()) ? await db.getDocumentPages(documentId, studentId) : [];
+      const pagesToSave = previous.length
+        ? previous.map((p) => ({ page_number: p.page_number, text: p.text, metadata: p.metadata }))
+        : parsed.pages.map((p) => ({
+            page_number: p.pageNumber,
+            text: p.text,
+            metadata: {
+              headings: p.headings || [],
+              ...p.metadata,
+            },
+          }));
+      const { pages: createdPages, chunks } = await this.indexPages(documentId, studentId, pagesToSave, {
+        page_count: parsed.pageCount,
         author: parsed.author || document.author,
       });
 
-      // 4. Stage: CHUNKING
-      await this.updateStatus(documentId, studentId, 'CHUNKING');
-      const chunks = DocumentChunkingService.chunkPages(documentId, createdPages);
-      await db.createDocumentChunks(documentId, studentId, chunks);
-
-      // 5. Stage: EMBEDDING
-      await this.updateStatus(documentId, studentId, 'EMBEDDING');
-      // Reprocessing replaces the document's vectors instead of adding stale copies next to new ones.
-      VectorStore.deleteDocumentVectors(documentId, studentId);
-      for (const chunk of chunks) {
-        const vector = await EmbeddingService.embed(chunk.content);
-        await VectorStore.addChunk(chunk, studentId, vector);
-      }
-
       // 6. Stage: READY
       // READY means processing finished; content_indexed says whether any text was found to search.
-      // Images and scanned PDFs have no extractable text (there is no OCR), so they are not searchable.
+      // Images and scanned PDFs have no text of their own; the student can have it recognised (OCR) in
+      // their browser, which is saved through indexRecognisedText.
       await db.updateDocument(documentId, studentId, {
         status: 'READY',
         processing_completed_at: new Date().toISOString(),
@@ -140,6 +131,96 @@ export class DocumentProcessingService {
         link: `/documents`,
       });
     }
+  }
+
+  /** Saves pages, then splits them into chunks and indexes them for search (replacing older vectors). */
+  private static async indexPages(
+    documentId: string,
+    studentId: string,
+    pages: Array<{ page_number: number; text: string; metadata?: any }>,
+    extra: { page_count?: number; author?: string } = {}
+  ) {
+    const createdPages = await db.createDocumentPages(documentId, studentId, pages);
+    await db.updateDocument(documentId, studentId, {
+      page_count: extra.page_count || createdPages.length,
+      ...(extra.author ? { author: extra.author } : {}),
+    });
+
+    await this.updateStatus(documentId, studentId, 'CHUNKING');
+    const chunks = DocumentChunkingService.chunkPages(documentId, createdPages);
+    await db.createDocumentChunks(documentId, studentId, chunks);
+
+    await this.updateStatus(documentId, studentId, 'EMBEDDING');
+    // Reprocessing replaces the document's vectors instead of adding stale copies next to new ones.
+    VectorStore.deleteDocumentVectors(documentId, studentId);
+    for (const chunk of chunks) {
+      const vector = await EmbeddingService.embed(chunk.content);
+      await VectorStore.addChunk(chunk, studentId, vector);
+    }
+    return { pages: createdPages, chunks };
+  }
+
+  /**
+   * Stores text that the student's browser recognised (OCR) in a scanned PDF or an image, and indexes it
+   * so the document can be searched, cited and used for answers. Only for files with no text of their own:
+   * text that came from the file itself is never replaced. Each page keeps its OCR confidence.
+   */
+  public static async indexRecognisedText(documentId: string, studentId: string, body: any) {
+    const document = await db.getDocumentById(documentId, studentId);
+    if (!document) throw new NotFoundError('Document not found');
+    const ext = String(document.file_extension || '').toLowerCase().replace(/^\./, '');
+    if (!OCR_EXTENSIONS.includes(ext)) throw new ValidationError('Text recognition is only for scanned PDFs and images.');
+    const meta: any = (document as any).metadata || {};
+    if (document.content_indexed && meta.text_source !== 'ocr') {
+      throw new ValidationError('This document already has text of its own, so recognised text is not needed.');
+    }
+    if (['QUEUED', 'PROCESSING', 'EXTRACTING', 'CHUNKING', 'EMBEDDING'].includes(String(document.status))) {
+      throw new ValidationError('The document is still being processed. Try again when it is ready.');
+    }
+    const raw = Array.isArray(body?.pages) ? body.pages : null;
+    if (!raw || !raw.length) throw new ValidationError('Send the recognised pages.');
+    if (raw.length > OCR_MAX_PAGES) throw new ValidationError(`Up to ${OCR_MAX_PAGES} pages can be recognised.`);
+    const seen = new Set<number>();
+    const pages = raw.map((p: any) => {
+      const n = Number(p?.page_number);
+      if (!Number.isInteger(n) || n < 1 || n > 10_000 || seen.has(n)) throw new ValidationError('Each page needs its own page number.');
+      seen.add(n);
+      const text = String(p?.text ?? '').replace(/\u0000/g, '').slice(0, OCR_MAX_PAGE_CHARS);
+      const confidence = Math.max(0, Math.min(100, Math.round(Number(p?.confidence) || 0)));
+      return {
+        page_number: n,
+        text,
+        metadata: { headings: [], word_count: text.split(/\s+/).filter(Boolean).length, text_source: 'ocr', ocr_confidence: confidence },
+      };
+    });
+    pages.sort((a: any, b: any) => a.page_number - b.page_number);
+    const withText = pages.filter((p: any) => p.text.trim());
+    if (!withText.length) throw new ValidationError('No text was recognised, so there is nothing to save.');
+    const confidence = Math.round(withText.reduce((s: number, p: any) => s + p.metadata.ocr_confidence, 0) / withText.length);
+
+    await this.updateStatus(documentId, studentId, 'PROCESSING');
+    const { pages: created, chunks } = await this.indexPages(documentId, studentId, pages, {
+      page_count: Math.max(Number(body?.page_count) || 0, document.page_count || 0, pages[pages.length - 1].page_number),
+    });
+    const now = new Date().toISOString();
+    await db.updateDocument(documentId, studentId, {
+      status: 'READY',
+      processing_completed_at: now,
+      processing_error: undefined,
+      content_indexed: chunks.length > 0,
+      metadata: {
+        ...meta,
+        text_source: 'ocr',
+        ocr_engine: 'Tesseract (in the browser)',
+        ocr_confidence: confidence,
+        ocr_pages: created.length,
+        ocr_at: now,
+        indexed_chunks: chunks.length,
+        indexed_at: now,
+      },
+    } as any);
+    logger.info(`Document ${documentId}: recognised text saved`, { userId: studentId, context: { pages: created.length, chunks: chunks.length, confidence } });
+    return db.getDocumentById(documentId, studentId);
   }
 
   private static async updateStatus(

@@ -2,6 +2,8 @@
 // Frontend API Client for AI Mock Interviews Module
 
 import { apiClient } from '../../../api/client';
+import { runInBrowser } from '../../../lib/browserSandbox';
+import { loadLanguageAvailability } from '../../coding/hooks/useLanguageAvailability';
 import {
   CategoryMetadata,
   TargetRoleMetadata,
@@ -117,6 +119,11 @@ export const mockInterviewApi = {
     }
   ): Promise<any> => {
     const res = await apiClient.post(`/mock-interviews/sessions/${sessionId}/code/run`, params);
+    // The server keeps the code snapshot for the interview. If it cannot run code (as on Vercel), Python and
+    // JavaScript then run in an isolated worker in this browser.
+    if ((await loadLanguageAvailability())[params.language]?.runs === 'browser') {
+      return runInBrowser({ language: params.language as 'python' | 'javascript', source: params.source_code, stdin: params.stdin });
+    }
     return unpack(res);
   },
 

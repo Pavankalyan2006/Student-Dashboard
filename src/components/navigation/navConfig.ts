@@ -33,6 +33,7 @@ import {
   Network,
   FlaskConical,
   ScanSearch,
+  ShieldCheck,
   Brain,
   Link2,
   ExternalLink,
@@ -144,6 +145,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { name: 'Git Lab', href: '/git', icon: GitBranch, match: ['/git-lab'] },
       { name: 'System Design Lab', href: '/system-design', icon: Network },
       { name: 'Virtual Lab', href: '/virtual-lab', icon: FlaskConical, match: ['/simulators'] },
+      { name: 'Cybersecurity Lab', href: '/cybersecurity-lab', icon: ShieldCheck, match: ['/cybersecurity', '/cyber-lab'] },
     ],
   },
   {

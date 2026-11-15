@@ -289,33 +289,36 @@ export class MlLabService {
             extension: '.py',
             size_bytes: 1420,
             content: `# train_model.py
-# Machine Learning Training Pipeline for Tabular Datasets
+# Press "Run in browser" below. It runs here, in your browser, with Pyodide; nothing runs on the server.
+# The dataset you pick is saved next to this file as dataset.csv. numpy, pandas and scikit-learn are
+# downloaded the first time (about 30 MB), then cached by your browser.
+import json
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from sklearn.metrics import accuracy_score, mean_absolute_error, r2_score
 
-def build_model(config):
-    """Initializes model hyper-parameters"""
-    return {
-        "n_estimators": config.get("n_estimators", 100),
-        "max_depth": config.get("max_depth", 4),
-        "learning_rate": config.get("learning_rate", 0.05),
-    }
+df = pd.read_csv("dataset.csv")
+target = df.columns[-1]                      # change this to your label column
+X = pd.get_dummies(df.drop(columns=[target]))
+y = df[target]
+regression = y.dtype.kind in "fc" and y.nunique() > 20
 
-def train_model(model, train_data, config):
-    """Fits decision trees or linear weights to training partition"""
-    print(f"Fitting model with {len(train_data)} records...")
-    return model
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+Model = RandomForestRegressor if regression else RandomForestClassifier
+model = Model(n_estimators=100, max_depth=4, random_state=42)
+model.fit(X_train, y_train)
+pred = model.predict(X_test)
 
-def evaluate_model(model, test_data, config):
-    """Calculates accuracy and a confusion matrix on held-out test data.
-    TODO: compare predictions with the true labels. No numbers are filled in here."""
-    raise NotImplementedError("Write your evaluation code. To train and evaluate in this app, use Run experiment.")
+if regression:
+    metrics = {"mae": float(mean_absolute_error(y_test, pred)), "r2": float(r2_score(y_test, pred))}
+else:
+    metrics = {"accuracy": float(accuracy_score(y_test, pred))}
+metrics.update(train_rows=len(X_train), test_rows=len(X_test), target=target)
 
-def predict_model(model, input_features):
-    """Infers the output class for a new sample.
-    TODO: implement after training."""
-    raise NotImplementedError("Write your prediction code.")
-
-# Note: this file is your own notes and code. The app does not run Python files; experiments
-# are trained by the ML Lab engine when you press Run experiment, and its metrics come from that run.
+print(f"Trained on {len(X_train)} rows, tested on {len(X_test)} held-out rows")
+print(json.dumps(metrics, indent=2))
+json.dump(metrics, open("metrics.json", "w"), indent=2)
 `,
             updated_at: new Date().toISOString(),
           },

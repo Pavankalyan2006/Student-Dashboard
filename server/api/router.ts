@@ -38,6 +38,7 @@ import { showcaseRouter } from './routes/showcase';
 import { personalIntelligenceRouter } from './routes/personalIntelligence';
 import { codeReviewRouter } from './routes/codeReview';
 import { competitionsRouter } from './routes/competitions';
+import { cybersecurityRouter } from './routes/cybersecurity';
 import { academicsRouter } from './routes/academics';
 import { adminRouter } from './routes/admin';
 
@@ -93,6 +94,7 @@ apiV1Router.use('/', showcaseRouter);
 apiV1Router.use('/', personalIntelligenceRouter);
 apiV1Router.use('/', codeReviewRouter);
 apiV1Router.use('/', competitionsRouter);
+apiV1Router.use('/cybersecurity', cybersecurityRouter);
 apiV1Router.use('/', learningModulesRouter);
 apiV1Router.use('/', externalIntegrationsRouter);
 apiV1Router.use('/', semesterCommandCenterRouter);

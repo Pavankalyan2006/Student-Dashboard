@@ -2,6 +2,8 @@
 // Frontend API Client for Lab Assistant & Interactive Experiment Suite
 
 import { apiClient } from '../../../api/client';
+import { runInBrowser } from '../../../lib/browserSandbox';
+import { loadLanguageAvailability } from '../../coding/hooks/useLanguageAvailability';
 import {
   LabCourse,
   LabManual,
@@ -167,6 +169,15 @@ export const labAssistantApi = {
     executionTimeMs: number;
     status: 'SUCCESS' | 'ERROR';
   }> => {
+    // Without a server sandbox (as on Vercel), Python and JavaScript run in an isolated worker in this browser.
+    // The code and what it printed are saved with the experiment, marked as a browser run.
+    if ((await loadLanguageAvailability())[language]?.runs === 'browser') {
+      const r = await runInBrowser({ language: language as 'python' | 'javascript', source: code, stdin });
+      await apiClient
+        .post(`/labs/${labId}/experiments/${expId}/code/save`, { code, language, stdin, browser_result: { stdout: r.stdout, stderr: r.stderr, execution_time_ms: r.execution_time_ms, status: r.status } })
+        .catch(() => undefined);
+      return { stdout: r.stdout, stderr: r.stderr, executionTimeMs: r.execution_time_ms, status: r.status === 'SUCCESS' ? 'SUCCESS' : 'ERROR' };
+    }
     const res = await apiClient.post(`/labs/${labId}/experiments/${expId}/code/run`, {
       code,
       language,

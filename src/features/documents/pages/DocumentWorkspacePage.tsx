@@ -7,6 +7,7 @@ import { DocumentViewer } from '../components/DocumentViewer';
 import { DocumentChat } from '../components/DocumentChat';
 import { DocumentSummaryPanel } from '../components/DocumentSummaryPanel';
 import { DocumentStatusBadge } from '../components/DocumentStatusBadge';
+import { RecogniseTextBanner, RecognisedTextNote, needsRecognition } from '../components/RecogniseTextBanner';
 import { RefreshCw, AlertTriangle, FilePenLine, Sparkles, BookOpen } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import { documentsApi } from '../api/documentsApi';
@@ -173,6 +174,9 @@ export function DocumentWorkspacePage({
           )}
         </div>
       )}
+
+      {currentStatus === 'READY' && needsRecognition(document) && <RecogniseTextBanner document={document} onDone={() => refetchDocument()} />}
+      <RecognisedTextNote document={document} />
 
       {/* Mobile Tab Switcher */}
       <div className="flex sm:hidden border-b border-slate-200 bg-slate-50 text-xs">

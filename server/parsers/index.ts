@@ -4,6 +4,7 @@ import { DOCXParser } from './docx';
 import { PPTXParser } from './pptx';
 import { TXTParser } from './txt';
 import { CodeAndDataParser } from './codeAndData';
+import { ImageParser } from './image';
 import { ValidationError } from '../core/exceptions';
 
 export class DocumentParserRegistry {
@@ -13,6 +14,7 @@ export class DocumentParserRegistry {
     new PPTXParser(),
     new CodeAndDataParser(),
     new TXTParser(),
+    new ImageParser(),
   ];
 
   public static getParser(mimeTypeOrExt: string, extension: string = ''): DocumentParser {
@@ -49,3 +51,4 @@ export * from './docx';
 export * from './pptx';
 export * from './txt';
 export * from './codeAndData';
+export * from './image';

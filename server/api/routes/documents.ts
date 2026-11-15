@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { requireAuth } from '../../middleware/auth';
 import { DocumentService } from '../../services/documents';
+import { DocumentProcessingService } from '../../processing/processor';
 import { DocumentAIService } from '../../services/documentAi';
 import { DocumentSummaryService } from '../../services/documentSummary';
 import { DocumentRetrievalService } from '../../rag/retriever';
@@ -706,6 +707,17 @@ documentsRouter.post('/documents/:documentId/retry-processing', requireAuth, asy
   }
 });
 
+// POST /api/v1/documents/:documentId/recognised-text - Save text recognised (OCR) in the browser
+// Body: { pages: [{ page_number, text, confidence }], page_count? }. Only for scans and images.
+documentsRouter.post('/documents/:documentId/recognised-text', requireAuth, async (req, res, next) => {
+  try {
+    const doc = await DocumentProcessingService.indexRecognisedText(req.params.documentId, req.user!.userId, req.body);
+    res.json({ success: true, data: doc });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // POST /api/v1/documents/:documentId/favorite - Toggle favorite
 documentsRouter.post('/documents/:documentId/favorite', requireAuth, async (req, res, next) => {
   try {
@@ -737,7 +749,9 @@ documentsRouter.get('/documents/:documentId/file', requireAuth, async (req, res,
       'Content-Disposition',
       `inline; filename="${encodeURIComponent(doc.original_filename)}"`
     );
-    res.send(data);
+    // Files are stored as data URLs; send the file's own bytes, not the data URL text.
+    const m = /^data:[^,]*;base64,/.exec(data);
+    res.send(m ? Buffer.from(data.slice(m[0].length), 'base64') : data);
   } catch (err) {
     next(err);
   }

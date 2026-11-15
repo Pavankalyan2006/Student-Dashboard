@@ -50,7 +50,7 @@ export function DocumentUploadPage({ onNavigate }: DocumentUploadPageProps) {
             </div>
             <h4 className="text-xs font-bold text-slate-900">Text indexing</h4>
             <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
-              The text of every page is indexed so answers can cite the exact page. Scanned images have no text to index.
+              The text of every page is indexed so answers can cite the exact page. For a scan or a photo, open it and choose Recognise text to read its text in your browser.
             </p>
           </div>
 

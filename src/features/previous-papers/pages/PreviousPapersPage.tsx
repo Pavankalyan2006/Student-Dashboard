@@ -1,7 +1,8 @@
 import * as React from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { FileStack, Upload, Trash2, Bot, AlertTriangle, ListChecks } from 'lucide-react';
+import { FileStack, Upload, Trash2, Bot, AlertTriangle, ListChecks, ScanText } from 'lucide-react';
+import { recogniseFile, pdfTextStats, joinPages, isImageFile, isPdfFile, OCR_NOTE } from '../../../lib/ocr';
 import { PageContainer, PageHeader, PageSection, MetricCard, LoadingState, ErrorState, EmptyState } from '../../../components/layout/PageComponents';
 import { Button } from '../../../components/ui/button';
 import { apiClient } from '../../../api/client';
@@ -68,6 +69,39 @@ export function PreviousPapersPage({ onNavigate }: { onNavigate: (path: string) 
   const [text, setText] = React.useState('');
   const [file, setFile] = React.useState<File | null>(null);
   const [view, setView] = React.useState<string | null>(null);
+  // A scanned PDF or a photo has no text of its own; its text can be recognised in the browser (OCR).
+  const [scan, setScan] = React.useState<'no' | 'checking' | 'yes'>('no');
+  const [ocrBusy, setOcrBusy] = React.useState('');
+  const [fromOcr, setFromOcr] = React.useState<{ name: string; pages: number; confidence: number } | null>(null);
+  const pickFile = async (f: File | null) => {
+    setFile(f);
+    setScan('no');
+    if (!f) return;
+    if (isImageFile(f)) return setScan('yes');
+    if (!isPdfFile(f)) return;
+    setScan('checking');
+    try {
+      setScan((await pdfTextStats(await f.arrayBuffer())).scanned ? 'yes' : 'no');
+    } catch {
+      setScan('no'); // The server reads it and explains any problem.
+    }
+  };
+  const recognise = async () => {
+    if (!file) return;
+    try {
+      const r = await recogniseFile(file, { onProgress: (n) => setOcrBusy(n) });
+      const recognised = joinPages(r.pages);
+      if (!recognised.trim()) throw new Error('No text could be recognised in this file.');
+      setText(recognised);
+      setFromOcr({ name: file.name, pages: r.pages.length, confidence: r.confidence });
+      setFile(null);
+      setScan('no');
+    } catch (e: any) {
+      toast.error(e?.message || 'The text could not be recognised.');
+    } finally {
+      setOcrBusy('');
+    }
+  };
   React.useEffect(() => {
     if (!subjectId && q.data?.subjects[0]) setSubjectId(q.data.subjects[0].id);
   }, [q.data, subjectId]);
@@ -78,7 +112,10 @@ export function PreviousPapersPage({ onNavigate }: { onNavigate: (path: string) 
       if (file) {
         if (file.size > 5 * 1024 * 1024) throw new Error('Files must be 5 MB or smaller.');
         body.file = { name: file.name, data: await readFile(file) };
-      } else body.text = text;
+      } else {
+        body.text = text;
+        if (fromOcr) body.text_source = 'ocr';
+      }
       return apiClient.post<{ questions: unknown[] }>('/previous-papers/me', body);
     },
     onSuccess: (p) => {
@@ -87,6 +124,7 @@ export function PreviousPapersPage({ onNavigate }: { onNavigate: (path: string) 
       setYear('');
       setText('');
       setFile(null);
+      setFromOcr(null);
       qc.invalidateQueries({ queryKey: KEY });
     },
     onError: (e: any) => toast.error(e?.message || 'The paper could not be added.'),
@@ -102,7 +140,7 @@ export function PreviousPapersPage({ onNavigate }: { onNavigate: (path: string) 
   const d = q.data;
   const sid = subjectId || d.subjects[0]?.id || '';
   const analysis = d.analyses.find((a) => a.subject_id === (view || d.analyses[0]?.subject_id)) || null;
-  const canAdd = !!sid && (file ? true : text.trim().length >= 20);
+  const canAdd = !!sid && (file ? scan === 'no' : text.trim().length >= 20);
 
   const planWithTutor = (a: Analysis) => {
     const top = a.topics.slice(0, 8).map((t) => `${t.topic} (asked in ${t.papers} of ${a.papers} papers${t.state ? `, my state: ${STATE[t.state]?.label.toLowerCase()}` : ''})`).join('; ');
@@ -122,7 +160,7 @@ export function PreviousPapersPage({ onNavigate }: { onNavigate: (path: string) 
       {d.subjects.length === 0 ? (
         <EmptyState title="Add your syllabus first" description="Papers are matched to the subjects and topics in your Semester Command Center syllabus." icon={<ListChecks className="h-6 w-6" />} actionText="Add my syllabus" onAction={() => onNavigate('/semester-command-center/syllabus')} />
       ) : (
-        <PageSection className="min-w-0" title="Add a paper" description="Paste the questions, or upload a PDF with selectable text or a .txt file (up to 5 MB). Scanned PDFs need text recognition (OCR), which is not set up here, so paste those as text.">
+        <PageSection className="min-w-0" title="Add a paper" description="Paste the questions, or upload a PDF, a .txt file or a photo of the paper (up to 5 MB). The text of a scan or photo is recognised in your browser, and you check it before adding.">
           <form className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4" onSubmit={(e) => { e.preventDefault(); if (canAdd) add.mutate(); }}>
             <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_7rem]">
               <label className="min-w-0 text-xs font-medium text-slate-600">Subject
@@ -133,15 +171,34 @@ export function PreviousPapersPage({ onNavigate }: { onNavigate: (path: string) 
               <label className="min-w-0 text-xs font-medium text-slate-600">Title<input className={cn(input, 'mt-1 block w-full')} value={title} maxLength={120} onChange={(e) => setTitle(e.target.value)} placeholder="End-semester, May" /></label>
               <label className="text-xs font-medium text-slate-600">Year<input className={cn(input, 'mt-1 block w-full')} type="number" min={1990} max={2100} value={year} onChange={(e) => setYear(e.target.value)} /></label>
             </div>
+            {fromOcr && !file && (
+              <p className="flex items-start gap-2 rounded-lg bg-amber-50 p-2.5 text-xs text-amber-900" data-testid="papers-ocr-note">
+                <ScanText className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>Recognised from {fromOcr.name} ({fromOcr.pages} page{fromOcr.pages === 1 ? '' : 's'}, confidence {fromOcr.confidence}%). Check the questions below and fix any mistakes before adding the paper.</span>
+              </p>
+            )}
+            {file && scan !== 'no' && (
+              <div className="flex flex-wrap items-center gap-2 rounded-lg bg-amber-50 p-2.5 text-xs text-amber-900" data-testid="papers-scan">
+                <ScanText className="h-4 w-4 shrink-0" />
+                <span className="min-w-0 flex-1">
+                  {scan === 'checking' ? 'Checking the file for text…' : ocrBusy || `${file.name} has no text of its own (it is a scan or a photo). Recognise its text in your browser, then check it.`}
+                </span>
+                {scan === 'yes' && (
+                  <Button type="button" size="sm" className="gap-1.5" onClick={recognise} disabled={!!ocrBusy} isLoading={!!ocrBusy} title={OCR_NOTE}>
+                    <ScanText className="h-3.5 w-3.5" /> Recognise text
+                  </Button>
+                )}
+              </div>
+            )}
             {!file && (
               <textarea className="block h-36 w-full rounded-lg border border-slate-200 p-2.5 text-sm focus:border-blue-400 focus:outline-none" value={text} onChange={(e) => setText(e.target.value)} placeholder={'UNIT I\n1. Explain the process state diagram. (10 marks)\n2. Compare paging and segmentation.'} aria-label="Paper text" data-testid="papers-text" />
             )}
             <div className="flex flex-wrap items-center gap-2">
               <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">
-                <Upload className="h-4 w-4" /> {file ? file.name : 'Upload PDF or .txt'}
-                <input type="file" accept=".pdf,.txt,application/pdf,text/plain" className="sr-only" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+                <Upload className="h-4 w-4" /> {file ? file.name : 'Upload PDF, .txt or photo'}
+                <input type="file" accept=".pdf,.txt,.png,.jpg,.jpeg,.webp,application/pdf,text/plain,image/png,image/jpeg,image/webp" className="sr-only" data-testid="papers-file" onChange={(e) => { pickFile(e.target.files?.[0] || null); e.target.value = ''; }} />
               </label>
-              {file && <Button type="button" size="sm" variant="ghost" onClick={() => setFile(null)}>Use pasted text instead</Button>}
+              {file && <Button type="button" size="sm" variant="ghost" onClick={() => pickFile(null)}>Use pasted text instead</Button>}
               <Button type="submit" className="ml-auto" disabled={!canAdd || add.isPending} isLoading={add.isPending}>Add paper</Button>
             </div>
           </form>
@@ -210,7 +267,7 @@ export function PreviousPapersPage({ onNavigate }: { onNavigate: (path: string) 
             <ul className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white">
               {d.papers.map((p) => (
                 <li key={p.id} className="flex items-center gap-3 px-4 py-2.5 text-sm">
-                  <span className="min-w-0 flex-1"><span className="block truncate font-medium text-slate-900">{p.title}</span><span className="block text-xs text-slate-500">{p.subject_name}{p.year ? ` · ${p.year}` : ''} · {p.question_count} questions · from {p.source === 'text' ? 'pasted text' : p.source.toUpperCase()}</span></span>
+                  <span className="min-w-0 flex-1"><span className="block truncate font-medium text-slate-900">{p.title}</span><span className="block text-xs text-slate-500">{p.subject_name}{p.year ? ` · ${p.year}` : ''} · {p.question_count} questions · from {p.source === 'text' ? 'pasted text' : p.source === 'ocr' ? 'a scan (recognised text)' : p.source.toUpperCase()}</span></span>
                   <button type="button" className="rounded p-1 text-slate-400 hover:text-rose-600" aria-label={`Remove ${p.title}`} disabled={remove.isPending} onClick={() => remove.mutate(p.id)}><Trash2 className="h-4 w-4" /></button>
                 </li>
               ))}
