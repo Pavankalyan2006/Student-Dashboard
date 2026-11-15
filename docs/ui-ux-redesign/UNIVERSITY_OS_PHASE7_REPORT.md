@@ -27,6 +27,10 @@ Phase 7 covers brief Part 8 ("Advanced student experience"). It extends the exis
 How results are matched and shown:
 
 - **Matching:** every word typed must appear in the item. Title matches rank above content matches.
+  - A word matches at the start of a word in the item, so "pag" finds "paging" but "metr" does not match inside "symmetric".
+  - Two-letter words, such as "os", must match a whole word.
+  - Hyphenated terms such as "METR-LA" stay together.
+  - Live checking showed that the first version matched letters anywhere inside words, so "METR-LA" returned unrelated courses. This was fixed in a follow-up.
 - **Each result shows:**
   - where it came from, such as "Your documents · page 2"
   - where the words matched
@@ -79,8 +83,8 @@ How results are matched and shown:
 
 ## Testing
 
-- **`src/tests/phase7_cross_platform.test.ts` (9 tests):**
-  - search matching and snippets
+- **`src/tests/phase7_cross_platform.test.ts` (10 tests):**
+  - search matching and snippets, including word-start matching, whole two-letter words and hyphenated terms
   - reminder building for all 8 categories, including the lead time, closed applications, finished team tasks and the goal exclusion
   - category switches and older switches
   - search over HTTP: notes and document pages are found with page links, another student sees nothing, and signed-out requests get 401
@@ -88,8 +92,15 @@ How results are matched and shown:
   - a new student gets no made-up recommendations
   - category and lead-time settings are saved, and an invalid lead time is rejected
   - a milestone reminder is not sent when its category is off, and is sent only once
-- **Full suite:** 1,166 passed and 10 skipped. `tsc` is clean and the build passes.
+- **Full suite:** 1,167 passed and 10 skipped (after the matching follow-up). `tsc` is clean and the build passes.
 - **Browser check:** searching "paging tlb" found the student's research project, their note, the OS course and page 2 of their uploaded PDF, each with its source. The reminder settings rendered, there were no page errors, and a new student's recommendations were empty.
+
+- **Live check after merge:**
+  - A PDF uploaded on the live site was read, and the import found its title, 3 authors, year and 2 references.
+  - Ask-a-paper answered from page 2 with the quoted passage.
+  - Search found the PDF's page 2, and course results opened their own pages.
+  - Recommendations showed 3 study-planner items, each with its source.
+  - All test data was deleted afterwards.
 
 Screenshots: `screenshots/global-search.png`, `screenshots/reminder-settings.png`.
 
