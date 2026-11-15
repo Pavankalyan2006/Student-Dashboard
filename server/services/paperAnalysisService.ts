@@ -4,6 +4,7 @@ import { AIService } from '../ai/service';
 import { NotFoundError, AppError } from '../core/exceptions';
 import { isModelAvailable, parseModelJson, rethrowAi } from '../ai/modelOutput';
 import { logger } from '../core/logging';
+import { ResearchCitationService } from './researchCitationService';
 
 export interface PaperComparisonMatrix {
   papers: ResearchPaper[];
@@ -43,7 +44,6 @@ export class PaperAnalysisService {
     }
 
     const authorStr = paper.authors.join(', ');
-    const authorShort = paper.authors.slice(0, 3).join(', ') + (paper.authors.length > 3 ? ' et al.' : '');
 
     const prompt = `You are an expert academic research assistant in Computer Science and Engineering.
 Analyze the following research paper objectively using ONLY the provided text and metadata.
@@ -106,13 +106,9 @@ Output valid JSON only with keys:
       generated_by: 'AI_MODEL',
     } as any;
     // Citation strings are built from the saved metadata, not from the model.
-    const citeAuthors = authorShort || 'Unknown author';
-    const year = paper.publication_year || 'n.d.';
-    const venue = paper.venue ? ` ${paper.venue}.` : '';
-    const doi = paper.doi ? ` https://doi.org/${paper.doi}` : '';
-    analysis.citation_apa = `${citeAuthors} (${year}). ${paper.title}.${venue}${doi}`;
-    analysis.citation_ieee = `${citeAuthors}, "${paper.title},"${paper.venue ? ` in ${paper.venue},` : ''} ${year}.${paper.doi ? ` doi: ${paper.doi}.` : ''}`;
-    analysis.citation_bibtex = `@article{${paper.authors[0]?.split(' ').pop()?.toLowerCase() || 'paper'}${paper.publication_year || ''},\n  title={${paper.title}},\n  author={${authorStr}},\n  journal={${paper.venue || ''}},\n  year={${paper.publication_year || ''}}\n}`;
+    analysis.citation_apa = ResearchCitationService.formatCitation(paper, 'APA');
+    analysis.citation_ieee = ResearchCitationService.formatCitation(paper, 'IEEE');
+    analysis.citation_bibtex = ResearchCitationService.toBibTeX(paper);
     analysis.citation_information = { apa: analysis.citation_apa, ieee: analysis.citation_ieee, bibtex: analysis.citation_bibtex };
 
     return analysis;

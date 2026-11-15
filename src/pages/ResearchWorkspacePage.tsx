@@ -18,6 +18,7 @@ import { MethodologyPanel } from '../features/research/components/MethodologyPan
 import { CitationsPanel } from '../features/research/components/CitationsPanel';
 import { EvidenceMatrixPanel } from '../features/research/components/EvidenceMatrixPanel';
 import { ExportPanel } from '../features/research/components/ExportPanel';
+import { ExperimentsPanel } from '../features/research/components/ExperimentsPanel';
 import { ResearchAIContextPanel } from '../features/research/components/ResearchAIContextPanel';
 import { ContextSelectorModal } from '../features/context/components/ContextSelectorModal';
 import {
@@ -35,6 +36,7 @@ import {
   PanelRightOpen,
   ArrowLeft,
   Sparkles,
+  FlaskConical,
 } from 'lucide-react';
 
 export const ResearchWorkspacePage: React.FC = () => {
@@ -71,6 +73,7 @@ export const ResearchWorkspacePage: React.FC = () => {
     { key: 'gaps', label: 'Research Gaps', count: gaps.length, icon: AlertCircle },
     { key: 'ideas', label: 'Ideas', count: ideas.length, icon: Lightbulb },
     { key: 'methodology', label: 'Methodology', icon: Layers },
+    { key: 'experiments', label: 'ML Experiments', icon: FlaskConical },
     { key: 'citations', label: 'Citations', count: citations.length, icon: BookmarkCheck },
     { key: 'evidence-matrix', label: 'Evidence Matrix', icon: Table },
     { key: 'export', label: 'Export', icon: Download },
@@ -180,6 +183,8 @@ export const ResearchWorkspacePage: React.FC = () => {
           {activeTab === 'ideas' && <IdeasPanel projectId={project.id} />}
 
           {activeTab === 'methodology' && <MethodologyPanel projectId={project.id} />}
+
+          {activeTab === 'experiments' && <ExperimentsPanel projectId={project.id} />}
 
           {activeTab === 'citations' && <CitationsPanel projectId={project.id} />}
 

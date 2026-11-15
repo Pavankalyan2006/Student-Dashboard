@@ -29,11 +29,7 @@ export const ResearchAIContextPanel: React.FC<ResearchAIContextPanelProps> = ({
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: `Welcome to the Academic Research Assistant for "${projectTitle}". I am grounded by your saved papers, methodology, and active context chips. All findings are backed by verified scientific citations.`,
-      citations: [
-        { number: 1, title: 'Attention Is All You Need' },
-        { number: 2, title: 'BERT: Pre-training of Deep Bidirectional Transformers' },
-      ],
+      content: `Research assistant for "${projectTitle}". Add context (papers, notes or documents) and ask a question. Sources are listed only when the answer used them; check them before citing.`,
     },
   ]);
 
@@ -65,36 +61,26 @@ export const ResearchAIContextPanel: React.FC<ResearchAIContextPanelProps> = ({
         },
       });
 
-      const responseText =
-        aiRes.reply ||
-        aiRes.message ||
-        `Based on the analyzed papers and active context [1], the literature supports this approach while highlighting standard evaluation boundaries [2].`;
+      const responseText = aiRes?.reply || aiRes?.message;
+      if (!responseText) throw new Error('The AI returned no answer.');
 
+      // Only the sources that were really sent with the question are listed. No steps are claimed.
       const assistantMsg: Message = {
         role: 'assistant',
         content: responseText,
-        plan: [
-          { step: 1, action: 'Read active research context', tool: 'get_selected_context', status: 'completed' },
-          { step: 2, action: 'Query saved papers and citations', tool: 'get_research_sources', status: 'completed' },
-          { step: 3, action: 'Synthesize grounded response', tool: 'summarize_research_paper', status: 'completed' },
-        ],
-        citations: promptRes.citations?.map((c, idx) => ({
+        citations: (promptRes.citations || []).map((c, idx) => ({
           number: idx + 1,
           title: c.title,
           url: c.url,
-        })) || [{ number: 1, title: 'Attention Is All You Need' }],
+        })),
       };
 
       setMessages((prev) => [...prev, assistantMsg]);
     } catch (err: any) {
-      toast.error('AI assistant error. Reverting to local synthesis.');
+      toast.error(err?.message || 'The AI assistant could not answer.');
       setMessages((prev) => [
         ...prev,
-        {
-          role: 'assistant',
-          content: `Evidence-based response grounded in project literature: The collected sources demonstrate verifiable results in laboratory settings. Consider checking edge distribution latency [1].`,
-          citations: [{ number: 1, title: 'Saved Paper Evidence' }],
-        },
+        { role: 'assistant', content: 'The AI could not answer right now, so nothing was generated. Try again later.' },
       ]);
     } finally {
       setIsSending(false);
@@ -111,7 +97,7 @@ export const ResearchAIContextPanel: React.FC<ResearchAIContextPanelProps> = ({
           </div>
           <div>
             <h3 className="text-xs font-bold text-slate-900">Research AI Agent</h3>
-            <p className="text-[10px] text-slate-500">Multi-source verified context</p>
+            <p className="text-[10px] text-slate-500">Answers from the context you add</p>
           </div>
         </div>
       </div>

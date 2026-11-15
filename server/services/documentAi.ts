@@ -141,21 +141,13 @@ Respond with valid JSON conforming to:
           ],
         };
       } else {
-        const topChunk = retrievedChunks[0];
+        // The AI did not answer. Show the closest passages as they are, and say so. No explanation is written.
+        const top = retrievedChunks.slice(0, 3);
         parsedResponse = {
-          answer: `According to **${document.title}** (Page ${topChunk.page_number}):\n\n${topChunk.content.slice(0, 350)}...\n\nThis material covers essential curriculum specifications and invariants.`,
-          citations: [
-            {
-              page_number: topChunk.page_number,
-              chunk_id: topChunk.chunk_id,
-              quoted_text: topChunk.content.slice(0, 80),
-            },
-          ],
-          confidence: 'grounded',
-          follow_up_questions: [
-            'Explain this in simpler terms',
-            'Give an exam-oriented summary of this topic',
-          ],
+          answer: `The AI could not answer right now, so no explanation was written. These are the passages in **${document.title}** that best match your question (${top.map((c) => `page ${c.page_number}`).join(', ')}). Open them to read the source.`,
+          citations: top.map((c) => ({ page_number: c.page_number, chunk_id: c.chunk_id, quoted_text: c.content.slice(0, 200) })),
+          confidence: 'partially_grounded',
+          follow_up_questions: [],
         };
       }
     }
@@ -250,19 +242,24 @@ Respond with valid JSON conforming to:
     const validated: DocumentCitation[] = [];
 
     if (Array.isArray(citations)) {
-      for (const cit of citations) {
+      for (let cit of citations) {
         const pageNum = Number(cit.page_number);
         if (cit.document_id && cit.document_id !== documentId) {
           continue;
         }
         if (validPages.has(pageNum)) {
-          const matchingChunk = retrievedChunks.find((c) => c.page_number === pageNum);
+          const onPage = retrievedChunks.filter((c) => c.page_number === pageNum);
+          const norm = (t: string) => String(t || '').toLowerCase().replace(/\s+/g, ' ').trim();
+          const quote = typeof cit.quoted_text === 'string' ? cit.quoted_text : '';
+          // A quote is kept only if it really appears on that page; otherwise the page's own text is shown.
+          const matchingChunk = (quote && onPage.find((c) => norm(c.content || '').includes(norm(quote)))) || onPage[0];
+          if (quote && !norm(matchingChunk?.content || '').includes(norm(quote))) cit = { ...cit, quoted_text: undefined };
           validated.push({
             document_id: documentId,
             document_title: documentTitle || 'Document',
             page_number: pageNum,
             chunk_id: cit.chunk_id || matchingChunk?.chunk_id,
-            quoted_text: cit.quoted_text || matchingChunk?.content?.slice(0, 100),
+            quoted_text: cit.quoted_text || matchingChunk?.content?.slice(0, 200),
             score: matchingChunk?.score,
           });
         }

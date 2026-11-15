@@ -7637,6 +7637,15 @@ print(power_mod(2, 10, 1000))  # Output: 24
     this.researchIdeas.set(idea.research_project_id, list);
   }
 
+  /** Phase 6: removes one idea from its project (a new array is set so persistence sees the change). */
+  public async deleteResearchIdea(projectId: string, ideaId: string): Promise<boolean> {
+    await this.initialize();
+    const list = this.researchIdeas.get(projectId) || [];
+    const next = list.filter((i) => i.id !== ideaId);
+    this.researchIdeas.set(projectId, next);
+    return next.length !== list.length;
+  }
+
   public async getResearchMethodology(projectId: string, studentId?: string): Promise<ResearchMethodology | null> {
     await this.initialize();
     if (studentId) {

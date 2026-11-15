@@ -12,6 +12,9 @@ import {
   LiteratureReview,
   EvidenceMatrixRow,
   CitationStyle,
+  NoveltyCheck,
+  PaperAnswer,
+  ProjectExperiments,
 } from '../types';
 
 export const researchApi = {
@@ -47,6 +50,16 @@ export const researchApi = {
 
   async updatePaperNotes(paperId: string, data: { notes?: string; reading_status?: 'TO_READ' | 'READING' | 'READ' }): Promise<ResearchPaper> {
     return apiClient.patch<ResearchPaper>(`/research/papers/${paperId}`, data);
+  },
+
+  /** Phase 6: correct a paper's bibliographic details (each edited field is marked as yours). */
+  async updatePaperMetadata(paperId: string, data: { title?: string; authors?: string[]; publication_year?: number | null; venue?: string; doi?: string; abstract?: string }): Promise<ResearchPaper> {
+    return apiClient.patch<ResearchPaper>(`/research/papers/${paperId}`, data);
+  },
+
+  /** Phase 6: ask a question about one paper. */
+  async askPaper(paperId: string, question: string): Promise<PaperAnswer> {
+    return apiClient.post<PaperAnswer>(`/research/papers/${paperId}/ask`, { question });
   },
 
   async deletePaper(paperId: string): Promise<{ deleted: boolean }> {
@@ -129,6 +142,31 @@ export const researchApi = {
   },
 
   // Methodology
+  async updateIdea(ideaId: string, data: Partial<ResearchIdea>): Promise<ResearchIdea> {
+    return apiClient.patch<ResearchIdea>(`/research/ideas/${ideaId}`, data);
+  },
+
+  async deleteIdea(ideaId: string): Promise<{ deleted: boolean }> {
+    return apiClient.delete<{ deleted: boolean }>(`/research/ideas/${ideaId}`);
+  },
+
+  async noveltyCheck(ideaId: string): Promise<NoveltyCheck> {
+    return apiClient.post<NoveltyCheck>(`/research/ideas/${ideaId}/novelty-check`, {});
+  },
+
+  // Phase 6: ML Lab experiments linked to the project
+  async listExperiments(projectId: string): Promise<ProjectExperiments> {
+    return apiClient.get<ProjectExperiments>(`/research/${projectId}/experiments`);
+  },
+
+  async linkExperiment(projectId: string, experimentId: string): Promise<ProjectExperiments> {
+    return apiClient.post<ProjectExperiments>(`/research/${projectId}/experiments`, { experiment_id: experimentId });
+  },
+
+  async unlinkExperiment(projectId: string, experimentId: string): Promise<ProjectExperiments> {
+    return apiClient.delete<ProjectExperiments>(`/research/${projectId}/experiments/${experimentId}`);
+  },
+
   async getMethodology(projectId: string): Promise<ResearchMethodology | null> {
     return apiClient.get<ResearchMethodology | null>(`/research/${projectId}/methodology`);
   },

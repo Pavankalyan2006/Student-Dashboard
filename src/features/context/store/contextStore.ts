@@ -11,15 +11,8 @@ interface ContextState {
 }
 
 export const useContextStore = create<ContextState>((set) => ({
-  selectedContexts: [
-    {
-      id: 'ctx_init_paper',
-      type: 'RESEARCH_PAPER',
-      reference_id: 'paper_seed_1',
-      title: 'Attention Is All You Need',
-      subtitle: 'NeurIPS 2017 · Transformer Architecture',
-    },
-  ],
+  // Starts empty: the student picks what the AI may read. (It used to start with a paper the student never saved.)
+  selectedContexts: [],
   isSelectorOpen: false,
   addContext: (item) =>
     set((state) => {
