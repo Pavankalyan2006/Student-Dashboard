@@ -20,6 +20,9 @@ const ALL_PAGES = [
   '/resume', '/mock-interviews', '/applications', '/placement', '/integrations', '/profile/external', '/career/jobs',
   '/community', '/community/questions', '/community/discussions', '/community/resources', '/progress', '/goals',
   '/profile', '/profile/edit', '/notifications', '/profile/settings', '/settings', '/sandbox',
+  // University OS phases 1-7
+  '/briefing', '/ai-brain', '/knowledge-graph', '/agents', '/grades', '/virtual-lab', '/previous-papers', '/code-review',
+  '/competitions', '/career/roadmap', '/deadlines', '/ai-memory',
 ];
 const PAGES = process.env.PAGES ? process.env.PAGES.split(',') : ALL_PAGES;
 const uniq = () => `${Date.now()}${Math.random().toString(36).slice(2, 6)}`;
