@@ -11,9 +11,10 @@ import { AiBrainService } from '../../services/aiBrainService';
 import { AgentActivityService } from '../../services/agentActivityService';
 import { studentAgentById, studentAgentView, CORE_AGENTS } from '../../ai/orchestration/studentAgents';
 import { ToolRegistry } from '../../ai/tools';
+import { PreviousPapersService } from '../../services/previousPapersService';
 
 export const personalIntelligenceRouter = Router();
-for (const p of ['/knowledge-graph', '/briefing', '/ai-brain', '/agents']) personalIntelligenceRouter.use(p, requireAuth);
+for (const p of ['/knowledge-graph', '/briefing', '/ai-brain', '/agents', '/previous-papers']) personalIntelligenceRouter.use(p, requireAuth);
 
 const me = (req: Request) => req.user!.userId;
 const fail = (res: Response, err: any, fallback: string) => {
@@ -120,3 +121,14 @@ personalIntelligenceRouter.patch(
 
 // GET /api/v1/agents/me/activity?limit=50 — the student's own tool-call log.
 personalIntelligenceRouter.get('/agents/me/activity', handle((req) => AgentActivityService.list(me(req), Number(req.query.limit) || 50), 'Your agent log could not be loaded.'));
+
+// ---------- Previous Papers ----------
+
+// GET /api/v1/previous-papers/me — the student's papers and which syllabus topics they ask most.
+personalIntelligenceRouter.get('/previous-papers/me', handle((req) => PreviousPapersService.overview(me(req)), 'Your papers could not be loaded.'));
+
+// POST /api/v1/previous-papers/me  { subject_id, title?, year?, exam?, text? | file: { name, data(base64) } }
+personalIntelligenceRouter.post('/previous-papers/me', handle((req) => PreviousPapersService.add(me(req), req.body), 'The paper could not be added.'));
+
+// DELETE /api/v1/previous-papers/me/:paperId
+personalIntelligenceRouter.delete('/previous-papers/me/:paperId', handle((req) => PreviousPapersService.remove(me(req), String(req.params.paperId)), 'The paper could not be removed.'));

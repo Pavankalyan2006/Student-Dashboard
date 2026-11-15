@@ -48,12 +48,19 @@ export function sanitiseRecord(studentId: string, input: any): AcademicRecord {
   const scale: GradeScale = ['O_10', 'AA_10', 'POINTS'].includes(input.scale) ? input.scale : 'O_10';
   const totalSemesters = Math.round(num(input.total_semesters, 1, 16, 8));
   const target = input.target_cgpa === null || input.target_cgpa === '' || input.target_cgpa === undefined ? null : round2(num(input.target_cgpa, 0, 10, 0));
+  // Subject ids must be unique across the whole record: the What-if simulator and edits find subjects by id.
+  const usedIds = new Set<string>();
+  const uniqueId = (id: string, salt: string) => {
+    const out = usedIds.has(id) ? `${id}_${salt}`.slice(0, 40) : id;
+    usedIds.add(out);
+    return out;
+  };
   const semesters: SemesterRecord[] = (Array.isArray(input.semesters) ? input.semesters : []).slice(0, 16).map((s: any) => ({
     semester: Math.round(num(s?.semester, 1, 16, 1)),
     subjects: (Array.isArray(s?.subjects) ? s.subjects : []).slice(0, 25).map((x: any, i: number) => {
       const grade = str(x?.grade, 4);
       if (grade && gradePoint(scale, grade) === null) throw new ValidationError(`"${grade}" is not a grade on the chosen scale.`);
-      return { id: idOf(x?.id, i), name: str(x?.name, 80) || `Subject ${i + 1}`, credits: num(x?.credits, 0, 30, 0), grade };
+      return { id: uniqueId(idOf(x?.id, i), `${s?.semester ?? 0}_${i}`), name: str(x?.name, 80) || `Subject ${i + 1}`, credits: num(x?.credits, 0, 30, 0), grade };
     }),
   }));
   const seen = new Set<number>();

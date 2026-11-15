@@ -59,6 +59,7 @@ import {
   BrainCircuit,
   Presentation,
   Sunrise,
+  FileStack,
   Workflow,
 } from 'lucide-react';
 
@@ -139,6 +140,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { name: 'SQL Lab', href: '/sql-lab', icon: Database },
       { name: 'Git Lab', href: '/git', icon: GitBranch, match: ['/git-lab'] },
       { name: 'System Design Lab', href: '/system-design', icon: Network },
+      { name: 'Virtual Lab', href: '/virtual-lab', icon: FlaskConical, match: ['/simulators'] },
     ],
   },
   {
@@ -158,6 +160,7 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { name: 'Quiz', href: '/quiz', icon: ListChecks },
       { name: 'Mistake Notebook', href: '/mistakes', icon: NotebookPen, match: ['/mistake-notebook'] },
+      { name: 'Previous Papers', href: '/previous-papers', icon: FileStack, match: ['/papers'] },
       { name: 'Exam Preparation', href: '/exams', icon: GraduationCap },
       { name: 'GATE Exam Preparation', href: '/assessment/gate-preparation', icon: BookOpenCheck, match: ['/gate'] },
       {
