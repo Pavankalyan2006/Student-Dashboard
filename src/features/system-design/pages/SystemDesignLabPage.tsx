@@ -52,6 +52,8 @@ import { AITutorDrawer } from '../components/AITutorDrawer';
 import { ArchitectureStudio } from '../components/ArchitectureStudio';
 import { toast } from 'sonner';
 
+const DRAFT_ID = 'sd_unsaved_draft';
+
 export type LabTab =
   | 'roadmap'
   | 'concepts'
@@ -90,10 +92,65 @@ export function SystemDesignLabPage({ onNavigate }: SystemDesignLabPageProps) {
   const [isInterviewModalOpen, setIsInterviewModalOpen] = React.useState(false);
   const [isAiTutorOpen, setIsAiTutorOpen] = React.useState(false);
 
-  // Load All System Design Data
-  const loadInitialData = React.useCallback(async () => {
+  // A student with no saved design still gets a working canvas: edits go into a local draft, and the first
+  // save creates the project. (Before, edits were dropped when no project existed.)
+  const blankDraft = React.useCallback((): SystemDesignProject => ({
+    id: DRAFT_ID,
+    student_id: '',
+    title: 'My first design',
+    description: 'New architecture design',
+    components: [],
+    connections: [],
+    requirements: { functional: [], non_functional: [], assumptions: [] },
+    versions: [],
+    tags: ['System Design'],
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  }), []);
+  const [draft, setDraft] = React.useState<SystemDesignProject>(() => blankDraft());
+  const effectiveProject: SystemDesignProject = currentProject || draft;
+  const isDraft = !currentProject;
+  const applyProject = (p: SystemDesignProject) => (currentProject ? setCurrentProject(p) : setDraft(p));
+
+  // Saves are queued so quick edits cannot create two projects or overwrite each other out of order.
+  const projectIdRef = React.useRef<string | null>(null);
+  React.useEffect(() => {
+    projectIdRef.current = currentProject?.id || null;
+  }, [currentProject?.id]);
+  const saveQueue = React.useRef<Promise<unknown>>(Promise.resolve());
+  const persistProject = (p: SystemDesignProject): Promise<SystemDesignProject> => {
+    const fields = {
+      components: p.components,
+      connections: p.connections,
+      requirements: p.requirements,
+      capacity_estimate: p.capacity_estimate,
+      database_design: p.database_design,
+      api_specification: p.api_specification,
+      diagrams: p.diagrams,
+    };
+    const run = async () => {
+      if (!projectIdRef.current) {
+        const created = await systemDesignApi.createProject({ title: p.title || 'My first design', description: p.description, ...fields });
+        projectIdRef.current = created.id;
+        setProjects((prev) => [created, ...prev.filter((x) => x.id !== created.id)]);
+        setCurrentProject(created);
+        setDraft(blankDraft());
+        return created;
+      }
+      const saved = await systemDesignApi.updateProject(projectIdRef.current, fields);
+      setCurrentProject(saved);
+      setProjects((prev) => prev.map((x) => (x.id === saved.id ? saved : x)));
+      return saved;
+    };
+    const next = saveQueue.current.then(run, run);
+    saveQueue.current = next.catch(() => undefined);
+    return next;
+  };
+
+  // Load All System Design Data (once; `silent` refreshes without the full-page loader)
+  const loadInitialData = React.useCallback(async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const [fetchedProjects, fetchedRoadmap, fetchedLessons, fetchedChallenges, fetchedAnalytics] = await Promise.all([
         systemDesignApi.getProjects().catch(() => []),
         systemDesignApi.getRoadmap().catch(() => null),
@@ -108,16 +165,13 @@ export function SystemDesignLabPage({ onNavigate }: SystemDesignLabPageProps) {
       setLessons(Array.isArray(fetchedLessons) ? fetchedLessons : []);
       setChallenges(Array.isArray(fetchedChallenges) ? fetchedChallenges : []);
       setAnalytics(fetchedAnalytics || null);
-
-      if (safeProjects.length > 0 && !currentProject) {
-        setCurrentProject(safeProjects[0]);
-      }
+      setCurrentProject((prev) => (prev ? safeProjects.find((p) => p.id === prev.id) || prev : safeProjects[0] || null));
     } catch (err: any) {
       toast.error('Failed to load system design lab: ' + (err?.message || 'Unknown error'));
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
-  }, [currentProject]);
+  }, []);
 
   React.useEffect(() => {
     loadInitialData();
@@ -125,25 +179,13 @@ export function SystemDesignLabPage({ onNavigate }: SystemDesignLabPageProps) {
 
   // Project Canvas Handlers
   const handleUpdateCanvas = (components: any[], connections: any[]) => {
-    if (!currentProject) return;
-    const updated = { ...currentProject, components, connections };
-    setCurrentProject(updated);
+    applyProject({ ...effectiveProject, components, connections });
   };
 
-  const handleSaveCurrentProject = async () => {
-    if (!currentProject) return;
+  const handleSaveCurrentProject = async (override?: SystemDesignProject) => {
     try {
-      const saved = await systemDesignApi.updateProject(currentProject.id, {
-        components: currentProject.components,
-        connections: currentProject.connections,
-        requirements: currentProject.requirements,
-        capacity_estimate: currentProject.capacity_estimate,
-        database_design: currentProject.database_design,
-        api_specification: currentProject.api_specification
-      });
-      setCurrentProject(saved);
-      setProjects(prev => prev.map(p => p.id === saved.id ? saved : p));
-      toast.success('Architecture saved successfully');
+      await persistProject(override || effectiveProject);
+      toast.success(isDraft ? 'Design saved to your account' : 'Architecture saved successfully');
     } catch (err: any) {
       toast.error('Save failed: ' + err.message);
     }
@@ -234,21 +276,6 @@ export function SystemDesignLabPage({ onNavigate }: SystemDesignLabPageProps) {
     );
   }
 
-  // Active Project for Designer & Workspaces
-  const effectiveProject: SystemDesignProject = currentProject || {
-    id: 'sd_default_proj',
-    student_id: 'std_demo',
-    title: 'New Architecture',
-    description: 'Empty architecture canvas',
-    components: [],
-    connections: [],
-    requirements: { functional: [], non_functional: [], assumptions: [] },
-    versions: [],
-    tags: ['System Design'],
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  };
-
   return (
     <PageContainer>
       {/* ------------------------------------------------------------- */}
@@ -297,7 +324,7 @@ export function SystemDesignLabPage({ onNavigate }: SystemDesignLabPageProps) {
               onClick={handleCreateNewProject}
               size="sm"
               variant="outline"
-              className="border-slate-700 text-slate-300 hover:text-white text-xs h-8 px-2.5"
+              className="border-slate-700 bg-transparent text-slate-200 hover:bg-slate-800 hover:text-white text-xs h-8 px-2.5"
             >
               <Plus className="w-3.5 h-3.5 mr-1" /> New
             </Button>
@@ -309,7 +336,7 @@ export function SystemDesignLabPage({ onNavigate }: SystemDesignLabPageProps) {
               }}
               size="sm"
               variant="outline"
-              className="border-indigo-500/40 text-indigo-300 hover:bg-indigo-950/40 text-xs h-8 px-2.5"
+              className="border-indigo-500/40 bg-transparent text-indigo-300 hover:bg-indigo-950/40 text-xs h-8 px-2.5"
             >
               <UserCheck className="w-3.5 h-3.5 mr-1" /> Mock Interview
             </Button>
@@ -374,7 +401,7 @@ export function SystemDesignLabPage({ onNavigate }: SystemDesignLabPageProps) {
             components={effectiveProject.components}
             connections={effectiveProject.connections}
             onChange={handleUpdateCanvas}
-            onSave={handleSaveCurrentProject}
+            onSave={() => handleSaveCurrentProject()}
           />
         )}
 
@@ -382,20 +409,13 @@ export function SystemDesignLabPage({ onNavigate }: SystemDesignLabPageProps) {
         {activeTab === 'studio' && (
           <ArchitectureStudio
             project={effectiveProject}
-            hasProject={!!currentProject}
+            hasProject
             onCreateProject={handleCreateNewProject}
             onSaveDiagrams={async (diagrams) => {
-              if (!currentProject) return;
-              const saved = await systemDesignApi.updateProject(currentProject.id, { diagrams });
-              setCurrentProject(saved);
-              setProjects((prev) => prev.map((p) => (p.id === saved.id ? saved : p)));
+              await persistProject({ ...effectiveProject, diagrams });
             }}
             onApplyArchitecture={(components, connections) => {
-              if (!currentProject) {
-                toast.error('Create a design project first, then open the draft on its canvas.');
-                return;
-              }
-              setCurrentProject({ ...effectiveProject, components, connections });
+              applyProject({ ...effectiveProject, components, connections });
               setActiveTab('designer');
               toast.info('The AI draft is on the canvas. Review it and press Save to keep it.');
             }}
@@ -470,13 +490,12 @@ export function SystemDesignLabPage({ onNavigate }: SystemDesignLabPageProps) {
             requirements={effectiveProject.requirements || { functional: [], non_functional: [], assumptions: [] }}
             capacityEstimate={effectiveProject.capacity_estimate}
             onChangeRequirements={(reqs) => {
-              const updated = { ...effectiveProject, requirements: reqs };
-              setCurrentProject(updated);
+              applyProject({ ...effectiveProject, requirements: reqs });
             }}
             onSaveCapacityEstimate={(estimate) => {
               const updated = { ...effectiveProject, capacity_estimate: estimate };
-              setCurrentProject(updated);
-              handleSaveCurrentProject();
+              applyProject(updated);
+              handleSaveCurrentProject(updated);
             }}
           />
         )}
@@ -487,8 +506,8 @@ export function SystemDesignLabPage({ onNavigate }: SystemDesignLabPageProps) {
             databaseDesign={effectiveProject.database_design}
             onChangeDatabaseDesign={(dbDesign) => {
               const updated = { ...effectiveProject, database_design: dbDesign };
-              setCurrentProject(updated);
-              handleSaveCurrentProject();
+              applyProject(updated);
+              handleSaveCurrentProject(updated);
             }}
             onNavigateToSqlLab={onNavigate ? () => onNavigate('/sql-lab') : undefined}
           />
@@ -500,8 +519,8 @@ export function SystemDesignLabPage({ onNavigate }: SystemDesignLabPageProps) {
             apiSpecification={effectiveProject.api_specification}
             onChangeApiSpecification={(apiSpec) => {
               const updated = { ...effectiveProject, api_specification: apiSpec };
-              setCurrentProject(updated);
-              handleSaveCurrentProject();
+              applyProject(updated);
+              handleSaveCurrentProject(updated);
             }}
           />
         )}
@@ -514,8 +533,9 @@ export function SystemDesignLabPage({ onNavigate }: SystemDesignLabPageProps) {
           <ArchitectureEvaluator
             project={effectiveProject}
             challengeId={effectiveProject.challenge_id}
+            unsaved={isDraft}
             onSubmissionComplete={() => {
-              loadInitialData();
+              loadInitialData(true);
             }}
           />
         )}

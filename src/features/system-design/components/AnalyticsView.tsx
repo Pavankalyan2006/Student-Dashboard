@@ -32,7 +32,7 @@ export function AnalyticsView({ analyticsData, onNavigateTab }: AnalyticsViewPro
   }
 
   const { progress, roadmap_summary, projects_count, submissions_count, completed_interviews_count } = analyticsData;
-  const readiness = progress?.readiness_score || 75;
+  const readiness = progress?.readiness_score ?? 0;
 
   return (
     <div className="space-y-6">
@@ -47,7 +47,7 @@ export function AnalyticsView({ analyticsData, onNavigateTab }: AnalyticsViewPro
           </div>
           <h2 className="text-2xl font-bold text-white tracking-tight">System Design Readiness: {readiness}%</h2>
           <p className="text-xs text-slate-300 mt-1 max-w-xl">
-            Calculated across curriculum lessons passed, challenge evaluations, architecture projects designed, and mock interview debrief scores.
+            From your own activity: lessons completed (40%), challenges passed, up to 5 (30%), mock interviews completed, up to 3 (20%), and designs created, up to 3 (10%).
           </p>
         </div>
 

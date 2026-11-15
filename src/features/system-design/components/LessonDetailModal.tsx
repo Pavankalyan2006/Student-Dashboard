@@ -340,7 +340,7 @@ export function LessonDetailModal({
                 Take Knowledge Check Quiz <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
               </Button>
             ) : submittedQuiz ? (
-              <Button onClick={handleResetQuiz} variant="outline" className="border-slate-700 text-slate-300 text-xs">
+              <Button onClick={handleResetQuiz} variant="outline" className="border-slate-700 bg-transparent text-slate-300 hover:bg-slate-800 hover:text-white text-xs">
                 Retry Quiz
               </Button>
             ) : (
