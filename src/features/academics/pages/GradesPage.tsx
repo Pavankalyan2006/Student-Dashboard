@@ -7,6 +7,7 @@ import { useProfileDefaults } from '../../profile/hooks/useProfileDefaults';
 import { cn } from '../../../lib/utils';
 import { GRADE_SCALES, summariseGrades, gradePoint, type AcademicRecord, type GradeScale } from '../../../../server/services/academicMath';
 import { useAcademicRecord, newId } from '../useAcademicRecord';
+import { WhatIfPanel } from '../components/WhatIfPanel';
 
 const input = 'h-9 rounded-lg border border-slate-200 bg-white px-2.5 text-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100';
 
@@ -185,6 +186,8 @@ export function GradesPage({ onNavigate }: { onNavigate: (path: string) => void 
               )}
             </div>
           </PageSection>
+
+          <WhatIfPanel record={draft} />
 
           {summary.semesters.some((s) => s.sgpa !== null) && (
             <PageSection title="SGPA by semester">

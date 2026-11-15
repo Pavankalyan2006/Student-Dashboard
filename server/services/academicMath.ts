@@ -145,3 +145,56 @@ export function attendanceStatus(attended: number, total: number, requiredPercen
   return { percent, can_miss: canMiss, must_attend: mustAttend, safe: total === 0 || attended / total >= r };
 }
 
+
+// ---------- What-if ----------
+
+export interface WhatIfResult {
+  /** CGPA from the grades entered so far. */
+  current_cgpa: number | null;
+  /** CGPA with the what-if grades and the extra semester, if any. */
+  projected_cgpa: number | null;
+  delta: number | null;
+  /** SGPA of each semester with the what-if grades applied. */
+  semesters: { semester: number; sgpa: number | null; changed: boolean }[];
+  credits: number;
+}
+
+/**
+ * Pure: what the CGPA would be if some subjects got the grades in `overrides` (by subject id) and, optionally,
+ * one more semester averaged `extra.sgpa` over `extra.credits`. Nothing is saved; only the student's own
+ * entered grades and their own what-if inputs are used.
+ */
+export function whatIfCgpa(
+  r: Pick<AcademicRecord, 'scale' | 'semesters'>,
+  overrides: Record<string, string>,
+  extra?: { sgpa: number; credits: number } | null
+): WhatIfResult {
+  const current = weightedAverage(r.scale, r.semesters.flatMap((s) => s.subjects));
+  const changedSemesters = new Set<number>();
+  const semesters = [...r.semesters]
+    .sort((a, b) => a.semester - b.semester)
+    .map((s) => {
+      const subjects = s.subjects.map((x) => {
+        if (overrides[x.id] === undefined || overrides[x.id] === x.grade) return x;
+        changedSemesters.add(s.semester);
+        return { ...x, grade: overrides[x.id] };
+      });
+      return { semester: s.semester, subjects };
+    });
+  const all = weightedAverage(r.scale, semesters.flatMap((s) => s.subjects));
+  let projected = all.gpa;
+  let credits = all.credits;
+  const extraOk = extra && Number.isFinite(extra.sgpa) && extra.sgpa >= 0 && extra.sgpa <= 10 && Number.isFinite(extra.credits) && extra.credits > 0 && extra.credits <= 60;
+  if (extraOk) {
+    const sum = (all.gpa ?? 0) * all.credits + extra!.sgpa * extra!.credits;
+    credits = all.credits + extra!.credits;
+    projected = round2(sum / credits);
+  }
+  return {
+    current_cgpa: current.gpa,
+    projected_cgpa: projected,
+    delta: projected !== null && current.gpa !== null ? round2(projected - current.gpa) : null,
+    semesters: semesters.map((s) => ({ semester: s.semester, sgpa: weightedAverage(r.scale, s.subjects).gpa, changed: changedSemesters.has(s.semester) })),
+    credits,
+  };
+}

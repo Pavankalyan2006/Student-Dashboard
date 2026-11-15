@@ -89,6 +89,8 @@ const AiMemoryPage = lazyPage(() => import('./features/ai-memory/pages/AiMemoryP
 const AiBrainPage = lazyPage(() => import('./features/ai-brain/pages/AiBrainPage'), 'AiBrainPage');
 const BriefingPage = lazyPage(() => import('./features/briefing/pages/BriefingPage'), 'BriefingPage');
 const KnowledgeGraphPage = lazyPage(() => import('./features/knowledge-graph/pages/KnowledgeGraphPage'), 'KnowledgeGraphPage');
+const PreviousPapersPage = lazyPage(() => import('./features/previous-papers/pages/PreviousPapersPage'), 'PreviousPapersPage');
+const VirtualLabPage = lazyPage(() => import('./features/virtual-lab/pages/VirtualLabPage'), 'VirtualLabPage');
 const AgentControlCenterPage = lazyPage(() => import('./features/agents/pages/AgentControlCenterPage'), 'AgentControlCenterPage');
 const ShowcasePage = lazyPage(() => import('./features/showcase/pages/ShowcasePage'), 'ShowcasePage');
 const PublicShowcasePage = lazyPage(() => import('./features/showcase/pages/PublicShowcasePage'), 'PublicShowcasePage');
@@ -884,6 +886,14 @@ function AppContent() {
 
     if (path === '/knowledge-graph' || path === '/knowledge-map') {
       return <KnowledgeGraphPage onNavigate={navigate} />;
+    }
+
+    if (path === '/previous-papers' || path === '/papers') {
+      return <PreviousPapersPage onNavigate={navigate} />;
+    }
+
+    if (path === '/virtual-lab' || path === '/simulators') {
+      return <VirtualLabPage onNavigate={navigate} />;
     }
 
     if (path === '/agents' || path === '/agent-control-center') {
