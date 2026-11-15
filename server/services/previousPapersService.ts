@@ -1,8 +1,9 @@
 // Previous Papers: the student adds their own past question papers (pasted text, or a text PDF or .txt file),
 // and the page shows which of their syllabus topics are asked most, joined with their Knowledge Graph state.
 //
-// Only the split questions are kept, not the file. Scanned PDFs have no text to read and OCR is not set up on
-// this deployment, so they are refused with a clear message instead of being guessed.
+// Only the split questions are kept, not the file. A scanned PDF has no text to read on the server, so it is
+// refused with a clear message; the page can recognise its text (OCR) in the browser, and the student checks
+// that text before it is sent here as pasted text marked text_source: 'ocr'.
 import { NotFoundError, ValidationError } from '../core/exceptions';
 import { DocumentParserRegistry } from '../parsers';
 import { semesterCommandCenterService } from './semesterCommandCenterService';
@@ -18,7 +19,7 @@ export interface StoredPaper {
   title: string;
   year?: number;
   exam?: string;
-  source: 'text' | 'pdf' | 'txt';
+  source: 'text' | 'pdf' | 'txt' | 'ocr';
   questions: PaperQuestion[];
   created_at: string;
 }
@@ -41,7 +42,7 @@ async function textFromFile(file: { name?: unknown; data?: unknown }): Promise<{
     if (buf.subarray(0, 5).toString('latin1') !== '%PDF-') throw new ValidationError('That file is not a PDF.');
     const parsed = await DocumentParserRegistry.parse(buf, 'application/pdf', 'pdf', { filename: name });
     if (parsed.metadata?.is_scanned) {
-      throw new ValidationError('This PDF is a scan with no text in it. Text recognition (OCR) is not set up here, so paste the questions as text instead.');
+      throw new ValidationError('This PDF is a scan with no text in it. Choose Recognise text to read it in your browser, then check the questions before adding them.');
     }
     return { text: parsed.pages.map((p) => p.text).join('\n'), source: 'pdf' };
   }
@@ -71,7 +72,10 @@ export class PreviousPapersService {
     let text = '';
     let source: StoredPaper['source'] = 'text';
     if (body.file) ({ text, source } = await textFromFile(body.file));
-    else text = String(body.text || '');
+    else {
+      text = String(body.text || '');
+      if (body.text_source === 'ocr') source = 'ocr';
+    }
     if (text.length > 200_000) throw new ValidationError('That paper is too long. Paste one paper at a time.');
     const questions = splitQuestions(text);
     if (!questions.length) throw new ValidationError('No questions were found. Put each question on its own line, numbered like "1." or "Q1".');

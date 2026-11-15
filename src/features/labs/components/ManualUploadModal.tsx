@@ -15,7 +15,9 @@ import {
   Trash2,
   Plus,
   BookOpen,
+  ScanText,
 } from 'lucide-react';
+import { recogniseFile, joinPages, isImageFile, isPdfFile, OCR_NOTE } from '../../../lib/ocr';
 import { Button } from '../../../components/ui/button';
 import { LabCourse, LabManual, LabExperimentDetail } from '../types/labAssistantTypes';
 import { labAssistantApi } from '../api/labAssistantApi';
@@ -48,6 +50,10 @@ export function ManualUploadModal({
   const [manualTitle, setManualTitle] = useState(lab.manual_title || `${lab.name} Lab Manual`);
   const [candidateExperiments, setCandidateExperiments] = useState<Partial<LabExperimentDetail>[]>([]);
   const [isSavingManual, setIsSavingManual] = useState(false);
+  // Scanned manuals and photos: the text is recognised (OCR) in the browser, then sent as a .txt file.
+  const [canRecognise, setCanRecognise] = useState(false);
+  const [ocrNote, setOcrNote] = useState('');
+  const [ocrConfidence, setOcrConfidence] = useState<number | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -55,11 +61,12 @@ export function ManualUploadModal({
 
   const validateAndSetFile = (selectedFile: File) => {
     setError(null);
-    const validExtensions = ['pdf', 'docx', 'txt'];
+    setCanRecognise(false);
+    const validExtensions = ['pdf', 'docx', 'txt', 'png', 'jpg', 'jpeg', 'webp'];
     const ext = selectedFile.name.split('.').pop()?.toLowerCase() || '';
 
     if (!validExtensions.includes(ext)) {
-      setError(`Unsupported file format (.${ext}). Supported formats: PDF, DOCX, TXT.`);
+      setError(`Unsupported file format (.${ext}). Supported formats: PDF, DOCX, TXT, or a photo (PNG, JPG, WebP).`);
       return;
     }
 
@@ -90,11 +97,45 @@ export function ManualUploadModal({
     }
   };
 
+  const showExtraction = (result: Awaited<ReturnType<typeof labAssistantApi.uploadManual>>) => {
+    setExtractedRawText(result.raw_text);
+    setPageCount(result.page_count);
+    setCandidateExperiments(result.candidate_experiments || []);
+    setIsReviewStep(true);
+  };
+
+  const handleRecognise = async () => {
+    if (!file) return;
+    try {
+      setIsUploading(true);
+      setError(null);
+      const r = await recogniseFile(file, { onProgress: (n) => setOcrNote(n) });
+      const text = joinPages(r.pages);
+      if (!text.trim()) throw new Error('No text could be recognised in this file. Use Manual Entry instead.');
+      const bytes = new TextEncoder().encode(text);
+      let bin = '';
+      for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+      setOcrNote('Finding the experiments…');
+      const result = await labAssistantApi.uploadManual(lab.id, `data:text/plain;base64,${btoa(bin)}`, file.name.replace(/\.[^.]+$/, '') + '.txt', 'text/plain');
+      setOcrConfidence(r.confidence);
+      setCanRecognise(false);
+      showExtraction(result);
+      toast.success(`Recognised ${r.pages.length} page${r.pages.length === 1 ? '' : 's'} (confidence ${r.confidence}%) and found ${result.candidate_experiments?.length || 0} candidate experiments. Check them before saving.`);
+    } catch (err: any) {
+      setError(err?.message || 'The text could not be recognised.');
+    } finally {
+      setIsUploading(false);
+      setOcrNote('');
+    }
+  };
+
   const handleProcessUpload = async () => {
     if (!file) {
       setError('Please select a laboratory manual document first.');
       return;
     }
+    // A photo has no text of its own, so it goes straight to text recognition.
+    if (isImageFile(file)) return handleRecognise();
 
     try {
       setIsUploading(true);
@@ -116,14 +157,14 @@ export function ManualUploadModal({
         file.type || 'application/pdf'
       );
 
-      setExtractedRawText(result.raw_text);
-      setPageCount(result.page_count);
-      setCandidateExperiments(result.candidate_experiments || []);
-      setIsReviewStep(true);
+      showExtraction(result);
+      setOcrConfidence(null);
       toast.success(
         `Successfully extracted ${result.candidate_experiments?.length || 0} candidate experiments!`
       );
     } catch (err: any) {
+      // A PDF without text is most likely a scan; its text can be recognised in the browser.
+      setCanRecognise(isPdfFile(file));
       setError(
         err.message ||
           'Failed to extract text from this document. Scanned images or password-protected PDFs cannot be parsed directly. Please use Manual Entry.'
@@ -181,7 +222,7 @@ export function ManualUploadModal({
               <p className="text-xs text-gray-500">
                 {isReviewStep
                   ? 'Verify experiment titles, aims, and procedures before saving to your workspace'
-                  : 'Upload PDF, DOCX, or TXT manual. Real extraction with student correction.'}
+                  : 'Upload a PDF, DOCX or TXT manual, or a photo. Real extraction with student correction.'}
               </p>
             </div>
           </div>
@@ -200,6 +241,13 @@ export function ManualUploadModal({
               <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
               <div className="flex-1">
                 <span>{error}</span>
+                {canRecognise && (
+                  <div className="mt-1.5">
+                    <button type="button" onClick={handleRecognise} disabled={isUploading} title={OCR_NOTE} className="inline-flex items-center gap-1 text-xs font-bold text-red-800 underline hover:no-underline" data-testid="manual-recognise">
+                      <ScanText className="w-3.5 h-3.5" /> If it is a scan, recognise its text in your browser →
+                    </button>
+                  </div>
+                )}
                 <div className="mt-1">
                   <button
                     type="button"
@@ -235,7 +283,7 @@ export function ManualUploadModal({
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept=".pdf,.docx,.txt"
+                  accept=".pdf,.docx,.txt,.png,.jpg,.jpeg,.webp"
                   className="hidden"
                   onChange={(e) => {
                     if (e.target.files && e.target.files[0]) {
@@ -265,7 +313,7 @@ export function ManualUploadModal({
                       Click to choose manual or drag and drop here
                     </h4>
                     <p className="text-xs text-gray-500 mt-1">
-                      Supports PDF, DOCX, and TXT manuals up to 20MB
+                      Supports PDF, DOCX and TXT manuals up to 20MB. Scans and photos are read in your browser.
                     </p>
                     <div className="flex items-center justify-center gap-2 mt-3 text-[11px] text-gray-400 font-medium">
                       <span>• University Syllabus</span>
@@ -298,6 +346,13 @@ export function ManualUploadModal({
             </div>
           ) : (
             /* STEP 2: REVIEW & EDIT EXTRACTED EXPERIMENTS */
+            <>
+            {ocrConfidence !== null && (
+              <p className="mb-3 flex items-start gap-2 rounded-xl bg-amber-50 border border-amber-200 p-3 text-xs text-amber-900" data-testid="manual-ocr-note">
+                <ScanText className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>This text was recognised from a scan in your browser (confidence {ocrConfidence}%). Recognition makes mistakes, so check each experiment before saving.</span>
+              </p>
+            )}
             <div className="space-y-4">
               <div className="flex items-center justify-between pb-2 border-b border-gray-100">
                 <div>
@@ -387,6 +442,7 @@ export function ManualUploadModal({
                 ))}
               </div>
             </div>
+            </>
           )}
         </div>
 
@@ -405,7 +461,7 @@ export function ManualUploadModal({
               >
                 {isUploading ? (
                   <>
-                    <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> Extracting...
+                    <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> {ocrNote || 'Extracting...'}
                   </>
                 ) : (
                   <>

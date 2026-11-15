@@ -127,6 +127,22 @@ export const documentsApi = {
     return apiClient.post(`/documents/${documentId}/notes`, options);
   },
 
+  /** The stored file itself, for reading in the browser (for example, recognising a scan's text). */
+  getFileBlob: async (documentId: string): Promise<Blob> => {
+    const token = apiClient.getToken();
+    const res = await fetch(`/api/v1/documents/${documentId}/file`, { headers: token ? { Authorization: `Bearer ${token}` } : {}, credentials: 'include' });
+    if (!res.ok) throw new Error('The file could not be downloaded.');
+    return res.blob();
+  },
+
+  /** Saves text recognised (OCR) in the browser for a scanned PDF or image, so it can be searched. */
+  saveRecognisedText: async (
+    documentId: string,
+    body: { pages: { page_number: number; text: string; confidence: number }[]; page_count: number }
+  ): Promise<Document> => {
+    return apiClient.post<Document>(`/documents/${documentId}/recognised-text`, body);
+  },
+
   retryProcessing: async (
     documentId: string
   ): Promise<{ success: boolean; status: string }> => {
