@@ -58,6 +58,8 @@ import {
   CalendarClock,
   BrainCircuit,
   Presentation,
+  Sunrise,
+  Workflow,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -97,6 +99,18 @@ export const NAV_SECTIONS: NavSection[] = [
       { name: 'Unified Progress', href: '/progress', icon: TrendingUp },
       { name: 'Learning Analytics', href: '/analytics', icon: Activity, match: ['/learning-analytics'] },
       { name: 'Notifications', href: '/notifications', icon: Bell },
+    ],
+  },
+  {
+    id: 'personal-intelligence',
+    title: 'Personal Intelligence',
+    icon: Brain,
+    items: [
+      { name: 'Daily Briefing', href: '/briefing', icon: Sunrise, match: ['/daily-briefing'] },
+      { name: 'My AI Brain', href: '/ai-brain', icon: Brain, isAi: true },
+      { name: 'Knowledge Graph', href: '/knowledge-graph', icon: Network, match: ['/knowledge-map'] },
+      { name: 'AI Agent Control Center', href: '/agents', icon: Workflow, isAi: true, match: ['/agent-control-center'] },
+      { name: 'AI Memory', href: '/ai-memory', icon: BrainCircuit, isAi: true, match: ['/profile/ai-memory'] },
     ],
   },
   {
@@ -197,7 +211,6 @@ export const NAV_SECTIONS: NavSection[] = [
     icon: UserRound,
     items: [
       { name: 'Student Profile', href: '/profile', icon: User },
-      { name: 'AI Memory', href: '/ai-memory', icon: BrainCircuit, isAi: true, match: ['/profile/ai-memory'] },
       { name: 'Learning Goals', href: '/goals', icon: Target, match: ['/learning-goals'] },
       { name: 'Portfolio Showcase', href: '/portfolio', icon: Presentation, match: ['/showcase', '/profile/portfolio'] },
       { name: 'Achievements', href: '/profile/achievements', icon: Medal },

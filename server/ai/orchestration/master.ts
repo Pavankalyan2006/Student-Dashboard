@@ -1,4 +1,5 @@
 import { db } from '../../db/database';
+import { applyStudentPrefs, disabledFor } from './studentAgents';
 import { AgentRouter } from './router';
 import { TaskPlanner } from './planner';
 import { AgentExecutor } from './executor';
@@ -132,9 +133,19 @@ export class MasterAgent {
 
       // 3. Classify intent and route to specialized agents
       const intent = AgentRouter.route(userMessage, agentContext, explicitMode);
+      // Specialists the student switched off in the AI Agent Control Center are left out of their requests.
+      const studentPrefs = applyStudentPrefs(studentId, intent.targetAgents);
+      intent.targetAgents = studentPrefs.agents;
 
       // 4. Create Task Plan DAG
       const plan = TaskPlanner.plan(workflowId, intent, userMessage, agentContext);
+      // The planner builds steps per intent, so drop any step whose agent the student switched off.
+      const offAgents = disabledFor(studentId);
+      if (offAgents.size) {
+        const removed = new Set(plan.tasks.filter((t) => offAgents.has(t.agent)).map((t) => t.id));
+        for (const t of plan.tasks) if (removed.has(t.id) && !studentPrefs.skipped.includes(t.agent)) studentPrefs.skipped.push(t.agent);
+        plan.tasks = plan.tasks.filter((t) => !removed.has(t.id)).map((t) => ({ ...t, dependencies: t.dependencies.filter((d) => !removed.has(d)) }));
+      }
 
       // Map to frontend AgentPlanItem format
       const frontendPlanSteps: AgentPlanItem[] = plan.tasks.map((t, idx) => ({
@@ -146,7 +157,7 @@ export class MasterAgent {
 
       yield {
         type: 'agent_plan',
-        data: { steps: frontendPlanSteps, intent: intent.intent, complexity: intent.complexity },
+        data: { steps: frontendPlanSteps, intent: intent.intent, complexity: intent.complexity, skipped_agents: studentPrefs.skipped },
       };
 
       // Persist workflow in database

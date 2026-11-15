@@ -177,8 +177,11 @@ describe('PHASE 15: Super Admin, Security Hardening, Observability & Production 
         ToolRegistry.execute(adminOnlyTool, {}, { studentId, role: 'STUDENT' })
       ).rejects.toThrow(AuthorizationError);
 
-      // A SUPER_ADMIN calling this tool succeeds
-      const res = await ToolRegistry.execute(adminOnlyTool, {}, { studentId: adminId, role: 'SUPER_ADMIN' });
+      // A SUPER_ADMIN calling this tool still needs to approve it, because it is marked confirmationRequired.
+      await expect(ToolRegistry.execute(adminOnlyTool, {}, { studentId: adminId, role: 'SUPER_ADMIN' })).rejects.toMatchObject({ code: 'APPROVAL_REQUIRED', statusCode: 409 });
+
+      // With approval, a SUPER_ADMIN calling this tool succeeds
+      const res = await ToolRegistry.execute(adminOnlyTool, {}, { studentId: adminId, role: 'SUPER_ADMIN', confirmed: true });
       expect(res.status).toBe('ok');
     });
   });

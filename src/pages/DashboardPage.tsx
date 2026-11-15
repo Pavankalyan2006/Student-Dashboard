@@ -31,6 +31,7 @@ import { ExternalActivityWidget } from '../features/dashboard/components/Externa
 import { onboardingApi } from '../api/onboardingApi';
 import { DashboardProfileSummary } from '../features/dashboard/components/DashboardProfileSummary';
 import { Sparkles, ArrowRight } from 'lucide-react';
+import { BriefingCard } from '../features/briefing/components/BriefingCard';
 
 export function DashboardPage({ onNavigate }: { onNavigate: (path: string) => void }) {
   const { data, isLoading, isError, error, refetch, toggleTodayTask } = useDashboard();
@@ -106,6 +107,9 @@ export function DashboardPage({ onNavigate }: { onNavigate: (path: string) => vo
 
       {/* Pick up where you left off */}
       <ContinueLearning item={data.continue_learning} onNavigate={onNavigate} />
+
+      {/* Today's briefing from the student's own deadlines, plans and practice */}
+      <BriefingCard onNavigate={onNavigate} />
 
       <QuickActions onNavigate={onNavigate} />
 

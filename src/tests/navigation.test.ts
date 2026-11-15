@@ -11,6 +11,7 @@ describe('Navigation & shell', () => {
   it('groups modules into the redesign categories', () => {
     expect(NAV_SECTIONS.map((s) => s.title)).toEqual([
       'Overview',
+      'Personal Intelligence',
       'Learn',
       'Practice',
       'AI Labs',

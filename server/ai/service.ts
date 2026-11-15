@@ -120,7 +120,7 @@ export class AIService {
   public static async executeTool(
     toolName: string,
     params: Record<string, any>,
-    context: { studentId: string; role: UserRole }
+    context: { studentId: string; role: UserRole; confirmed?: boolean }
   ): Promise<any> {
     return ToolRegistry.execute(toolName, params, context);
   }
