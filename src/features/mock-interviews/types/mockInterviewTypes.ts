@@ -13,6 +13,8 @@ export type MockInterviewCategory =
   | 'RESUME'
   | 'INTERNSHIP'
   | 'GRADUATE_JOB'
+  | 'PROJECT'
+  | 'COMMUNICATION'
   | 'CUSTOM';
 
 export type TargetRole =
@@ -176,6 +178,18 @@ export interface MockInterviewAnswerEntity {
   created_at: string;
 }
 
+export interface DeliveryMetrics {
+  words: number;
+  sentences: number;
+  avg_sentence_words: number;
+  filler_words: number;
+  fillers_found: string[];
+  structure_markers: number;
+  star_parts: string[];
+  words_per_minute?: number;
+  notes: string[];
+}
+
 export interface MockInterviewReport {
   overall_score: number;
   scoring_definition: string;
@@ -203,7 +217,19 @@ export interface MockInterviewReport {
     model_answer: string;
     code_execution_summary?: string;
     sql_execution_summary?: string;
+    delivery?: DeliveryMetrics;
   }>;
+  delivery_summary?: {
+    answers_measured: number;
+    avg_words: number;
+    total_filler_words: number;
+    answers_with_structure: number;
+    avg_words_per_minute?: number;
+    time_used_minutes: number;
+    time_planned_minutes: number;
+    time_note: string;
+    disclaimer: string;
+  };
   recommended_learning_modules: Array<{
     id: string;
     module_name: string;
@@ -247,7 +273,7 @@ export interface MockInterviewAnalytics {
   scoring_definition: string;
   is_onboarding: boolean;
   score_trajectory: Array<{ date: string; score: number; category: string }>;
-  category_breakdown: Array<{ category: string; count: number; average_score: number }>;
+  category_breakdown: Array<{ category: string; count: number; average_score: number; first_score?: number; latest_score?: number; change?: number | null }>;
   strongest_topics: string[];
   topics_requiring_improvement: string[];
   recent_sessions: Array<{

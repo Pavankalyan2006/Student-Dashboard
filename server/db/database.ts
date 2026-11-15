@@ -4645,6 +4645,14 @@ print(power_mod(2, 10, 1000))  # Output: 24
     return { bookmarked: true };
   }
 
+  /** How much of one course the student has finished: lessons completed out of the course's lessons. */
+  public async getCourseCompletion(studentId: string, courseId: string): Promise<{ enrolled: boolean; lessons_total: number; lessons_completed: number }> {
+    await this.initialize();
+    const lessons = Array.from(this.lessons.values()).filter((l) => l.course_id === courseId);
+    const done = lessons.filter((l) => this.lessonProgress.get(`${studentId}_${l.id}`)?.status === 'COMPLETED').length;
+    return { enrolled: this.enrollments.has(`${studentId}_${courseId}`), lessons_total: lessons.length, lessons_completed: done };
+  }
+
   public async getLessonById(lessonId: string, studentId?: string): Promise<LessonWithNavigation | null> {
     await this.initialize();
     const lesson = this.lessons.get(lessonId);

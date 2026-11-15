@@ -2,6 +2,7 @@
  * Phase 12 - Seed Data for Skills Bank, Career Roles & Initial Resume
  */
 
+import { PHASE5_CAREER_TRACKS } from './seedCareerTracks';
 import {
   Skill,
   CareerRole,
@@ -426,6 +427,8 @@ export const SEED_CAREER_ROLES: CareerRole[] = [
     created_at: '2026-03-01T00:00:00Z',
     updated_at: '2026-03-01T00:00:00Z',
   },
+  // Phase 5: tracks the University OS brief lists that were missing.
+  ...PHASE5_CAREER_TRACKS,
 ];
 
 // Initial Demo Resume for Student std_01j8k9x2p4 (Alex Chen)

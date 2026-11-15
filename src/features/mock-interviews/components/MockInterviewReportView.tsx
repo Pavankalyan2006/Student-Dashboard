@@ -264,6 +264,20 @@ ${report.communication_observations.map((c) => `- ${c}`).join('\n')}
         </div>
       </div>
 
+      {report.delivery_summary && report.delivery_summary.answers_measured > 0 && (
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-3" data-testid="delivery-summary">
+          <h3 className="font-bold text-sm text-slate-900">Delivery and time</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+            <div className="rounded-xl bg-slate-50 p-3"><span className="block text-slate-500">Average length</span><b className="text-slate-900">{report.delivery_summary.avg_words} words</b></div>
+            <div className="rounded-xl bg-slate-50 p-3"><span className="block text-slate-500">Filler words</span><b className="text-slate-900">{report.delivery_summary.total_filler_words}</b></div>
+            <div className="rounded-xl bg-slate-50 p-3"><span className="block text-slate-500">Structured answers</span><b className="text-slate-900">{report.delivery_summary.answers_with_structure} of {report.delivery_summary.answers_measured}</b></div>
+            <div className="rounded-xl bg-slate-50 p-3"><span className="block text-slate-500">Pace</span><b className="text-slate-900">{report.delivery_summary.avg_words_per_minute ? `${report.delivery_summary.avg_words_per_minute} words/min` : 'Not timed'}</b></div>
+          </div>
+          <p className="text-xs text-slate-700">{report.delivery_summary.time_note}</p>
+          <p className="text-[11px] text-slate-500">{report.delivery_summary.disclaimer}</p>
+        </div>
+      )}
+
       {/* Per-Question Detailed Feedback Accordions */}
       <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
         <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2">
@@ -318,6 +332,15 @@ ${report.communication_observations.map((c) => `- ${c}`).join('\n')}
                       <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 whitespace-pre-wrap font-sans">
                         {q.student_answer}
                       </div>
+                      {q.delivery && (
+                        <p className="mt-1.5 text-[11px] text-slate-500">
+                          {q.delivery.words} words, {q.delivery.sentences} sentence{q.delivery.sentences === 1 ? '' : 's'}
+                          {q.delivery.filler_words ? `, ${q.delivery.filler_words} filler word${q.delivery.filler_words === 1 ? '' : 's'} (${q.delivery.fillers_found.join(', ')})` : ''}
+                          {q.delivery.words_per_minute ? `, about ${q.delivery.words_per_minute} words/min` : ''}
+                          {q.delivery.star_parts.length ? `. STAR parts found: ${q.delivery.star_parts.join(', ')}` : ''}.
+                          {q.delivery.notes.map((n, ni) => <span key={ni} className="block text-amber-700">{n}</span>)}
+                        </p>
+                      )}
                     </div>
 
                     {/* Strengths & Missing Concepts */}

@@ -652,6 +652,8 @@ export interface KnowledgeGraphData {
 // ==========================================
 export type ApplicationStatus =
   | 'SAVED'
+  | 'INTERESTED'
+  | 'PREPARING'
   | 'APPLIED'
   | 'ASSESSMENT'
   | 'INTERVIEW'
@@ -660,7 +662,15 @@ export type ApplicationStatus =
   | 'OFFER'
   | 'ACCEPTED'
   | 'REJECTED'
-  | 'WITHDRAWN';
+  | 'WITHDRAWN'
+  | 'CLOSED';
+
+/** The kinds of opportunity the tracker can hold (Opportunity Intelligence, Module 17). */
+export const OPPORTUNITY_TYPES = [
+  'INTERNSHIP', 'JOB', 'SCHOLARSHIP', 'FELLOWSHIP', 'RESEARCH_INTERNSHIP', 'GRADUATE_PROGRAM',
+  'OPEN_SOURCE_PROGRAM', 'STARTUP_PROGRAM', 'ENTREPRENEURSHIP', 'INTERNATIONAL',
+] as const;
+export type OpportunityType = (typeof OPPORTUNITY_TYPES)[number];
 
 export interface ApplicationTimelineEvent {
   id: string;
@@ -696,6 +706,8 @@ export interface InternshipApplication {
   contact_person?: string;
   notes: string;
   timeline: ApplicationTimelineEvent[];
+  /** What kind of opportunity this is. Older records have none and are internships or jobs. */
+  opportunity_type?: OpportunityType;
   /** The job description the student pasted, kept so the skill comparison can be re-run. */
   job_description?: string;
   jd_analysis?: JobDescriptionSkillAnalysis;

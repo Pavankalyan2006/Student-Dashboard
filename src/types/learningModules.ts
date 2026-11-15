@@ -603,6 +603,8 @@ export interface KnowledgeGraphData {
 
 export type ApplicationStatus =
   | 'SAVED'
+  | 'INTERESTED'
+  | 'PREPARING'
   | 'APPLIED'
   | 'ASSESSMENT'
   | 'INTERVIEW'
@@ -611,7 +613,14 @@ export type ApplicationStatus =
   | 'OFFER'
   | 'ACCEPTED'
   | 'REJECTED'
-  | 'WITHDRAWN';
+  | 'WITHDRAWN'
+  | 'CLOSED';
+
+export const OPPORTUNITY_TYPES = [
+  'INTERNSHIP', 'JOB', 'SCHOLARSHIP', 'FELLOWSHIP', 'RESEARCH_INTERNSHIP', 'GRADUATE_PROGRAM',
+  'OPEN_SOURCE_PROGRAM', 'STARTUP_PROGRAM', 'ENTREPRENEURSHIP', 'INTERNATIONAL',
+] as const;
+export type OpportunityType = (typeof OPPORTUNITY_TYPES)[number];
 
 export interface ApplicationTimelineEvent {
   id: string;
@@ -641,6 +650,7 @@ export interface InternshipApplication {
   deadline?: string;
   application_url?: string;
   status: ApplicationStatus;
+  opportunity_type?: OpportunityType;
   salary_range?: string;
   interview_date?: string;
   assessment_date?: string;

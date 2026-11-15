@@ -9,8 +9,11 @@ import { randomBytes } from 'crypto';
 import { db } from '../db/database';
 import { ValidationError, NotFoundError } from '../core/exceptions';
 
-export type ShowcaseSection = 'skills' | 'projects' | 'certificates' | 'achievements' | 'github';
-export const SHOWCASE_SECTIONS: ShowcaseSection[] = ['skills', 'projects', 'certificates', 'achievements', 'github'];
+export type ShowcaseSection = 'education' | 'skills' | 'projects' | 'research' | 'competitions' | 'certificates' | 'achievements' | 'github';
+export const SHOWCASE_SECTIONS: ShowcaseSection[] = ['education', 'skills', 'projects', 'research', 'competitions', 'certificates', 'achievements', 'github'];
+// Sections added later start switched off for the public link, so nothing new is published without the student
+// choosing it. Education (branch and semester) was always shown before it had a switch, so it starts on.
+const DEFAULT_SECTIONS: Record<ShowcaseSection, boolean> = { education: true, skills: true, projects: true, research: false, competitions: false, certificates: true, achievements: true, github: true };
 
 export interface ShowcaseSettings {
   student_id: string;
@@ -33,6 +36,8 @@ export interface ShowcaseView {
   certificates: { title: string; issuer: string; date: string; verify_path: string }[];
   achievements: { name: string; description: string; earned_at: string }[];
   github: { name: string; description: string; language: string; stars: number; url: string }[];
+  research: { title: string; topic: string; type: string; status: string; question?: string }[];
+  competitions: { event: string; kind: string; outcome: string; rank?: number; date: string; project?: string; proof_url?: string }[];
 }
 
 export const showcaseStores: { settings: Map<string, ShowcaseSettings> } = { settings: new Map() };
@@ -44,7 +49,7 @@ export function defaultShowcase(studentId: string): ShowcaseSettings {
     slug: null,
     show_name: true,
     headline: '',
-    sections: { skills: true, projects: true, certificates: true, achievements: true, github: true },
+    sections: { ...DEFAULT_SECTIONS },
     updated_at: null,
   };
 }
@@ -63,7 +68,10 @@ async function safe<T>(p: () => Promise<T> | T, fallback: T): Promise<T> {
 
 export class ShowcaseService {
   static get(studentId: string): ShowcaseSettings {
-    return showcaseStores.settings.get(studentId) || defaultShowcase(studentId);
+    const s = showcaseStores.settings.get(studentId);
+    if (!s) return defaultShowcase(studentId);
+    // Settings saved before a section existed get that section's default.
+    return { ...s, sections: { ...DEFAULT_SECTIONS, ...s.sections } };
   }
 
   static update(studentId: string, input: any): ShowcaseSettings {
@@ -113,13 +121,16 @@ export class ShowcaseService {
     const { GitHubService } = await import('./githubService');
     const profile: any = await safe(async () => (await StudentProfileService.getProfile(studentId)).profile, null);
 
-    const [projects, portfolio, certificates, achievements, repos] = await Promise.all([
+    const { CompetitionHubService } = await import('./competitionHubService');
+    const [projects, portfolio, certificates, achievements, repos, research] = await Promise.all([
       on('projects') ? safe(() => db.getProjects(studentId), [] as any[]) : [],
       on('projects') ? safe(() => OnboardingService.getPortfolioProjects(studentId), [] as any[]) : [],
       on('certificates') ? safe(() => db.getCertificates(studentId), [] as any[]) : [],
       on('achievements') ? safe(() => db.getStudentAchievements(studentId), [] as any[]) : [],
       on('github') ? safe(() => GitHubService.listFeatured(studentId), [] as any[]) : [],
+      on('research') ? safe(() => db.getResearchProjects(studentId), [] as any[]) : [],
     ]);
+    const competitions = on('competitions') ? await safe(async () => CompetitionHubService.results(studentId), [] as ReturnType<typeof CompetitionHubService.results>) : [];
 
     const seenTitles = new Set<string>();
     const projectRows: ShowcaseView['projects'] = [];
@@ -140,8 +151,8 @@ export class ShowcaseService {
     return {
       name: !publicView || settings.show_name ? clip(student.name, 100) : null,
       headline: settings.headline,
-      branch: profile?.academic?.branch || student.branch || '',
-      semester: profile?.academic?.current_semester || student.semester || null,
+      branch: on('education') ? profile?.academic?.branch || student.branch || '' : '',
+      semester: on('education') ? profile?.academic?.current_semester || student.semester || null : null,
       target_roles: (profile?.career?.target_roles || []).slice(0, 4),
       skills: on('skills') ? (profile?.skills?.skills || []).slice(0, 24).map((s: any) => ({ name: clip(s.name, 40), level: s.proficiency ? String(s.proficiency).toLowerCase() : undefined })) : [],
       projects: projectRows.slice(0, 12),
@@ -155,6 +166,12 @@ export class ShowcaseService {
         .filter((r: any) => r.student_id === studentId && (!publicView || r.visibility === 'PUBLIC'))
         .slice(0, 8)
         .map((r: any) => ({ name: clip(r.featured_metadata?.title || r.name, 80), description: clip(r.featured_metadata?.custom_description || r.description, 300), language: clip(r.language, 30), stars: Number(r.stars) || 0, url: httpUrl(r.url) || '' })),
+      research: research
+        .filter((r: any) => r.student_id === studentId)
+        .slice(0, 8)
+        .map((r: any) => ({ title: clip(r.title, 160), topic: clip(r.topic || r.domain, 120), type: clip(String(r.research_type || '').toLowerCase().replace(/_/g, ' '), 40), status: clip(String(r.status || '').toLowerCase().replace(/_/g, ' '), 40), question: r.research_question ? clip(r.research_question, 300) : undefined })),
+      // Results the student recorded in the Competition Hub. The page labels them as self-reported.
+      competitions: competitions.slice(0, 12).map((c) => ({ event: clip(c.event, 160), kind: clip(c.kind.toLowerCase().replace(/_/g, ' '), 40), outcome: clip(c.outcome.toLowerCase().replace(/_/g, ' '), 40), rank: c.rank, date: c.date, project: c.project ? clip(c.project, 160) : undefined, proof_url: httpUrl(c.proof_url) })),
     };
   }
 }

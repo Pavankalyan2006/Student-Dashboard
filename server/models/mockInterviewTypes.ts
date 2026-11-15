@@ -13,6 +13,8 @@ export type MockInterviewCategory =
   | 'RESUME'
   | 'INTERNSHIP'
   | 'GRADUATE_JOB'
+  | 'PROJECT'
+  | 'COMMUNICATION'
   | 'CUSTOM';
 
 export type TargetRole =
@@ -157,6 +159,8 @@ export interface MockInterviewAnswerEntity {
     method?: 'AI_MODEL' | 'KEYWORD_MATCH' | 'SKIPPED';
   };
   created_at: string;
+  /** Counts from the answer text and timing (see interviewDelivery.ts). Not a judgement of confidence. */
+  delivery?: import('../services/interviewDelivery').DeliveryMetrics;
 }
 
 export interface MockInterviewReport {

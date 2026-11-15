@@ -30,6 +30,52 @@ export function skillMatches(requirement: string, studentSkills: string[]): bool
   );
 }
 
+/** What a roadmap step counts as done, measured from the student's real activity on the platform. */
+export const EVIDENCE_TARGETS = { dsa_solved: 10, projects: 1, interviews: 1 };
+
+export interface RoadmapActivity {
+  courses: Record<string, { lessons_total: number; lessons_completed: number }>;
+  dsa_solved: number;
+  projects: number;
+  interviews_completed: number;
+  /** Skills with evidence other than the student's own declaration (a project, course, quiz or verified record). */
+  evidenced_skills: string[];
+}
+
+export interface StepEvidence {
+  verified: boolean;
+  detail: string;
+}
+
+/**
+ * Pure: whether a roadmap step is backed by real activity. Learning-path stages map to the role skill at the same
+ * position; courses to finishing every lesson; practice to solved DSA problems; projects and interviews to records
+ * the student made. A step the student only marked as done is not verified.
+ */
+export function stepEvidence(step: Pick<CareerRoadmapStep, 'source_type' | 'source_id'>, role: Pick<CareerRole, 'id' | 'skills'> | null, a: RoadmapActivity): StepEvidence {
+  switch (step.source_type) {
+    case 'COURSE': {
+      const c = a.courses[step.source_id || ''];
+      if (!c || c.lessons_total === 0) return { verified: false, detail: 'Not started' };
+      const ok = c.lessons_completed >= c.lessons_total;
+      return { verified: ok, detail: `${c.lessons_completed} of ${c.lessons_total} lessons completed` };
+    }
+    case 'DSA':
+      return { verified: a.dsa_solved >= EVIDENCE_TARGETS.dsa_solved, detail: `${a.dsa_solved} of ${EVIDENCE_TARGETS.dsa_solved} DSA problems solved` };
+    case 'PROJECT':
+      return { verified: a.projects >= EVIDENCE_TARGETS.projects, detail: a.projects ? `${a.projects} project${a.projects === 1 ? '' : 's'} on the platform` : 'No project created yet' };
+    case 'PLACEMENT':
+      return { verified: a.interviews_completed >= EVIDENCE_TARGETS.interviews, detail: a.interviews_completed ? `${a.interviews_completed} mock interview${a.interviews_completed === 1 ? '' : 's'} completed` : 'No mock interview completed yet' };
+    default: {
+      const m = role ? new RegExp(`^${role.id}_path_(\\d+)$`).exec(step.source_id || '') : null;
+      const skill = m && role ? role.skills[Number(m[1]) - 1] : undefined;
+      if (!skill) return { verified: false, detail: 'No activity is linked to this stage' };
+      const ok = skillMatches(skill, a.evidenced_skills);
+      return { verified: ok, detail: ok ? `Evidence recorded for ${skill}` : `No evidence yet for ${skill} (a project, course or quiz adds it)` };
+    }
+  }
+}
+
 export class CareerService {
   private static careerProfiles: Map<string, CareerProfileData> = new Map();
 
@@ -251,14 +297,64 @@ export class CareerService {
     };
 
     await db.saveCareerRoadmap(roadmap);
-    return roadmap;
+    return this.withEvidence(studentId, roadmap);
+  }
+
+  /** Reads the activity a roadmap is measured against. Each source fails soft to "no activity". */
+  private static async roadmapActivity(studentId: string, roadmaps: CareerRoadmap[]): Promise<RoadmapActivity> {
+    const safe = async <T>(fn: () => Promise<T>, f: T): Promise<T> => {
+      try {
+        return await fn();
+      } catch {
+        return f;
+      }
+    };
+    const courseIds = Array.from(new Set(roadmaps.flatMap((r) => r.steps.filter((s) => s.source_type === 'COURSE' && s.source_id).map((s) => s.source_id as string))));
+    const courses: RoadmapActivity['courses'] = {};
+    for (const id of courseIds) courses[id] = await safe(() => db.getCourseCompletion(studentId, id), { enrolled: false, lessons_total: 0, lessons_completed: 0 });
+    const [dsa, projects, sessions, skills, evidence] = await Promise.all([
+      safe(() => db.getDSAProgress(studentId), null as any),
+      safe(() => db.getProjects(studentId), [] as any[]),
+      safe(() => db.getMockInterviewSessions(studentId), [] as any[]),
+      safe(() => db.getStudentSkills(studentId), [] as any[]),
+      safe(() => db.getSkillEvidence(studentId), [] as any[]),
+    ]);
+    const evidencedIds = new Set(evidence.filter((e: any) => e.source_type !== 'STUDENT_DECLARED').map((e: any) => e.skill_id));
+    return {
+      courses,
+      dsa_solved: dsa?.problems_solved?.length || 0,
+      projects: (projects || []).filter((p: any) => !p.student_id || p.student_id === studentId).length,
+      interviews_completed: (sessions || []).filter((x: any) => x.student_id === studentId && x.status === 'COMPLETED').length,
+      evidenced_skills: skills.filter((sk: any) => evidencedIds.has(sk.skill_id) || sk.confidence === 'VERIFIED').map((sk: any) => sk.skill_name),
+    };
+  }
+
+  /** Adds evidence to each step and a progress count that only includes verified steps. */
+  private static async withEvidence<T extends CareerRoadmap | CareerRoadmap[]>(studentId: string, input: T): Promise<T> {
+    const list = (Array.isArray(input) ? input : [input]) as CareerRoadmap[];
+    const activity = await this.roadmapActivity(studentId, list);
+    const out = [];
+    for (const r of list) {
+      const role = await db.getCareerRoleById(r.role_id).catch(() => null);
+      const steps = r.steps.map((s) => ({ ...s, evidence: stepEvidence(s, role, activity) }));
+      const done = steps.filter((s) => s.evidence.verified).length;
+      out.push({
+        ...r,
+        steps,
+        // The roadmap is complete only when every step is backed by activity, not when it is ticked off.
+        status: steps.length > 0 && done === steps.length ? ('COMPLETED' as const) : ('IN_PROGRESS' as const),
+        verified_progress: { done, total: steps.length, percent: steps.length ? Math.round((done / steps.length) * 100) : 0 },
+        self_marked_done: steps.filter((s) => s.status === 'COMPLETED').length,
+      });
+    }
+    return (Array.isArray(input) ? out : out[0]) as unknown as T;
   }
 
   /**
    * List roadmaps for the student
    */
   public static async listRoadmaps(studentId: string): Promise<CareerRoadmap[]> {
-    return await db.getCareerRoadmaps(studentId);
+    return this.withEvidence(studentId, await db.getCareerRoadmaps(studentId));
   }
 
   /**
@@ -269,7 +365,7 @@ export class CareerService {
     if (!roadmap) {
       throw new NotFoundError(`Career roadmap '${roadmapId}' not found`);
     }
-    return roadmap;
+    return this.withEvidence(studentId, roadmap);
   }
 
   /**
@@ -281,7 +377,11 @@ export class CareerService {
     stepId: string,
     status: RoadmapStepStatus
   ): Promise<CareerRoadmap> {
-    const roadmap = await this.getRoadmap(roadmapId, studentId);
+    if (!['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED'].includes(status as string)) {
+      throw new ValidationError('status must be NOT_STARTED, IN_PROGRESS or COMPLETED');
+    }
+    const roadmap = await db.getCareerRoadmapById(roadmapId, studentId);
+    if (!roadmap) throw new NotFoundError(`Career roadmap '${roadmapId}' not found`);
     const step = roadmap.steps.find((s) => s.id === stepId);
     if (!step) {
       throw new NotFoundError(`Roadmap step '${stepId}' not found`);
@@ -297,7 +397,7 @@ export class CareerService {
     }
 
     await db.saveCareerRoadmap(roadmap);
-    return roadmap;
+    return this.withEvidence(studentId, roadmap);
   }
 
   /**
@@ -475,7 +575,7 @@ export class CareerService {
 
     const today = new Date(new Date().toDateString()).getTime();
     for (const app of applications) {
-      if (['REJECTED', 'WITHDRAWN', 'OFFER', 'ACCEPTED'].includes(String(app.status))) continue;
+      if (['REJECTED', 'WITHDRAWN', 'CLOSED', 'OFFER', 'ACCEPTED'].includes(String(app.status))) continue;
       const future = (d?: string) => !!d && new Date(d).getTime() >= today;
       if (future(app.interview_date)) {
         upcomingDeadlines.push({

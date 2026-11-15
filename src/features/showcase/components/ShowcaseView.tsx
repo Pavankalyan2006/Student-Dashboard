@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Award, BadgeCheck, ExternalLink, Github, Hammer, Star, Sparkles } from 'lucide-react';
+import { Award, BadgeCheck, ExternalLink, Github, Hammer, Star, Sparkles, FlaskConical, Trophy } from 'lucide-react';
 
 export interface ShowcaseData {
   name: string | null;
@@ -12,7 +12,11 @@ export interface ShowcaseData {
   certificates: { title: string; issuer: string; date: string; verify_path: string }[];
   achievements: { name: string; description: string; earned_at: string }[];
   github: { name: string; description: string; language: string; stars: number; url: string }[];
+  research?: { title: string; topic: string; type: string; status: string; question?: string }[];
+  competitions?: { event: string; kind: string; outcome: string; rank?: number; date: string; project?: string; proof_url?: string }[];
 }
+
+export type ShowcaseSectionKey = 'education' | 'skills' | 'projects' | 'research' | 'competitions' | 'certificates' | 'achievements' | 'github';
 
 const Ext = ({ href, children }: { href: string; children: React.ReactNode }) => (
   <a href={href} target="_blank" rel="noopener noreferrer nofollow" className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:underline">
@@ -30,10 +34,12 @@ function Section({ title, icon, children, testId }: { title: string; icon: React
 }
 
 /** Renders a showcase. Used for the owner's preview and for the public link, so both always match. */
-export function ShowcaseView({ data, sections }: { data: ShowcaseData; sections?: Partial<Record<'skills' | 'projects' | 'certificates' | 'achievements' | 'github', boolean>> }) {
+export function ShowcaseView({ data, sections }: { data: ShowcaseData; sections?: Partial<Record<ShowcaseSectionKey, boolean>> }) {
   const show = (k: keyof NonNullable<typeof sections>) => !sections || sections[k] !== false;
-  const sub = [data.branch, data.semester ? `Semester ${data.semester}` : ''].filter(Boolean).join(' · ');
-  const empty = !data.skills.length && !data.projects.length && !data.certificates.length && !data.achievements.length && !data.github.length;
+  const research = data.research || [];
+  const competitions = data.competitions || [];
+  const sub = show('education') ? [data.branch, data.semester ? `Semester ${data.semester}` : ''].filter(Boolean).join(' · ') : '';
+  const empty = !data.skills.length && !data.projects.length && !data.certificates.length && !data.achievements.length && !data.github.length && !research.length && !competitions.length;
 
   return (
     <div className="space-y-8">
@@ -77,6 +83,38 @@ export function ShowcaseView({ data, sections }: { data: ShowcaseData; sections?
               </article>
             ))}
           </div>
+        </Section>
+      )}
+
+      {show('research') && research.length > 0 && (
+        <Section title="Research" icon={<FlaskConical className="h-4 w-4" />} testId="showcase-research">
+          <div className="grid gap-3 md:grid-cols-2">
+            {research.map((r) => (
+              <article key={r.title} className="rounded-2xl border border-slate-200 bg-white p-4">
+                <h3 className="font-semibold text-slate-900">{r.title}</h3>
+                <p className="mt-0.5 text-xs text-slate-500">{[r.topic, r.type, r.status].filter(Boolean).join(' · ')}</p>
+                {r.question && <p className="mt-1 text-sm text-slate-600">{r.question}</p>}
+              </article>
+            ))}
+          </div>
+        </Section>
+      )}
+
+      {show('competitions') && competitions.length > 0 && (
+        <Section title="Hackathons and competitions" icon={<Trophy className="h-4 w-4" />} testId="showcase-competitions">
+          <ul className="divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-white">
+            {competitions.map((c) => (
+              <li key={`${c.event}-${c.date}`} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
+                <span>
+                  <span className="block text-sm font-medium text-slate-900">{c.event}</span>
+                  <span className="text-xs text-slate-500">
+                    {c.outcome.replace(/^\w/, (x) => x.toUpperCase())}{c.rank ? `, rank ${c.rank}` : ''} · {c.kind}{c.date ? ` · ${c.date}` : ''}{c.project ? ` · ${c.project}` : ''}
+                  </span>
+                </span>
+                {c.proof_url ? <Ext href={c.proof_url}>Proof</Ext> : <span className="text-[11px] text-slate-400">Self-reported</span>}
+              </li>
+            ))}
+          </ul>
         </Section>
       )}
 
