@@ -5,6 +5,7 @@ import { StorageService } from '../../server/storage/storage';
 import { VectorStore } from '../../server/rag/vectorStore';
 import { ValidationError, NotFoundError, AuthorizationError } from '../../server/core/exceptions';
 import { DOCUMENT_CATEGORIES } from '../../server/api/routes/documents';
+import { minimalPdf } from './helpers/minimalPdf';
 
 describe('Master Documents Page Compliance Test Suite (24 Requirements)', () => {
   const studentA = 'std_test_documents_master_a';
@@ -401,7 +402,7 @@ describe('Master Documents Page Compliance Test Suite (24 Requirements)', () => 
       originalName: 'raft_paper.pdf',
       mimeType: 'application/pdf',
       sizeBytes: 2000,
-      contentBase64: 'data:application/pdf;base64,cmFmdA==',
+      contentBase64: `data:application/pdf;base64,${minimalPdf(['Raft consensus elects a leader by majority vote.', 'The leader replicates log entries to followers.']).toString('base64')}`,
       category: 'Research Papers',
     });
 
@@ -550,7 +551,7 @@ describe('Master Documents Page Compliance Test Suite (24 Requirements)', () => 
       originalName: 'os_lab_manual.pdf',
       mimeType: 'application/pdf',
       sizeBytes: 2000,
-      contentBase64: 'data:application/pdf;base64,b3NfbWFu',
+      contentBase64: `data:application/pdf;base64,${minimalPdf(['Operating Systems Lab Manual', 'Experiment 1: CPU scheduling with FCFS, SJF and Round Robin.']).toString('base64')}`,
       category: 'Laboratory Manuals',
       subject: 'Operating Systems',
     });
