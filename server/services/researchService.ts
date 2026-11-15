@@ -12,6 +12,19 @@ import {
 } from '../models/researchGitHubTypes';
 import { NotFoundError, AuthorizationError, ValidationError } from '../core/exceptions';
 import { logger } from '../core/logging';
+import { extractPaperMetadata } from './paperMetadataExtractor';
+import { ResearchProviderService } from './researchProviderService';
+import { ResearchCitationService } from './researchCitationService';
+
+/** True when two titles share most of their words (used to trust a DOI match). */
+export function titlesAgree(a: string, b: string): boolean {
+  const words = (s: string) => new Set(String(s || '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter((w) => w.length > 2));
+  const A = words(a), B = words(b);
+  if (!A.size || !B.size) return false;
+  let shared = 0;
+  A.forEach((w) => { if (B.has(w)) shared++; });
+  return shared / Math.min(A.size, B.size) >= 0.6;
+}
 
 export class ResearchService {
   /**
@@ -181,8 +194,7 @@ export class ResearchService {
 
     await db.saveResearchPaper(paper);
 
-    // Also auto-generate an initial APA citation for this paper
-    const authorStr = paper.authors.slice(0, 3).join(', ') + (paper.authors.length > 3 ? ', et al.' : '');
+    // Also generate an initial APA citation. Missing fields are left out, never filled in.
     const citation: ResearchCitation = {
       id: `cite_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
       student_id: studentId,
@@ -190,8 +202,8 @@ export class ResearchService {
       paper_id: paper.id,
       source_type: 'PAPER',
       citation_style: 'APA',
-      formatted_citation: `${authorStr || 'Unknown author'} (${paper.publication_year || 'n.d.'}). ${paper.title}.${paper.venue ? ` ${paper.venue}.` : ''}${paper.doi ? ` https://doi.org/${paper.doi}` : ''}`,
-      bibtex: `@article{${paper.authors[0]?.split(' ').pop()?.toLowerCase() || 'paper'}${paper.publication_year},\n  title={${paper.title}},\n  author={${paper.authors.join(' and ')}},\n  journal={${paper.venue}},\n  year={${paper.publication_year}}\n}`,
+      formatted_citation: ResearchCitationService.formatCitation(paper, 'APA'),
+      bibtex: ResearchCitationService.toBibTeX(paper),
       metadata: {
         title: paper.title,
         authors: paper.authors,
@@ -232,7 +244,10 @@ export class ResearchService {
   }
 
   /**
-   * Import paper from an existing uploaded PDF document in Phase 6 Document AI
+   * Imports an uploaded document as a paper. Metadata is read from the document's own text
+   * (Phase 6), each field with the page it came from. Nothing is invented: a field that cannot be
+   * found stays empty, and the uploader is never listed as the author. When a DOI is found it is
+   * looked up on OpenAlex, and the matched record fills fields only when its title agrees.
    */
   public static async importPaperFromDocument(
     projectId: string,
@@ -248,25 +263,93 @@ export class ResearchService {
       throw new AuthorizationError('You do not have permission to import this document');
     }
 
-    const filename = document.original_filename || (document as any).filename || 'document.pdf';
-    const title = document.title || filename;
-    const abstract = document.description || `Academic document imported from ${filename}.`;
+    const pages = (await db.getDocumentPages(document.id, studentId)).map((p) => ({ page_number: p.page_number, text: p.text || '' }));
+    const meta = extractPaperMetadata(pages);
+    const provenance: Record<string, any> = { ...meta.provenance };
+    let title = meta.title;
+    if (!title) {
+      title = document.title || document.original_filename || 'Untitled document';
+      provenance.title = { source: 'DOCUMENT_TEXT', method: 'the name you gave the uploaded file', needs_check: true };
+    }
+    let authors = meta.authors;
+    let year = meta.publication_year;
+    let abstract = meta.abstract;
+    let venue = '';
+    let doiCheck: Record<string, any> = { status: meta.doi ? 'NOT_CHECKED' : 'NO_DOI_FOUND' };
+
+    if (meta.doi && process.env.RESEARCH_LIVE_SEARCH !== 'off') {
+      try {
+        const match = await ResearchProviderService.lookupDoi(meta.doi);
+        if (!match) {
+          doiCheck = { status: 'NOT_FOUND', note: 'OpenAlex has no work with this DOI. Check the DOI in the PDF.' };
+        } else if (titlesAgree(title, match.title) || !meta.title) {
+          doiCheck = { status: 'MATCHED', openalex_id: match.external_id, openalex_title: match.title };
+          const viaDoi = { source: 'OPENALEX_DOI', method: `OpenAlex record for DOI ${meta.doi}` };
+          title = match.title; provenance.title = viaDoi;
+          if (match.authors.length) { authors = match.authors; provenance.authors = viaDoi; }
+          if (match.publication_year) { year = match.publication_year; provenance.publication_year = viaDoi; }
+          if (match.venue) { venue = match.venue; provenance.venue = viaDoi; }
+          if (!abstract && match.abstract) { abstract = match.abstract; provenance.abstract = viaDoi; }
+        } else {
+          doiCheck = { status: 'TITLE_MISMATCH', openalex_title: match.title, note: 'The DOI points to a work with a different title, so its details were not used. Check the DOI.' };
+        }
+      } catch (err: any) {
+        doiCheck = { status: 'UNREACHABLE', note: `OpenAlex could not be reached (${err?.name === 'TimeoutError' ? 'timeout' : err?.message || 'network error'}), so the DOI was not checked.` };
+      }
+    }
 
     return await this.savePaper(projectId, studentId, {
-      document_id: documentId || document.id,
+      document_id: document.id,
       title,
       abstract,
-      authors: [studentId],
-      publication_year: new Date().getFullYear(),
-      venue: 'Uploaded Academic Document',
+      authors,
+      publication_year: year,
+      venue,
+      doi: meta.doi,
       provider: 'PDF_UPLOAD',
       metadata: {
-        is_peer_reviewed: false,
-        open_access: true,
         page_count: document.page_count,
         file_size_bytes: document.file_size || (document as any).file_size_bytes || 0,
+        keywords: meta.keywords,
+        references: meta.references,
+        reference_count: meta.references.length,
+        field_provenance: provenance,
+        missing_fields: (['title', 'authors', 'abstract', 'publication_year', 'doi', 'keywords', 'references'] as const).filter((f) => !provenance[f]),
+        doi_check: doiCheck,
+        extracted_from_pages: pages.length,
       },
     });
+  }
+
+  /** Phase 6: the student corrects a paper's bibliographic details. Each edited field is marked as theirs. */
+  public static async updatePaperMetadata(paperId: string, studentId: string, body: Record<string, unknown>): Promise<ResearchPaper> {
+    const paper = await this.getPaper(paperId, studentId);
+    const provenance: Record<string, any> = { ...(paper.metadata?.field_provenance || {}) };
+    const edited = { source: 'STUDENT_EDITED', method: 'entered by you', at: new Date().toISOString() };
+    if (body.title !== undefined) {
+      if (typeof body.title !== 'string' || !body.title.trim()) throw new ValidationError('A paper needs a title');
+      paper.title = body.title.trim().slice(0, 500); provenance.title = edited;
+    }
+    if (body.authors !== undefined) {
+      if (!Array.isArray(body.authors)) throw new ValidationError('authors must be a list of names');
+      paper.authors = body.authors.map((a) => String(a || '').trim()).filter(Boolean).slice(0, 100); provenance.authors = edited;
+    }
+    if (body.publication_year !== undefined) {
+      const y = Number(body.publication_year);
+      if (body.publication_year !== null && body.publication_year !== '' && (!Number.isInteger(y) || y < 1900 || y > new Date().getFullYear() + 1)) throw new ValidationError('publication_year must be a year');
+      paper.publication_year = body.publication_year === null || body.publication_year === '' ? 0 : y; provenance.publication_year = edited;
+    }
+    if (body.venue !== undefined) { paper.venue = String(body.venue || '').trim().slice(0, 300); provenance.venue = edited; }
+    if (body.abstract !== undefined) { paper.abstract = String(body.abstract || '').slice(0, 10000); provenance.abstract = edited; }
+    if (body.doi !== undefined) {
+      const d = String(body.doi || '').trim().replace(/^https?:\/\/doi\.org\//i, '');
+      if (d && !/^10\.\d{4,9}\/\S+$/.test(d)) throw new ValidationError('That does not look like a DOI (it starts with 10.)');
+      paper.doi = d || undefined; provenance.doi = edited;
+    }
+    paper.metadata = { ...(paper.metadata || {}), field_provenance: provenance };
+    paper.updated_at = new Date().toISOString();
+    await db.saveResearchPaper(paper);
+    return paper;
   }
 
   /**
@@ -377,18 +460,21 @@ export class ResearchService {
     }
   ): Promise<ResearchIdea> {
     await this.getProject(projectId, studentId);
+    if (!data || typeof data.title !== 'string' || !data.title.trim()) throw new ValidationError('An idea needs a title');
     const idea: ResearchIdea = {
       id: `idea_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
       research_project_id: projectId,
       student_id: studentId,
-      title: data.title.trim(),
-      problem: data.problem.trim(),
-      motivation: data.motivation.trim(),
-      proposed_approach: data.proposed_approach.trim(),
-      technologies: data.technologies || ['Python', 'PostgreSQL'],
-      dataset_possibilities: data.dataset_possibilities || 'Open-access benchmark data',
-      evaluation_approach: data.evaluation_approach || 'Quantitative benchmark comparison',
-      expected_contribution: data.expected_contribution || 'Novel architecture or method',
+      title: String(data.title || '').trim().slice(0, 300),
+      problem: String(data.problem || '').trim(),
+      motivation: String(data.motivation || '').trim(),
+      proposed_approach: String(data.proposed_approach || '').trim(),
+      // Empty unless the student (or an AI draft they accepted) filled them in. Nothing is pre-filled.
+      technologies: Array.isArray(data.technologies) ? data.technologies.map(String).slice(0, 20) : [],
+      dataset_possibilities: String(data.dataset_possibilities || ''),
+      evaluation_approach: String(data.evaluation_approach || ''),
+      expected_contribution: String(data.expected_contribution || ''),
+      workspace_status: 'DRAFT',
       related_paper_ids: data.related_paper_ids || [],
       related_project_ids: data.related_project_ids || [],
       created_at: new Date().toISOString(),

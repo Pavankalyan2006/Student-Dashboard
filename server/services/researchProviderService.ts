@@ -214,7 +214,26 @@ export class ResearchProviderService {
     const works = (Array.isArray(body?.results) ? body.results : []).filter(
       (w: any) => !venueLower || String(w?.primary_location?.source?.display_name || '').toLowerCase().includes(venueLower)
     );
-    return works.slice(0, limit).map((w: any, i: number) => ({
+    return works.slice(0, limit).map((w: any, i: number) => this.mapOpenAlexWork(w, i, now));
+  }
+
+  /**
+   * Phase 6: looks one DOI up on OpenAlex. Returns null when OpenAlex has no work with that DOI;
+   * throws when OpenAlex cannot be reached, so the caller can say so instead of guessing.
+   */
+  public static async lookupDoi(doi: string): Promise<ResearchPaper | null> {
+    const clean = String(doi || '').trim().replace(/^https?:\/\/doi\.org\//i, '');
+    if (!/^10\.\d{4,9}\/\S+$/.test(clean)) return null;
+    const url = new URL(`https://api.openalex.org/works/doi:${clean.split("/").map(encodeURIComponent).join("/")}`);
+    if (process.env.OPENALEX_MAILTO) url.searchParams.set('mailto', process.env.OPENALEX_MAILTO);
+    const res = await fetch(url.toString(), { headers: { Accept: 'application/json', 'User-Agent': 'BTech-Student-AI-Platform/1.0' }, signal: AbortSignal.timeout(8000) });
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error(`OpenAlex answered ${res.status}`);
+    return this.mapOpenAlexWork(await res.json(), 0, new Date().toISOString());
+  }
+
+  private static mapOpenAlexWork(w: any, i: number, now: string): ResearchPaper {
+    return {
       id: `paper_oa_${String(w.id || i).split('/').pop()}`,
       research_project_id: '',
       student_id: '',
@@ -231,7 +250,7 @@ export class ResearchProviderService {
       is_saved: false,
       metadata: { open_access: Boolean(w.open_access?.is_oa), type: w.type, retrieved_at: now, source: 'LIVE' },
       created_at: now,
-    }));
+    };
   }
 
   /**

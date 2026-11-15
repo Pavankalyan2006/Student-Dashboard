@@ -67,6 +67,25 @@ export class ResearchExportService {
       }
     }
 
+    // Phase 6: linked ML Lab runs, with the metrics those runs recorded.
+    const { ResearchIntelligenceService } = await import('./researchIntelligenceService');
+    const experiments = (await ResearchIntelligenceService.listExperiments(projectId, studentId)).linked;
+    if (experiments.length > 0) {
+      md += `## Experiments (ML Lab runs)\n\n`;
+      for (const e of experiments) {
+        const m = e.metrics;
+        const bits = [
+          m.accuracy !== undefined ? `accuracy ${(m.accuracy * 100).toFixed(1)}%` : '',
+          m.f1_score !== undefined ? `macro F1 ${m.f1_score}` : '',
+          m.r2_score !== undefined ? `R² ${m.r2_score}` : '',
+          m.mae !== undefined ? `MAE ${m.mae}` : '',
+          m.rmse !== undefined ? `RMSE ${m.rmse}` : '',
+        ].filter(Boolean);
+        md += `- **${e.name}**: ${e.algorithm} on ${e.dataset_name} (${e.status.toLowerCase()}). ${bits.length ? `Held-out ${bits.join(', ')}.` : 'No metrics recorded.'}\n`;
+      }
+      md += `\n`;
+    }
+
     if (citations.length > 0) {
       md += `## 6. References & Bibliography\n\n`;
       md += ResearchCitationService.generateBibliography(citations, 'APA');

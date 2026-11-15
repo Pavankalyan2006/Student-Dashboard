@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { researchApi } from '../api/researchApi';
-import { ResearchPaper, ResearchPaperAnalysis, PaperComparisonMatrix } from '../types';
+import { ResearchPaper, ResearchPaperAnalysis, PaperComparisonMatrix, PaperAnswer } from '../types';
+import { documentsApi } from '../../documents/api/documentsApi';
 import { useImportPaper } from '../hooks/useResearch';
 import {
   Search,
@@ -80,6 +81,124 @@ const PaperNotes: React.FC<{ paper: ResearchPaper; projectId: string }> = ({ pap
   );
 };
 
+const FIELD_LABELS: Record<string, string> = {
+  title: 'Title', authors: 'Authors', abstract: 'Abstract', publication_year: 'Year', venue: 'Venue', doi: 'DOI', keywords: 'Keywords', references: 'References',
+};
+const DOI_CHECK_LABEL: Record<string, string> = {
+  MATCHED: 'DOI matched on OpenAlex', NOT_FOUND: 'DOI not found on OpenAlex', TITLE_MISMATCH: 'DOI points to a different title',
+  UNREACHABLE: 'OpenAlex could not be reached', NO_DOI_FOUND: 'No DOI in the file', NOT_CHECKED: 'DOI not checked',
+};
+
+/** Phase 6: where each detail of an imported paper came from, and a form to correct it. */
+const PaperProvenance: React.FC<{ paper: ResearchPaper; projectId: string }> = ({ paper, projectId }) => {
+  const qc = useQueryClient();
+  const meta: Record<string, any> = paper.metadata || {};
+  const prov: Record<string, any> = meta.field_provenance || {};
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState({
+    title: paper.title, authors: paper.authors.join('; '), publication_year: paper.publication_year ? String(paper.publication_year) : '', venue: paper.venue || '', doi: paper.doi || '',
+  });
+  const save = useMutation({
+    mutationFn: () => researchApi.updatePaperMetadata(paper.id, {
+      title: form.title, authors: form.authors.split(';').map((a) => a.trim()).filter(Boolean),
+      publication_year: form.publication_year ? Number(form.publication_year) : null, venue: form.venue, doi: form.doi,
+    }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['research-papers', projectId] }); setEditing(false); toast.success('Paper details saved'); },
+    onError: (e: any) => toast.error(e.message || 'Could not save the details'),
+  });
+  if (!Object.keys(prov).length && paper.provider !== 'PDF_UPLOAD') return null;
+  const needsCheck = Object.entries(prov).filter(([, v]) => v?.needs_check).map(([k]) => FIELD_LABELS[k] || k);
+  return (
+    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs space-y-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="font-bold text-slate-700">Where these details came from</span>
+        <button onClick={() => setEditing((v) => !v)} className="text-indigo-700 font-bold hover:underline">{editing ? 'Cancel' : 'Correct details'}</button>
+      </div>
+      {needsCheck.length > 0 && (
+        <p className="text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1">
+          Read from the PDF layout, so please check: {needsCheck.join(', ')}.
+        </p>
+      )}
+      <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
+        {Object.keys(FIELD_LABELS).map((k) => {
+          const v = prov[k];
+          return (
+            <li key={k} className="text-slate-600">
+              <span className="font-semibold text-slate-700">{FIELD_LABELS[k]}:</span>{' '}
+              {v ? `${v.source === 'OPENALEX_DOI' ? 'OpenAlex (DOI match)' : v.source === 'STUDENT_EDITED' ? 'entered by you' : `from the file${v.page ? `, page ${v.page}` : ''}`}` : 'not found, left empty'}
+            </li>
+          );
+        })}
+      </ul>
+      {meta.doi_check?.status && <p className="text-slate-500">{meta.doi_check.note || DOI_CHECK_LABEL[meta.doi_check.status] || meta.doi_check.status}</p>}
+      {Array.isArray(meta.keywords) && meta.keywords.length > 0 && <p className="text-slate-600">Keywords: {meta.keywords.join(', ')}</p>}
+      {Array.isArray(meta.references) && meta.references.length > 0 && (
+        <details>
+          <summary className="cursor-pointer text-slate-700 font-semibold">{meta.references.length} references found in the file</summary>
+          <ol className="list-decimal pl-5 mt-1 space-y-0.5 text-slate-600 max-h-48 overflow-y-auto">
+            {meta.references.map((r: string, i: number) => <li key={i}>{r}</li>)}
+          </ol>
+        </details>
+      )}
+      {editing && (
+        <form className="space-y-2 pt-2 border-t border-slate-200" onSubmit={(e) => { e.preventDefault(); save.mutate(); }}>
+          {([['title', 'Title'], ['authors', 'Authors (separate with ;)'], ['publication_year', 'Year'], ['venue', 'Venue'], ['doi', 'DOI']] as const).map(([k, label]) => (
+            <label key={k} className="block">
+              <span className="block text-[10px] font-bold uppercase text-slate-500">{label}</span>
+              <input value={form[k]} onChange={(e) => setForm({ ...form, [k]: e.target.value })} className="w-full border border-slate-200 rounded-lg px-2 py-1 bg-white" />
+            </label>
+          ))}
+          <button type="submit" disabled={save.isPending} className="px-3 py-1.5 rounded-lg font-bold bg-slate-900 text-white disabled:opacity-50">{save.isPending ? 'Saving…' : 'Save details'}</button>
+        </form>
+      )}
+    </div>
+  );
+};
+
+/** Phase 6: ask one paper a question. Source passages and the AI's explanation are shown apart. */
+const AskPaper: React.FC<{ paper: ResearchPaper }> = ({ paper }) => {
+  const [question, setQuestion] = useState('');
+  const ask = useMutation({
+    mutationFn: () => researchApi.askPaper(paper.id, question),
+    onError: (e: any) => toast.error(e.message || 'Could not answer'),
+  });
+  const a: PaperAnswer | undefined = ask.data;
+  return (
+    <div className="pt-3 border-t border-slate-100 space-y-2">
+      <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); if (question.trim()) ask.mutate(); }}>
+        <label htmlFor={`ask-${paper.id}`} className="sr-only">Ask this paper</label>
+        <input id={`ask-${paper.id}`} value={question} onChange={(e) => setQuestion(e.target.value)} maxLength={1000}
+          placeholder={paper.document_id ? 'Ask this paper (answers cite page numbers)' : 'Ask about this paper (answers use the abstract only)'}
+          className="flex-1 text-xs border border-slate-200 rounded-lg px-2 py-1.5" />
+        <button type="submit" disabled={!question.trim() || ask.isPending} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white disabled:opacity-50">
+          {ask.isPending ? 'Asking…' : 'Ask'}
+        </button>
+      </form>
+      {a && (
+        <div className="space-y-2 text-xs" aria-live="polite">
+          <p className="text-slate-500">{a.basis_note}</p>
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-2.5 space-y-1">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-800">From the paper</div>
+            {a.source_passages.length === 0 ? (
+              <p className="text-emerald-900">No supporting passage was found in the {a.basis === 'FULL_TEXT' ? 'file' : 'abstract'}.</p>
+            ) : (
+              a.source_passages.map((sp, i) => (
+                <blockquote key={i} className="text-emerald-950 border-l-2 border-emerald-400 pl-2">
+                  “{sp.text}”{sp.page ? <span className="text-emerald-700 font-semibold"> (page {sp.page})</span> : null}
+                </blockquote>
+              ))
+            )}
+          </div>
+          <div className="rounded-lg border border-violet-200 bg-violet-50 p-2.5 space-y-1">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-violet-800">AI interpretation</div>
+            <p className="text-violet-950 whitespace-pre-wrap">{a.interpretation}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const PapersPanel: React.FC<PapersPanelProps> = ({ projectId, papers }) => {
   const qc = useQueryClient();
   const importMutation = useImportPaper(projectId);
@@ -109,6 +228,8 @@ export const PapersPanel: React.FC<PapersPanelProps> = ({ projectId, papers }) =
   // PDF import modal state
   const [showPdfModal, setShowPdfModal] = useState(false);
   const [documentIdInput, setDocumentIdInput] = useState('');
+  const docsQuery = useQuery({ queryKey: ['research-import-docs'], queryFn: () => documentsApi.getDocuments({ limit: 100 } as any), enabled: showPdfModal });
+  const readyDocs = (docsQuery.data?.items || []).filter((d: any) => d.status === 'READY');
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -360,7 +481,10 @@ export const PapersPanel: React.FC<PapersPanelProps> = ({ projectId, papers }) =
 
                       <h4 className="text-base font-bold text-slate-900 leading-snug">{p.title}</h4>
                       <p className="text-xs text-slate-500">
-                        {p.authors.join(', ')} · <span className="font-semibold text-slate-800">{p.venue}</span> ({p.publication_year}) · {p.citation_count} Citations
+                        {p.authors.length ? p.authors.join(', ') : 'Authors not recorded'}
+                        {p.venue ? <> · <span className="font-semibold text-slate-800">{p.venue}</span></> : null}
+                        {' '}({p.publication_year || 'year not recorded'})
+                        {p.provider !== 'PDF_UPLOAD' && p.provider !== 'MANUAL' ? ` · ${p.citation_count} citations` : ''}
                       </p>
                     </div>
 
@@ -392,6 +516,8 @@ export const PapersPanel: React.FC<PapersPanelProps> = ({ projectId, papers }) =
                       Open source page
                     </a>
                   )}
+                  <PaperProvenance paper={p} projectId={projectId} />
+                  <AskPaper paper={p} />
                   <PaperNotes paper={p} projectId={projectId} />
                 </div>
               );
@@ -592,16 +718,22 @@ export const PapersPanel: React.FC<PapersPanelProps> = ({ projectId, papers }) =
             </div>
 
             <p className="text-xs text-slate-500">
-              Provide the Document ID of an academic PDF already parsed, indexed, and chunked in Phase 6 Document AI.
+              Pick a PDF you uploaded in Documents. Title, authors, abstract, year, DOI, keywords and references are read from its text, with the page each came from. Anything not found is left empty for you to fill in.
             </p>
 
-            <input
-              type="text"
-              placeholder="e.g. doc_seed_1"
+            <label htmlFor="research-import-doc" className="sr-only">Uploaded document</label>
+            <select
+              id="research-import-doc"
               value={documentIdInput}
               onChange={(e) => setDocumentIdInput(e.target.value)}
               className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm"
-            />
+            >
+              <option value="">{docsQuery.isLoading ? 'Loading your documents…' : readyDocs.length ? 'Choose a document' : 'No processed documents yet'}</option>
+              {readyDocs.map((d) => <option key={d.id} value={d.id}>{d.title}</option>)}
+            </select>
+            {!docsQuery.isLoading && readyDocs.length === 0 && (
+              <a href="/documents" className="text-xs text-indigo-700 font-semibold hover:underline">Upload a PDF in Documents</a>
+            )}
 
             <div className="flex justify-end gap-2 pt-2">
               <button

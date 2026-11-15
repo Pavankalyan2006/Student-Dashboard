@@ -206,6 +206,70 @@ export class MlLabService {
     return data;
   }
 
+  /** Column profile (type, missing values, unique values, min/max/mean/std) computed from the actual rows. */
+  public static profileColumns(headers: string[], rows: Record<string, any>[]): MLDatasetColumnInfo[] {
+    return headers.map((colName) => {
+      let missing = 0;
+      const values: any[] = [];
+      let numericCount = 0;
+
+      for (const r of rows) {
+        const v = r[colName];
+        if (v === null || v === undefined) {
+          missing++;
+        } else {
+          values.push(v);
+          if (typeof v === 'number') numericCount++;
+        }
+      }
+
+      const isNumerical = numericCount > values.length * 0.8;
+      const uniqueVals = Array.from(new Set(values));
+
+      if (isNumerical) {
+        const numVals = values.filter((v) => typeof v === 'number');
+        const min = numVals.length > 0 ? Math.min(...numVals) : 0;
+        const max = numVals.length > 0 ? Math.max(...numVals) : 0;
+        const mean = numVals.length > 0 ? parseFloat((numVals.reduce((a, b) => a + b, 0) / numVals.length).toFixed(2)) : 0;
+        const variance = numVals.reduce((acc, v) => acc + Math.pow(v - mean, 2), 0) / (numVals.length || 1);
+        const std = parseFloat(Math.sqrt(variance).toFixed(2));
+
+        return {
+          name: colName,
+          data_type: 'NUMERICAL',
+          missing_count: missing,
+          unique_count: uniqueVals.length,
+          min,
+          max,
+          mean,
+          std,
+          sample_values: uniqueVals.slice(0, 3),
+        };
+      } else {
+        return {
+          name: colName,
+          data_type: 'CATEGORICAL',
+          missing_count: missing,
+          unique_count: uniqueVals.length,
+          sample_values: uniqueVals.slice(0, 3),
+        };
+      }
+    });
+
+  }
+
+  private static profiledBuiltIns = new Set<string>();
+  /** Built-in sample statistics are computed from the generated rows once, not typed in by hand. */
+  private static withRealProfile(d: MLDataset): MLDataset {
+    if (!this.profiledBuiltIns.has(d.id) && Array.isArray(d.raw_data) && d.raw_data.length) {
+      const headers = Object.keys(d.raw_data[0]);
+      d.columns_metadata = this.profileColumns(headers, d.raw_data);
+      d.total_samples = d.raw_data.length;
+      this.profiledBuiltIns.add(d.id);
+    }
+    return d;
+  }
+
   // -------------------------------------------------------------
   // Workspace Management
   // -------------------------------------------------------------
@@ -241,12 +305,17 @@ def train_model(model, train_data, config):
     return model
 
 def evaluate_model(model, test_data, config):
-    """Calculates accuracy and confusion matrix on held-out test data"""
-    return {"accuracy": 0.96, "test_samples": len(test_data)}
+    """Calculates accuracy and a confusion matrix on held-out test data.
+    TODO: compare predictions with the true labels. No numbers are filled in here."""
+    raise NotImplementedError("Write your evaluation code. To train and evaluate in this app, use Run experiment.")
 
 def predict_model(model, input_features):
-    """Infers output class for new sample input"""
-    return {"prediction": "setosa", "confidence": 0.94}
+    """Infers the output class for a new sample.
+    TODO: implement after training."""
+    raise NotImplementedError("Write your prediction code.")
+
+# Note: this file is your own notes and code. The app does not run Python files; experiments
+# are trained by the ML Lab engine when you press Run experiment, and its metrics come from that run.
 `,
             updated_at: new Date().toISOString(),
           },
@@ -423,7 +492,7 @@ seed: 42
 
   public static getDatasets(studentId: string): MLDataset[] {
     const custom = this.customDatasets.get(studentId) || [];
-    return [...this.builtInDatasets, ...custom];
+    return [...this.builtInDatasets.map((d) => this.withRealProfile(d)), ...custom];
   }
 
   public static getDatasetById(studentId: string, datasetId: string): MLDataset {
@@ -485,53 +554,7 @@ seed: 42
     }
 
     // Profiling columns
-    const columns_metadata: MLDatasetColumnInfo[] = headers.map((colName) => {
-      let missing = 0;
-      const values: any[] = [];
-      let numericCount = 0;
-
-      for (const r of rows) {
-        const v = r[colName];
-        if (v === null || v === undefined) {
-          missing++;
-        } else {
-          values.push(v);
-          if (typeof v === 'number') numericCount++;
-        }
-      }
-
-      const isNumerical = numericCount > values.length * 0.8;
-      const uniqueVals = Array.from(new Set(values));
-
-      if (isNumerical) {
-        const numVals = values.filter((v) => typeof v === 'number');
-        const min = numVals.length > 0 ? Math.min(...numVals) : 0;
-        const max = numVals.length > 0 ? Math.max(...numVals) : 0;
-        const mean = numVals.length > 0 ? parseFloat((numVals.reduce((a, b) => a + b, 0) / numVals.length).toFixed(2)) : 0;
-        const variance = numVals.reduce((acc, v) => acc + Math.pow(v - mean, 2), 0) / (numVals.length || 1);
-        const std = parseFloat(Math.sqrt(variance).toFixed(2));
-
-        return {
-          name: colName,
-          data_type: 'NUMERICAL',
-          missing_count: missing,
-          unique_count: uniqueVals.length,
-          min,
-          max,
-          mean,
-          std,
-          sample_values: uniqueVals.slice(0, 3),
-        };
-      } else {
-        return {
-          name: colName,
-          data_type: 'CATEGORICAL',
-          missing_count: missing,
-          unique_count: uniqueVals.length,
-          sample_values: uniqueVals.slice(0, 3),
-        };
-      }
-    });
+    const columns_metadata = MlLabService.profileColumns(headers, rows);
 
     const targetCol = data.target_column || headers[headers.length - 1];
     const targetMeta = columns_metadata.find((c) => c.name === targetCol);
@@ -579,7 +602,7 @@ seed: 42
       logs.push({ timestamp: new Date().toISOString(), stage, message, level });
     };
 
-    log('QUEUED', `Experiment '${config.name}' queued for execution in sandboxed worker.`);
+    log('QUEUED', `Experiment '${config.name}' queued. Training runs in the app's built-in engine with row and column limits; no student code is executed.`);
 
     // 1. Fetch dataset
     const dataset = this.getDatasetById(studentId, config.dataset_id || config.dataset_name);

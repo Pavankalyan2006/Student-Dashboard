@@ -55,6 +55,8 @@ export interface ResearchProject {
   objective: string;
   research_question?: string;
   status: ResearchStatus;
+  /** Phase 6: ML Lab experiments the student linked to this project (ids, owner-checked on read). */
+  linked_experiment_ids?: string[];
   created_at: string;
   updated_at: string;
 }
@@ -145,7 +147,52 @@ export interface ResearchIdea {
   expected_contribution: string;
   related_paper_ids: string[];
   related_project_ids: string[];
+  /** Phase 6 idea workspace. All of these are written by the student (or accepted from an AI draft). */
+  research_questions?: string[];
+  hypothesis?: string;
+  evaluation_metrics?: string[];
+  timeline?: IdeaMilestone[];
+  outline?: string;
+  workspace_status?: IdeaWorkspaceStatus;
+  novelty_checks?: NoveltyCheck[];
+  updated_at?: string;
   created_at: string;
+}
+
+export type IdeaWorkspaceStatus = 'DRAFT' | 'DEVELOPING' | 'READY_FOR_GUIDE';
+
+export interface IdeaMilestone {
+  id: string;
+  title: string;
+  /** YYYY-MM-DD, chosen by the student. Never generated. */
+  target_date?: string;
+  done: boolean;
+}
+
+export interface NoveltyMatch {
+  title: string;
+  authors: string[];
+  publication_year: number;
+  venue: string;
+  doi?: string;
+  url?: string;
+  /** OPENALEX = found by a live search for this check; PROJECT = already saved in the project. */
+  found_in: 'OPENALEX' | 'PROJECT';
+  /** Share of the idea's key terms that also appear in the paper's title and abstract, 0-100. */
+  overlap_score: number;
+  overlap_level: 'HIGH' | 'MEDIUM' | 'LOW';
+  matched_terms: string[];
+}
+
+export interface NoveltyCheck {
+  id: string;
+  checked_at: string;
+  query: string;
+  idea_terms: string[];
+  papers_checked: number;
+  matches: NoveltyMatch[];
+  summary: string;
+  disclaimer: string;
 }
 
 export interface ResearchMethodology {

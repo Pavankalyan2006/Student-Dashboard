@@ -162,7 +162,74 @@ export interface ResearchIdea {
   expected_contribution: string;
   related_paper_ids: string[];
   related_project_ids: string[];
+  research_questions?: string[];
+  hypothesis?: string;
+  evaluation_metrics?: string[];
+  timeline?: IdeaMilestone[];
+  outline?: string;
+  workspace_status?: 'DRAFT' | 'DEVELOPING' | 'READY_FOR_GUIDE';
+  novelty_checks?: NoveltyCheck[];
+  generated_by?: string;
+  updated_at?: string;
   created_at: string;
+}
+
+export interface IdeaMilestone {
+  id: string;
+  title: string;
+  target_date?: string;
+  done: boolean;
+}
+
+export interface NoveltyMatch {
+  title: string;
+  authors: string[];
+  publication_year: number;
+  venue: string;
+  doi?: string;
+  url?: string;
+  found_in: 'OPENALEX' | 'PROJECT';
+  overlap_score: number;
+  overlap_level: 'HIGH' | 'MEDIUM' | 'LOW';
+  matched_terms: string[];
+}
+
+export interface NoveltyCheck {
+  id: string;
+  checked_at: string;
+  query: string;
+  idea_terms: string[];
+  papers_checked: number;
+  matches: NoveltyMatch[];
+  summary: string;
+  disclaimer: string;
+}
+
+export interface PaperAnswer {
+  paper_id: string;
+  question: string;
+  basis: 'FULL_TEXT' | 'ABSTRACT_ONLY';
+  interpretation: string;
+  source_passages: { page?: number; text: string }[];
+  found_in_source: boolean;
+  basis_note: string;
+}
+
+export interface LinkedExperiment {
+  id: string;
+  name: string;
+  dataset_name: string;
+  algorithm: string;
+  status: string;
+  train_split: number;
+  metrics: { accuracy?: number; f1_score?: number; r2_score?: number; mae?: number; rmse?: number };
+  fit_note?: string;
+  created_at: string;
+}
+
+export interface ProjectExperiments {
+  linked: LinkedExperiment[];
+  available: { id: string; name: string; dataset_name: string; status: string; created_at: string }[];
 }
 
 export interface ResearchMethodology {

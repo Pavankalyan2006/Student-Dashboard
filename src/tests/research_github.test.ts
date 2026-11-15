@@ -149,7 +149,8 @@ describe('Phase 13: Research Assistant, GitHub Integration & Advanced AI Tools',
       );
 
       expect(importedPaper).toBeDefined();
-      expect(importedPaper.document_id).toBe('doc_seed_1');
+      // 'doc_seed_1' is an alias; the paper stores the real id of the document it points to.
+      expect(importedPaper.document_id).toBe('doc_seed_os_01');
       expect(importedPaper.provider).toBe('PDF_UPLOAD');
       expect(importedPaper.research_project_id).toBe(projectId);
 

@@ -7,6 +7,7 @@ import { LiteratureReviewService } from '../../services/literatureReviewService'
 import { ResearchCitationService } from '../../services/researchCitationService';
 import { ResearchExportService } from '../../services/researchExportService';
 import { logger } from '../../core/logging';
+import { ResearchIntelligenceService } from '../../services/researchIntelligenceService';
 
 export const researchRouter = Router();
 
@@ -60,7 +61,15 @@ researchRouter.get('/papers/:paper_id', requireAuth, async (req: Request, res: R
 
 researchRouter.patch('/papers/:paper_id', requireAuth, async (req: Request, res: Response) => {
   try {
-    const paper = await ResearchService.updatePaperNotes(req.params.paper_id, req.user!.userId, { notes: req.body?.notes, reading_status: req.body?.reading_status });
+    const body = req.body || {};
+    const studentId = req.user!.userId;
+    const metaKeys = ['title', 'authors', 'publication_year', 'venue', 'abstract', 'doi'];
+    if (metaKeys.some((k) => body[k] !== undefined)) {
+      await ResearchService.updatePaperMetadata(req.params.paper_id, studentId, body);
+    }
+    const paper = body.notes !== undefined || body.reading_status !== undefined
+      ? await ResearchService.updatePaperNotes(req.params.paper_id, studentId, { notes: body.notes, reading_status: body.reading_status })
+      : await ResearchService.getPaper(req.params.paper_id, studentId);
     res.json({ success: true, data: paper });
   } catch (err: any) {
     res.status(err.statusCode || err.status || 500).json({ success: false, message: err.message, code: err.code });
@@ -72,6 +81,44 @@ researchRouter.delete('/papers/:paper_id', requireAuth, async (req: Request, res
     await ResearchService.getPaper(req.params.paper_id, req.user!.userId); // owner check
     const deleted = await ResearchService.deletePaper(req.params.paper_id, req.user!.userId);
     res.json({ success: true, data: { deleted } });
+  } catch (err: any) {
+    res.status(err.statusCode || err.status || 500).json({ success: false, message: err.message, code: err.code });
+  }
+});
+
+// Phase 6: ask a question about one paper (full text with page citations, or abstract only).
+researchRouter.post('/papers/:paper_id/ask', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const answer = await ResearchIntelligenceService.askPaper(req.params.paper_id, req.user!.userId, req.body?.question);
+    res.json({ success: true, data: answer });
+  } catch (err: any) {
+    res.status(err.statusCode || err.status || 500).json({ success: false, message: err.message, code: err.code });
+  }
+});
+
+// Phase 6: idea workspace and novelty (overlap) check.
+researchRouter.patch('/ideas/:idea_id', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const idea = await ResearchIntelligenceService.updateIdea(req.params.idea_id, req.user!.userId, req.body || {});
+    res.json({ success: true, data: idea });
+  } catch (err: any) {
+    res.status(err.statusCode || err.status || 500).json({ success: false, message: err.message, code: err.code });
+  }
+});
+
+researchRouter.delete('/ideas/:idea_id', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const deleted = await ResearchIntelligenceService.deleteIdea(req.params.idea_id, req.user!.userId);
+    res.json({ success: true, data: { deleted } });
+  } catch (err: any) {
+    res.status(err.statusCode || err.status || 500).json({ success: false, message: err.message, code: err.code });
+  }
+});
+
+researchRouter.post('/ideas/:idea_id/novelty-check', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const check = await ResearchIntelligenceService.noveltyCheck(req.params.idea_id, req.user!.userId);
+    res.json({ success: true, data: check });
   } catch (err: any) {
     res.status(err.statusCode || err.status || 500).json({ success: false, message: err.message, code: err.code });
   }
@@ -141,7 +188,8 @@ researchRouter.get('/:id', requireAuth, async (req: Request, res: Response) => {
 researchRouter.patch('/:id', requireAuth, async (req: Request, res: Response) => {
   try {
     const studentId = req.user!.userId;
-    const updated = await ResearchService.updateProject(req.params.id, studentId, req.body);
+    const { linked_experiment_ids: _ignored, ...updates } = req.body || {}; // links are changed only through the owner-checked experiments routes
+    const updated = await ResearchService.updateProject(req.params.id, studentId, updates);
     res.json({ success: true, data: updated });
   } catch (err: any) {
     res.status(err.statusCode || err.status || 400).json({ success: false, message: err.message });
@@ -299,6 +347,31 @@ researchRouter.post('/:id/ideas', requireAuth, async (req: Request, res: Respons
     res.status(201).json({ success: true, data: idea });
   } catch (err: any) {
     res.status(err.statusCode || err.status || 400).json({ success: false, message: err.message });
+  }
+});
+
+// Phase 6: ML Lab experiments linked to a research project.
+researchRouter.get('/:id/experiments', requireAuth, async (req: Request, res: Response) => {
+  try {
+    res.json({ success: true, data: await ResearchIntelligenceService.listExperiments(req.params.id, req.user!.userId) });
+  } catch (err: any) {
+    res.status(err.statusCode || err.status || 500).json({ success: false, message: err.message, code: err.code });
+  }
+});
+
+researchRouter.post('/:id/experiments', requireAuth, async (req: Request, res: Response) => {
+  try {
+    res.json({ success: true, data: await ResearchIntelligenceService.linkExperiment(req.params.id, req.user!.userId, req.body?.experiment_id) });
+  } catch (err: any) {
+    res.status(err.statusCode || err.status || 500).json({ success: false, message: err.message, code: err.code });
+  }
+});
+
+researchRouter.delete('/:id/experiments/:experiment_id', requireAuth, async (req: Request, res: Response) => {
+  try {
+    res.json({ success: true, data: await ResearchIntelligenceService.unlinkExperiment(req.params.id, req.user!.userId, req.params.experiment_id) });
+  } catch (err: any) {
+    res.status(err.statusCode || err.status || 500).json({ success: false, message: err.message, code: err.code });
   }
 });
 

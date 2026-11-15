@@ -4,38 +4,41 @@ import { NotFoundError } from '../core/exceptions';
 
 export class ResearchCitationService {
   /**
-   * Format citation in APA, IEEE, MLA, or BibTeX
+   * Format citation in APA, IEEE, MLA, or BibTeX.
+   * Only saved metadata is used. A missing author, year or venue is left out (APA "n.d." for no year),
+   * never filled with a placeholder name, the current year or a made-up venue.
    */
   public static formatCitation(paper: ResearchPaper, style: CitationStyle): string {
-    const authors = paper.authors || ['Academic Contributor'];
-    const year = paper.publication_year || new Date().getFullYear();
-    const title = paper.title || 'Untitled Research Paper';
-    const venue = paper.venue || 'Academic Proceedings';
+    const authors = (paper.authors || []).map((a) => String(a).trim()).filter(Boolean);
+    const year = paper.publication_year ? String(paper.publication_year) : '';
+    const title = (paper.title || '').trim() || '[Title missing]';
+    const venue = (paper.venue || '').trim();
     const doiPart = paper.doi ? ` https://doi.org/${paper.doi}` : '';
 
     if (style === 'APA') {
       const authorAPA =
-        authors.length === 1
+        authors.length === 0
+          ? ''
+          : authors.length === 1
           ? authors[0]
           : authors.length === 2
           ? `${authors[0]} & ${authors[1]}`
           : `${authors[0]}, et al.`;
-      return `${authorAPA} (${year}). ${title}. ${venue}.${doiPart}`;
+      // APA puts the title first when there is no author.
+      const head = authorAPA ? `${authorAPA} (${year || 'n.d.'}). ${title}.` : `${title}. (${year || 'n.d.'}).`;
+      return `${head}${venue ? ` ${venue}.` : ''}${doiPart}`;
     }
 
     if (style === 'IEEE') {
-      const authorIEEE =
-        authors.length === 1
-          ? authors[0]
-          : authors.length <= 3
-          ? authors.join(', ')
-          : `${authors[0]} et al.`;
-      return `${authorIEEE}, "${title}," in ${venue}, ${year}.${paper.doi ? ` doi: ${paper.doi}.` : ''}`;
+      const authorIEEE = authors.length === 0 ? '' : authors.length <= 3 ? authors.join(', ') : `${authors[0]} et al.`;
+      const more = Boolean(venue || year);
+      return `${authorIEEE ? `${authorIEEE}, ` : ''}"${title}${more ? ',' : '.'}"${venue ? ` in ${venue}${year ? ',' : '.'}` : ''}${year ? ` ${year}.` : ''}${paper.doi ? ` doi: ${paper.doi}.` : ''}`;
     }
 
     if (style === 'MLA') {
-      const authorMLA = authors.length > 2 ? `${authors[0]}, et al.` : authors.join(', and ');
-      return `${authorMLA}. "${title}." ${venue}, ${year}.${doiPart}`;
+      const authorMLA = authors.length === 0 ? '' : authors.length > 2 ? `${authors[0]}, et al.` : authors.join(', and ');
+      const bits = [authorMLA ? `${authorMLA}.` : '', `"${title}."`, venue ? `${venue}${year ? ',' : '.'}` : '', year ? `${year}.` : ''].filter(Boolean);
+      return `${bits.join(' ')}${doiPart}`;
     }
 
     // BIBTEX
@@ -43,19 +46,20 @@ export class ResearchCitationService {
   }
 
   /**
-   * Generate valid BibTeX record
+   * Generate a BibTeX record. Fields that are not known are left out instead of filled with defaults.
    */
   public static toBibTeX(paper: ResearchPaper): string {
-    const firstAuthor = paper.authors[0]?.split(' ').pop()?.toLowerCase() || 'paper';
-    const cleanKey = `${firstAuthor}${paper.publication_year || 2024}`;
-    const authorBib = (paper.authors || []).join(' and ');
-
-    return `@article{${cleanKey},
-  title={${paper.title}},
-  author={${authorBib}},
-  journal={${paper.venue}},
-  year={${paper.publication_year || 2024}}${paper.doi ? `,\n  doi={${paper.doi}}` : ''}${paper.url ? `,\n  url={${paper.url}}` : ''}
-}`;
+    const authors = (paper.authors || []).filter(Boolean);
+    const firstAuthor = authors[0]?.split(' ').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'untitled';
+    const titleWord = (paper.title || '').toLowerCase().split(/\s+/).find((w) => w.replace(/[^a-z]/g, '').length > 3)?.replace(/[^a-z]/g, '') || '';
+    const cleanKey = `${firstAuthor}${paper.publication_year || ''}${titleWord}`;
+    const fields: string[] = [`  title={${paper.title || ''}}`];
+    if (authors.length) fields.push(`  author={${authors.join(' and ')}}`);
+    if (paper.venue) fields.push(`  journal={${paper.venue}}`);
+    if (paper.publication_year) fields.push(`  year={${paper.publication_year}}`);
+    if (paper.doi) fields.push(`  doi={${paper.doi}}`);
+    if (paper.url) fields.push(`  url={${paper.url}}`);
+    return `@article{${cleanKey},\n${fields.join(',\n')}\n}`;
   }
 
   /**
