@@ -36,6 +36,7 @@ import { aiMemoryRouter } from './routes/aiMemory';
 import { deadlinesRouter } from './routes/deadlines';
 import { showcaseRouter } from './routes/showcase';
 import { personalIntelligenceRouter } from './routes/personalIntelligence';
+import { codeReviewRouter } from './routes/codeReview';
 import { academicsRouter } from './routes/academics';
 import { adminRouter } from './routes/admin';
 
@@ -89,6 +90,7 @@ apiV1Router.use('/', aiMemoryRouter);
 apiV1Router.use('/', deadlinesRouter);
 apiV1Router.use('/', showcaseRouter);
 apiV1Router.use('/', personalIntelligenceRouter);
+apiV1Router.use('/', codeReviewRouter);
 apiV1Router.use('/', learningModulesRouter);
 apiV1Router.use('/', externalIntegrationsRouter);
 apiV1Router.use('/', semesterCommandCenterRouter);

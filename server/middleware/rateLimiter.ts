@@ -142,7 +142,7 @@ export function isAIGenerationRequest(method: string, url: string): boolean {
   if (method !== 'POST') return false;
   const p = (url || '').split('?')[0].toLowerCase();
   if (!p.startsWith('/api/')) return false;
-  return /^\/api\/v1\/(ai|discover)\//.test(p) || /\/(generate|explain|chat|ask|tutor|summari[sz]e|analy[sz]e|evaluate|feedback|hint|hints)(\/|$)/.test(p);
+  return /^\/api\/v1\/(ai|discover)\//.test(p) || /^\/api\/v1\/code-review\/me\/?$/.test(p) || /\/propose(\/|$)/.test(p) || /\/(generate|explain|chat|ask|tutor|summari[sz]e|analy[sz]e|evaluate|feedback|hint|hints)(\/|$)/.test(p);
 }
 
 /** Applies the AI limiter only to AI generation calls; everything else passes straight through. */

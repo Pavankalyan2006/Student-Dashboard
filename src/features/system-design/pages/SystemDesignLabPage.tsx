@@ -4,6 +4,7 @@
 import * as React from 'react';
 import {
   Network,
+  Shapes,
   BookOpen,
   Layers,
   Sparkles,
@@ -48,12 +49,14 @@ import { InterviewPracticeModal } from '../components/InterviewPracticeModal';
 import { SavedProjectsView } from '../components/SavedProjectsView';
 import { AnalyticsView } from '../components/AnalyticsView';
 import { AITutorDrawer } from '../components/AITutorDrawer';
+import { ArchitectureStudio } from '../components/ArchitectureStudio';
 import { toast } from 'sonner';
 
 export type LabTab =
   | 'roadmap'
   | 'concepts'
   | 'designer'
+  | 'studio'
   | 'challenges'
   | 'requirements'
   | 'database'
@@ -328,6 +331,7 @@ export function SystemDesignLabPage({ onNavigate }: SystemDesignLabPageProps) {
         <div className="mt-5 pt-3 border-t border-slate-800 flex gap-1.5 overflow-x-auto pb-1 text-xs">
           {[
             { id: 'designer', label: 'Architecture Designer', icon: Network },
+            { id: 'studio', label: 'Architecture Studio', icon: Shapes },
             { id: 'roadmap', label: 'Learning Roadmap', icon: BookOpen },
             { id: 'concepts', label: 'Concepts (69)', icon: Lightbulb },
             { id: 'challenges', label: 'Challenges (25)', icon: Trophy },
@@ -371,6 +375,30 @@ export function SystemDesignLabPage({ onNavigate }: SystemDesignLabPageProps) {
             connections={effectiveProject.connections}
             onChange={handleUpdateCanvas}
             onSave={handleSaveCurrentProject}
+          />
+        )}
+
+        {/* Architecture Studio: UML, flowchart and ER diagrams as editable text, and AI drafts */}
+        {activeTab === 'studio' && (
+          <ArchitectureStudio
+            project={effectiveProject}
+            hasProject={!!currentProject}
+            onCreateProject={handleCreateNewProject}
+            onSaveDiagrams={async (diagrams) => {
+              if (!currentProject) return;
+              const saved = await systemDesignApi.updateProject(currentProject.id, { diagrams });
+              setCurrentProject(saved);
+              setProjects((prev) => prev.map((p) => (p.id === saved.id ? saved : p)));
+            }}
+            onApplyArchitecture={(components, connections) => {
+              if (!currentProject) {
+                toast.error('Create a design project first, then open the draft on its canvas.');
+                return;
+              }
+              setCurrentProject({ ...effectiveProject, components, connections });
+              setActiveTab('designer');
+              toast.info('The AI draft is on the canvas. Review it and press Save to keep it.');
+            }}
           />
         )}
 

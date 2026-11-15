@@ -11,6 +11,7 @@
 // 9. 10-Step Interactive System Design Interview Mode
 // 10. AI System Design Assistant with Progressive Modes
 
+import { validateDiagrams } from './architectureStudioService';
 import { db } from '../db/database';
 import { NotFoundError, ValidationError, AuthorizationError, AppError } from '../core/exceptions';
 import { logger } from '../core/logging';
@@ -141,6 +142,7 @@ export class SystemDesignService {
     if (updates.components && updates.components.length > 100) {
       throw new ValidationError('A single diagram cannot exceed 100 components to prevent browser canvas degradation');
     }
+    if (updates.diagrams !== undefined) updates = { ...updates, diagrams: validateDiagrams(updates.diagrams) };
 
     return db.updateSystemDesignProject(projectId, studentId, updates);
   }
