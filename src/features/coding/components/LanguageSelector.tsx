@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { codingApi } from '../api/codingApi';
+import React from 'react';
+import { useLanguageAvailability } from '../hooks/useLanguageAvailability';
 import { CodingLanguage } from '../types/coding';
 import { useCodingEditorStore } from '../stores/codingEditorStore';
 import { Code2, ChevronDown } from 'lucide-react';
@@ -24,23 +24,8 @@ export const LanguageSelector: React.FC<{ disabled?: boolean; onChangeLanguage?:
 }) => {
   const language = useCodingEditorStore((s) => s.language);
   const setLanguage = useCodingEditorStore((s) => s.setLanguage);
-  // Which toolchains the server can actually run; unknown until loaded.
-  const [availability, setAvailability] = useState<Record<string, { available: boolean; detail?: string }>>({});
-  useEffect(() => {
-    let alive = true;
-    codingApi
-      .getLanguages()
-      .then((list: any[]) => {
-        if (!alive || !Array.isArray(list)) return;
-        const map: Record<string, { available: boolean; detail?: string }> = {};
-        for (const l of list) map[l.id] = { available: l.available !== false, detail: l.availability_detail };
-        setAvailability(map);
-      })
-      .catch(() => {});
-    return () => {
-      alive = false;
-    };
-  }, []);
+  // Which languages can run, and where (server sandbox, browser sandbox, or not at all).
+  const availability = useLanguageAvailability();
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selected = e.target.value as CodingLanguage;
@@ -68,12 +53,14 @@ export const LanguageSelector: React.FC<{ disabled?: boolean; onChangeLanguage?:
               disabled={availability[l.id]?.available === false}
               className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
             >
-              {l.name}
-              {availability[l.id]?.available === false
-                ? availability[l.id]?.detail === 'sandbox_unavailable'
-                  ? ' (running code is off on this server)'
-                  : ' (not installed on server)'
-                : ''}
+              {availability[l.id]?.runs === 'browser' ? l.name.replace(' (Node.js)', '') : l.name}
+              {availability[l.id]?.runs === 'browser'
+                ? ' (runs in your browser)'
+                : availability[l.id]?.available === false
+                  ? availability[l.id]?.detail === 'sandbox_unavailable'
+                    ? ' (running code is off on this server)'
+                    : ' (not installed on server)'
+                  : ''}
             </option>
           ))}
         </select>

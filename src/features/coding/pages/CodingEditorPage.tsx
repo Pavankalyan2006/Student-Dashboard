@@ -11,8 +11,10 @@ import { CodeDiffViewer } from '../components/CodeDiffViewer';
 import { SavedCodeList } from '../components/SavedCodeList';
 import { CodingHistory } from '../components/CodingHistory';
 import { CodingProblemPanel } from '../components/CodingProblemPanel';
-import { CodingProblem, CodingLanguage } from '../types/coding';
+import { CodingProblem, CodingLanguage, ExecutionResult } from '../types/coding';
 import { toast } from 'sonner';
+import { runInBrowser } from '../../../lib/browserSandbox';
+import { loadLanguageAvailability } from '../hooks/useLanguageAvailability';
 import { ArrowLeft, Save } from 'lucide-react';
 
 export const DEFAULT_LANGUAGE_BOILERPLATES: Record<CodingLanguage, string> = {
@@ -113,6 +115,7 @@ export const CodingEditorPage: React.FC<CodingEditorPageProps> = ({
   const setLanguage = useCodingEditorStore((s) => s.setLanguage);
   const stdin = useCodingEditorStore((s) => s.stdin);
   const setIsExecuting = useCodingEditorStore((s) => s.setIsExecuting);
+  const setRunStatus = useCodingEditorStore((s) => s.setRunNote);
   const setExecutionResult = useCodingEditorStore((s) => s.setExecutionResult);
   const aiPanelOpen = useCodingEditorStore((s) => s.aiPanelOpen);
   const setActiveProblemId = useCodingEditorStore((s) => s.setActiveProblemId);
@@ -194,6 +197,18 @@ export const CodingEditorPage: React.FC<CodingEditorPageProps> = ({
   const handleRunCode = async () => {
     setIsExecuting(true);
     try {
+      // Without a server sandbox (as on Vercel), Python and JavaScript run in an isolated worker in this browser.
+      const where = (await loadLanguageAvailability())[language]?.runs;
+      if (where === 'browser') {
+        const res = await runInBrowser(
+          { language: language as 'python' | 'javascript', source: sourceCode, stdin },
+          { onStatus: (text) => setRunStatus(text) }
+        );
+        setExecutionResult(res as ExecutionResult);
+        if (res.status === 'SUCCESS') toast.success(`Ran in your browser in ${res.execution_time_ms} ms`);
+        else toast.error(`Execution ended with ${res.status.replace(/_/g, ' ')}`);
+        return;
+      }
       const res = await codingApi.runCode({
         language,
         source_code: sourceCode,
@@ -217,6 +232,7 @@ export const CodingEditorPage: React.FC<CodingEditorPageProps> = ({
       });
     } finally {
       setIsExecuting(false);
+      setRunStatus('');
     }
   };
 

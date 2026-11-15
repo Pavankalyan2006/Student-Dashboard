@@ -8,6 +8,7 @@
 // 6. Interactive Live Model Prediction Tester
 
 import * as React from 'react';
+import { PythonRunPanel } from '../components/PythonRunPanel';
 import {
   Cpu,
   Sparkles,
@@ -601,7 +602,7 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
                   {selectedFile ? selectedFile.name : 'No file selected'}
                 </span>
                 <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 text-emerald-400 font-mono">
-                  Python/YAML
+                  {selectedFile && /\.py$/i.test(selectedFile.name) ? 'Python' : 'Text'}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -627,6 +628,14 @@ export function MlLabPage({ onNavigate }: MlLabPageProps) {
                 placeholder="# Enter Python model script or configuration here..."
               />
             </div>
+            {selectedFile && /\.py$/i.test(selectedFile.name) && (
+              <PythonRunPanel
+                source={fileContent}
+                fileName={selectedFile.name}
+                files={(selectedWorkspace?.files || []) as any}
+                datasets={datasets as any}
+              />
+            )}
           </div>
         </div>
       )}

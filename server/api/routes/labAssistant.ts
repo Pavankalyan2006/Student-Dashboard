@@ -353,15 +353,36 @@ labAssistantRouter.post('/:labId/experiments/:expId/code/run', requireAuth, asyn
 labAssistantRouter.post('/:labId/experiments/:expId/code/save', requireAuth, async (req: Request, res: Response) => {
   try {
     const studentId = req.user!.userId;
-    const { code, language, stdin } = req.body;
+    const { code, language, stdin, browser_result } = req.body;
+    // A run made in the student's browser sandbox (when this server cannot run code) is recorded with its
+    // output, marked as a browser run, so the lab report shows what the program printed.
+    const br =
+      browser_result && typeof browser_result === 'object'
+        ? {
+            stdout: String(browser_result.stdout ?? '').slice(0, 20_000),
+            stderr: String(browser_result.stderr ?? '').slice(0, 20_000),
+            ms: Math.max(0, Math.min(600_000, Math.round(Number(browser_result.execution_time_ms) || 0))),
+            ok: browser_result.status === 'SUCCESS',
+          }
+        : null;
     const draft = await db.saveLabCodeDraft({
       student_id: studentId,
       experiment_id: req.params.expId,
       code: code || '',
       language: language || 'python',
       stdin,
+      ...(br ? { last_output: br.stdout || br.stderr, last_error: br.stderr, execution_duration_ms: br.ms } : {}),
       updated_at: new Date().toISOString(),
     });
+    if (br) {
+      const exp = await db.getLabExperimentById(req.params.expId, studentId);
+      if (exp) {
+        exp.execution_status = br.ok ? 'SUCCESS' : 'ERROR';
+        exp.execution_duration_ms = br.ms;
+        exp.execution_place = 'browser';
+        await db.saveLabExperiment(exp);
+      }
+    }
     res.json({ success: true, data: draft });
   } catch (err: any) {
     res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });

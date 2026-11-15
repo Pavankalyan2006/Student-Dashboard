@@ -39,6 +39,8 @@ interface CodingEditorState {
   activeSavedCodeId: string | null;
   executionResult: ExecutionResult | null;
   isExecuting: boolean;
+  /** What the browser sandbox is doing, e.g. "Downloading numpy…". Empty for server runs. */
+  runNote: string;
   runStatus: 'idle' | 'running' | 'completed' | 'failed';
   outputTab: 'output' | 'errors' | 'input' | 'tests';
   editorSettings: EditorSettings;
@@ -55,6 +57,7 @@ interface CodingEditorState {
   setActiveSavedCodeId: (id: string | null) => void;
   setExecutionResult: (res: ExecutionResult | null) => void;
   setIsExecuting: (val: boolean) => void;
+  setRunNote: (text: string) => void;
   setRunStatus: (status: 'idle' | 'running' | 'completed' | 'failed') => void;
   setOutputTab: (tab: 'output' | 'errors' | 'input' | 'tests') => void;
   updateEditorSettings: (settings: Partial<EditorSettings>) => void;
@@ -96,6 +99,7 @@ export const useCodingEditorStore = create<CodingEditorState>((set, get) => ({
   activeSavedCodeId: null,
   executionResult: null,
   isExecuting: false,
+  runNote: '',
   runStatus: 'idle',
   outputTab: 'output',
   editorSettings: getStoredSettings(),
@@ -133,6 +137,7 @@ export const useCodingEditorStore = create<CodingEditorState>((set, get) => ({
       outputTab: nextTab,
     });
   },
+  setRunNote: (text) => set({ runNote: text }),
   setIsExecuting: (val) => set({ isExecuting: val, runStatus: val ? 'running' : get().runStatus }),
   setRunStatus: (status) => set({ runStatus: status }),
   setOutputTab: (tab) => set({ outputTab: tab }),

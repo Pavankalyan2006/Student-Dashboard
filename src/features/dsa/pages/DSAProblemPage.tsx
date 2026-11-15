@@ -29,6 +29,8 @@ import {
 } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import { toast } from 'sonner';
+import { runSampleTestsInBrowser, SANDBOX_NOTE } from '../../../lib/browserSandbox';
+import { useLanguageAvailability } from '../../coding/hooks/useLanguageAvailability';
 
 interface DSAProblemPageProps {
   problemId: string;
@@ -38,6 +40,17 @@ interface DSAProblemPageProps {
 export const DSAProblemPage: React.FC<DSAProblemPageProps> = ({ problemId, onNavigate }) => {
   const [problem, setProblem] = React.useState<DSAProblem | null>(null);
   const [language, setLanguage] = React.useState<CodingLanguage>('python');
+  // Where Run executes each language: the server sandbox, or (when the server has none) this browser.
+  const availability = useLanguageAvailability();
+  const runsIn = availability[language]?.runs;
+  const [runNote, setRunNote] = React.useState('');
+  const langLabel = (id: string, name: string) => {
+    const a = availability[id];
+    if (!a) return name;
+    if (a.runs === 'browser') return `${name} (runs in your browser)`;
+    if (a.runs === 'none') return `${name} (running code is off on this server)`;
+    return name;
+  };
   const [code, setCode] = React.useState<string>('');
   const [isRunning, setIsRunning] = React.useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = React.useState<boolean>(false);
@@ -170,10 +183,18 @@ export const DSAProblemPage: React.FC<DSAProblemPageProps> = ({ problemId, onNav
     setRunResult(null);
 
     try {
-      const result: any = await dsaApi.runCode(problemId, {
-        language,
-        source_code: code,
-      });
+      const result: any =
+        runsIn === 'browser' && problem
+          ? await runSampleTestsInBrowser(
+              language as 'python' | 'javascript',
+              code,
+              (problem.public_test_cases?.length ? problem.public_test_cases : problem.examples || []).map((c) => ({ input: c.input, output: c.output })),
+              { onStatus: setRunNote }
+            )
+          : await dsaApi.runCode(problemId, {
+              language,
+              source_code: code,
+            });
       setRunResult(result);
       setActiveCaseTab(0);
 
@@ -192,11 +213,16 @@ export const DSAProblemPage: React.FC<DSAProblemPageProps> = ({ problemId, onNav
       toast.error(err.message || 'Execution failed');
     } finally {
       setIsRunning(false);
+      setRunNote('');
     }
   };
 
   const handleSubmit = async () => {
     if (!code.trim() || isSubmitting) return;
+    if (runsIn === 'browser') {
+      toast.info('Graded submissions run the hidden tests on our server, which cannot run code on this deployment. Use Run Code to check the sample tests in your browser.');
+      return;
+    }
     setIsSubmitting(true);
     setConsoleMode('submit');
     setSubmissionResult(null);
@@ -553,10 +579,10 @@ export const DSAProblemPage: React.FC<DSAProblemPageProps> = ({ problemId, onNav
                 onChange={(e) => handleLanguageChange(e.target.value as CodingLanguage)}
                 className="text-xs h-8 px-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-mono text-slate-800 dark:text-slate-200 focus:outline-none"
               >
-                <option value="python">Python 3 (Sandbox Ready)</option>
-                <option value="javascript">JavaScript (Node.js 20)</option>
-                <option value="java">Java 21 (OpenJDK)</option>
-                <option value="cpp">C++ (GCC / Clang)</option>
+                <option value="python">{langLabel('python', 'Python 3')}</option>
+                <option value="javascript">{langLabel('javascript', availability.javascript?.runs === 'browser' ? 'JavaScript' : 'JavaScript (Node.js 20)')}</option>
+                <option value="java" disabled={availability.java?.runs === 'none'}>{langLabel('java', 'Java 21 (OpenJDK)')}</option>
+                <option value="cpp" disabled={availability.cpp?.runs === 'none'}>{langLabel('cpp', 'C++ (GCC / Clang)')}</option>
               </select>
             </div>
 
@@ -805,7 +831,7 @@ export const DSAProblemPage: React.FC<DSAProblemPageProps> = ({ problemId, onNav
             {((consoleMode === 'run' && !runResult) || (consoleMode === 'submit' && !submissionResult)) && (
               <div className="py-6 text-center text-slate-500 text-xs">
                 {isRunning ? (
-                  <span className="text-blue-400 italic">Executing your solution in isolated process sandbox...</span>
+                  <span className="text-blue-400 italic" title={runsIn === 'browser' ? SANDBOX_NOTE : undefined}>{runsIn === 'browser' ? runNote || 'Running in your browser…' : 'Executing your solution in isolated process sandbox...'}</span>
                 ) : isSubmitting ? (
                   <span className="text-emerald-400 italic">Evaluating against full public and hidden test cases...</span>
                 ) : (
