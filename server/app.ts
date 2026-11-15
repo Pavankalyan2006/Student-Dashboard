@@ -26,6 +26,7 @@ import { showcaseStores } from './services/showcaseService';
 import { agentActivityStores } from './services/agentActivityService';
 import { briefingStores } from './services/briefingService';
 import { paperStores } from './services/previousPapersService';
+import { cyberStores } from './services/cyberLabService';
 import { codeReviewStores } from './services/codeReviewService';
 import { competitionStores } from './services/competitionHubService';
 import { healthRouter } from './api/routes/health';
@@ -116,6 +117,7 @@ function registerSources(backend: StateBackend) {
   registerPersistentSource('briefing', briefingStores as unknown as Record<string, any>, ['actions']);
   registerPersistentSource('previousPapers', paperStores as unknown as Record<string, any>, ['papers']);
   registerPersistentSource('codeReview', codeReviewStores as unknown as Record<string, any>, ['reviews']);
+  registerPersistentSource('cyberLab', cyberStores as unknown as Record<string, any>, ['progress']);
   registerPersistentSource('competitions', competitionStores as unknown as Record<string, any>, ['events', 'participations', 'teams']);
   if (backend === 'postgres') {
     // No writable disk on serverless: uploaded file bytes live in the state store instead of data/vault.
