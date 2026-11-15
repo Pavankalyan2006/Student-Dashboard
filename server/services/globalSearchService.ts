@@ -53,7 +53,30 @@ export const SEARCH_LIMITS = { queryChars: 200, maxBody: 20000, maxDocPages: 400
 // ---------------------------------------------------------------------------
 
 export function queryTokens(q: string): string[] {
-  return Array.from(new Set(String(q || '').toLowerCase().slice(0, SEARCH_LIMITS.queryChars).split(/[^a-z0-9+#.]+/).map((t) => t.replace(/^\.+|\.+$/g, '')).filter((t) => t.length >= 2)));
+  return Array.from(new Set(String(q || '').toLowerCase().slice(0, SEARCH_LIMITS.queryChars).split(/[^a-z0-9+#.-]+/).map((t) => t.replace(/^[.-]+|[.-]+$/g, '')).filter((t) => t.length >= 2)));
+}
+
+const tokenPatterns = new Map<string, RegExp>();
+/**
+ * A token matches at the start of a word, so "pag" finds "paging" but "metr" does not match inside
+ * "symmetric". Two-character tokens ("os", "la") must be a whole word. A hyphenated
+ * token ("metr-la", "k-means") matches with a hyphen, a space or nothing between its parts.
+ */
+function tokenPattern(tok: string): RegExp {
+  let re = tokenPatterns.get(tok);
+  if (!re) {
+    const body = tok.split('-').map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('[\\s-]?');
+    const whole = tok.length <= 2 ? '(?![a-z0-9])' : '';
+    re = new RegExp(`(?:^|[^a-z0-9])(${body})${whole}`);
+    if (tokenPatterns.size > 500) tokenPatterns.clear();
+    tokenPatterns.set(tok, re);
+  }
+  return re;
+}
+/** Index of the token in lower-cased text, or -1. */
+function findToken(lower: string, tok: string): number {
+  const m = tokenPattern(tok).exec(lower);
+  return m ? m.index + m[0].length - m[1].length : -1;
 }
 
 /** Every token must appear in the title or body. Title hits score higher than body hits. */
@@ -63,13 +86,13 @@ export function scoreText(tokens: string[], title: string, body: string, phrase:
   const b = body.toLowerCase();
   let score = 0;
   for (const tok of tokens) {
-    if (t.includes(tok)) score += 10;
-    else if (b.includes(tok)) score += 3;
+    if (findToken(t, tok) >= 0) score += 10;
+    else if (findToken(b, tok) >= 0) score += 3;
     else return 0;
   }
   if (phrase && t.includes(phrase)) score += 25;
   else if (phrase && b.includes(phrase)) score += 8;
-  if (t.startsWith(tokens[0])) score += 5;
+  if (findToken(t, tokens[0]) === 0) score += 5;
   return score;
 }
 
@@ -80,7 +103,7 @@ export function snippet(body: string, tokens: string[], width = 160): string {
   const lower = clean.toLowerCase();
   let at = -1;
   for (const tok of tokens) {
-    const i = lower.indexOf(tok);
+    const i = findToken(lower, tok);
     if (i >= 0 && (at < 0 || i < at)) at = i;
   }
   if (at < 0 || clean.length <= width) return clean.slice(0, width) + (clean.length > width ? '…' : '');
@@ -110,7 +133,7 @@ export class GlobalSearchService {
     const push = (c: Candidate) => {
       const s = scoreText(tokens, c.title, c.body, phrase);
       if (s <= 0) return;
-      const inTitle = tokens.every((tok) => c.title.toLowerCase().includes(tok));
+      const inTitle = tokens.every((tok) => findToken(c.title.toLowerCase(), tok) >= 0);
       const { body, ...rest } = c;
       results.push({ ...rest, score: s, description: snippet(body || c.title, tokens), matched_in: c.matched_in || (inTitle ? 'title' : 'content') });
     };
@@ -153,7 +176,7 @@ export class GlobalSearchService {
             const pages = (await db.getDocumentPages(d.id, studentId)).slice(0, SEARCH_LIMITS.maxDocPages);
             for (const p of pages) {
               const text = String(p.text || '').toLowerCase();
-              if (tokens.every((tok) => text.includes(tok))) {
+              if (tokens.every((tok) => findToken(text, tok) >= 0)) {
                 pageHit = { page: p.page_number, text: String(p.text || '') };
                 break;
               }
@@ -201,8 +224,8 @@ export class GlobalSearchService {
         const convs = (await db.getConversationsByStudentId(studentId)).slice(0, SEARCH_LIMITS.maxConversations);
         for (const c of convs) {
           const msgs = (await db.getMessagesByConversationId(c.id, studentId)).slice(-SEARCH_LIMITS.maxMessages);
-          const hit = msgs.find((m) => tokens.every((tok) => String(m.content || '').toLowerCase().includes(tok)));
-          const titleHit = tokens.every((tok) => c.title.toLowerCase().includes(tok));
+          const hit = msgs.find((m) => tokens.every((tok) => findToken(String(m.content || '').toLowerCase(), tok) >= 0));
+          const titleHit = tokens.every((tok) => findToken(c.title.toLowerCase(), tok) >= 0);
           if (!hit && !titleHit) continue;
           push({ id: c.id, type: 'conversations', title: c.title, body: hit ? cap(hit.content) : '', url: '/ai-tutor', tags: [], source: `Your AI conversations · ${new Date(c.updated_at).toLocaleDateString('en-IN')}`, matched_in: hit ? (hit.role === 'user' ? 'your message' : 'AI reply') : 'title', private: true });
         }

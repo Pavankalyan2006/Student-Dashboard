@@ -23,6 +23,20 @@ describe('Search matching', () => {
   });
 });
 
+describe('Search word matching', () => {
+  it('matches at the start of words, keeps short words whole and hyphenated terms together', () => {
+    expect(queryTokens('METR-LA dataset')).toEqual(['metr-la', 'dataset']);
+    expect(scoreText(queryTokens('METR-LA'), 'Fluid Mechanics', 'symmetric flow in large labs', 'metr-la')).toBe(0);
+    expect(scoreText(queryTokens('METR-LA'), 'GNN paper', 'trained on the METR-LA dataset', 'metr-la')).toBeGreaterThan(0);
+    expect(scoreText(queryTokens('metr la'), 'GNN paper', 'trained on the METR-LA dataset', 'metr la')).toBeGreaterThan(0);
+    expect(scoreText(['os'], 'Cosine similarity', 'oscillators', 'os')).toBe(0);
+    expect(scoreText(['os'], 'OS notes', '', 'os')).toBeGreaterThan(0);
+    expect(scoreText(['pag'], 'Paging and TLB', '', 'pag')).toBeGreaterThan(0);
+    expect(scoreText(['c++'], 'Intro to C++ templates', '', 'c++')).toBeGreaterThan(0);
+    expect(snippet(`${'z '.repeat(120)}symmetric matrices, then metro lines`, ['metr'])).toMatch(/^…[^…]*metro lines$/);
+  });
+});
+
 describe('Reminder categories', () => {
   const base: ReminderInput = {
     today: '2026-11-15', studentId: 'me', today_tasks: 0, due_flashcards: 0, deadlines: [], applications: [], hub_deadlines: [], teams: [],
