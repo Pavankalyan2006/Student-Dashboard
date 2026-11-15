@@ -27,10 +27,12 @@ export const aiApi = {
     return apiClient.get<ToolSchema[]>('/ai/tools');
   },
 
-  executeTool: async (toolName: string, parameters: Record<string, any>) => {
+  /** Tools that change data run only with `confirmed: true`, sent after the student approves the action. */
+  executeTool: async (toolName: string, parameters: Record<string, any>, confirmed = false) => {
     return apiClient.post<{ toolName: string; result: any }>('/ai/tools/execute', {
       toolName,
       parameters,
+      confirmed,
     });
   },
 };

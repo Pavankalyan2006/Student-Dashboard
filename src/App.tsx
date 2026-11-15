@@ -86,6 +86,10 @@ const DiscoverPage = lazyPage(() => import('./features/discover/pages/DiscoverPa
 const MistakeNotebookPage = lazyPage(() => import('./features/mistakes/pages/MistakeNotebookPage'), 'MistakeNotebookPage');
 const GradesPage = lazyPage(() => import('./features/academics/pages/GradesPage'), 'GradesPage');
 const AiMemoryPage = lazyPage(() => import('./features/ai-memory/pages/AiMemoryPage'), 'AiMemoryPage');
+const AiBrainPage = lazyPage(() => import('./features/ai-brain/pages/AiBrainPage'), 'AiBrainPage');
+const BriefingPage = lazyPage(() => import('./features/briefing/pages/BriefingPage'), 'BriefingPage');
+const KnowledgeGraphPage = lazyPage(() => import('./features/knowledge-graph/pages/KnowledgeGraphPage'), 'KnowledgeGraphPage');
+const AgentControlCenterPage = lazyPage(() => import('./features/agents/pages/AgentControlCenterPage'), 'AgentControlCenterPage');
 const ShowcasePage = lazyPage(() => import('./features/showcase/pages/ShowcasePage'), 'ShowcasePage');
 const PublicShowcasePage = lazyPage(() => import('./features/showcase/pages/PublicShowcasePage'), 'PublicShowcasePage');
 const DeadlinesPage = lazyPage(() => import('./features/deadlines/pages/DeadlinesPage'), 'DeadlinesPage');
@@ -867,6 +871,23 @@ function AppContent() {
 
     if (path === '/ai-memory' || path === '/profile/ai-memory') {
       return <AiMemoryPage onNavigate={navigate} />;
+    }
+
+    // Personal Intelligence. /knowledge-graph must come before the /knowledge (Knowledge Base) prefix route.
+    if (path === '/ai-brain') {
+      return <AiBrainPage onNavigate={navigate} />;
+    }
+
+    if (path === '/briefing' || path === '/daily-briefing') {
+      return <BriefingPage onNavigate={navigate} />;
+    }
+
+    if (path === '/knowledge-graph' || path === '/knowledge-map') {
+      return <KnowledgeGraphPage onNavigate={navigate} />;
+    }
+
+    if (path === '/agents' || path === '/agent-control-center') {
+      return <AgentControlCenterPage onNavigate={navigate} />;
     }
 
     if (path === '/mistakes' || path === '/mistake-notebook') {

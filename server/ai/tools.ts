@@ -52,8 +52,9 @@ import { RecommendationService } from '../services/recommendationService';
 import { NotificationService } from '../services/notificationService';
 import { OnboardingService } from '../services/onboardingService';
 import { StudentContextEngine } from './studentContextEngine';
-import { AuthorizationError, ValidationError } from '../core/exceptions';
+import { AppError, AuthorizationError, ValidationError } from '../core/exceptions';
 import { logger } from '../core/logging';
+import { AgentActivityService } from '../services/agentActivityService';
 
 export interface ToolParameterSchema {
   type: 'string' | 'number' | 'boolean' | 'object' | 'array';
@@ -128,18 +129,46 @@ export class ToolRegistry {
   public static async execute(
     name: string,
     params: Record<string, any>,
-    context: { studentId: string; role?: UserRole } | string
+    context: { studentId: string; role?: UserRole; confirmed?: boolean; agent?: string } | string
   ): Promise<any> {
     const ctx =
       typeof context === 'string'
         ? { studentId: context, role: 'STUDENT' as UserRole }
         : { studentId: context.studentId, role: context.role || ('STUDENT' as UserRole) };
+    const confirmed = typeof context === 'object' && context.confirmed === true;
+    const agent = typeof context === 'object' ? context.agent : undefined;
 
     const tool = this.tools.get(name);
     if (!tool) {
       throw new ValidationError(`Unknown tool: ${name}`);
     }
 
+    // Tools that change or delete the student's data, run code or act outside the platform need the student's
+    // explicit approval for this call. Agents never pass it, so they cannot run such tools on their own.
+    const log = (status: 'ok' | 'failed' | 'blocked', started: number, error?: string) =>
+      AgentActivityService.record(ctx.studentId, {
+        tool: name,
+        agent,
+        category: tool.category,
+        status,
+        needs_approval: tool.confirmationRequired,
+        approved: confirmed,
+        duration_ms: Date.now() - started,
+        error,
+      });
+    const started = Date.now();
+    try {
+      const result = await this.run(tool, name, params, ctx, confirmed);
+      log('ok', started);
+      return result;
+    } catch (err: any) {
+      if (err?.code === 'APPROVAL_REQUIRED') log('blocked', started, 'Waiting for your approval');
+      else log('failed', started, err?.message);
+      throw err;
+    }
+  }
+
+  private static async run(tool: ToolDefinition, name: string, params: Record<string, any>, ctx: { studentId: string; role: UserRole }, confirmed: boolean): Promise<any> {
     if (this.disabledTools.has(name)) {
       throw new ValidationError(`Tool '${name}' has been administratively disabled`);
     }
@@ -154,6 +183,10 @@ export class ToolRegistry {
       if (schema.required && (params[paramName] === undefined || params[paramName] === null)) {
         throw new ValidationError(`Missing required parameter '${paramName}' for tool '${name}'`);
       }
+    }
+
+    if (tool.confirmationRequired && !confirmed) {
+      throw new AppError(`'${name}' changes your data, so it runs only after you approve it.`, 409, 'APPROVAL_REQUIRED');
     }
 
     logger.info(`Executing tool '${name}' for student ${ctx.studentId}`, {

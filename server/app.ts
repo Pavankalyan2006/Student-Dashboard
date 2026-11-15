@@ -23,6 +23,8 @@ import { semesterStateStore } from './services/semesterCommandCenterService';
 import { academicStores } from './services/academicRecordsService';
 import { aiMemoryStores } from './services/aiMemoryService';
 import { showcaseStores } from './services/showcaseService';
+import { agentActivityStores } from './services/agentActivityService';
+import { briefingStores } from './services/briefingService';
 import { healthRouter } from './api/routes/health';
 import { logger } from './core/logging';
 import { db } from './db/database';
@@ -106,6 +108,9 @@ function registerSources(backend: StateBackend) {
   registerPersistentSource('academicRecords', academicStores as unknown as Record<string, any>, ['records']);
   registerPersistentSource('aiMemory', aiMemoryStores as unknown as Record<string, any>, ['settings']);
   registerPersistentSource('showcase', showcaseStores as unknown as Record<string, any>, ['settings']);
+  // AI Agent Control Center: each student's tool-call log and agent switches. Daily briefing item actions.
+  registerPersistentSource('agentActivity', agentActivityStores as unknown as Record<string, any>, ['log', 'prefs']);
+  registerPersistentSource('briefing', briefingStores as unknown as Record<string, any>, ['actions']);
   if (backend === 'postgres') {
     // No writable disk on serverless: uploaded file bytes live in the state store instead of data/vault.
     registerPersistentSource('storageBlobs', StorageService as unknown as Record<string, any>, ['fileBlobs']);

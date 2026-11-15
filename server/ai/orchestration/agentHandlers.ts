@@ -39,7 +39,7 @@ export class AgentHandlers {
   ): Promise<AgentResult> {
     const studentId = context.student_id;
     const role = context.role;
-    const ctx = { studentId, role };
+    const ctx = { studentId, role, agent: task.agent };
     const query: string = String(task.params.query || '').trim();
 
     try {

@@ -380,9 +380,11 @@ aiRouter.post('/ai/tools/execute', requireAuth, async (req, res, next) => {
       throw new ValidationError("Parameter 'toolName' is required");
     }
 
+    // `confirmed: true` is the student's explicit approval for a tool that changes their data.
     const result = await AIService.executeTool(toolName, parameters || {}, {
       studentId: req.user!.userId,
       role: req.user!.role,
+      confirmed: req.body?.confirmed === true,
     });
 
     res.json({
