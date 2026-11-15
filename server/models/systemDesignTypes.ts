@@ -227,6 +227,14 @@ export interface DesignProjectVersion {
   connections: ArchitectureConnection[];
 }
 
+export interface StudioDiagram {
+  id: string;
+  kind: 'class' | 'sequence' | 'flowchart' | 'er';
+  title: string;
+  source: string;
+  updated_at: string;
+}
+
 export interface SystemDesignProject {
   id: string;
   student_id: string;
@@ -243,6 +251,8 @@ export interface SystemDesignProject {
   capacity_estimate?: CapacityCalculation;
   database_design?: DatabaseDesign;
   api_specification?: ApiSpecification;
+  /** Architecture Studio diagrams (class, sequence, flowchart, ER), kept as editable text. */
+  diagrams?: StudioDiagram[];
   versions: DesignProjectVersion[];
   tags: string[];
   created_at: string;

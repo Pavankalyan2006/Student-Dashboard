@@ -32,6 +32,7 @@ import {
   Cpu,
   Network,
   FlaskConical,
+  ScanSearch,
   Brain,
   Link2,
   ExternalLink,
@@ -136,6 +137,7 @@ export const NAV_SECTIONS: NavSection[] = [
     icon: Code2,
     items: [
       { name: 'Coding Lab', href: '/coding', icon: Code2, match: ['/coding-lab', '/sandbox'] },
+      { name: 'Code Review', href: '/code-review', icon: ScanSearch },
       { name: 'DSA Lab', href: '/dsa', icon: Binary, match: ['/dsa-lab'] },
       { name: 'SQL Lab', href: '/sql-lab', icon: Database },
       { name: 'Git Lab', href: '/git', icon: GitBranch, match: ['/git-lab'] },

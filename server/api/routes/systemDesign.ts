@@ -6,6 +6,7 @@ import { SystemDesignService } from '../../services/systemDesignService';
 import { db } from '../../db/database';
 import { logger } from '../../core/logging';
 import { requireAuth } from '../../middleware/auth';
+import { ArchitectureStudioService } from '../../services/architectureStudioService';
 
 export const systemDesignRouter = Router();
 
@@ -397,3 +398,22 @@ systemDesignRouter.get('/system-design/analytics', async (req: Request, res: Res
     res.status(err.statusCode || err.statusCode || err.status || 500).json({ success: false, message: err.message });
   }
 });
+
+// =========================================================================
+// Architecture Studio: AI drafts the student edits (nothing is saved here)
+// =========================================================================
+
+const studioHandler = (fn: (studentId: string, body: any) => Promise<unknown>, fallback: string) => async (req: Request, res: Response) => {
+  try {
+    res.json({ success: true, data: await fn(resolveStudentId(req), req.body) });
+  } catch (err: any) {
+    const status = err?.statusCode || err?.status || 500;
+    res.status(status).json({ success: false, message: status < 500 || status === 502 || status === 503 ? err.message : fallback });
+  }
+};
+
+// POST /api/v1/system-design/architecture/propose  { description }
+systemDesignRouter.post('/system-design/architecture/propose', studioHandler((id, b) => ArchitectureStudioService.proposeArchitecture(id, b), 'The architecture draft could not be made.'));
+
+// POST /api/v1/system-design/diagrams/propose  { kind, description }
+systemDesignRouter.post('/system-design/diagrams/propose', studioHandler((id, b) => ArchitectureStudioService.proposeDiagram(id, b), 'The diagram draft could not be made.'));
