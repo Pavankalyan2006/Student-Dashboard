@@ -4,6 +4,11 @@ import {
   NotificationPreference,
   NotificationType,
 } from '../models/communityProfileProgressTypes';
+import { ValidationError } from '../core/exceptions';
+import { collectDeadlines } from './deadlineService';
+import { LearningModulesService } from './learningModulesService';
+import { competitionStores, upcomingDeadlines } from './competitionHubService';
+import { categoryEnabled, cleanCategories, leadDays, LEAD_DAYS, reminderCandidates } from './notificationCategories';
 
 export class NotificationService {
   public static async getNotifications(studentId: string, unreadOnly?: boolean): Promise<NotificationItem[] & {
@@ -66,7 +71,18 @@ export class NotificationService {
     studentId: string,
     updates: Partial<NotificationPreference>
   ): Promise<NotificationPreference> {
-    return db.updateNotificationPreferences(studentId, updates);
+    const u: any = { ...(updates || {}) };
+    // Phase 7: the brief's categories are merged with the saved ones; unknown keys are kept for older screens.
+    if (u.categories && typeof u.categories === 'object') {
+      const current: any = (await db.getNotificationPreferences(studentId)).categories || {};
+      u.categories = { ...current, ...u.categories, ...(cleanCategories(u.categories) || {}) };
+    }
+    if (u.reminder_lead_days !== undefined) {
+      const n = Number(u.reminder_lead_days);
+      if (!Number.isInteger(n) || n < LEAD_DAYS.min || n > LEAD_DAYS.max) throw new ValidationError(`reminder_lead_days must be ${LEAD_DAYS.min} to ${LEAD_DAYS.max}`);
+      u.reminder_lead_days = n;
+    }
+    return db.updateNotificationPreferences(studentId, u);
   }
 
   public static async updateNotificationPreferences(
@@ -160,30 +176,43 @@ export class NotificationService {
       }
     }
 
-    // 2. Study task reminder
-    if (prefs.learning) {
-      try {
-        const todayTasks = await db.getTodayTasks(studentId);
-        const pendingTasks = todayTasks.filter((t) => !(t as any).is_completed && !(t as any).completed);
-        if (pendingTasks.length > 0) {
-          const alreadyNotified = existing.some(
-            (n) => (n.title.includes('Study Plan') || n.title.includes('Study Tasks')) && new Date(n.created_at).getTime() > oneDayAgo
-          );
-          if (!alreadyNotified) {
-            const notif = await this.createNotification(studentId, {
-              type: 'SYSTEM',
-              title: `Today's Study Plan: ${pendingTasks.length} Pending Tasks`,
-              message: `You have ${pendingTasks.length} study tasks scheduled for today. Complete them to maintain your streak!`,
-              link: '/study-planner',
-              entity_type: 'STUDY_TASK',
-              entity_id: 'today_tasks',
-            });
-            created.push(notif);
-          }
+    // 2. Phase 7: the brief's categories, built from the student's own dated records.
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      const [deadlines, applications, todayTasks, due] = await Promise.all([
+        collectDeadlines(studentId).catch(() => []),
+        LearningModulesService.getApplications(studentId).catch(() => [] as any[]),
+        db.getTodayTasks(studentId).catch(() => [] as any[]),
+        db.getDueFlashcards(studentId, { limit: 500 }).catch(() => [] as any[]),
+      ]);
+      const hub = upcomingDeadlines(competitionStores.events.get(studentId) || [], [], competitionStores.participations.get(studentId) || [], new Date().toISOString());
+      const teams = Array.from(competitionStores.teams.values()).filter((t) => t.members.some((m) => m.student_id === studentId));
+      const candidates = reminderCandidates(
+        {
+          today, deadlines, applications: applications as any[], hub_deadlines: hub, teams, studentId,
+          today_tasks: todayTasks.filter((t: any) => !t.is_completed && !t.completed).length,
+          due_flashcards: due.length,
+        },
+        leadDays(prefs)
+      );
+      const sent = new Set(existing.map((n: any) => n.entity_id).filter(Boolean));
+      for (const c of candidates) {
+        if (!categoryEnabled(prefs, c.category) || sent.has(c.key)) continue;
+        const notif = await this.createNotification(studentId, {
+          type: c.type as any,
+          title: c.title,
+          message: c.message,
+          link: c.link,
+          entity_type: `REMINDER_${c.category.toUpperCase()}`,
+          entity_id: c.key,
+        });
+        if (notif.id) {
+          created.push(notif);
+          sent.add(c.key);
         }
-      } catch (err) {
-        // gracefully continue
       }
+    } catch (err) {
+      // a failing source adds no reminders; nothing is guessed
     }
 
     const result = Object.assign([...created], {

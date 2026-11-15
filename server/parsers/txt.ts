@@ -80,7 +80,6 @@ export class TXTParser implements DocumentParser {
 
     return {
       title,
-      author: 'Academic Faculty',
       pageCount: pages.length,
       pages,
       language: 'en',

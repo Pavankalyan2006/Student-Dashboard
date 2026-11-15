@@ -582,6 +582,8 @@ export function ProfileSettingsPage({
             ))}
           </div>
 
+          <ReminderCategories notifs={notifs} setNotifs={setNotifs} />
+
           <div className="flex justify-end pt-4 border-t border-slate-100">
             <button
               onClick={saveNotifications}
@@ -765,5 +767,60 @@ function PlatformLinksList({ onNavigate }: { onNavigate: (path: string) => void 
         Manage platforms
       </button>
     </div>
+  );
+}
+
+
+/** Phase 7: the reminder categories from the brief, the lead time, and where reminders are delivered. */
+const REMINDER_CATEGORIES: { key: string; label: string; desc: string }[] = [
+  { key: 'assignments', label: 'Upcoming assignments', desc: 'Assignments, labs, seminars and project reviews in your semester calendar' },
+  { key: 'exams', label: 'Examination dates', desc: 'Slip tests, minors, lab exams, end-semester exams and GATE' },
+  { key: 'study_reminders', label: 'Study reminders', desc: 'Tasks planned for today in your study planner' },
+  { key: 'project_deadlines', label: 'Project deadlines', desc: 'Milestones in your projects' },
+  { key: 'revision', label: 'Revision activities', desc: 'Flashcards that are due for review' },
+  { key: 'opportunity_deadlines', label: 'Saved opportunity deadlines', desc: 'Application deadlines and Competition Hub registration dates you saved' },
+  { key: 'team_updates', label: 'Team updates', desc: 'Competition team tasks assigned to you that are due soon' },
+  { key: 'interview_sessions', label: 'Interview sessions', desc: 'Interview and assessment dates on your saved applications' },
+];
+
+function ReminderCategories({ notifs, setNotifs }: { notifs: any; setNotifs: (n: any) => void }) {
+  const cats: Record<string, boolean> = notifs.categories || {};
+  const lead = Number(notifs.reminder_lead_days) || 3;
+  return (
+    <section aria-labelledby="reminder-cats" className="space-y-3 pt-4 border-t border-slate-100">
+      <div>
+        <h3 id="reminder-cats" className="text-sm font-bold text-slate-900">Reminders</h3>
+        <p className="text-xs text-slate-500">
+          Reminders are made only from dates you recorded in the app, and each one is sent once. They appear in the app; email delivery is not connected.
+        </p>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+        {REMINDER_CATEGORIES.map((c) => (
+          <label key={c.key} className="flex items-start justify-between gap-3 p-3 rounded-xl border border-slate-200 bg-slate-50/50 cursor-pointer">
+            <span>
+              <span className="block text-xs font-semibold text-slate-900">{c.label}</span>
+              <span className="block text-[11px] text-slate-500">{c.desc}</span>
+            </span>
+            <input
+              type="checkbox"
+              checked={cats[c.key] !== false}
+              onChange={(e) => setNotifs({ ...notifs, categories: { ...cats, [c.key]: e.target.checked } })}
+              className="mt-0.5 h-4 w-4 rounded border-slate-300 cursor-pointer"
+            />
+          </label>
+        ))}
+      </div>
+      <label className="flex items-center gap-2 text-xs text-slate-700">
+        Remind me
+        <select
+          value={lead}
+          onChange={(e) => setNotifs({ ...notifs, reminder_lead_days: Number(e.target.value) })}
+          className="border border-slate-200 rounded-lg px-2 py-1 text-xs"
+        >
+          {[1, 2, 3, 5, 7, 14].map((d) => <option key={d} value={d}>{d} day{d === 1 ? '' : 's'}</option>)}
+        </select>
+        before a date
+      </label>
+    </section>
   );
 }

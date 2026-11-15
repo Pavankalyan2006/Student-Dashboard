@@ -5,6 +5,14 @@ const require = createRequire(import.meta.url);
 let pdfParsePkg: any;
 try {
   pdfParsePkg = require('pdf-parse');
+  // pdf.js loads its worker from a file next to the package. Serverless bundles (Vercel) do not ship that
+  // file, so parsing failed there and every PDF looked like a scan. Give pdf.js the worker as data instead.
+  try {
+    const worker = require('pdf-parse/worker');
+    if (pdfParsePkg?.PDFParse?.setWorker && typeof worker?.getData === 'function') pdfParsePkg.PDFParse.setWorker(worker.getData());
+  } catch {
+    // The worker file next to the package is used instead.
+  }
 } catch (e) {
   // Ignore load error
 }
@@ -125,15 +133,15 @@ export class PDFParser implements DocumentParser {
       isScanned = true;
       pages.push({
         pageNumber: 1,
-        text: `[Scanned Document Notice: Little or no extractable digital text was detected in ${title}. Optical Character Recognition (OCR) is required to index image-only or handwritten pages. For best results with AI question answering and semantic search, upload a machine-readable or OCR-processed digital PDF.]`,
+        // No text was found. The page is left empty so nothing is indexed or answered from it; the notice is metadata.
+        text: '',
         headings: ['Scanned Document Notice'],
-        metadata: { word_count: 0, is_scanned: true, extractable: false },
+        metadata: { word_count: 0, is_scanned: true, extractable: false, notice: `No digital text was found in ${title}. It may be a scan; text recognition (OCR) is not set up here.` },
       });
     }
 
     return {
       title,
-      author: 'Academic Faculty',
       pageCount: pages.length,
       pages,
       language: 'en',

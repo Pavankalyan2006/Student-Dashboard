@@ -1,7 +1,6 @@
 import { Router } from 'express';
-import { db } from '../../db/database';
-import { SearchCategory } from '../../models/types';
 import { requireAuth } from '../../middleware/auth';
+import { GlobalSearchService } from '../../services/globalSearchService';
 
 export const searchRouter = Router();
 
@@ -9,11 +8,12 @@ export const searchRouter = Router();
 searchRouter.get('/search', requireAuth, async (req, res, next) => {
   try {
     const q = (req.query.q as string) || '';
-    const type = (req.query.type as SearchCategory | 'all') || 'all';
+    const type = String(req.query.type || 'all');
     const page = Math.max(1, parseInt(req.query.page as string, 10) || 1);
     const limit = Math.min(50, Math.max(1, parseInt(req.query.limit as string, 10) || 10));
 
-    const result = await db.search(q, type, page, limit, req.user!.userId);
+    // Phase 7: live search across the student's own records and the shared catalogue.
+    const result = await GlobalSearchService.search(req.user!.userId, q, type, page, limit);
 
     res.json({
       success: true,
