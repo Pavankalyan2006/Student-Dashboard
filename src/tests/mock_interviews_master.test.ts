@@ -13,9 +13,9 @@ describe('AI Mock Interviews Module - Master Verification Suite', () => {
   });
 
   describe('1. Catalog, Categories & Metadata', () => {
-    it('provides all 12 official interview tracks with rubrics and defaults', () => {
+    it('provides all 14 interview tracks with rubrics and defaults', () => {
       const categories = MockInterviewEngineService.getCategories();
-      expect(categories.length).toBe(12);
+      expect(categories.length).toBe(14); // Phase 5 added PROJECT and COMMUNICATION
 
       const requiredCategories = [
         'HR',
@@ -30,6 +30,8 @@ describe('AI Mock Interviews Module - Master Verification Suite', () => {
         'INTERNSHIP',
         'GRADUATE_JOB',
         'CUSTOM',
+        'PROJECT',
+        'COMMUNICATION',
       ];
 
       for (const cat of requiredCategories) {

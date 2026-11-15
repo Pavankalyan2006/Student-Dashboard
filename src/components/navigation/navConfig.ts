@@ -62,6 +62,7 @@ import {
   Sunrise,
   FileStack,
   Workflow,
+  Trophy,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -186,6 +187,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { name: 'Jobs Discovery', href: '/career/jobs', icon: Search, match: ['/jobs'] },
       { name: 'Resume', href: '/resume', icon: FileUser },
       { name: 'Internships / Applications', href: '/applications', icon: Briefcase },
+      { name: 'Competition Hub', href: '/competitions', icon: Trophy, match: ['/hackathons'] },
       { name: 'Placement Preparation', href: '/placement', icon: Award, match: ['/placements'] },
     ],
   },

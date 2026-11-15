@@ -29,7 +29,7 @@ import {
 import { PageContainer, PageHeader, LoadingState, EmptyState } from '../../../components/layout/PageComponents';
 import { Button } from '../../../components/ui/button';
 import { learningModulesApi } from '../../../api/learningModulesApi';
-import { InternshipApplication, ApplicationStatus } from '../../../types/learningModules';
+import { InternshipApplication, ApplicationStatus, OPPORTUNITY_TYPES, OpportunityType } from '../../../types/learningModules';
 import { toast } from 'sonner';
 
 interface ApplicationTrackerPageProps {
@@ -38,6 +38,8 @@ interface ApplicationTrackerPageProps {
 
 const STATUS_COLUMNS: ApplicationStatus[] = [
   'SAVED',
+  'INTERESTED',
+  'PREPARING',
   'APPLIED',
   'ASSESSMENT',
   'INTERVIEW',
@@ -46,6 +48,8 @@ const STATUS_COLUMNS: ApplicationStatus[] = [
 
 const ALL_STATUSES: ApplicationStatus[] = [
   'SAVED',
+  'INTERESTED',
+  'PREPARING',
   'APPLIED',
   'ASSESSMENT',
   'INTERVIEW',
@@ -55,7 +59,10 @@ const ALL_STATUSES: ApplicationStatus[] = [
   'ACCEPTED',
   'REJECTED',
   'WITHDRAWN',
+  'CLOSED',
 ];
+
+const typeLabel = (t?: string) => (t ? t.replace(/_/g, ' ').toLowerCase().replace(/^\w/, (c) => c.toUpperCase()) : 'Internship or job');
 
 export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPageProps) {
   const [applications, setApplications] = React.useState<InternshipApplication[]>([]);
@@ -73,6 +80,8 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
   const [role, setRole] = React.useState('');
   const [location, setLocation] = React.useState('');
   const [createStatus, setCreateStatus] = React.useState<ApplicationStatus>('APPLIED');
+  const [createType, setCreateType] = React.useState<OpportunityType>('INTERNSHIP');
+  const [typeFilter, setTypeFilter] = React.useState<string>('ALL');
   const [deadline, setDeadline] = React.useState('');
   const [applicationUrl, setApplicationUrl] = React.useState('');
   const [salaryRange, setSalaryRange] = React.useState('');
@@ -132,6 +141,7 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
         salary_range: salaryRange,
         notes,
         status: createStatus,
+        opportunity_type: createType,
         job_description: jobDescription || undefined,
       } as any);
       toast.success(createStatus === 'SAVED' ? 'Saved to your tracker. Nothing was sent to the company.' : 'Application recorded in your tracker. Nothing was sent to the company.');
@@ -280,7 +290,8 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
           app.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
           app.location.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesStatus = statusFilter === 'ALL' || app.status === statusFilter;
-        return matchesSearch && matchesStatus;
+        const matchesType = typeFilter === 'ALL' || (app.opportunity_type || 'INTERNSHIP') === typeFilter;
+        return matchesSearch && matchesStatus && matchesType;
       })
       .sort((a, b) => {
         if (sortBy === 'DATE_DESC') {
@@ -299,7 +310,7 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
         }
         return 0;
       });
-  }, [applications, searchQuery, statusFilter, sortBy]);
+  }, [applications, searchQuery, statusFilter, typeFilter, sortBy]);
 
   if (loading) {
     return (
@@ -313,13 +324,13 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
   // Conversion calculations
   const totalTracked = applications.length;
   // Saved postings are not applications yet, so they are left out of the interview rate.
-  const totalApplied = applications.filter((a) => a.status !== 'SAVED').length;
+  const totalApplied = applications.filter((a) => !['SAVED', 'INTERESTED', 'PREPARING'].includes(a.status)).length;
   const interviewsCount = applications.filter((a) => a.status === 'INTERVIEW' || a.status === 'TECHNICAL_ROUND' || a.status === 'HR_ROUND').length;
   const offersCount = applications.filter((a) => a.status === 'OFFER' || a.status === 'ACCEPTED').length;
   const interviewRate = totalApplied > 0 ? Math.round((interviewsCount / totalApplied) * 100) : null;
   const today = new Date().toISOString().split('T')[0];
   const nextDeadline = applications
-    .filter((a) => a.deadline && a.deadline >= today && !['REJECTED', 'WITHDRAWN', 'ACCEPTED'].includes(a.status))
+    .filter((a) => a.deadline && a.deadline >= today && !['REJECTED', 'WITHDRAWN', 'ACCEPTED', 'CLOSED'].includes(a.status))
     .sort((a, b) => (a.deadline! < b.deadline! ? -1 : 1))[0];
 
   return (
@@ -458,6 +469,20 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
             </div>
 
             <div className="flex items-center gap-1.5 shrink-0">
+              <select
+                aria-label="Filter by opportunity type"
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value)}
+                className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white text-slate-700 focus:outline-none"
+              >
+                <option value="ALL">All opportunity types</option>
+                {OPPORTUNITY_TYPES.map((t) => (
+                  <option key={t} value={t}>{typeLabel(t)}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-center gap-1.5 shrink-0">
               <ArrowUpDown className="w-3.5 h-3.5 text-gray-400" />
               <select
                 value={sortBy}
@@ -493,7 +518,7 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
 
       {/* Kanban Pipeline View */}
       {activeView === 'kanban' && filteredApps.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 overflow-x-auto pb-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 xl:grid-cols-7 gap-4 overflow-x-auto pb-4">
           {STATUS_COLUMNS.map((col) => {
             const colApps = filteredApps.filter((a) => a.status === col);
             return (
@@ -525,6 +550,7 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
                         )}
                       </div>
                       <p className="text-xs text-slate-600 font-medium truncate">{app.role}</p>
+                      <p className="text-[10px] text-slate-400">{typeLabel(app.opportunity_type)}</p>
                       <p className="text-[11px] text-gray-400 flex items-center gap-1">
                         <MapPin className="w-3 h-3" /> {app.location}
                       </p>
@@ -895,6 +921,20 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
             </div>
 
             <div>
+              <label htmlFor="app-create-type" className="block text-xs font-semibold text-slate-700 mb-1">Type of opportunity</label>
+              <select
+                id="app-create-type"
+                value={createType}
+                onChange={(e) => setCreateType(e.target.value as OpportunityType)}
+                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {OPPORTUNITY_TYPES.map((t) => (
+                  <option key={t} value={t}>{typeLabel(t)}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
               <label htmlFor="app-create-status" className="block text-xs font-semibold text-slate-700 mb-1">Where are you with this one?</label>
               <select
                 id="app-create-status"
@@ -903,6 +943,8 @@ export function ApplicationTrackerPage({ onNavigate }: ApplicationTrackerPagePro
                 className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="SAVED">Saved, not applied yet</option>
+                <option value="INTERESTED">Interested</option>
+                <option value="PREPARING">Preparing my application</option>
                 <option value="APPLIED">I have applied</option>
               </select>
               <p className="text-[11px] text-gray-500 mt-1">This tracker only records what you do. It never submits an application for you.</p>

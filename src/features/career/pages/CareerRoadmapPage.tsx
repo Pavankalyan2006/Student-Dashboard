@@ -1,49 +1,36 @@
 import React, { useEffect, useState } from 'react';
 import { careerApi, CareerRoadmap, CareerRole } from '../api/careerApi';
-import {
-  Compass,
-  ChevronLeft,
-  Sparkles,
-  CheckCircle2,
-  Clock,
-  ExternalLink,
-  BookOpen,
-  FolderGit2,
-  Code2,
-  Plus,
-  Trash2,
-} from 'lucide-react';
+import { Compass, ChevronLeft, Sparkles, CheckCircle2, Circle, ExternalLink, Plus, Trash2, Scale } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface CareerRoadmapPageProps {
   onNavigate: (path: string) => void;
 }
 
+/**
+ * Career roadmaps, one per career goal. A student can hold several goals, compare them and drop one. Progress counts
+ * only steps backed by real activity (courses finished, problems solved, projects, mock interviews, skill evidence).
+ * The student can still tick a step for their own tracking; that tick is shown but not counted.
+ */
 export const CareerRoadmapPage: React.FC<CareerRoadmapPageProps> = ({ onNavigate }) => {
   const [roadmaps, setRoadmaps] = useState<CareerRoadmap[]>([]);
-  const [activeRoadmap, setActiveRoadmap] = useState<CareerRoadmap | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
   const [roles, setRoles] = useState<CareerRole[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   const fetchRoadmaps = async () => {
     try {
       setIsLoading(true);
-      const [list, allRoles] = await Promise.all([
-        careerApi.listRoadmaps(),
-        careerApi.listRoles(),
-      ]);
+      setLoadError(null);
+      const [list, allRoles] = await Promise.all([careerApi.listRoadmaps(), careerApi.listRoles()]);
       setRoadmaps(list);
       setRoles(allRoles);
-      if (list.length > 0) {
-        setActiveRoadmap(list[0]);
-      } else if (allRoles.length > 0) {
-        // Auto-generate for SDE if none exists
-        const generated = await careerApi.generateRoadmap(allRoles[0].id);
-        setRoadmaps([generated]);
-        setActiveRoadmap(generated);
-      }
+      // A goal is the student's choice: nothing is generated for them.
+      setActiveId((cur) => (cur && list.some((r) => r.id === cur) ? cur : list[0]?.id || null));
     } catch (err: any) {
-      toast.error('Failed to load career roadmaps');
+      setLoadError(err?.message || 'Career roadmaps could not be loaded.');
     } finally {
       setIsLoading(false);
     }
@@ -53,195 +40,242 @@ export const CareerRoadmapPage: React.FC<CareerRoadmapPageProps> = ({ onNavigate
     fetchRoadmaps();
   }, []);
 
+  const active = roadmaps.find((r) => r.id === activeId) || null;
+  const replace = (updated: CareerRoadmap) => setRoadmaps((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
+
   const handleStepStatusToggle = async (stepId: string, currentStatus: string) => {
-    if (!activeRoadmap) return;
+    if (!active) return;
     const nextStatus = currentStatus === 'COMPLETED' ? 'IN_PROGRESS' : 'COMPLETED';
     try {
-      const updated = await careerApi.updateStepStatus(activeRoadmap.id, stepId, nextStatus as any);
-      setActiveRoadmap(updated);
-      setRoadmaps((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
-      toast.success(nextStatus === 'COMPLETED' ? 'Marked step completed' : 'Marked step in progress');
+      replace(await careerApi.updateStepStatus(active.id, stepId, nextStatus as any));
     } catch {
-      toast.error('Failed to update step status');
+      toast.error('Could not update the step');
     }
   };
 
-  const handleCreateRoadmapForRole = async (roleId: string) => {
+  const handleAddGoal = async (roleId: string) => {
+    if (roadmaps.some((r) => r.role_id === roleId)) {
+      setActiveId(roadmaps.find((r) => r.role_id === roleId)!.id);
+      return;
+    }
     try {
-      const newRoadmap = await careerApi.generateRoadmap(roleId);
-      setRoadmaps([newRoadmap, ...roadmaps]);
-      setActiveRoadmap(newRoadmap);
-      toast.success(`Generated roadmap for ${newRoadmap.title}`);
+      setBusy(true);
+      const created = await careerApi.generateRoadmap(roleId);
+      setRoadmaps((prev) => [created, ...prev]);
+      setActiveId(created.id);
+      toast.success(`Added the goal: ${created.title}`);
     } catch {
-      toast.error('Failed to generate roadmap');
+      toast.error('The roadmap could not be created');
+    } finally {
+      setBusy(false);
     }
   };
 
-  if (isLoading || !activeRoadmap) {
+  const handleRemoveGoal = async (id: string) => {
+    try {
+      await careerApi.deleteRoadmap(id);
+      const rest = roadmaps.filter((r) => r.id !== id);
+      setRoadmaps(rest);
+      setActiveId(rest[0]?.id || null);
+      toast.success('Goal removed');
+    } catch {
+      toast.error('The goal could not be removed');
+    }
+  };
+
+  if (isLoading) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center">
         <Sparkles className="h-8 w-8 animate-spin text-purple-600 mb-3" />
-        <p className="text-xs text-slate-500 font-medium">Personalizing learning progression...</p>
+        <p className="text-xs text-slate-500 font-medium">Loading your career roadmaps…</p>
+      </div>
+    );
+  }
+  if (loadError) {
+    return (
+      <div className="max-w-xl mx-auto mt-10 rounded-2xl border border-red-200 bg-red-50 p-6 text-center">
+        <p className="text-sm font-semibold text-red-900">{loadError}</p>
+        <button onClick={fetchRoadmaps} className="mt-3 rounded-lg border border-red-300 bg-white px-3 py-1.5 text-xs font-semibold text-red-700">Try again</button>
       </div>
     );
   }
 
-  const completedCount = activeRoadmap.steps.filter((s) => s.status === 'COMPLETED').length;
-  const progressPercent = Math.round((completedCount / activeRoadmap.steps.length) * 100);
+  const roleName = (id: string) => roles.find((r) => r.id === id)?.name || id;
+  const available = roles.filter((r) => !roadmaps.some((m) => m.role_id === r.id));
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-12">
-      {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
         <div className="flex items-center gap-3">
           <button
             onClick={() => onNavigate('/career')}
+            aria-label="Back to Career"
             className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-              {activeRoadmap.title}
-            </h1>
-            <p className="text-xs text-slate-500">
-              Personalized technical progression linking directly to platform courses, labs, and projects.
-            </p>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Career Roadmaps</h1>
+            <p className="text-xs text-slate-500">One roadmap per career goal, linked to the courses, labs, projects and interviews on this platform.</p>
           </div>
         </div>
-
-        {/* Switch or Create Roadmap */}
-        <div className="flex flex-wrap items-center gap-2">
-          {roadmaps.length > 1 && (
-            <div className="flex items-center gap-1.5">
-              <label className="text-xs text-slate-500 font-medium">Switch Roadmap:</label>
-              <select
-                value={activeRoadmap.id}
-                onChange={(e) => {
-                  const found = roadmaps.find((r) => r.id === e.target.value);
-                  if (found) setActiveRoadmap(found);
-                }}
-                className="px-3 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium"
-              >
-                {roadmaps.map((r) => (
-                  <option key={r.id} value={r.id}>{r.title}</option>
-                ))}
-              </select>
-            </div>
-          )}
-
+        {roadmaps.length > 0 && available.length > 0 && (
           <select
+            aria-label="Add a career goal"
+            disabled={busy}
             onChange={(e) => {
               if (e.target.value) {
-                handleCreateRoadmapForRole(e.target.value);
+                handleAddGoal(e.target.value);
                 e.target.value = '';
               }
             }}
             defaultValue=""
-            className="px-3 py-1.5 text-xs rounded-lg border border-purple-300 dark:border-purple-800 bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 font-semibold"
+            className="px-3 py-1.5 text-xs rounded-lg border border-purple-300 bg-purple-50 text-purple-700 font-semibold"
           >
-            <option value="" disabled>+ New Role Roadmap</option>
-            {roles.map((r) => (
+            <option value="" disabled>+ Add a career goal</option>
+            {available.map((r) => (
               <option key={r.id} value={r.id}>{r.name}</option>
             ))}
           </select>
-        </div>
+        )}
       </div>
 
-      {/* Progress Card */}
-      <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <span className="text-xs font-bold text-slate-900 dark:text-white">
-              Roadmap Progression: {completedCount} of {activeRoadmap.steps.length} stages completed
-            </span>
+      {roadmaps.length === 0 ? (
+        <div className="space-y-4" data-testid="choose-goal">
+          <div className="rounded-2xl border border-slate-200 bg-white p-5">
+            <div className="flex items-center gap-2 text-slate-900"><Compass className="h-5 w-5 text-purple-600" /><h2 className="text-base font-bold">Choose a career goal</h2></div>
+            <p className="mt-1 text-xs text-slate-500">Pick one or more. Each gets its own roadmap. You can compare them and change your mind at any time.</p>
           </div>
-          <span className="text-sm font-bold text-purple-600">{progressPercent}%</span>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {roles.map((r) => (
+              <button
+                key={r.id}
+                disabled={busy}
+                onClick={() => handleAddGoal(r.id)}
+                className="rounded-xl border border-slate-200 bg-white p-4 text-left transition hover:border-purple-300 hover:shadow-sm disabled:opacity-60"
+              >
+                <p className="text-sm font-semibold text-slate-900">{r.name}</p>
+                <p className="mt-1 line-clamp-2 text-xs text-slate-500">{r.description}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="flex flex-wrap gap-2" role="tablist" aria-label="My career goals">
+            {roadmaps.map((r) => (
+              <button
+                key={r.id}
+                role="tab"
+                aria-selected={r.id === activeId}
+                onClick={() => setActiveId(r.id)}
+                className={`rounded-lg border px-3 py-2 text-left text-xs ${r.id === activeId ? 'border-purple-600 bg-purple-600 text-white' : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'}`}
+              >
+                <span className="font-semibold">{roleName(r.role_id)}</span>
+                <span className="ml-2 opacity-80">{r.verified_progress?.percent ?? 0}%</span>
+              </button>
+            ))}
+          </div>
+
+          {roadmaps.length >= 2 && (
+            <div className="rounded-2xl border border-slate-200 bg-white p-4" data-testid="compare-goals">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <p className="flex items-center gap-2 text-sm font-bold text-slate-900"><Scale className="h-4 w-4 text-slate-500" /> Compare my goals</p>
+                <button className="text-xs font-semibold text-purple-700 hover:underline" onClick={() => onNavigate('/career/explore')}>Compare role requirements</button>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="text-slate-500"><tr><th className="py-1 pr-3 font-medium">Goal</th><th className="py-1 pr-3 font-medium">Steps backed by activity</th><th className="py-1 pr-3 font-medium">Still to do</th><th className="py-1 font-medium">Next step</th></tr></thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {roadmaps.map((r) => {
+                      const next = r.steps.find((s) => !s.evidence?.verified);
+                      return (
+                        <tr key={r.id}>
+                          <td className="py-1.5 pr-3 font-semibold text-slate-800">{roleName(r.role_id)}</td>
+                          <td className="py-1.5 pr-3">{r.verified_progress?.done ?? 0} of {r.verified_progress?.total ?? r.steps.length}</td>
+                          <td className="py-1.5 pr-3">{(r.verified_progress?.total ?? r.steps.length) - (r.verified_progress?.done ?? 0)}</td>
+                          <td className="py-1.5 text-slate-600">{next ? next.title : 'All done'}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {active && <RoadmapDetail roadmap={active} onToggle={handleStepStatusToggle} onNavigate={onNavigate} onRemove={() => handleRemoveGoal(active.id)} />}
+        </>
+      )}
+    </div>
+  );
+};
+
+function RoadmapDetail({ roadmap, onToggle, onNavigate, onRemove }: { roadmap: CareerRoadmap; onToggle: (id: string, s: string) => void; onNavigate: (p: string) => void; onRemove: () => void }) {
+  const vp = roadmap.verified_progress || { done: 0, total: roadmap.steps.length, percent: 0 };
+  return (
+    <>
+      <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3" data-testid="roadmap-progress">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-base font-bold text-slate-900 dark:text-white">{roadmap.title}</h2>
+          <button onClick={onRemove} className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-transparent px-2.5 py-1 text-xs text-slate-600 hover:bg-slate-50"><Trash2 className="h-3.5 w-3.5" /> Remove this goal</button>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-bold text-slate-900 dark:text-white">{vp.done} of {vp.total} steps backed by your activity</span>
+          <span className="text-sm font-bold text-purple-600">{vp.percent}%</span>
         </div>
         <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
-          <div
-            className="bg-purple-600 h-2 rounded-full transition-all duration-500"
-            style={{ width: `${progressPercent}%` }}
-          />
+          <div className="bg-purple-600 h-2 rounded-full transition-all duration-500" style={{ width: `${vp.percent}%` }} />
         </div>
+        <p className="text-[11px] text-slate-500">
+          Progress counts finished courses, solved problems, projects, completed mock interviews and recorded skill evidence. Steps you tick yourself are shown as self-marked and do not change it.
+        </p>
       </div>
 
-      {/* Sequential Steps Timeline */}
       <div className="space-y-4">
-        {activeRoadmap.steps.map((step, idx) => {
-          const isDone = step.status === 'COMPLETED';
-          const isInProgress = step.status === 'IN_PROGRESS';
-
+        {roadmap.steps.map((step, idx) => {
+          const verified = !!step.evidence?.verified;
+          const selfMarked = step.status === 'COMPLETED';
           return (
             <div
               key={step.id}
-              className={`p-5 rounded-2xl border transition flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${
-                isDone
-                  ? 'bg-emerald-50/30 dark:bg-emerald-950/10 border-emerald-200 dark:border-emerald-900/50'
-                  : isInProgress
-                  ? 'bg-white dark:bg-slate-900 border-purple-300 dark:border-purple-800 shadow-sm ring-1 ring-purple-500/20'
-                  : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 opacity-80'
-              }`}
+              data-testid="roadmap-step"
+              className={`p-5 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${verified ? 'bg-emerald-50/40 border-emerald-200' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800'}`}
             >
               <div className="flex items-start gap-4">
-                <button
-                  onClick={() => handleStepStatusToggle(step.id, step.status)}
-                  className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 font-bold text-xs transition ${
-                    isDone
-                      ? 'bg-emerald-600 text-white'
-                      : isInProgress
-                      ? 'bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 border-2 border-purple-600'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
-                  }`}
-                  title="Click to toggle stage completion"
-                >
-                  {isDone ? '✓' : idx + 1}
-                </button>
-
+                <span className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 font-bold text-xs ${verified ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                  {verified ? '✓' : idx + 1}
+                </span>
                 <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                      Stage {idx + 1}: {step.title}
-                    </h3>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                      {step.estimated_effort}
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                    {step.description}
-                  </p>
-                  <div className="flex items-center gap-2 text-[11px] text-slate-400 pt-0.5">
-                    <span>Resource Type: <strong className="text-slate-700 dark:text-slate-300">{step.source_type}</strong></span>
-                  </div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">Step {idx + 1}: {step.title}</h3>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">{step.description}</p>
+                  {step.evidence && (
+                    <p className={`flex items-center gap-1.5 text-[11px] font-medium ${verified ? 'text-emerald-700' : 'text-slate-500'}`}>
+                      {verified ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Circle className="h-3.5 w-3.5" />}
+                      {verified ? 'Done: ' : 'Not yet: '}
+                      {step.evidence.detail}
+                    </p>
+                  )}
                 </div>
               </div>
-
-              {/* Action Link to real platform modules */}
-              <div className="flex items-center gap-3 shrink-0 self-end sm:self-center">
+              <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
                 {step.url && (
-                  <button
-                    onClick={() => onNavigate(step.url!)}
-                    className="px-3.5 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600 text-xs font-semibold hover:bg-blue-100 flex items-center gap-1.5 transition"
-                  >
-                    Open Platform Module
-                    <ExternalLink className="h-3 w-3" />
+                  <button onClick={() => onNavigate(step.url!)} className="px-3.5 py-1.5 rounded-lg bg-blue-50 text-blue-600 text-xs font-semibold hover:bg-blue-100 flex items-center gap-1.5">
+                    Open <ExternalLink className="h-3 w-3" />
                   </button>
                 )}
                 <button
-                  onClick={() => handleStepStatusToggle(step.id, step.status)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition ${
-                    isDone
-                      ? 'border-emerald-200 text-emerald-700 hover:bg-emerald-100'
-                      : 'border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50'
-                  }`}
+                  onClick={() => onToggle(step.id, step.status)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium border bg-transparent ${selfMarked ? 'border-emerald-200 text-emerald-700' : 'border-slate-300 text-slate-700 hover:bg-slate-50'}`}
+                  title="Your own tick. It does not change the progress above."
                 >
-                  {isDone ? 'Completed' : 'Mark Done'}
+                  {selfMarked ? 'Self-marked done' : <span className="inline-flex items-center gap-1"><Plus className="h-3 w-3" /> Mark for myself</span>}
                 </button>
               </div>
             </div>
           );
         })}
       </div>
-    </div>
+    </>
   );
-};
+}

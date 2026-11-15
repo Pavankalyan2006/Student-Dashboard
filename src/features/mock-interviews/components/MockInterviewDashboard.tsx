@@ -812,6 +812,11 @@ export const MockInterviewDashboard: React.FC<Props> = ({
                       <div>
                         <span className="font-bold text-slate-800 block">{cat.category}</span>
                         <span className="text-[10px] text-slate-500">{cat.count} session(s)</span>
+                        {typeof cat.change === 'number' && (
+                          <span className={`block text-[10px] font-semibold ${cat.change >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                            First {cat.first_score}% → latest {cat.latest_score}% ({cat.change >= 0 ? '+' : ''}{cat.change})
+                          </span>
+                        )}
                       </div>
                       <span className="font-mono font-bold text-blue-700 text-sm">{cat.average_score}%</span>
                     </div>

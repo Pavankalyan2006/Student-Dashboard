@@ -32,6 +32,7 @@ import {
   ApplicationTimelineEvent,
   JobDescriptionSkillAnalysis,
 } from '../models/learningModulesTypes';
+import { OPPORTUNITY_TYPES } from '../models/learningModulesTypes';
 import { db } from '../db/database';
 import { NotFoundError, ValidationError, AuthorizationError, AppError } from '../core/exceptions';
 import { logger } from '../core/logging';
@@ -1984,7 +1985,7 @@ Output JSON format:
   }
 
   private static readonly APPLICATION_STATUSES: ApplicationStatus[] = [
-    'SAVED', 'APPLIED', 'ASSESSMENT', 'INTERVIEW', 'TECHNICAL_ROUND', 'HR_ROUND', 'OFFER', 'ACCEPTED', 'REJECTED', 'WITHDRAWN',
+    'SAVED', 'INTERESTED', 'PREPARING', 'APPLIED', 'ASSESSMENT', 'INTERVIEW', 'TECHNICAL_ROUND', 'HR_ROUND', 'OFFER', 'ACCEPTED', 'REJECTED', 'WITHDRAWN', 'CLOSED',
   ];
 
   private static checkStatus(status: unknown): ApplicationStatus {
@@ -2025,6 +2026,12 @@ Output JSON format:
       if (!['http:', 'https:'].includes(u.protocol)) throw new ValidationError('application_url must start with http:// or https://');
     }
     if (data?.status !== undefined) out.status = this.checkStatus(data.status);
+    if (data?.opportunity_type !== undefined && data.opportunity_type !== null && data.opportunity_type !== '') {
+      if (!(OPPORTUNITY_TYPES as readonly string[]).includes(data.opportunity_type)) {
+        throw new ValidationError(`opportunity_type must be one of ${OPPORTUNITY_TYPES.join(', ')}`);
+      }
+      out.opportunity_type = data.opportunity_type;
+    }
     return out;
   }
 
@@ -2091,8 +2098,9 @@ Output JSON format:
       contact_person: clean.contact_person,
       resume_version_name: clean.resume_version_name,
       notes: clean.notes || '',
+      opportunity_type: clean.opportunity_type,
       job_description: clean.job_description || undefined,
-      timeline: [{ id: `ev_${Date.now()}`, title: status === 'SAVED' ? 'Saved to tracker' : 'Application recorded', date: today, status }],
+      timeline: [{ id: `ev_${Date.now()}`, title: ['SAVED', 'INTERESTED', 'PREPARING'].includes(status) ? 'Saved to tracker' : 'Application recorded', date: today, status }],
       jd_analysis: clean.job_description ? await this.analyseJobDescription(studentId, clean.job_description) : undefined,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -2130,7 +2138,7 @@ Output JSON format:
     const app = await this.getApplicationById(studentId, appId);
     const clean = this.cleanApplicationInput(patch);
     if (clean.company_name === '' || clean.role === '') throw new ValidationError('Company name and role cannot be empty');
-    for (const k of ['company_name', 'role', 'location', 'deadline', 'application_url', 'salary_range', 'notes', 'interview_date', 'assessment_date', 'contact_person', 'resume_version_name', 'application_date'] as const) {
+    for (const k of ['company_name', 'role', 'location', 'deadline', 'application_url', 'salary_range', 'notes', 'interview_date', 'assessment_date', 'contact_person', 'resume_version_name', 'application_date', 'opportunity_type'] as const) {
       if (k in clean) (app as any)[k] = (clean as any)[k];
     }
     if ('job_description' in clean) {

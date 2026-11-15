@@ -35,6 +35,8 @@ export interface CareerRoadmapStep {
   source_id?: string;
   url?: string;
   action_label?: string;
+  /** Whether real activity backs this step (computed by the server; a self-marked tick does not count). */
+  evidence?: { verified: boolean; detail: string };
 }
 
 export interface CareerRoadmap {
@@ -42,10 +44,12 @@ export interface CareerRoadmap {
   student_id: string;
   role_id: string;
   title: string;
-  status: 'ACTIVE' | 'COMPLETED' | 'PAUSED';
+  status: 'ACTIVE' | 'COMPLETED' | 'PAUSED' | 'IN_PROGRESS';
   created_at: string;
   updated_at: string;
   steps: CareerRoadmapStep[];
+  verified_progress?: { done: number; total: number; percent: number };
+  self_marked_done?: number;
 }
 
 export interface PotentiallyRelevantRole {

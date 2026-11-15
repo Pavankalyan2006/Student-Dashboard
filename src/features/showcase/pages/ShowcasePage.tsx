@@ -1,13 +1,13 @@
 import * as React from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Presentation, Copy, RefreshCw, PencilLine, Link2, Printer } from 'lucide-react';
+import { Presentation, Copy, RefreshCw, PencilLine, Link2, Printer, FileText } from 'lucide-react';
 import { PageContainer, PageHeader, LoadingState, ErrorState } from '../../../components/layout/PageComponents';
 import { Button } from '../../../components/ui/button';
 import { apiClient } from '../../../api/client';
-import { ShowcaseView, type ShowcaseData } from '../components/ShowcaseView';
+import { ShowcaseView, type ShowcaseData, type ShowcaseSectionKey } from '../components/ShowcaseView';
 
-type Section = 'skills' | 'projects' | 'certificates' | 'achievements' | 'github';
+type Section = ShowcaseSectionKey;
 interface Settings {
   enabled: boolean;
   slug: string | null;
@@ -17,7 +17,16 @@ interface Settings {
 }
 
 const KEY = ['showcase', 'me'];
-const LABELS: Record<Section, string> = { skills: 'Skills', projects: 'Projects', certificates: 'Certificates', achievements: 'Achievements', github: 'Featured GitHub repositories' };
+const LABELS: Record<Section, string> = {
+  education: 'Education (branch and semester)',
+  skills: 'Skills',
+  projects: 'Projects',
+  research: 'Research projects',
+  competitions: 'Hackathon and competition results',
+  certificates: 'Certificates',
+  achievements: 'Achievements',
+  github: 'Featured GitHub repositories',
+};
 
 /** The student's portfolio built from their real projects, certificates, achievements and repositories, with opt-in sharing. */
 export function ShowcasePage({ onNavigate }: { onNavigate: (path: string) => void }) {
@@ -63,6 +72,7 @@ export function ShowcasePage({ onNavigate }: { onNavigate: (path: string) => voi
           <div className="flex gap-2">
             <Button variant="outline" className="gap-2" onClick={() => window.print()}><Printer className="h-4 w-4" /> Print or save as PDF</Button>
             <Button variant="outline" className="gap-2" onClick={() => onNavigate('/projects')}><PencilLine className="h-4 w-4" /> Add projects</Button>
+            <Button variant="outline" className="gap-2" onClick={() => onNavigate('/resume')}><FileText className="h-4 w-4" /> Export my resume</Button>
           </div>
         }
       />
@@ -108,7 +118,7 @@ export function ShowcasePage({ onNavigate }: { onNavigate: (path: string) => voi
             <p className="pt-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Sections on the shared page</p>
             {(Object.keys(LABELS) as Section[]).map((k) => (
               <label key={k} className="flex items-center gap-2 text-sm text-slate-700">
-                <input type="checkbox" className="h-4 w-4 accent-blue-600" checked={settings.sections[k]} onChange={(e) => save.mutate({ sections: { ...settings.sections, [k]: e.target.checked } })} /> {LABELS[k]}
+                <input type="checkbox" className="h-4 w-4 accent-blue-600" checked={!!settings.sections[k]} onChange={(e) => save.mutate({ sections: { ...settings.sections, [k]: e.target.checked } })} /> {LABELS[k]}
               </label>
             ))}
           </div>
