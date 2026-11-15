@@ -44,7 +44,8 @@ export function ApiDesignWorkspace({
 
   // Initialize with starter endpoints
   const currentSpec: ApiSpecification = React.useMemo(() => {
-    if (apiSpecification && apiSpecification.endpoints && apiSpecification.endpoints.length > 0) {
+    // An example is shown only until the student saves their own (an empty saved design stays empty).
+    if (apiSpecification) {
       return apiSpecification;
     }
     return {
@@ -173,7 +174,16 @@ export function ApiDesignWorkspace({
 
   const selectedEndpoint = currentSpec.endpoints.find(e => e.id === selectedEndpointId);
 
+  const isExample = !apiSpecification;
+
   return (
+    <div className="space-y-4">
+      {isExample && !readOnly && (
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-2.5 text-xs text-amber-200" data-testid="api-example">
+          <span>This is an example (a URL shortener) to show how the workspace works. It is not your design until you change it.</span>
+          <button type="button" onClick={() => onChangeApiSpecification({ title: 'My API', version: '1.0.0', base_url: 'https://api.example.com/v1', endpoints: [] })} className="rounded-lg border border-amber-400/50 px-2.5 py-1 font-semibold text-amber-100 hover:bg-amber-500/20">Start empty</button>
+        </div>
+      )}
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
       {/* ------------------------------------------------------------- */}
       {/* LEFT: ENDPOINTS LIST & BUILDER */}
@@ -387,7 +397,7 @@ export function ApiDesignWorkspace({
                 onClick={handleCopySpec}
                 size="sm"
                 variant="outline"
-                className="border-slate-700 text-slate-300 text-xs h-7 px-2.5"
+                className="border-slate-700 bg-transparent text-slate-300 hover:bg-slate-800 hover:text-white text-xs h-7 px-2.5"
               >
                 {copied ? <Check className="w-3.5 h-3.5 text-emerald-400 mr-1" /> : <Copy className="w-3.5 h-3.5 mr-1" />}
                 {copied ? 'Copied' : 'Copy'}
@@ -396,7 +406,7 @@ export function ApiDesignWorkspace({
                 onClick={handleDownloadSpec}
                 size="sm"
                 variant="outline"
-                className="border-slate-700 text-slate-300 text-xs h-7 px-2.5"
+                className="border-slate-700 bg-transparent text-slate-300 hover:bg-slate-800 hover:text-white text-xs h-7 px-2.5"
               >
                 <Download className="w-3.5 h-3.5 mr-1" /> Export
               </Button>
@@ -415,6 +425,7 @@ export function ApiDesignWorkspace({
           </span>
         </div>
       </div>
+    </div>
     </div>
   );
 }

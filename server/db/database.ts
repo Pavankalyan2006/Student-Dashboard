@@ -10064,12 +10064,14 @@ print(power_mod(2, 10, 1000))  # Output: 24
         highest_challenge_score: 0,
         mastered_concepts: [],
         weak_concepts: [],
-        readiness_score: 45,
+        readiness_score: 0,
         last_activity_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
       this.systemDesignProgress.set(studentId, prog);
     }
+    // Readiness is always worked out from what the student has actually done (it used to start at 45%).
+    prog.readiness_score = systemDesignReadiness(prog, this.systemDesignLessons.size);
     return prog;
   }
 
@@ -12676,4 +12678,19 @@ export function matchesProfileSubject(course: { title?: string; code?: string },
     // "DBMS" style abbreviations against "Database Management Systems (DBMS)".
     return /^[a-z]{2,6}$/.test(s) && new RegExp(`\\(${s}\\)|\\b${s}\\b`).test(title);
   });
+}
+
+/**
+ * System Design readiness (0-100) from real activity only: lessons completed (40), challenges passed, up to 5 (30),
+ * mock interviews completed, up to 3 (20), and design projects created, up to 3 (10).
+ */
+export function systemDesignReadiness(
+  p: { completed_lessons?: string[]; completed_challenges?: string[]; interview_sessions_completed?: number; total_projects_created?: number },
+  totalLessons: number
+): number {
+  const lessons = totalLessons > 0 ? Math.min(1, (p.completed_lessons?.length || 0) / totalLessons) : 0;
+  const challenges = Math.min(5, p.completed_challenges?.length || 0) / 5;
+  const interviews = Math.min(3, p.interview_sessions_completed || 0) / 3;
+  const projects = Math.min(3, p.total_projects_created || 0) / 3;
+  return Math.round(lessons * 40 + challenges * 30 + interviews * 20 + projects * 10);
 }

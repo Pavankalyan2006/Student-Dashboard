@@ -204,7 +204,7 @@ export function ChallengeCatalogView({
                     onClick={() => onViewChallengeDetail(c)}
                     size="sm"
                     variant="outline"
-                    className="border-slate-700 text-slate-300 text-xs h-7 px-2.5"
+                    className="border-slate-700 bg-transparent text-slate-300 hover:bg-slate-800 hover:text-white text-xs h-7 px-2.5"
                   >
                     Details
                   </Button>

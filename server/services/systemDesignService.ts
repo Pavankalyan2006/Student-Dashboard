@@ -97,7 +97,8 @@ export class SystemDesignService {
       throw new ValidationError('Project title is required');
     }
 
-    const projectId = data.id || `proj_sd_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    // The id is always made here: a client-chosen id could replace another student's project with the same id.
+    const projectId = `proj_sd_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     const newProject: SystemDesignProject = {
       id: projectId,
       student_id: studentId,
@@ -114,6 +115,7 @@ export class SystemDesignService {
       capacity_estimate: data.capacity_estimate,
       database_design: data.database_design,
       api_specification: data.api_specification,
+      diagrams: validateDiagrams(data.diagrams),
       versions: [
         {
           version_number: 1,

@@ -729,6 +729,7 @@ export function ArchitectureDesigner({
             return (
               <div
                 key={comp.id}
+                data-testid="canvas-node"
                 onMouseDown={(e) => handleStartDrag(e, comp)}
                 onClick={(e) => handleComponentClick(e, comp.id)}
                 style={{
@@ -922,7 +923,7 @@ export function ArchitectureDesigner({
                   onClick={handleDuplicateSelected}
                   size="sm"
                   variant="outline"
-                  className="flex-1 border-slate-700 text-slate-300 text-xs"
+                  className="flex-1 border-slate-700 bg-transparent text-slate-300 hover:bg-slate-800 hover:text-white text-xs"
                 >
                   <Copy className="w-3.5 h-3.5 mr-1" /> Duplicate
                 </Button>

@@ -24,32 +24,56 @@ import { toast } from 'sonner';
 interface ArchitectureEvaluatorProps {
   project: SystemDesignProject;
   challengeId?: string;
+  unsaved?: boolean;
   onSubmissionComplete?: (submission: ChallengeSubmission) => void;
 }
 
 export function ArchitectureEvaluator({
   project,
   challengeId,
-  onSubmissionComplete
+  onSubmissionComplete,
+  unsaved = false
 }: ArchitectureEvaluatorProps) {
   const [evaluating, setEvaluating] = React.useState(false);
   const [evaluation, setEvaluation] = React.useState<any | null>(null);
+  const [error, setError] = React.useState<string | null>(null);
 
   const runEvaluation = React.useCallback(async () => {
+    if (unsaved) return;
     try {
       setEvaluating(true);
+      setError(null);
       const res = await systemDesignApi.evaluateArchitecture(project.id);
       setEvaluation(res);
     } catch (err: any) {
-      toast.error('Evaluation failed: ' + err.message);
+      setError(err?.message || 'The evaluation could not be run.');
     } finally {
       setEvaluating(false);
     }
-  }, [project.id]);
+  }, [project.id, unsaved]);
 
   React.useEffect(() => {
     runEvaluation();
   }, [runEvaluation]);
+
+  if (unsaved) {
+    return (
+      <div className="p-12 text-center text-slate-300 bg-slate-900 border border-slate-800 rounded-2xl" data-testid="evaluation-unsaved">
+        <ShieldCheck className="w-8 h-8 text-indigo-400 mx-auto mb-2" />
+        Save your design in the Architecture Designer first. The evaluation checks the saved design.
+      </div>
+    );
+  }
+
+  if (error && !evaluation) {
+    return (
+      <div className="p-12 text-center text-slate-300 bg-slate-900 border border-slate-800 rounded-2xl space-y-3" data-testid="evaluation-error">
+        <AlertTriangle className="w-8 h-8 text-amber-400 mx-auto" />
+        <p>The evaluation could not be run: {error}</p>
+        <button type="button" onClick={runEvaluation} className="px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-semibold">Try again</button>
+      </div>
+    );
+  }
 
   const handleSubmitChallenge = async () => {
     if (!challengeId) return;
@@ -119,7 +143,7 @@ export function ArchitectureEvaluator({
               disabled={evaluating}
               size="sm"
               variant="outline"
-              className="border-slate-700 text-slate-300 text-xs"
+              className="border-slate-700 bg-transparent text-slate-300 hover:bg-slate-800 hover:text-white text-xs"
             >
               Re-evaluate
             </Button>

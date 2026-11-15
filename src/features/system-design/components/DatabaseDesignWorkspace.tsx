@@ -48,7 +48,8 @@ export function DatabaseDesignWorkspace({
 
   // Initialize with sensible starter entities if none exist
   const currentDesign: DatabaseDesign = React.useMemo(() => {
-    if (databaseDesign && databaseDesign.entities && databaseDesign.entities.length > 0) {
+    // An example is shown only until the student saves their own (an empty saved design stays empty).
+    if (databaseDesign) {
       return databaseDesign;
     }
     return {
@@ -165,7 +166,16 @@ export function DatabaseDesignWorkspace({
 
   const selectedEntity = currentDesign.entities.find(e => e.id === selectedEntityId);
 
+  const isExample = !databaseDesign;
+
   return (
+    <div className="space-y-4">
+      {isExample && !readOnly && (
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-2.5 text-xs text-amber-200" data-testid="database-example">
+          <span>This is an example (a URL shortener) to show how the workspace works. It is not your design until you change it.</span>
+          <button type="button" onClick={() => onChangeDatabaseDesign({ entities: [], relationships: [] })} className="rounded-lg border border-amber-400/50 px-2.5 py-1 font-semibold text-amber-100 hover:bg-amber-500/20">Start empty</button>
+        </div>
+      )}
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
       {/* ------------------------------------------------------------- */}
       {/* LEFT: ENTITY LIST & ATTRIBUTE EDITOR */}
@@ -348,7 +358,7 @@ export function DatabaseDesignWorkspace({
             </div>
 
             {!readOnly && (
-              <Button onClick={handleAddAttribute} size="sm" variant="outline" className="w-full border-slate-700 text-slate-300 text-xs">
+              <Button onClick={handleAddAttribute} size="sm" variant="outline" className="w-full border-slate-700 bg-transparent text-slate-300 hover:bg-slate-800 hover:text-white text-xs">
                 <Plus className="w-3.5 h-3.5 mr-1" /> Add Column
               </Button>
             )}
@@ -384,7 +394,7 @@ export function DatabaseDesignWorkspace({
                 onClick={handleCopySql}
                 size="sm"
                 variant="outline"
-                className="border-slate-700 text-slate-300 text-xs h-7 px-2.5"
+                className="border-slate-700 bg-transparent text-slate-300 hover:bg-slate-800 hover:text-white text-xs h-7 px-2.5"
               >
                 {copied ? <Check className="w-3.5 h-3.5 text-emerald-400 mr-1" /> : <Copy className="w-3.5 h-3.5 mr-1" />}
                 {copied ? 'Copied' : 'Copy'}
@@ -416,6 +426,7 @@ export function DatabaseDesignWorkspace({
           </span>
         </div>
       </div>
+    </div>
     </div>
   );
 }
