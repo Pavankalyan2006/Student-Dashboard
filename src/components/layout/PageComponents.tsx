@@ -2,10 +2,27 @@ import * as React from 'react';
 import { AlertCircle, RefreshCw, Sparkles, FolderOpen, ArrowRight } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/button';
+import { motion } from 'motion/react';
+import { AnimatedNumber, EASE_OUT } from '../motion';
 
 export function PageContainer({ children, className }: { children: React.ReactNode; className?: string }) {
   // The shell already pads and centres <main>; pages only add vertical rhythm.
-  return <div className={cn('mx-auto w-full max-w-7xl space-y-6 lg:space-y-8', className)}>{children}</div>;
+  // Each top-level section rises in a moment after the one above it, so a page settles in from top to bottom.
+  const items = React.Children.toArray(children);
+  return (
+    <div className={cn('mx-auto w-full max-w-7xl space-y-6 lg:space-y-8', className)}>
+      {items.map((child, i) => (
+        <motion.div
+          key={(React.isValidElement(child) && child.key) || i}
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.42, ease: EASE_OUT, delay: Math.min(i, 8) * 0.055 }}
+        >
+          {child}
+        </motion.div>
+      ))}
+    </div>
+  );
 }
 
 export interface PageHeaderProps {
@@ -24,9 +41,15 @@ export function PageHeader({ title, description, badge, actions, eyebrow, icon, 
     <div className={cn('flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between', className)}>
       <div className="flex min-w-0 items-start gap-3.5">
         {icon && (
-          <div className="mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-50 to-violet-50 text-blue-600 ring-1 ring-inset ring-blue-100 [&_svg]:h-5 [&_svg]:w-5">
+          <motion.div
+            initial={{ scale: 0.6, rotate: -12, opacity: 0 }}
+            animate={{ scale: 1, rotate: 0, opacity: 1 }}
+            whileHover={{ rotate: -6, scale: 1.06 }}
+            transition={{ type: 'spring', stiffness: 320, damping: 18 }}
+            className="mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-50 to-violet-50 text-blue-600 ring-1 ring-inset ring-blue-100 [&_svg]:h-5 [&_svg]:w-5"
+          >
             {icon}
-          </div>
+          </motion.div>
         )}
         <div className="min-w-0 space-y-1.5">
           {eyebrow && <p className="text-xs font-semibold uppercase tracking-[0.08em] text-blue-600">{eyebrow}</p>}
@@ -94,26 +117,28 @@ const METRIC_TONES: Record<NonNullable<MetricCardProps['tone']>, string> = {
 
 /** A single real metric. Pass "—" (not a made-up number) when the data is not there yet. */
 export function MetricCard({ label, value, hint, icon, tone = 'brand', onClick, className }: MetricCardProps) {
-  const Comp: any = onClick ? 'button' : 'div';
+  const Comp: any = onClick ? motion.button : motion.div;
   return (
     <Comp
       type={onClick ? 'button' : undefined}
       onClick={onClick}
+      whileHover={{ y: -3 }}
+      whileTap={onClick ? { scale: 0.98 } : undefined}
+      transition={{ type: 'spring', stiffness: 380, damping: 26 }}
       className={cn(
-        'flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 text-left shadow-xs transition-[border-color,box-shadow] sm:p-5',
-        onClick && 'hover:border-slate-300 hover:shadow-sm',
+        'group/metric flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 text-left shadow-xs transition-[border-color,box-shadow] hover:border-slate-300 hover:shadow-md sm:p-5',
         className
       )}
     >
       <div className="flex items-center justify-between gap-3">
         <span className="text-[13px] font-medium text-slate-600">{label}</span>
         {icon && (
-          <span className={cn('flex h-8 w-8 items-center justify-center rounded-lg ring-1 ring-inset [&_svg]:h-4 [&_svg]:w-4', METRIC_TONES[tone])}>
+          <span className={cn('flex h-8 w-8 items-center justify-center rounded-lg ring-1 ring-inset transition-transform duration-300 group-hover/metric:scale-110 group-hover/metric:-rotate-6 motion-reduce:transform-none [&_svg]:h-4 [&_svg]:w-4', METRIC_TONES[tone])}>
             {icon}
           </span>
         )}
       </div>
-      <div className="font-display text-[26px] font-bold leading-none tracking-tight text-slate-900 tabular-nums">{value}</div>
+      <div className="font-display text-[26px] font-bold leading-none tracking-tight text-slate-900 tabular-nums"><AnimatedNumber value={value} /></div>
       {hint && <div className="text-xs text-slate-500">{hint}</div>}
     </Comp>
   );
@@ -145,7 +170,7 @@ export function EmptyState({
         className
       )}
     >
-      <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-slate-50 to-blue-50 text-blue-500 ring-1 ring-inset ring-slate-200 [&_svg]:h-6 [&_svg]:w-6">
+      <div className="mb-4 flex h-12 w-12 animate-float items-center justify-center rounded-xl bg-gradient-to-br from-slate-50 to-blue-50 text-blue-500 ring-1 ring-inset ring-slate-200 [&_svg]:h-6 [&_svg]:w-6">
         {icon || <FolderOpen className="h-6 w-6" />}
       </div>
       <h3 className="mb-1 text-[15px] font-semibold text-slate-900">{title}</h3>

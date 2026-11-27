@@ -32,6 +32,8 @@ import { onboardingApi } from '../api/onboardingApi';
 import { DashboardProfileSummary } from '../features/dashboard/components/DashboardProfileSummary';
 import { Sparkles, ArrowRight } from 'lucide-react';
 import { BriefingCard } from '../features/briefing/components/BriefingCard';
+import { TodayAtAGlance } from '../features/planner/components/TodayAtAGlance';
+import { Reveal } from '../components/motion';
 
 export function DashboardPage({ onNavigate }: { onNavigate: (path: string) => void }) {
   const { data, isLoading, isError, error, refetch, toggleTodayTask } = useDashboard();
@@ -111,6 +113,9 @@ export function DashboardPage({ onNavigate }: { onNavigate: (path: string) => vo
       {/* Today's briefing from the student's own deadlines, plans and practice */}
       <BriefingCard onNavigate={onNavigate} />
 
+      {/* Today's classes (timetable) and most urgent tasks (task board) */}
+      <TodayAtAGlance onNavigate={onNavigate} />
+
       <QuickActions onNavigate={onNavigate} />
 
       {/* Main workspace: today's work on the left, progress and schedule on the right */}
@@ -158,15 +163,15 @@ export function DashboardPage({ onNavigate }: { onNavigate: (path: string) => vo
           <p className="text-[13px] text-slate-500">Live numbers from each module you use.</p>
         </div>
         <div className="grid grid-cols-1 items-start gap-6 md:grid-cols-2 xl:grid-cols-3 [&>*]:min-w-0">
-          <RecentCodingWidget onNavigate={onNavigate} />
-          <DSAProgressWidget onNavigate={onNavigate} />
-          <QuizProgressWidget onNavigate={onNavigate} />
-          <PlacementProgressWidget onNavigate={onNavigate} />
-          <CareerResumeWidget onNavigate={onNavigate} />
-          <ResearchGitHubWidget onNavigate={onNavigate} />
-          <ExternalActivityWidget onNavigate={onNavigate} />
-          <RecentDocuments documents={data.recent_documents} onNavigate={onNavigate} />
-          <RecentBookmarks bookmarks={data.bookmarks} onNavigate={onNavigate} />
+          <Reveal delay={0.00}><RecentCodingWidget onNavigate={onNavigate} /></Reveal>
+          <Reveal delay={0.06}><DSAProgressWidget onNavigate={onNavigate} /></Reveal>
+          <Reveal delay={0.12}><QuizProgressWidget onNavigate={onNavigate} /></Reveal>
+          <Reveal delay={0.00}><PlacementProgressWidget onNavigate={onNavigate} /></Reveal>
+          <Reveal delay={0.06}><CareerResumeWidget onNavigate={onNavigate} /></Reveal>
+          <Reveal delay={0.12}><ResearchGitHubWidget onNavigate={onNavigate} /></Reveal>
+          <Reveal delay={0.00}><ExternalActivityWidget onNavigate={onNavigate} /></Reveal>
+          <Reveal delay={0.06}><RecentDocuments documents={data.recent_documents} onNavigate={onNavigate} /></Reveal>
+          <Reveal delay={0.12}><RecentBookmarks bookmarks={data.bookmarks} onNavigate={onNavigate} /></Reveal>
         </div>
       </section>
     </PageContainer>

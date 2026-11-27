@@ -40,6 +40,7 @@ import { codeReviewRouter } from './routes/codeReview';
 import { competitionsRouter } from './routes/competitions';
 import { cybersecurityRouter } from './routes/cybersecurity';
 import { academicsRouter } from './routes/academics';
+import { plannerRouter } from './routes/planner';
 import { adminRouter } from './routes/admin';
 
 import { learningModulesRouter } from './routes/learningModules';
@@ -88,6 +89,7 @@ apiV1Router.use('/', certificatesRouter);
 apiV1Router.use('/', insightsRouter);
 apiV1Router.use('/', discoverRouter);
 apiV1Router.use('/', academicsRouter);
+apiV1Router.use('/', plannerRouter);
 apiV1Router.use('/', aiMemoryRouter);
 apiV1Router.use('/', deadlinesRouter);
 apiV1Router.use('/', showcaseRouter);

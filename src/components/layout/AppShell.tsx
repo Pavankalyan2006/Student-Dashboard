@@ -9,6 +9,7 @@ import { AppFooter } from './AppFooter';
 import { useAuth } from '../../hooks/useAuth';
 import { useWorkspacePrefs } from '../../store/workspacePrefsStore';
 import { KeyboardShortcuts } from '../navigation/KeyboardShortcuts';
+import { BackToTop, ScrollProgress, motion, EASE_OUT } from '../motion';
 
 export interface AppShellProps {
   currentPath: string;
@@ -35,6 +36,7 @@ export function AppShell({ currentPath, onNavigate, children }: AppShellProps) {
 
   return (
     <div className="min-h-screen bg-canvas text-slate-900">
+      <ScrollProgress />
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[60] focus:rounded-lg focus:bg-white focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-slate-900 focus:shadow-lg"
@@ -56,13 +58,16 @@ export function AppShell({ currentPath, onNavigate, children }: AppShellProps) {
       >
         <Topbar currentPath={currentPath} onNavigate={onNavigate} />
 
-        <main
+        <motion.main
           id="main-content"
           key={routeKey}
-          className="mx-auto w-full min-w-0 max-w-[1440px] flex-1 animate-page-in px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-8 print:max-w-none print:p-0"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: EASE_OUT }}
+          className="mx-auto w-full min-w-0 max-w-[1440px] flex-1 px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-8 print:max-w-none print:p-0"
         >
           {children}
-        </main>
+        </motion.main>
 
         <AppFooter onNavigate={onNavigate} />
       </div>
@@ -70,6 +75,8 @@ export function AppShell({ currentPath, onNavigate, children }: AppShellProps) {
       {/* Global Search Dialog (Ctrl+K) */}
       <GlobalSearch onNavigate={onNavigate} />
       <KeyboardShortcuts onNavigate={onNavigate} />
+      {/* The research workspace has its own floating button in the same corner. */}
+      {!routeKey.startsWith('/research/') && <BackToTop />}
 
       <Toaster
         position="top-right"

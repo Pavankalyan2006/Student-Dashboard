@@ -64,6 +64,8 @@ import {
   FileStack,
   Workflow,
   Trophy,
+  CalendarDays,
+  KanbanSquare,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -98,7 +100,9 @@ export const NAV_SECTIONS: NavSection[] = [
       { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
       { name: 'Semester Command Center', href: '/semester-command-center', icon: CalendarRange, match: ['/semester'] },
       { name: 'Grades & CGPA', href: '/grades', icon: Calculator, match: ['/cgpa', '/cgpa-calculator'] },
+      { name: 'Class Timetable', href: '/timetable', icon: CalendarDays, match: ['/schedule'] },
       { name: 'Attendance', href: '/attendance', icon: CalendarCheck },
+      { name: 'Task Board', href: '/tasks', icon: KanbanSquare, match: ['/task-board', '/kanban'] },
       { name: 'Deadlines', href: '/deadlines', icon: CalendarClock, match: ['/calendar'] },
       { name: 'Unified Progress', href: '/progress', icon: TrendingUp },
       { name: 'Learning Analytics', href: '/analytics', icon: Activity, match: ['/learning-analytics'] },

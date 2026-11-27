@@ -3,6 +3,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './api/queryClient';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { AppShell } from './components/layout/AppShell';
+import { MotionProvider } from './components/motion';
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
 const AiAgentPage = lazyPage(() => import('./pages/AiAgentPage'), 'AiAgentPage');
@@ -99,6 +100,8 @@ const ShowcasePage = lazyPage(() => import('./features/showcase/pages/ShowcasePa
 const PublicShowcasePage = lazyPage(() => import('./features/showcase/pages/PublicShowcasePage'), 'PublicShowcasePage');
 const DeadlinesPage = lazyPage(() => import('./features/deadlines/pages/DeadlinesPage'), 'DeadlinesPage');
 const AttendancePage = lazyPage(() => import('./features/academics/pages/AttendancePage'), 'AttendancePage');
+const TimetablePage = lazyPage(() => import('./features/planner/pages/TimetablePage'), 'TimetablePage');
+const TaskBoardPage = lazyPage(() => import('./features/planner/pages/TaskBoardPage'), 'TaskBoardPage');
 const GoalDetailPage = lazyPage(() => import('./features/goals/pages/GoalDetailPage'), 'GoalDetailPage');
 const CommunityDashboardPage = lazyPage(() => import('./features/community/pages/CommunityDashboardPage'), 'CommunityDashboardPage');
 const CommunityQuestionsPage = lazyPage(() => import('./features/community/pages/CommunityQuestionsPage'), 'CommunityQuestionsPage');
@@ -862,6 +865,14 @@ function AppContent() {
       return <GradesPage onNavigate={navigate} />;
     }
 
+    if (path === '/timetable' || path === '/schedule') {
+      return <TimetablePage onNavigate={navigate} />;
+    }
+
+    if (path === '/tasks' || path === '/task-board' || path === '/kanban') {
+      return <TaskBoardPage onNavigate={navigate} />;
+    }
+
     if (path === '/attendance') {
       return <AttendancePage onNavigate={navigate} />;
     }
@@ -1193,11 +1204,13 @@ export default function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
+        <MotionProvider>
         <StudentContextProvider>
           <React.Suspense fallback={<LoadingState message="Loading…" className="min-h-screen" />}>
             <AppContent />
           </React.Suspense>
         </StudentContextProvider>
+        </MotionProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   );

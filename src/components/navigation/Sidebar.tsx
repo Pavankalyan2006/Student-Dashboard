@@ -8,6 +8,7 @@ import { BrandMark } from '../layout/BrandMark';
 import { footerSignature, initialsFor, registeredStudentName } from '../layout/studentName';
 import { NAV_SECTIONS, findActiveNavItem, findSectionForItem, navItemByHref, type NavItem, type NavSection } from './navConfig';
 import { useWorkspacePrefs } from '../../store/workspacePrefsStore';
+import { motion } from 'motion/react';
 
 export type { NavItem, NavSection } from './navConfig';
 export { NAV_SECTIONS } from './navConfig';
@@ -237,21 +238,30 @@ function SidebarLink({ item, active, railMode, onClick }: { item: NavItem; activ
       }}
       aria-current={active ? 'page' : undefined}
       className={cn(
-        'relative flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium transition-colors duration-150',
-        active ? 'bg-white/[0.07] text-white' : 'text-[#A3ADC6] hover:bg-white/[0.04] hover:text-white',
+        'group/navlink relative flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium transition-colors duration-150',
+        active ? 'text-white' : 'text-[#A3ADC6] hover:bg-white/[0.04] hover:text-white',
         railMode && 'lg:justify-center lg:px-0 lg:py-2.5'
       )}
     >
-      {active && <span aria-hidden="true" className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-blue-400" />}
+      {active && (
+        <motion.span
+          layoutId="sidebar-active-pill"
+          aria-hidden="true"
+          className="absolute inset-0 rounded-lg bg-gradient-to-r from-blue-500/[0.16] to-transparent ring-1 ring-inset ring-white/[0.06]"
+          transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+        >
+          <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-blue-400" />
+        </motion.span>
+      )}
       <Icon
         className={cn(
-          'h-[18px] w-[18px] shrink-0 transition-colors',
+          'relative h-[18px] w-[18px] shrink-0 transition-[color,transform] duration-200 group-hover/navlink:translate-x-0.5 motion-reduce:transform-none',
           active ? 'text-blue-300' : item.isAi ? 'text-violet-300/80' : 'text-[#7F8BB0]'
         )}
       />
-      <span className={cn('flex-1 truncate', railMode && 'lg:sr-only')}>{item.name}</span>
+      <span className={cn('relative flex-1 truncate', railMode && 'lg:sr-only')}>{item.name}</span>
       {item.badge && !railMode && (
-        <span className="rounded-md bg-violet-500/15 px-1.5 py-px text-[10px] font-semibold text-violet-200 ring-1 ring-inset ring-violet-400/20">
+        <span className="relative rounded-md bg-violet-500/15 px-1.5 py-px text-[10px] font-semibold text-violet-200 ring-1 ring-inset ring-violet-400/20">
           {item.badge}
         </span>
       )}

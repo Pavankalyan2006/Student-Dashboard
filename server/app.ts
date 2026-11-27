@@ -21,6 +21,7 @@ import { GitLabService } from './services/gitLabService';
 import { VectorStore } from './rag/vectorStore';
 import { semesterStateStore } from './services/semesterCommandCenterService';
 import { academicStores } from './services/academicRecordsService';
+import { plannerStores } from './services/plannerService';
 import { aiMemoryStores } from './services/aiMemoryService';
 import { showcaseStores } from './services/showcaseService';
 import { agentActivityStores } from './services/agentActivityService';
@@ -110,6 +111,8 @@ function registerSources(backend: StateBackend) {
   registerPersistentSource('semesterCommandCenter', semesterStateStore as unknown as Record<string, any>, ['states']);
   // Grades, CGPA and attendance the student enters (Grades & CGPA, Attendance pages).
   registerPersistentSource('academicRecords', academicStores as unknown as Record<string, any>, ['records']);
+  // Weekly timetable and task board the student keeps (Timetable, Task Board pages).
+  registerPersistentSource('planner', plannerStores as unknown as Record<string, any>, ['timetables', 'boards']);
   registerPersistentSource('aiMemory', aiMemoryStores as unknown as Record<string, any>, ['settings']);
   registerPersistentSource('showcase', showcaseStores as unknown as Record<string, any>, ['settings']);
   // AI Agent Control Center: each student's tool-call log and agent switches. Daily briefing item actions.
