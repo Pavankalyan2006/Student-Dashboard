@@ -68,7 +68,7 @@ export function CourseProgress({
                       className="h-full rounded-full transition-all duration-300"
                       style={{
                         width: `${course.progress}%`,
-                        backgroundColor: course.color || '#4654E0',
+                        backgroundColor: course.color || '#6957E8',
                       }}
                     />
                   </div>

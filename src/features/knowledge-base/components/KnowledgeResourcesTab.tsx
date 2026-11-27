@@ -146,7 +146,7 @@ export const KnowledgeResourcesTab: React.FC<KnowledgeResourcesTabProps> = ({
                       {col && (
                         <span
                           className="text-[10px] font-medium px-2 py-0.5 rounded text-slate-900"
-                          style={{ backgroundColor: col.color || '#574FDD' }}
+                          style={{ backgroundColor: col.color || '#6957E8' }}
                         >
                           {col.name}
                         </span>

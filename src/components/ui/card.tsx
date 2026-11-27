@@ -5,7 +5,7 @@ export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElemen
   return (
     <div
       className={cn(
-        'rounded-xl border border-slate-200 bg-white text-slate-900 shadow-xs transition-shadow',
+        'rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-xs transition-[box-shadow,border-color] duration-200',
         className
       )}
       {...props}
@@ -53,7 +53,7 @@ export function StatCard({ title, value, subtitle, change, changeType = 'positiv
     <Card className={cn('p-5 flex flex-col justify-between hover:border-slate-300 transition-colors', className)}>
       <div className="flex items-center justify-between gap-3">
         <span className="text-[13px] font-medium text-slate-600">{title}</span>
-        {icon && <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600 ring-1 ring-inset ring-blue-100">{icon}</div>}
+        {icon && <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-50 to-sky-50 text-blue-600 ring-1 ring-inset ring-blue-100">{icon}</div>}
       </div>
       <div className="mt-3">
         <div className="font-display text-[26px] font-bold leading-none tracking-tight text-slate-900 tabular-nums">{value}</div>
@@ -89,7 +89,7 @@ export interface ProgressCardProps {
   className?: string;
 }
 
-export function ProgressCard({ title, current, total, unit = '', category, color = 'bg-blue-600', className }: ProgressCardProps) {
+export function ProgressCard({ title, current, total, unit = '', category, color = 'bg-gradient-to-r from-blue-600 to-sky-400', className }: ProgressCardProps) {
   const percentage = Math.min(100, Math.round((current / (total || 1)) * 100));
 
   return (

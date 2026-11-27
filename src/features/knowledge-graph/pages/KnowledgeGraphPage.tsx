@@ -44,7 +44,7 @@ interface KnowledgeMap {
 
 export const STATE_META: Record<TopicState, { label: string; fill: string; stroke: string; chip: string }> = {
   demonstrated: { label: 'Demonstrated', fill: '#d1fae5', stroke: '#059669', chip: 'bg-emerald-50 text-emerald-700 ring-emerald-200' },
-  practiced: { label: 'Practiced', fill: '#dbeafe', stroke: '#2563eb', chip: 'bg-blue-50 text-blue-700 ring-blue-200' },
+  practiced: { label: 'Practiced', fill: '#dbeafe', stroke: '#6957E8', chip: 'bg-blue-50 text-blue-700 ring-blue-200' },
   learning: { label: 'Learning', fill: '#fef3c7', stroke: '#d97706', chip: 'bg-amber-50 text-amber-700 ring-amber-200' },
   needs_revision: { label: 'Needs revision', fill: '#ffe4e6', stroke: '#e11d48', chip: 'bg-rose-50 text-rose-700 ring-rose-200' },
   not_started: { label: 'Not started', fill: '#f1f5f9', stroke: '#94a3b8', chip: 'bg-slate-100 text-slate-600 ring-slate-200' },

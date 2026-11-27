@@ -527,7 +527,7 @@ export function DocumentsPage({ onNavigate }: DocumentsPageProps) {
           <div className="flex items-center gap-2 flex-1">
             <div
               className="h-5 w-5 rounded-md flex items-center justify-center text-white"
-              style={{ backgroundColor: currentFolder.color || '#4654E0' }}
+              style={{ backgroundColor: currentFolder.color || '#6957E8' }}
             >
               <Folder className="h-3 w-3" />
             </div>
@@ -652,7 +652,7 @@ export function DocumentsPage({ onNavigate }: DocumentsPageProps) {
                     <div className="flex items-center justify-between gap-2 mb-3">
                       <div
                         className="h-10 w-10 rounded-xl flex items-center justify-center text-white shadow-xs"
-                        style={{ backgroundColor: f.color || '#4654E0' }}
+                        style={{ backgroundColor: f.color || '#6957E8' }}
                       >
                         <Folder className="h-5 w-5" />
                       </div>

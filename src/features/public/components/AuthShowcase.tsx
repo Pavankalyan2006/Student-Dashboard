@@ -1,7 +1,8 @@
 import * as React from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Bot, CalendarDays, Code2, GraduationCap, ShieldCheck } from 'lucide-react';
-import { BrandMark } from '../../../components/layout/BrandMark';
+import { NexoraLogo } from '../../../components/brand/Nexora';
+import { HeroConstellation } from '../../../components/brand/Illustrations';
 import { EASE_OUT } from '../../../components/motion';
 
 const POINTS = [
@@ -20,19 +21,16 @@ export function AuthShowcase() {
   }, []);
 
   return (
-    <aside className="hero-brand relative hidden overflow-hidden text-white lg:flex lg:flex-col lg:justify-between lg:p-12 xl:p-16">
+    <aside className="hero-brand inverse-island relative hidden overflow-hidden text-white lg:flex lg:flex-col lg:justify-between lg:p-12 xl:p-16">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-24 -top-24 h-96 w-96 rounded-full bg-blue-500/25 blur-3xl animate-float" />
-        <div className="absolute -bottom-32 right-0 h-[28rem] w-[28rem] rounded-full bg-violet-500/20 blur-3xl animate-float [animation-delay:1.5s]" />
+        <div className="absolute -left-24 -top-24 h-96 w-96 rounded-full bg-[#7865F5]/25 blur-3xl animate-float" />
+        <div className="absolute -bottom-32 right-0 h-[28rem] w-[28rem] rounded-full bg-[#37C9E8]/15 blur-3xl animate-float [animation-delay:1.5s]" />
+        <HeroConstellation className="absolute right-0 top-1/3 h-[220px] w-[420px] opacity-60" />
         <div className="absolute inset-0 bg-[radial-gradient(rgb(255_255_255_/_0.07)_1px,transparent_1.2px)] bg-[size:22px_22px] [mask-image:linear-gradient(to_bottom,black,transparent)]" />
       </div>
 
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: EASE_OUT }} className="relative flex items-center gap-3">
-        <BrandMark className="h-11 w-11" />
-        <div>
-          <p className="font-display text-lg font-bold">B.Tech AI Platform</p>
-          <p className="text-xs text-white/60">Intelligent learning workspace</p>
-        </div>
+        <NexoraLogo tone="dark" tagline="Learn Smarter. Build Faster. Achieve More." markClassName="h-11 w-11" />
       </motion.div>
 
       <div className="relative max-w-lg">
@@ -43,7 +41,7 @@ export function AuthShowcase() {
           className="font-display text-4xl font-extrabold leading-tight tracking-tight xl:text-5xl"
         >
           Everything for your degree,{' '}
-          <span className="bg-gradient-to-r from-sky-300 via-indigo-200 to-violet-300 bg-clip-text text-transparent">in one workspace.</span>
+          <span className="bg-gradient-to-r from-[#C7B2FB] via-[#B4A7F7] to-[#7AD8EF] bg-clip-text text-transparent">in one workspace.</span>
         </motion.h2>
 
         <ul className="mt-10 space-y-3">
@@ -68,7 +66,7 @@ export function AuthShowcase() {
                     />
                   )}
                 </AnimatePresence>
-                <span className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors ${on ? 'bg-gradient-to-br from-blue-500 to-violet-500' : 'bg-white/10'}`}>
+                <span className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors ${on ? 'bg-brand-gradient' : 'bg-white/10'}`}>
                   <Icon className="h-5 w-5" />
                 </span>
                 <span className="relative">

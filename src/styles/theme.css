@@ -10,45 +10,51 @@
  */
 
 :root {
-  --surface-0: #F6F7FB;
+  /* NEXORA AI light surfaces */
+  --surface-0: #F6F7FC;
   --surface-1: #FFFFFF;
   --surface-2: #FFFFFF;
   --surface-glass: rgb(255 255 255 / 0.78);
-  --hairline: rgb(18 24 41 / 0.07);
-  --glow-a: rgb(94 110 239 / 0.10);
-  --glow-b: rgb(141 107 234 / 0.08);
-  --glow-c: rgb(46 151 192 / 0.06);
-  --grid-dot: rgb(18 24 41 / 0.045);
-  --noise-opacity: 0.025;
-  --selection: rgb(94 110 239 / 0.22);
+  --hairline: #E8EAF2;
+  --glow-a: rgb(105 87 232 / 0.09);
+  --glow-b: rgb(139 114 245 / 0.07);
+  --glow-c: rgb(55 201 232 / 0.06);
+  --grid-dot: rgb(24 32 51 / 0.045);
+  --noise-opacity: 0.022;
+  --selection: rgb(105 87 232 / 0.2);
+  --brand-gradient: linear-gradient(135deg, #6957E8 0%, #8B72F5 55%, #37C9E8 120%);
+  --gradient-border: linear-gradient(135deg, rgb(105 87 232 / 0.55), rgb(139 114 245 / 0.25) 45%, rgb(55 201 232 / 0.4));
 }
 
 :root.dark {
-  --surface-0: #070B16;
-  --surface-1: #0E1424;
-  --surface-2: #131B2E;
-  --surface-glass: rgb(12 18 33 / 0.72);
-  --hairline: rgb(255 255 255 / 0.06);
-  --glow-a: rgb(94 110 239 / 0.16);
-  --glow-b: rgb(141 107 234 / 0.12);
-  --glow-c: rgb(46 151 192 / 0.08);
-  --grid-dot: rgb(255 255 255 / 0.035);
-  --noise-opacity: 0.04;
-  --selection: rgb(127 144 247 / 0.35);
+  /* NEXORA AI dark surfaces: main #080B16, secondary #0D1222, card #11182B, elevated #17213A */
+  --surface-0: #080B16;
+  --surface-1: #11182B;
+  --surface-2: #17213A;
+  --surface-glass: rgb(13 18 34 / 0.72);
+  --hairline: rgb(255 255 255 / 0.08);
+  --glow-a: rgb(120 101 245 / 0.15);
+  --glow-b: rgb(155 120 255 / 0.10);
+  --glow-c: rgb(55 201 232 / 0.07);
+  --grid-dot: rgb(255 255 255 / 0.03);
+  --noise-opacity: 0.035;
+  --selection: rgb(120 101 245 / 0.35);
+  --brand-gradient: linear-gradient(135deg, #7865F5 0%, #9B78FF 55%, #37C9E8 120%);
+  --gradient-border: linear-gradient(135deg, rgb(120 101 245 / 0.6), rgb(155 120 255 / 0.2) 45%, rgb(55 201 232 / 0.45));
 }
 
 /* ---------- Dark surfaces for white-based utilities ----------
    text-white stays white (it sits on coloured buttons). Only white *surfaces* turn dark.
    :where() keeps specificity equal to the utility, so hover:/focus: variants still win. */
 :where(.dark) .bg-white { background-color: var(--surface-1); }
-:where(.dark) .bg-white\/95 { background-color: rgb(14 20 36 / 0.95); }
-:where(.dark) .bg-white\/90 { background-color: rgb(14 20 36 / 0.9); }
-:where(.dark) .bg-white\/85 { background-color: rgb(14 20 36 / 0.85); }
-:where(.dark) .bg-white\/80 { background-color: rgb(14 20 36 / 0.8); }
-:where(.dark) .bg-white\/75 { background-color: rgb(14 20 36 / 0.75); }
-:where(.dark) .bg-white\/70 { background-color: rgb(14 20 36 / 0.7); }
-:where(.dark) .bg-white\/60 { background-color: rgb(14 20 36 / 0.6); }
-:where(.dark) .bg-white\/50 { background-color: rgb(14 20 36 / 0.5); }
+:where(.dark) .bg-white\/95 { background-color: rgb(17 24 43 / 0.95); }
+:where(.dark) .bg-white\/90 { background-color: rgb(17 24 43 / 0.9); }
+:where(.dark) .bg-white\/85 { background-color: rgb(17 24 43 / 0.85); }
+:where(.dark) .bg-white\/80 { background-color: rgb(17 24 43 / 0.8); }
+:where(.dark) .bg-white\/75 { background-color: rgb(17 24 43 / 0.75); }
+:where(.dark) .bg-white\/70 { background-color: rgb(17 24 43 / 0.7); }
+:where(.dark) .bg-white\/60 { background-color: rgb(17 24 43 / 0.6); }
+:where(.dark) .bg-white\/50 { background-color: rgb(17 24 43 / 0.5); }
 :where(.dark) .hover\:bg-white:hover,
 :where(.dark) .focus\:bg-white:focus,
 :where(.dark) .group:hover .group-hover\:bg-white { background-color: var(--surface-2); }
@@ -117,13 +123,13 @@
 .sidebar-surface {
   background-color: var(--color-navy-950);
   background-image:
-    radial-gradient(420px 260px at 0% 0%, rgb(94 110 239 / 0.22), transparent 70%),
-    radial-gradient(300px 240px at 100% 100%, rgb(141 107 234 / 0.14), transparent 70%),
+    radial-gradient(420px 260px at 0% 0%, rgb(120 101 245 / 0.20), transparent 70%),
+    radial-gradient(300px 240px at 100% 100%, rgb(55 201 232 / 0.08), transparent 70%),
     linear-gradient(180deg, rgb(255 255 255 / 0.02), transparent 40%);
 }
 :where(.dark) .sidebar-surface {
-  background-color: #060A15;
-  border-right-color: rgb(255 255 255 / 0.05);
+  background-color: #0A0E1B;
+  border-right-color: rgb(255 255 255 / 0.06);
 }
 
 /* Frosted top bar. */
@@ -136,13 +142,13 @@
 
 /* Gradient text for display headings and stats. */
 .text-gradient {
-  background-image: linear-gradient(100deg, var(--color-blue-600), var(--color-violet-600) 55%, var(--color-sky-500));
+  background-image: linear-gradient(100deg, #6957E8, #8B72F5 55%, #18AFD0);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 :where(.dark) .text-gradient {
-  background-image: linear-gradient(100deg, #A6B5FC, #C3B4FA 55%, #7DD3F0);
+  background-image: linear-gradient(100deg, #B4A7F7, #C7B2FB 55%, #7AD8EF);
 }
 
 /* A card style for hand-built panels: hairline border, soft lift on hover. */
@@ -220,7 +226,7 @@ table, .tabular { font-variant-numeric: tabular-nums; }
 /* Only bordered fields get the glow; borderless ones (search palettes, chat boxes) stay clean. */
 :where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]), select, textarea):where([class*="border"]:not([class*="border-0"]):not([class*="border-none"]):not([class*="border-transparent"])):focus {
   border-color: var(--color-blue-400);
-  box-shadow: 0 0 0 3px rgb(94 110 239 / 0.16);
+  box-shadow: 0 0 0 3px rgb(105 87 232 / 0.16);
   outline: none;
 }
 :where(input, textarea)::placeholder { color: var(--color-slate-400); }
@@ -236,8 +242,8 @@ table, .tabular { font-variant-numeric: tabular-nums; }
 :where(.dark) .skeleton { background-image: linear-gradient(90deg, transparent 0, rgb(255 255 255 / 0.06) 50%, transparent 100%); }
 :where(.dark) .surface-hero {
   background:
-    radial-gradient(120% 140% at 0% 0%, rgb(94 110 239 / 0.14) 0%, transparent 55%),
-    radial-gradient(90% 120% at 100% 0%, rgb(141 107 234 / 0.12) 0%, transparent 60%),
+    radial-gradient(120% 140% at 0% 0%, rgb(120 101 245 / 0.14) 0%, transparent 55%),
+    radial-gradient(90% 120% at 100% 0%, rgb(55 201 232 / 0.08) 0%, transparent 60%),
     var(--surface-1);
 }
 
@@ -265,3 +271,92 @@ table, .tabular { font-variant-numeric: tabular-nums; }
 /* Navy text is a light-theme ink; at night it reads as the main text colour. Inside inverse islands the
    slate token is the light one again, so this still resolves to navy-like ink there. */
 :where(.dark) :is(.text-navy-950, .text-navy-900, .text-navy-800) { color: var(--color-slate-900); }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   NEXORA AI design-system utilities
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* Brand gradient fill (logo tiles, primary highlights). */
+.bg-brand-gradient { background-image: var(--brand-gradient); }
+
+/* Glass panel: frosted surface for floating UI (command palette, popovers, hero chips). */
+.glass-panel {
+  background-color: var(--surface-glass);
+  backdrop-filter: saturate(1.5) blur(18px);
+  -webkit-backdrop-filter: saturate(1.5) blur(18px);
+  border: 1px solid var(--hairline);
+}
+
+/* Gradient border for important elements: a 1px brand gradient ring drawn with a mask, so the fill stays the card's. */
+.gradient-border { position: relative; }
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: var(--gradient-border);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Elevated surface (spec "elevated card"). */
+.surface-elevated {
+  background-color: var(--surface-2);
+  border: 1px solid var(--hairline);
+  border-radius: 16px;
+  box-shadow: var(--shadow-md);
+}
+
+/* NEXORA neural backdrop: a faint connected-node pattern used behind heroes and the auth screens. */
+.neural-backdrop {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'%3E%3Cg fill='none' stroke='%238B72F5' stroke-opacity='.22' stroke-width='.8'%3E%3Cpath d='M20 40L90 20L150 70L220 30M90 20L70 110L150 70L200 140L220 30M70 110L30 180L120 200L200 140M120 200L150 70M30 180L20 40'/%3E%3C/g%3E%3Cg fill='%2337C9E8' fill-opacity='.35'%3E%3Ccircle cx='20' cy='40' r='2'/%3E%3Ccircle cx='90' cy='20' r='2.4'/%3E%3Ccircle cx='150' cy='70' r='2.8'/%3E%3Ccircle cx='220' cy='30' r='2'/%3E%3Ccircle cx='70' cy='110' r='2.2'/%3E%3Ccircle cx='200' cy='140' r='2.6'/%3E%3Ccircle cx='30' cy='180' r='2'/%3E%3Ccircle cx='120' cy='200' r='2.4'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 240px 240px;
+}
+
+/* Hero banners: deep NEXORA indigo with restrained violet/cyan light. */
+.hero-brand {
+  background-color: #0D1222;
+  background-image:
+    radial-gradient(70% 120% at 100% 0%, rgb(139 114 245 / 0.32) 0%, transparent 60%),
+    radial-gradient(60% 100% at 0% 100%, rgb(55 201 232 / 0.16) 0%, transparent 65%),
+    linear-gradient(135deg, #141B31 0%, #0A0E1B 100%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 1px 2px rgb(16 24 48 / 0.08);
+}
+
+/* Slowly drifting gradient wash, used sparingly (dashboard hero, auth screen). */
+@keyframes nexora-drift {
+  0%, 100% { background-position: 0% 0%, 100% 0%, 0 0; }
+  50% { background-position: 18% 12%, 82% 18%, 0 0; }
+}
+.animate-drift { background-size: 140% 140%, 140% 140%, auto; animation: nexora-drift 18s ease-in-out infinite; }
+
+/* Press feedback for buttons and clickable cards. */
+.press { transition: transform 150ms var(--ease-out); }
+.press:active { transform: scale(0.97); }
+
+/* Lift on hover for interactive cards. */
+.hover-lift { transition: transform 220ms var(--ease-out), box-shadow 220ms var(--ease-out), border-color 220ms var(--ease-out); }
+.hover-lift:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+
+/* NEXORA logo loader: the N stroke draws, nodes pulse. */
+@keyframes nexora-draw { 0% { stroke-dashoffset: 120; } 55%, 100% { stroke-dashoffset: 0; } }
+@keyframes nexora-node { 0%, 100% { opacity: .35; transform: scale(.85); } 50% { opacity: 1; transform: scale(1.15); } }
+.nexora-loader-path { stroke-dasharray: 120; animation: nexora-draw 1.6s var(--ease-out) infinite alternate; }
+.nexora-loader-node { transform-box: fill-box; transform-origin: center; animation: nexora-node 1.4s ease-in-out infinite; }
+.nexora-loader-node:nth-of-type(2) { animation-delay: .2s; }
+.nexora-loader-node:nth-of-type(3) { animation-delay: .4s; }
+.nexora-loader-node:nth-of-type(4) { animation-delay: .6s; }
+
+/* AI thinking: three dots breathing in sequence. */
+@keyframes nexora-think { 0%, 80%, 100% { opacity: .25; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
+.ai-thinking > span { display: inline-block; width: 6px; height: 6px; border-radius: 999px; background: currentColor; animation: nexora-think 1.2s ease-in-out infinite; }
+.ai-thinking > span:nth-child(2) { animation-delay: .15s; }
+.ai-thinking > span:nth-child(3) { animation-delay: .3s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-drift, .nexora-loader-path, .nexora-loader-node, .ai-thinking > span { animation: none !important; }
+  .hover-lift:hover, .press:active { transform: none; }
+}

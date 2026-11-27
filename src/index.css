@@ -12,7 +12,7 @@
 
 /*
  * ─────────────────────────────────────────────────────────────────────────────
- *  B.Tech AI Platform design system ("Meridian")
+ *  NEXORA AI design system
  *  One palette, one type scale, one radius scale and one elevation scale for
  *  the whole app. See docs/ui-ux-redesign/DESIGN_SYSTEM_DOCUMENTATION.md.
  *
@@ -35,17 +35,17 @@
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
   /* Neutral: cool, navy-tinted greys */
-  --color-slate-50: #F7F8FB;
-  --color-slate-100: #EFF1F6;
-  --color-slate-200: #E3E6EE;
-  --color-slate-300: #CDD2DD;
-  --color-slate-400: #828BA0; /* 3.4:1 on white: readable as secondary text */
-  --color-slate-500: #636C80;
-  --color-slate-600: #4C5569;
-  --color-slate-700: #363F52;
-  --color-slate-800: #212839;
-  --color-slate-900: #121829;
-  --color-slate-950: #0A0F1E;
+  --color-slate-50: #F6F7FC;
+  --color-slate-100: #EFF1F8;
+  --color-slate-200: #E8EAF2;
+  --color-slate-300: #D3D7E4;
+  --color-slate-400: #8A93AA; /* 3.4:1 on white: readable as secondary text */
+  --color-slate-500: #647089;
+  --color-slate-600: #4E5871;
+  --color-slate-700: #384159;
+  --color-slate-800: #252D42;
+  --color-slate-900: #182033;
+  --color-slate-950: #0D1322;
 
   --color-gray-50: var(--color-slate-50);
   --color-gray-100: var(--color-slate-100);
@@ -82,42 +82,42 @@
   --color-neutral-950: var(--color-slate-950);
 
   /* Brand: refined indigo-blue */
-  --color-blue-50: #F0F3FF;
-  --color-blue-100: #E2E8FF;
-  --color-blue-200: #C9D3FE;
-  --color-blue-300: #A6B5FC;
-  --color-blue-400: #7F90F7;
-  --color-blue-500: #5E6EEF;
-  --color-blue-600: #4654E0;
-  --color-blue-700: #3843C4;
-  --color-blue-800: #2F389E;
-  --color-blue-900: #29307C;
-  --color-blue-950: #191D4A;
+  --color-blue-50: #F3F1FE;
+  --color-blue-100: #E8E4FD;
+  --color-blue-200: #D3CBFB;
+  --color-blue-300: #B4A7F7;
+  --color-blue-400: #9584F2;
+  --color-blue-500: #7B69F0;
+  --color-blue-600: #6957E8;
+  --color-blue-700: #5744CC;
+  --color-blue-800: #4737A6;
+  --color-blue-900: #3B3083;
+  --color-blue-950: #231C4D;
 
-  --color-indigo-50: #F2F2FF;
-  --color-indigo-100: #E5E5FF;
-  --color-indigo-200: #CDCDFE;
-  --color-indigo-300: #ADABFB;
-  --color-indigo-400: #8986F5;
-  --color-indigo-500: #6B66EC;
-  --color-indigo-600: #574FDD;
-  --color-indigo-700: #4840C0;
-  --color-indigo-800: #3B359B;
-  --color-indigo-900: #33307A;
-  --color-indigo-950: #1E1C48;
+  --color-indigo-50: #F3F1FE;
+  --color-indigo-100: #E8E4FD;
+  --color-indigo-200: #D3CBFB;
+  --color-indigo-300: #B4A7F7;
+  --color-indigo-400: #9584F2;
+  --color-indigo-500: #7B69F0;
+  --color-indigo-600: #6957E8;
+  --color-indigo-700: #5744CC;
+  --color-indigo-800: #4737A6;
+  --color-indigo-900: #3B3083;
+  --color-indigo-950: #231C4D;
 
   /* Accent: muted violet, reserved for AI surfaces */
-  --color-violet-50: #F6F3FF;
-  --color-violet-100: #EDE8FE;
-  --color-violet-200: #DCD3FD;
-  --color-violet-300: #C3B4FA;
-  --color-violet-400: #A68DF4;
-  --color-violet-500: #8D6BEA;
-  --color-violet-600: #7951D8;
-  --color-violet-700: #6641BA;
-  --color-violet-800: #543798;
-  --color-violet-900: #46307A;
-  --color-violet-950: #2A1B4D;
+  --color-violet-50: #F7F3FF;
+  --color-violet-100: #EEE7FE;
+  --color-violet-200: #DFD2FD;
+  --color-violet-300: #C7B2FB;
+  --color-violet-400: #AB8EF8;
+  --color-violet-500: #8B72F5;
+  --color-violet-600: #7A5BE6;
+  --color-violet-700: #6748C6;
+  --color-violet-800: #553BA1;
+  --color-violet-900: #46327F;
+  --color-violet-950: #2A1D4F;
   --color-purple-50: var(--color-violet-50);
   --color-purple-100: var(--color-violet-100);
   --color-purple-200: var(--color-violet-200);
@@ -142,17 +142,17 @@
   --color-fuchsia-950: var(--color-violet-950);
 
   /* Info: calm teal-blue */
-  --color-sky-50: #EFF8FC;
-  --color-sky-100: #DCF0F8;
-  --color-sky-200: #B9E1F1;
-  --color-sky-300: #8BCCE6;
-  --color-sky-400: #55B2D7;
-  --color-sky-500: #2E97C0;
-  --color-sky-600: #1F7AA2;
-  --color-sky-700: #1C6283;
-  --color-sky-800: #1C516B;
-  --color-sky-900: #1B4459;
-  --color-sky-950: #112B3A;
+  --color-sky-50: #EEFBFE;
+  --color-sky-100: #D5F4FB;
+  --color-sky-200: #AEE8F6;
+  --color-sky-300: #7AD8EF;
+  --color-sky-400: #37C9E8;
+  --color-sky-500: #18AFD0;
+  --color-sky-600: #128CAB;
+  --color-sky-700: #14708A;
+  --color-sky-800: #175B70;
+  --color-sky-900: #184B5D;
+  --color-sky-950: #0B303D;
   --color-cyan-50: var(--color-sky-50);
   --color-cyan-100: var(--color-sky-100);
   --color-cyan-200: var(--color-sky-200);
@@ -177,17 +177,17 @@
   --color-teal-950: var(--color-sky-950);
 
   /* Success */
-  --color-emerald-50: #EEFAF4;
-  --color-emerald-100: #D6F3E4;
-  --color-emerald-200: #AFE6CB;
-  --color-emerald-300: #7DD3AC;
-  --color-emerald-400: #46BA89;
-  --color-emerald-500: #21A06F;
-  --color-emerald-600: #14825A;
-  --color-emerald-700: #12684A;
-  --color-emerald-800: #12533D;
-  --color-emerald-900: #114533;
-  --color-emerald-950: #08271D;
+  --color-emerald-50: #ECFCF5;
+  --color-emerald-100: #D1F7E6;
+  --color-emerald-200: #A6EDCF;
+  --color-emerald-300: #6FE0B3;
+  --color-emerald-400: #36D399;
+  --color-emerald-500: #1CB67F;
+  --color-emerald-600: #12936A;
+  --color-emerald-700: #117558;
+  --color-emerald-800: #125D47;
+  --color-emerald-900: #114D3C;
+  --color-emerald-950: #062B21;
   --color-green-50: var(--color-emerald-50);
   --color-green-100: var(--color-emerald-100);
   --color-green-200: var(--color-emerald-200);
@@ -212,17 +212,17 @@
   --color-lime-950: var(--color-emerald-950);
 
   /* Warning */
-  --color-amber-50: #FFF8EB;
-  --color-amber-100: #FEEDCB;
-  --color-amber-200: #FCDA97;
-  --color-amber-300: #F8C05E;
-  --color-amber-400: #F2A63A;
-  --color-amber-500: #E48A1C;
-  --color-amber-600: #C66C12;
-  --color-amber-700: #A35113;
-  --color-amber-800: #844117;
-  --color-amber-900: #6C3716;
-  --color-amber-950: #3E1C08;
+  --color-amber-50: #FFF9EB;
+  --color-amber-100: #FEF0C9;
+  --color-amber-200: #FDE08F;
+  --color-amber-300: #F9CB5C;
+  --color-amber-400: #F5B942;
+  --color-amber-500: #E99A1E;
+  --color-amber-600: #C77814;
+  --color-amber-700: #A15715;
+  --color-amber-800: #834518;
+  --color-amber-900: #6C3A17;
+  --color-amber-950: #3E1D08;
   --color-yellow-50: var(--color-amber-50);
   --color-yellow-100: var(--color-amber-100);
   --color-yellow-200: var(--color-amber-200);
@@ -247,17 +247,17 @@
   --color-orange-950: var(--color-amber-950);
 
   /* Danger */
-  --color-red-50: #FEF3F2;
-  --color-red-100: #FEE3E1;
-  --color-red-200: #FDCAC6;
-  --color-red-300: #F9A49E;
-  --color-red-400: #F2746C;
-  --color-red-500: #E54C43;
-  --color-red-600: #CC342C;
-  --color-red-700: #AB2822;
-  --color-red-800: #8D2520;
-  --color-red-900: #752420;
-  --color-red-950: #400E0C;
+  --color-red-50: #FEF2F2;
+  --color-red-100: #FEE2E2;
+  --color-red-200: #FECACA;
+  --color-red-300: #FCA5A5;
+  --color-red-400: #F87171;
+  --color-red-500: #EF4F4F;
+  --color-red-600: #D63535;
+  --color-red-700: #B42828;
+  --color-red-800: #932525;
+  --color-red-900: #7A2424;
+  --color-red-950: #420E0E;
   --color-rose-50: var(--color-red-50);
   --color-rose-100: var(--color-red-100);
   --color-rose-200: var(--color-red-200);
@@ -282,11 +282,11 @@
   --color-pink-950: var(--color-red-950);
 
   /* Navy: the shell (sidebar, dark panels, code surfaces) */
-  --color-navy-600: #2A3866;
-  --color-navy-700: #1D2A50;
-  --color-navy-800: #152040;
-  --color-navy-900: #0E1731;
-  --color-navy-950: #091024;
+  --color-navy-600: #283255;
+  --color-navy-700: #1C2440;
+  --color-navy-800: #141B31;
+  --color-navy-900: #0D1222;
+  --color-navy-950: #0A0E1B;
 
   /* Semantic aliases (prefer these in new code) */
   --color-primary: var(--color-blue-600);
@@ -298,7 +298,7 @@
   --color-ink-muted: var(--color-slate-500);
   --color-line: var(--color-slate-200);
   --color-line-strong: var(--color-slate-300);
-  --color-canvas: #F6F7FB;
+  --color-canvas: #F6F7FC;
   --color-surface: #FFFFFF;
   --color-success: var(--color-emerald-600);
   --color-warning: var(--color-amber-600);
@@ -368,7 +368,7 @@
     --sidebar: var(--color-navy-950);
     --sidebar-surface: var(--color-navy-900);
     --sidebar-border: var(--color-navy-700);
-    --sidebar-text: #A3ADC6;
+    --sidebar-text: #9CA8C2;
     --sidebar-active: var(--color-navy-800);
     --foreground: var(--color-slate-900);
     --secondary: var(--color-slate-600);
@@ -514,24 +514,13 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  /*
-   * The one hero treatment for module landing banners: deep navy with a restrained
-   * indigo/violet glow. Replaces the dozen different saturated gradients pages used before.
-   */
-  .hero-brand {
-    background-color: var(--color-navy-950);
-    background-image:
-      radial-gradient(70% 120% at 100% 0%, rgb(121 81 216 / 0.30) 0%, transparent 60%),
-      radial-gradient(60% 100% at 0% 100%, rgb(70 84 224 / 0.28) 0%, transparent 65%),
-      linear-gradient(135deg, var(--color-navy-900) 0%, var(--color-navy-950) 100%);
-    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 1px 2px rgb(16 24 48 / 0.08);
-  }
+  /* .hero-brand lives in styles/theme.css with the other NEXORA surfaces. */
 
   /* Subtle brand wash used behind page heroes. */
   .surface-hero {
     background:
-      radial-gradient(120% 140% at 0% 0%, rgb(70 84 224 / 0.07) 0%, transparent 55%),
-      radial-gradient(90% 120% at 100% 0%, rgb(121 81 216 / 0.06) 0%, transparent 60%),
+      radial-gradient(120% 140% at 0% 0%, rgb(105 87 232 / 0.07) 0%, transparent 55%),
+      radial-gradient(90% 120% at 100% 0%, rgb(55 201 232 / 0.05) 0%, transparent 60%),
       var(--surface-1, #FFFFFF);
   }
 }

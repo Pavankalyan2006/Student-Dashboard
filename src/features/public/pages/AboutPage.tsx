@@ -104,7 +104,7 @@ export function AboutPage({ onNavigate }: AboutPageProps) {
                 Undergraduate engineering students face a challenging duality: maintaining a competitive SGPA / CGPA in university semester exams while independently mastering modern software engineering, coding problems, and system architecture for competitive placements.
               </p>
               <p className="text-sm text-slate-600 leading-relaxed">
-                The B.Tech AI Learning Platform resolves this fragmentation. By integrating your active semester curriculum with personalized AI agents, isolated coding sandboxes, and structured placement modules, students build both top academic grades and tier-1 industry capabilities under one unified system.
+                The NEXORA AI resolves this fragmentation. By integrating your active semester curriculum with personalized AI agents, isolated coding sandboxes, and structured placement modules, students build both top academic grades and tier-1 industry capabilities under one unified system.
               </p>
             </div>
 

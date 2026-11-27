@@ -13,12 +13,12 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       'inline-flex items-center justify-center font-semibold transition-[background-color,border-color,color,box-shadow,transform] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:translate-y-px active:scale-[0.97] motion-reduce:active:scale-100 disabled:opacity-50 disabled:pointer-events-none select-none shrink-0 cursor-pointer rounded-lg';
 
     const variants = {
-      primary: 'bg-blue-600 text-white shadow-[inset_0_1px_0_rgb(255_255_255_/_0.14),0_1px_2px_rgb(16_24_48_/_0.12)] hover:bg-blue-700 focus-visible:ring-blue-500',
+      primary: 'bg-blue-600 text-white shadow-[inset_0_1px_0_rgb(255_255_255_/_0.16),0_6px_16px_-8px_rgb(105_87_232_/_0.7)] hover:bg-blue-700 hover:shadow-[inset_0_1px_0_rgb(255_255_255_/_0.16),0_8px_20px_-8px_rgb(105_87_232_/_0.85)] focus-visible:ring-blue-500',
       secondary: 'bg-slate-100 text-slate-800 hover:bg-slate-200 focus-visible:ring-slate-400',
       outline: 'border border-slate-300/80 bg-white text-slate-800 shadow-xs hover:bg-slate-50 hover:border-slate-300 focus-visible:ring-blue-500',
       ghost: 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 focus-visible:ring-slate-400',
       danger: 'bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-500',
-      ai: 'bg-gradient-to-r from-blue-600 to-violet-600 text-white shadow-[inset_0_1px_0_rgb(255_255_255_/_0.16),0_1px_2px_rgb(16_24_48_/_0.12)] hover:from-blue-700 hover:to-violet-700 focus-visible:ring-violet-500',
+      ai: 'bg-brand-gradient text-white shadow-[inset_0_1px_0_rgb(255_255_255_/_0.18),0_8px_20px_-10px_rgb(120_101_245_/_0.9)] hover:brightness-110 focus-visible:ring-violet-500',
     };
 
     const sizes = {

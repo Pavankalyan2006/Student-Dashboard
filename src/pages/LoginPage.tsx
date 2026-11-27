@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { NexoraLogo } from '../components/brand/Nexora';
 import {
   Sparkles,
   Lock,
@@ -222,11 +223,7 @@ export function LoginPage({
         onClick={() => onNavigate && onNavigate('/')}
         className="flex items-center gap-3 mb-6 cursor-pointer lg:hidden"
       >
-        <BrandMark className="h-11 w-11" />
-        <div>
-          <h1 className="text-xl font-bold tracking-tight text-slate-900">B.Tech AI Learning Platform</h1>
-          <p className="text-xs text-slate-500">Personalized Academic Operating System for Engineering Students</p>
-        </div>
+        <NexoraLogo tone="auto" tagline="Learn Smarter. Build Faster. Achieve More." markClassName="h-11 w-11" />
       </div>
 
       {/* Main Auth Card */}

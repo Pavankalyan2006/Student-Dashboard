@@ -37,10 +37,10 @@ export function ChartCard({
   description,
   data,
   type = 'area',
-  color = '#4654E0',
+  color = '#6957E8',
   dataKey = 'value',
   secondaryDataKey,
-  secondaryColor = '#574FDD',
+  secondaryColor = '#6957E8',
   unit = '',
   className,
 }: ChartCardProps) {
@@ -61,17 +61,17 @@ export function ChartCard({
                     <stop offset="95%" stopColor={color} stopOpacity={0.0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EFF1F6" />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E8EAF2" />
                 <XAxis
                   dataKey="label"
                   tickLine={false}
                   axisLine={false}
-                  tick={{ fontSize: 11, fill: '#6A7387' }}
+                  tick={{ fontSize: 11, fill: '#647089' }}
                 />
                 <YAxis
                   tickLine={false}
                   axisLine={false}
-                  tick={{ fontSize: 11, fill: '#6A7387' }}
+                  tick={{ fontSize: 11, fill: '#647089' }}
                   tickFormatter={(v) => `${v}${unit}`}
                 />
                 <Tooltip
@@ -118,17 +118,17 @@ export function ChartCard({
               </AreaChart>
             ) : (
               <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EFF1F6" />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E8EAF2" />
                 <XAxis
                   dataKey="label"
                   tickLine={false}
                   axisLine={false}
-                  tick={{ fontSize: 11, fill: '#6A7387' }}
+                  tick={{ fontSize: 11, fill: '#647089' }}
                 />
                 <YAxis
                   tickLine={false}
                   axisLine={false}
-                  tick={{ fontSize: 11, fill: '#6A7387' }}
+                  tick={{ fontSize: 11, fill: '#647089' }}
                   tickFormatter={(v) => `${v}${unit}`}
                 />
                 <Tooltip

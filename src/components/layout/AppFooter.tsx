@@ -25,7 +25,7 @@ export function AppFooter({ onNavigate }: { onNavigate: (path: string) => void }
       <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-3 px-4 py-5 text-xs text-slate-500 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
         <div className="flex min-w-0 items-center gap-2.5">
           <BrandMark className="h-6 w-6 rounded-md" />
-          <span className="font-semibold text-slate-700">B.Tech AI Platform</span>
+          <span className="font-semibold text-slate-700">NEXORA AI</span>
           <span className="text-slate-300" aria-hidden="true">·</span>
           <span
             data-testid="footer-student-name"

@@ -143,7 +143,7 @@ export function SubsystemProgressPage({
                     fontSize: '11px',
                   }}
                 />
-                <Bar dataKey="value" name="Metric" fill="#4654E0" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="value" name="Metric" fill="#6957E8" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

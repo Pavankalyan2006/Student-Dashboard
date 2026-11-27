@@ -116,7 +116,7 @@ export function DocumentViewer({
             </div>
           </div>
           <div className="text-[11px] text-slate-500 flex justify-between border-t pt-3 mt-6">
-            <span>B.Tech AI Learning Workspace</span>
+            <span>NEXORA AI Workspace</span>
             <span className="tabular-nums">Page {currentPage} of {totalPages}</span>
           </div>
         </div>

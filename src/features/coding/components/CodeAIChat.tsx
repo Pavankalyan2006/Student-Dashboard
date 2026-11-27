@@ -44,7 +44,7 @@ export const CodeAIChat: React.FC<{ problemContext?: any }> = ({ problemContext 
     {
       id: 'm1',
       sender: 'ai',
-      text: `Hello! I'm your **B.Tech AI Coding Assistant**. I have live context of your **${language}** editor workspace.
+      text: `Hello! I'm your **NEXORA AI Coding Assistant**. I have live context of your **${language}** editor workspace.
 
 Ask me anything about your code, or select an action below!`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),

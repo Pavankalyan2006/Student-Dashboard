@@ -9,7 +9,7 @@ export const GO_TO_SHORTCUTS: { key: string; href: string; label: string }[] = [
   { key: 'n', href: '/notes', label: 'Notes' },
   { key: 'f', href: '/flashcards', label: 'Flashcards' },
   { key: 's', href: '/study-planner', label: 'Study Planner' },
-  { key: 'p', href: '/progress', label: 'Unified Progress' },
+  { key: 'p', href: '/progress', label: 'Progress & Analytics' },
   { key: 'a', href: '/ai-agent', label: 'AI Tutor' },
   { key: 'j', href: '/career/jobs', label: 'Jobs' },
 ];

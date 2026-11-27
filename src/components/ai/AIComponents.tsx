@@ -137,7 +137,7 @@ export function AIResponseContainer({
       <div className="flex-1 space-y-1 overflow-hidden">
         <div className="flex items-center justify-between text-xs text-slate-500">
           <span className="font-semibold text-slate-900">
-            {isAssistant ? 'B.Tech AI Agent' : 'You'}
+            {isAssistant ? 'NEXORA AI Agent' : 'You'}
           </span>
           {timestamp && <span className="tabular-nums">{timestamp}</span>}
         </div>
@@ -304,7 +304,7 @@ export function AIEmptyState({ onSelectPrompt }: { onSelectPrompt?: (text: strin
         <Bot className="h-6 w-6" />
       </div>
       <h3 className="text-base font-bold text-slate-900 mb-1">
-        B.Tech AI Learning Agent
+        NEXORA AI Agent
       </h3>
       <p className="text-xs text-slate-600 leading-relaxed mb-6">
         Ask any algorithmic concept, coursework question, syllabus breakdown, or engineering lab query.

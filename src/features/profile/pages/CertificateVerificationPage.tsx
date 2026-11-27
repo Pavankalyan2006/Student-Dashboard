@@ -112,7 +112,7 @@ export function CertificateVerificationPage({
             {/* Disclaimer & Privacy Protection Note */}
             <div className="text-[11px] text-slate-500 text-center space-y-1">
               <p>
-                This record verifies official academic course mastery on the B.Tech AI Learning Platform.
+                This record verifies official academic course mastery on the NEXORA AI.
               </p>
               <p className="text-[10px] text-slate-400">
                 Private student credentials, internal tokens, and student IDs are securely shielded.
