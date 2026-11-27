@@ -1,319 +1,275 @@
 import * as React from 'react';
-import {
-  Sparkles,
-  BookOpen,
-  Code2,
-  GraduationCap,
-  Briefcase,
-  Layers,
-  ArrowRight,
-  Menu,
-  X,
-  Compass,
-  Cpu,
-  ShieldCheck,
-  CheckCircle2,
-} from 'lucide-react';
-import { Button } from '../../../components/ui/button';
+import { AnimatePresence, motion } from 'motion/react';
+import { ArrowRight, Menu, X, ArrowUpRight } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
 import { ThemeToggle } from '../../../components/navigation/ThemeToggle';
 import { NexoraLogo, NexoraMark } from '../../../components/brand/Nexora';
 import { ScrollProgress } from '../../../components/motion';
+import { PublicBackdrop, type BackdropVariant } from './PublicBackdrop';
+import { cn } from '../../../lib/utils';
 
 interface PublicLayoutProps {
   currentPath: string;
   onNavigate: (path: string) => void;
   children: React.ReactNode;
+  /** Which colour mood the living background uses. Defaults to the page's own. */
+  backdrop?: BackdropVariant;
 }
 
-export function PublicLayout({ currentPath, onNavigate, children }: PublicLayoutProps) {
-  const { isAuthenticated, student } = useAuth();
-  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+const NAV_LINKS = [
+  { label: 'Home', path: '/' },
+  { label: 'About', path: '/about' },
+  { label: 'How it works', path: '/how-it-works' },
+];
 
-  const navLinks = [
-    { label: 'Home', path: '/' },
-    { label: 'About', path: '/about' },
-    { label: 'How It Works', path: '/how-it-works' },
-  ];
+function variantFor(path: string): BackdropVariant {
+  if (path.startsWith('/about')) return 'about';
+  if (path.startsWith('/how-it-works')) return 'how';
+  return 'home';
+}
+
+/** A link styled as a button that still opens in a new tab with Ctrl/Cmd-click. */
+function NavAnchor({
+  href,
+  onNavigate,
+  className,
+  children,
+  onClick,
+  ...rest
+}: React.AnchorHTMLAttributes<HTMLAnchorElement> & { href: string; onNavigate: (p: string) => void }) {
+  return (
+    <a
+      href={href}
+      onClick={(e) => {
+        onClick?.(e);
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+        e.preventDefault();
+        onNavigate(href);
+      }}
+      className={className}
+      {...rest}
+    >
+      {children}
+    </a>
+  );
+}
+
+export function PublicLayout({ currentPath, onNavigate, children, backdrop }: PublicLayoutProps) {
+  const { isAuthenticated } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const [scrolled, setScrolled] = React.useState(false);
+  const active = currentPath === '/home' ? '/' : currentPath;
+
+  React.useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  React.useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setMobileMenuOpen(false);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [mobileMenuOpen]);
+
+  const go = (p: string) => {
+    setMobileMenuOpen(false);
+    onNavigate(p);
+  };
 
   return (
-    <div className="app-canvas min-h-screen flex flex-col text-slate-900 font-sans">
+    <div className="relative flex min-h-screen flex-col bg-[var(--surface-0)] font-sans text-slate-900">
+      <PublicBackdrop variant={backdrop ?? variantFor(active)} />
       <ScrollProgress />
-      {/* Top Navigation Bar */}
-      <header className="glass-bar sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          {/* Logo & Brand */}
-          <div
-            onClick={() => onNavigate('/')}
-            className="flex items-center gap-3 cursor-pointer group"
-          >
+
+      <header
+        className={cn(
+          'sticky top-0 z-50 transition-[background-color,border-color,box-shadow] duration-300',
+          scrolled ? 'glass-bar shadow-[0_8px_30px_-20px_rgb(8_11_22_/_0.5)]' : 'border-b border-transparent'
+        )}
+      >
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+          <NavAnchor href="/" onNavigate={go} className="group flex items-center rounded-lg" aria-label="NEXORA AI home">
             <NexoraLogo
               tone="auto"
               tagline="Learn Smarter. Build Faster. Achieve More."
-              markClassName="h-10 w-10 transition-transform duration-300 group-hover:scale-105 group-hover:-rotate-3"
+              markClassName="h-9 w-9 transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-105"
             />
-          </div>
+          </NavAnchor>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center gap-1 lg:gap-2">
-            {navLinks.map((link) => {
-              const isActive = currentPath === link.path;
+          <nav aria-label="Site" className="hidden items-center gap-1 rounded-full border border-slate-200/70 bg-white/50 p-1 backdrop-blur md:flex">
+            {NAV_LINKS.map((link) => {
+              const isActive = active === link.path;
               return (
-                <button
+                <NavAnchor
                   key={link.path}
-                  onClick={() => onNavigate(link.path)}
-                  className={`relative px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
-                    isActive
-                      ? 'bg-blue-50 text-blue-600 font-semibold'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                  }`}
+                  href={link.path}
+                  onNavigate={go}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={cn(
+                    'relative rounded-full px-4 py-1.5 text-sm font-medium transition-colors',
+                    isActive ? 'text-white' : 'text-slate-600 hover:text-slate-900'
+                  )}
                 >
-                  {link.label}
-                </button>
+                  {isActive && (
+                    <motion.span
+                      layoutId="public-nav-pill"
+                      className="absolute inset-0 rounded-full bg-brand-gradient shadow-[0_6px_16px_-8px_rgb(120_101_245_/_0.9)]"
+                      transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+                    />
+                  )}
+                  <span className="relative">{link.label}</span>
+                </NavAnchor>
               );
             })}
           </nav>
 
-          {/* Right Action Buttons */}
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden items-center gap-2.5 md:flex">
             <ThemeToggle />
             {isAuthenticated ? (
-              <Button
-                onClick={() => onNavigate('/dashboard')}
-                className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-sm flex items-center gap-1.5"
-              >
-                <span>Go to Dashboard</span>
-                <ArrowRight className="h-3.5 w-3.5" />
-              </Button>
+              <button type="button" onClick={() => go('/dashboard')} className="press inline-flex items-center gap-1.5 rounded-xl bg-brand-gradient px-4 py-2 text-[13px] font-semibold text-white shadow-[0_8px_20px_-10px_rgb(120_101_245_/_0.9)] hover:brightness-110">
+                Open my workspace <ArrowRight className="h-3.5 w-3.5" />
+              </button>
             ) : (
               <>
-                <Button
-                  variant="ghost"
-                  onClick={() => onNavigate('/login')}
-                  className="text-slate-600 hover:text-slate-900 text-xs font-semibold px-3 py-2 cursor-pointer"
-                >
-                  Sign In
-                </Button>
-                <Button
-                  onClick={() => onNavigate('/register')}
-                  className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-sm flex items-center gap-1.5 cursor-pointer"
-                >
-                  <span>Get Started</span>
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </Button>
+                <button type="button" onClick={() => go('/login')} className="press rounded-xl px-3 py-2 text-[13px] font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-900">
+                  Sign in
+                </button>
+                <button type="button" onClick={() => go('/register')} className="press inline-flex items-center gap-1.5 rounded-xl bg-brand-gradient px-4 py-2 text-[13px] font-semibold text-white shadow-[0_8px_20px_-10px_rgb(120_101_245_/_0.9)] hover:brightness-110">
+                  Start free <ArrowRight className="h-3.5 w-3.5" />
+                </button>
               </>
             )}
           </div>
 
-          {/* Mobile Hamburger Button */}
-          <div className="md:hidden flex items-center gap-2">
+          <div className="flex items-center gap-2 md:hidden">
             <ThemeToggle />
             <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 focus:outline-none"
-              aria-label="Toggle navigation menu"
+              type="button"
+              onClick={() => setMobileMenuOpen((o) => !o)}
+              className="rounded-lg p-2 text-slate-700 hover:bg-slate-100"
+              aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={mobileMenuOpen}
             >
               {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
           </div>
         </div>
 
-        {/* Mobile Dropdown Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden border-t border-slate-200 bg-white px-4 pt-3 pb-5 space-y-3 shadow-lg">
-            <nav className="flex flex-col space-y-1">
-              {navLinks.map((link) => (
-                <button
-                  key={link.path}
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    onNavigate(link.path);
-                  }}
-                  className={`text-left px-3 py-2 rounded-lg text-sm font-medium ${
-                    currentPath === link.path
-                      ? 'bg-blue-50 text-blue-600 font-bold'
-                      : 'text-slate-600 hover:bg-slate-50'
-                  }`}
-                >
-                  {link.label}
-                </button>
-              ))}
-            </nav>
-
-            <div className="pt-2 border-t border-slate-100 flex flex-col gap-2">
-              {isAuthenticated ? (
-                <Button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    onNavigate('/dashboard');
-                  }}
-                  className="w-full bg-blue-600 text-white text-sm font-semibold justify-center"
-                >
-                  Go to Dashboard
-                </Button>
-              ) : (
-                <>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      onNavigate('/login');
-                    }}
-                    className="w-full justify-center text-sm font-semibold"
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.22 }}
+              className="glass-panel overflow-hidden border-x-0 md:hidden"
+            >
+              <nav aria-label="Site" className="flex flex-col gap-1 px-4 pb-4 pt-2">
+                {NAV_LINKS.map((link) => (
+                  <NavAnchor
+                    key={link.path}
+                    href={link.path}
+                    onNavigate={go}
+                    className={cn(
+                      'rounded-xl px-3 py-2.5 text-[15px] font-medium',
+                      active === link.path ? 'bg-blue-50 font-semibold text-blue-700' : 'text-slate-700 hover:bg-slate-100'
+                    )}
                   >
-                    Sign In
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      onNavigate('/register');
-                    }}
-                    className="w-full bg-blue-600 text-white text-sm font-semibold justify-center"
-                  >
-                    Get Started (Sign Up)
-                  </Button>
-                </>
-              )}
-            </div>
-          </div>
-        )}
+                    {link.label}
+                  </NavAnchor>
+                ))}
+                <div className="mt-2 grid gap-2 border-t border-slate-200 pt-3">
+                  {isAuthenticated ? (
+                    <button type="button" onClick={() => go('/dashboard')} className="rounded-xl bg-brand-gradient py-2.5 text-sm font-semibold text-white">
+                      Open my workspace
+                    </button>
+                  ) : (
+                    <>
+                      <button type="button" onClick={() => go('/register')} className="rounded-xl bg-brand-gradient py-2.5 text-sm font-semibold text-white">
+                        Start free
+                      </button>
+                      <button type="button" onClick={() => go('/login')} className="rounded-xl border border-slate-200 bg-white py-2.5 text-sm font-semibold text-slate-800">
+                        Sign in
+                      </button>
+                    </>
+                  )}
+                </div>
+              </nav>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </header>
 
-      {/* Main Content Area */}
-      <main className="flex-1">{children}</main>
+      <main className="relative z-10 flex-1">{children}</main>
 
-      {/* Public Footer */}
-      <footer className="bg-navy-900 text-white border-t border-slate-800 pt-16 pb-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-slate-800">
-            {/* Platform Identity */}
-            <div className="lg:col-span-2 space-y-4">
-              <div className="flex items-center gap-3">
-                <NexoraMark className="h-10 w-10" />
-                <div>
-                  <h3 className="font-display text-lg font-extrabold tracking-[0.08em] text-white">NEXORA AI</h3>
-                  <p className="text-xs text-slate-400">Learn Smarter. Build Faster. Achieve More.</p>
-                </div>
-              </div>
-              <p className="text-sm text-slate-300 leading-relaxed max-w-sm">
-                Engineered specifically for undergraduate B.Tech students. Unifying university syllabus
-                mastery, isolated coding & SQL sandboxes, AI tutoring, spaced revision, and tier-1 placement preparation.
+      <footer className="relative z-10 border-t border-slate-200/70 bg-white/50 backdrop-blur-xl">
+        <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+          <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
+            <div className="space-y-4">
+              <NexoraLogo tone="auto" tagline />
+              <p className="max-w-xs text-sm leading-relaxed text-slate-600">
+                A personal AI learning companion for B.Tech students: your syllabus, your labs, your plans and your career, in one calm workspace.
               </p>
-              <div className="flex items-center gap-2 pt-2 text-xs text-emerald-400 font-medium">
-                <ShieldCheck className="h-4 w-4" />
-                <span>Strict Student Isolation • Zero Mock Data • Real Persistence</span>
-              </div>
             </div>
-
-            {/* Academic Navigation */}
-            <div className="space-y-3">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Academic OS</h4>
-              <ul className="space-y-2 text-sm text-slate-300">
-                <li>
-                  <button onClick={() => onNavigate('/dashboard')} className="hover:text-white transition-colors cursor-pointer">
-                    Personalized Dashboard
-                  </button>
-                </li>
-                <li>
-                  <button onClick={() => onNavigate('/semester-command-center')} className="hover:text-white transition-colors cursor-pointer">
-                    Semester Command Center
-                  </button>
-                </li>
-                <li>
-                  <button onClick={() => onNavigate('/ai-tutor')} className="hover:text-white transition-colors cursor-pointer">
-                    AI Tutor & Doubt Solver
-                  </button>
-                </li>
-                <li>
-                  <button onClick={() => onNavigate('/courses')} className="hover:text-white transition-colors cursor-pointer">
-                    Courses & Lessons
-                  </button>
-                </li>
-                <li>
-                  <button onClick={() => onNavigate('/notes')} className="hover:text-white transition-colors cursor-pointer">
-                    AI Notes & Flashcards
-                  </button>
-                </li>
-              </ul>
-            </div>
-
-            {/* Practical Laboratories */}
-            <div className="space-y-3">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Practical Labs</h4>
-              <ul className="space-y-2 text-sm text-slate-300">
-                <li>
-                  <button onClick={() => onNavigate('/coding')} className="hover:text-white transition-colors cursor-pointer">
-                    Coding Practice Lab
-                  </button>
-                </li>
-                <li>
-                  <button onClick={() => onNavigate('/dsa')} className="hover:text-white transition-colors cursor-pointer">
-                    DSA Algorithm Lab
-                  </button>
-                </li>
-                <li>
-                  <button onClick={() => onNavigate('/sql-lab')} className="hover:text-white transition-colors cursor-pointer">
-                    SQL Sandboxed Lab
-                  </button>
-                </li>
-                <li>
-                  <button onClick={() => onNavigate('/ml-lab')} className="hover:text-white transition-colors cursor-pointer">
-                    AI / ML Laboratory
-                  </button>
-                </li>
-                <li>
-                  <button onClick={() => onNavigate('/system-design')} className="hover:text-white transition-colors cursor-pointer">
-                    System Design Lab
-                  </button>
-                </li>
-              </ul>
-            </div>
-
-            {/* Career & Community */}
-            <div className="space-y-3">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Career & Community</h4>
-              <ul className="space-y-2 text-sm text-slate-300">
-                <li>
-                  <button onClick={() => onNavigate('/placements')} className="hover:text-white transition-colors cursor-pointer">
-                    Placement Preparation
-                  </button>
-                </li>
-                <li>
-                  <button onClick={() => onNavigate('/resume')} className="hover:text-white transition-colors cursor-pointer">
-                    AI Resume Builder
-                  </button>
-                </li>
-                <li>
-                  <button onClick={() => onNavigate('/mock-interviews')} className="hover:text-white transition-colors cursor-pointer">
-                    Mock Interview Simulator
-                  </button>
-                </li>
-                <li>
-                  <button onClick={() => onNavigate('/projects')} className="hover:text-white transition-colors cursor-pointer">
-                    Engineering Projects
-                  </button>
-                </li>
-                <li>
-                  <button onClick={() => onNavigate('/community')} className="hover:text-white transition-colors cursor-pointer">
-                    Student Community Hub
-                  </button>
-                </li>
+            <FooterColumn
+              title="Explore"
+              links={[
+                ['Home', '/'],
+                ['About NEXORA', '/about'],
+                ['How it works', '/how-it-works'],
+              ]}
+              onNavigate={go}
+            />
+            <FooterColumn
+              title="Get going"
+              links={
+                isAuthenticated
+                  ? [['Open my workspace', '/dashboard']]
+                  : [
+                      ['Create your account', '/register'],
+                      ['Sign in', '/login'],
+                    ]
+              }
+              onNavigate={go}
+            />
+            <div>
+              <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Our promises</h3>
+              <ul className="mt-4 space-y-2.5 text-sm text-slate-600">
+                <li>Student-only. No faculty views.</li>
+                <li>Your data stays yours.</li>
+                <li>Honest numbers, never invented ones.</li>
               </ul>
             </div>
           </div>
-
-          {/* Bottom Bar */}
-          <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-4">
-            <p>© {new Date().getFullYear()} NEXORA AI. All rights reserved. Dedicated to engineering student excellence.</p>
-            <div className="flex items-center gap-6">
-              <button onClick={() => onNavigate('/about')} className="hover:text-white transition-colors">About</button>
-              <button onClick={() => onNavigate('/how-it-works')} className="hover:text-white transition-colors">How It Works</button>
-              <button onClick={() => onNavigate('/login')} className="hover:text-white transition-colors">Student Sign In</button>
-              <button onClick={() => onNavigate('/register')} className="hover:text-white transition-colors">Register</button>
-            </div>
+          <div className="mt-12 flex flex-col items-start justify-between gap-3 border-t border-slate-200/70 pt-6 text-xs text-slate-500 sm:flex-row sm:items-center">
+            <span className="flex items-center gap-2">
+              <NexoraMark className="h-5 w-5" /> © {new Date().getFullYear()} NEXORA AI
+            </span>
+            <span>Learn Smarter. Build Faster. Achieve More.</span>
           </div>
         </div>
       </footer>
+    </div>
+  );
+}
+
+function FooterColumn({ title, links, onNavigate }: { title: string; links: [string, string][]; onNavigate: (p: string) => void }) {
+  return (
+    <div>
+      <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">{title}</h3>
+      <ul className="mt-4 space-y-2.5">
+        {links.map(([label, href]) => (
+          <li key={href}>
+            <NavAnchor href={href} onNavigate={onNavigate} className="group inline-flex items-center gap-1 text-sm text-slate-700 hover:text-blue-700">
+              {label}
+              <ArrowUpRight className="h-3.5 w-3.5 opacity-0 transition-opacity group-hover:opacity-100" />
+            </NavAnchor>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
