@@ -11,6 +11,9 @@ import { SandboxService } from '../../server/execution/sandbox';
 import { NotesService } from '../../server/services/notes';
 import { ProjectService } from '../../server/services/projectService';
 
+/** Dates relative to today, so the "upcoming" events stay upcoming whenever the suite runs. */
+const daysFromNow = (n: number) => new Date(Date.now() + n * 86_400_000).toISOString().slice(0, 10);
+
 describe('SECTION 56: Synthetic Student Registration, Onboarding & Whole-Platform Integration', () => {
   const syntheticStudent = {
     id: 'std_aarav_test_student_aiml_07',
@@ -115,9 +118,9 @@ describe('SECTION 56: Synthetic Student Registration, Onboarding & Whole-Platfor
         ],
       })),
       academic_dates: [
-        { id: 'ad_1', label: 'AI/ML Slip Test 1', date: '2026-11-10', type: 'SLIP_TEST' },
-        { id: 'ad_2', label: 'Minor 1 Theory Exam', date: '2026-11-25', type: 'INTERNAL_EXAM' },
-        { id: 'ad_3', label: 'End-Semester Final Exams', date: '2026-12-20', type: 'END_SEMESTER' },
+        { id: 'ad_1', label: 'AI/ML Slip Test 1', date: daysFromNow(-7), type: 'SLIP_TEST' },
+        { id: 'ad_2', label: 'Minor 1 Theory Exam', date: daysFromNow(10), type: 'INTERNAL_EXAM' },
+        { id: 'ad_3', label: 'End-Semester Final Exams', date: daysFromNow(35), type: 'END_SEMESTER' },
       ],
     });
 

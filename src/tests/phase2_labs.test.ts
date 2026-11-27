@@ -37,7 +37,8 @@ describe('Phase 2 › Batch 1 › code execution sandbox', () => {
 
   it('results carry the isolation level and no invented memory figure', async () => {
     const r = await SandboxService.execute({ language: 'python', sourceCode: 'print(6*7)' });
-    expect(r.stdout).toBe('42\n');
+    // Windows prints CRLF line endings; the value is what matters.
+    expect(r.stdout.replace(/\r\n/g, '\n')).toBe('42\n');
     expect(r.isolation).toBe(iso.level);
     expect(r.memory_kb).toBeUndefined();
   });
