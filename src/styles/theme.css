@@ -360,3 +360,17 @@ table, .tabular { font-variant-numeric: tabular-nums; }
   .animate-drift, .nexora-loader-path, .nexora-loader-node, .ai-thinking > span { animation: none !important; }
   .hover-lift:hover, .press:active { transform: none; }
 }
+
+/* Public site: a soft light that follows the cursor across cards (see useSpotlight). */
+.spotlight-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 300ms var(--ease-out);
+  background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), rgb(139 114 245 / 0.14), transparent 45%);
+}
+.spotlight-card:hover::after { opacity: 1; }
+:where(.dark) .spotlight-card::after { background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), rgb(155 120 255 / 0.16), transparent 45%); }

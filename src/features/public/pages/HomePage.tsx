@@ -1,562 +1,701 @@
 import * as React from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import {
-  Sparkles,
-  ArrowRight,
   BookOpen,
   Code2,
-  Database,
-  Cpu,
-  Layers,
-  GraduationCap,
+  CalendarRange,
   Briefcase,
-  CheckCircle2,
-  BrainCircuit,
-  Terminal,
-  CalendarCheck,
-  FolderGit2,
-  Users2,
-  HelpCircle,
-  ChevronDown,
-  ShieldAlert,
+  Microscope,
+  Sparkles,
+  Play,
+  Pause,
+  RotateCcw,
+  StepForward,
+  Check,
+  Bot,
+  Layers,
+  Binary,
+  Database,
   Target,
-  Zap,
+  GraduationCap,
+  Rocket,
+  FlaskConical,
+  Trophy,
+  Brain,
 } from 'lucide-react';
-import { Button } from '../../../components/ui/button';
 import { PublicLayout } from '../components/PublicLayout';
-import { motion } from 'motion/react';
-import { EASE_OUT } from '../../../components/motion';
-import { HeroPreview } from '../components/HeroPreview';
-
-/** Each section below the hero rises in once as it scrolls into view. */
-const REVEAL = {
-  initial: { opacity: 0, y: 28 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true, margin: '-80px' },
-  transition: { duration: 0.65, ease: EASE_OUT },
-} as const;
+import { CtaBand, Eyebrow, Faq, HeroButtons, Section, SectionHeading, SpotlightCard, reveal } from '../components/PublicKit';
+import { AnimatedNumber, EASE_OUT } from '../../../components/motion';
+import { NexoraMark, AiThinking } from '../../../components/brand/Nexora';
+import { useAuth } from '../../../hooks/useAuth';
+import { cn } from '../../../lib/utils';
 
 interface HomePageProps {
   onNavigate: (path: string) => void;
 }
 
-export function HomePage({ onNavigate }: HomePageProps) {
-  const [activeFaq, setActiveFaq] = React.useState<number | null>(null);
+/* ───────────────────────────── Hero: try asking ───────────────────────────── */
 
-  const toggleFaq = (index: number) => {
-    setActiveFaq(activeFaq === index ? null : index);
+const ROTATING = ['studies with you', 'codes with you', 'plans your semester', 'preps your placements'];
+
+const SAMPLE_QUESTIONS = [
+  {
+    q: 'Explain deadlock in OS like I have an exam tomorrow',
+    a: 'Four conditions must all hold: mutual exclusion, hold and wait, no preemption and circular wait. Break any one and deadlock is impossible. For your exam, learn one prevention trick per condition, then practise the Banker’s algorithm on a 3-process table.',
+  },
+  {
+    q: 'Why is my binary search stuck in an infinite loop?',
+    a: 'You probably update with lo = mid instead of lo = mid + 1. When lo and hi are next to each other, mid equals lo and nothing moves. Use mid = lo + (hi - lo) / 2 and always shrink the range past mid.',
+  },
+  {
+    q: 'Plan my week: DBMS minor on Friday, two labs pending',
+    a: 'Mon: normalisation (1NF to BCNF) and 10 flashcards. Tue: finish the SQL lab record. Wed: transactions and ACID with one past paper. Thu: OS lab and a timed DBMS quiz. Fri morning: review your mistake notebook only.',
+  },
+];
+
+function useTypewriter(text: string, speed = 14) {
+  const [out, setOut] = React.useState('');
+  React.useEffect(() => {
+    const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if (reduced) {
+      setOut(text);
+      return;
+    }
+    setOut('');
+    let i = 0;
+    const id = window.setInterval(() => {
+      i += 2;
+      setOut(text.slice(0, i));
+      if (i >= text.length) window.clearInterval(id);
+    }, speed);
+    return () => window.clearInterval(id);
+  }, [text, speed]);
+  return out;
+}
+
+function AskDemo() {
+  const [active, setActive] = React.useState(0);
+  const [thinking, setThinking] = React.useState(false);
+  const [shown, setShown] = React.useState(0);
+  const answer = useTypewriter(thinking ? '' : SAMPLE_QUESTIONS[shown].a);
+
+  const pick = (i: number) => {
+    setActive(i);
+    setThinking(true);
+    window.setTimeout(() => {
+      setShown(i);
+      setThinking(false);
+    }, 650);
   };
 
-  const coreProblems = [
-    {
-      problem: 'Information Overload & Outdated Syllabi',
-      solution: 'Automated Syllabus Parsing & Structured Unit Mastery',
-      description:
-        'Instead of drowning in fragmented textbook PDFs and obsolete question papers, our engine parses your exact university syllabus into actionable units, topics, and verified learning milestones.',
-      icon: BookOpen,
-      accent: 'from-blue-500/10 to-indigo-500/10 text-blue-600',
-    },
-    {
-      problem: 'Theory Without Practical Application',
-      solution: 'In-Browser Execution Sandboxes & Visualizers',
-      description:
-        'Bridge the gap between theoretical rote memorization and genuine engineering ability with our isolated Coding Lab, 20+ DSA Algorithm Visualizers, safe SQL Workbenches, and AI/ML model trainers.',
-      icon: Terminal,
-      accent: 'from-emerald-500/10 to-teal-500/10 text-emerald-600',
-    },
-    {
-      problem: 'Exam Panic & Rushed Last-Minute Cramming',
-      solution: 'Semester Command Center & Spaced Revision',
-      description:
-        'Track internal assessments, slip tests, and end-semester examinations with automated daily study tasks, algorithm-backed spaced repetition flashcards, and syllabus-targeted practice quizzes.',
-      icon: CalendarCheck,
-      accent: 'from-amber-500/10 to-orange-500/10 text-amber-600',
-    },
-    {
-      problem: 'Generic Career Roadmaps & Placement Disconnect',
-      solution: 'Branch-Specific Career Tracks & Mock Interviews',
-      description:
-        'Receive concrete placement roadmaps aligned with your branch (AI/ML, CSE, ECE, Data Science), practice AI mock technical interviews, build verified engineering projects, and generate tailored ATS resumes.',
-      icon: Briefcase,
-      accent: 'from-purple-500/10 to-pink-500/10 text-purple-600',
-    },
-  ];
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 24, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.7, delay: 0.25, ease: EASE_OUT }}
+      className="gradient-border relative min-w-0 rounded-[1.75rem] bg-white/80 p-5 shadow-[0_40px_90px_-40px_rgb(105_87_232_/_0.6)] backdrop-blur-xl sm:p-6"
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <NexoraMark className="h-8 w-8" />
+          <div>
+            <p className="text-sm font-semibold text-slate-900">Your NEXORA agent</p>
+            <p className="text-[11px] text-slate-500">Try a question below</p>
+          </div>
+        </div>
+        <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-700 ring-1 ring-inset ring-amber-200">
+          Example
+        </span>
+      </div>
 
-  const agentGroups = [
-    {
-      title: 'Academic Intelligence Agents',
-      subtitle: 'Curriculum & Semester Mastery',
-      agents: [
-        'Semester Agent: Manages university regulation schemes, credits, and subject catalogs.',
-        'Syllabus Agent: Deconstructs uploaded syllabus PDFs into structured units & topics.',
-        'Study Planner Agent: Generates dynamic daily & weekly study agendas based on student availability.',
-        'Exam Prep Agent: Formulates slip test, midterm, and end-sem revision priorities.',
-      ],
-      icon: GraduationCap,
-      color: 'border-blue-200 bg-blue-50/50 text-blue-600',
-    },
-    {
-      title: 'Practical Laboratory Agents',
-      subtitle: 'Code, DSA, SQL & AI Experimentation',
-      agents: [
-        'Coding Agent: Provides intelligent code walkthroughs and debugging suggestions.',
-        'DSA Agent: Guides step-by-step through algorithmic complexity and edge cases.',
-        'SQL Agent: Explains relational query execution plans and database normalization.',
-        'ML Agent: Inspects datasets, assists feature engineering, and interprets loss curves.',
-      ],
-      icon: Code2,
-      color: 'border-emerald-200 bg-emerald-50/50 text-emerald-700',
-    },
-    {
-      title: 'Knowledge & Doubt Agents',
-      subtitle: '24/7 Context-Aware AI Tutoring',
-      agents: [
-        'Tutor Agent: Contextualized Socratic explanations aligned with your current semester.',
-        'Doubt Solver Agent: Instant resolution of complex mathematical and engineering queries.',
-        'Document RAG Agent: Semantic vector search over lecture notes, textbooks, and lab manuals.',
-      ],
-      icon: BrainCircuit,
-      color: 'border-indigo-200 bg-indigo-50/50 text-indigo-700',
-    },
-    {
-      title: 'Career & Placement Agents',
-      subtitle: 'Industry Readiness & Portfolio Building',
-      agents: [
-        'Resume Agent: Analyzes engineering projects and crafts high-scoring ATS resumes.',
-        'Placement Agent: Curates company-specific quantitative, verbal, and technical problem sets.',
-        'Interview Agent: Conducts live simulated voice/chat technical and HR mock interviews.',
-      ],
-      icon: Target,
-      color: 'border-purple-200 bg-purple-50/50 text-purple-700',
-    },
-  ];
+      <div className="mt-5 space-y-2" role="tablist" aria-label="Example questions">
+        {SAMPLE_QUESTIONS.map((s, i) => (
+          <button
+            key={s.q}
+            type="button"
+            role="tab"
+            aria-selected={active === i}
+            onClick={() => pick(i)}
+            className={cn(
+              'press w-full rounded-2xl border px-4 py-2.5 text-left text-[13px] font-medium transition-colors',
+              active === i
+                ? 'border-blue-300 bg-blue-50 text-blue-800'
+                : 'border-slate-200 bg-white/70 text-slate-700 hover:border-blue-200 hover:bg-white'
+            )}
+          >
+            {s.q}
+          </button>
+        ))}
+      </div>
 
-  const labs = [
-    {
-      name: 'Coding Lab',
-      desc: 'Isolated, secure multi-language execution sandbox supporting Python, JavaScript, TypeScript, C++, and Java with real test-case runners.',
-      icon: Terminal,
-      badge: 'Multi-Language Sandbox',
-    },
-    {
-      name: 'DSA Lab',
-      desc: 'Interactive step-by-step visualizers for Binary Trees, Graphs, Sorting, Dynamic Programming, and 200+ curated engineering problems.',
-      icon: Layers,
-      badge: 'Visualizers & Practice',
-    },
-    {
-      name: 'SQL Lab',
-      desc: 'In-browser relational database workbench with schema inspection, sample university schemas, and analytical query execution.',
-      icon: Database,
-      badge: 'Safe Database Sandbox',
-    },
-    {
-      name: 'AI / ML Lab',
-      desc: 'Practical machine learning workbench to load datasets, inspect distributions, preprocess data, train models, and evaluate metrics.',
-      icon: Cpu,
-      badge: 'Data Science & Training',
-    },
-    {
-      name: 'System Design Lab',
-      desc: 'Interactive architecture canvas to model microservices, caches, message queues, database sharding, and latency trade-offs.',
-      icon: Zap,
-      badge: 'Architecture & Scalability',
-    },
-    {
-      name: 'Lab Assistant & Viva',
-      desc: 'Step-by-step experiment theory, circuit and code guides, sample observations, and interactive AI viva examination simulator.',
-      icon: HelpCircle,
-      badge: 'Curriculum Lab Prep',
-    },
-  ];
+      <div className="mt-4 min-h-[148px] rounded-2xl border border-slate-200 bg-slate-50/80 p-4" aria-live="polite">
+        <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-violet-600">
+          <Sparkles className="h-3.5 w-3.5" /> NEXORA
+        </div>
+        {thinking ? (
+          <AiThinking />
+        ) : (
+          <p className="text-[13.5px] leading-relaxed text-slate-700">
+            {answer}
+            <span className="ml-0.5 inline-block h-4 w-[2px] translate-y-0.5 animate-pulse bg-violet-500" aria-hidden="true" />
+          </p>
+        )}
+      </div>
+      <p className="mt-3 text-[11px] text-slate-500">Inside the app, answers use your own syllabus, notes and progress.</p>
+    </motion.div>
+  );
+}
 
-  const faqs = [
-    {
-      q: 'Which B.Tech engineering branches are supported?',
-      a: 'The platform uniquely supports Computer Science & Engineering (CSE), Artificial Intelligence & Machine Learning (AI/ML), Data Science & Analytics, Information Technology (IT), Electronics & Communication Engineering (ECE), Electrical & Electronics Engineering (EEE), Mechanical Engineering, Civil Engineering, and specialized interdisciplinary engineering tracks.',
-    },
-    {
-      q: 'How does the platform personalize content for my semester?',
-      a: 'Upon sign-up or profile setup, you provide your degree, branch, current semester (1 to 8), and institution. The system automatically initializes your branch curriculum with relevant subject units, topics, and assessment dates. Every module—from the Dashboard to the AI Tutor and Study Planner—tailors its recommendations strictly to your active academic profile.',
-    },
-    {
-      q: 'Is code execution safe and isolated?',
-      a: 'Yes. All student code and SQL queries run inside isolated execution environments with strict resource constraints (CPU limits, memory quotas, execution timeouts, and zero access to the production platform database). Your code runs safely without putting your workspace or server at risk.',
-    },
-    {
-      q: 'How does the AI Tutor differ from generic ChatGPT?',
-      a: 'Unlike generic chatbots that lack context, our AI Tutor is driven by the Centralized Student Context Engine. It knows your branch, current semester subjects, weak topics from recent quizzes, and target career role. It provides syllabus-grounded explanations, mathematical notation with KaTeX, and source references from your uploaded documents.',
-    },
-    {
-      q: 'Can I upload my college syllabus and lecture notes?',
-      a: 'Yes. The Documents Vault allows you to upload syllabus documents (PDF, DOCX, TXT) and lecture slides. The platform parses the document, extracts key units and topics, and allows you to chat with your documents using semantic vector retrieval (RAG), generate structured notes, or create flashcards.',
-    },
-    {
-      q: 'Is there an administrator or faculty portal?',
-      a: 'No. In strict accordance with our architectural philosophy, this platform is 100% student-centric. There are zero administrative platforms, faculty roles, or supervisory portals. Every capability exists exclusively to empower undergraduate engineering students to achieve academic and career excellence.',
-    },
-  ];
+function RotatingWord() {
+  const [i, setI] = React.useState(0);
+  React.useEffect(() => {
+    const id = window.setInterval(() => setI((x) => (x + 1) % ROTATING.length), 2600);
+    return () => window.clearInterval(id);
+  }, []);
+  return (
+    <span className="relative inline-grid min-h-[2.1em] sm:min-h-0">
+      <AnimatePresence mode="wait">
+        <motion.span
+          key={ROTATING[i]}
+          initial={{ opacity: 0, y: 18, filter: 'blur(6px)' }}
+          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+          exit={{ opacity: 0, y: -18, filter: 'blur(6px)' }}
+          transition={{ duration: 0.45, ease: EASE_OUT }}
+          className="text-gradient sm:whitespace-nowrap"
+        >
+          {ROTATING[i]}.
+        </motion.span>
+      </AnimatePresence>
+    </span>
+  );
+}
+
+/* ───────────────────────────── Module explorer ───────────────────────────── */
+
+const MODULES = [
+  {
+    id: 'learn',
+    label: 'Learn',
+    icon: BookOpen,
+    title: 'Understand it, then remember it',
+    text: 'An AI tutor that explains at your level, notes it can summarise, PDFs you can question, and flashcards that come back exactly when you are about to forget.',
+    points: ['AI Tutor with beginner to advanced modes', 'Document Q&A with page references', 'Spaced-repetition flashcards', 'Doubt solver for text, code and maths'],
+    tint: 'from-[#7865F5] to-[#9B78FF]',
+  },
+  {
+    id: 'practice',
+    label: 'Practice',
+    icon: Code2,
+    title: 'Labs that run in your browser',
+    text: 'Write and run code, step through algorithms, query real tables and train small models, with nothing to install and an assistant that explains what went wrong.',
+    points: ['Coding Lab and sandbox', 'DSA Lab with 150 curated problems', 'SQL Lab with sample databases', 'AI/ML and System Design labs'],
+    tint: 'from-[#37C9E8] to-[#7865F5]',
+  },
+  {
+    id: 'plan',
+    label: 'Plan',
+    icon: CalendarRange,
+    title: 'Your semester, under control',
+    text: 'Subjects, units, slip tests, minors and end-sems in one command center. The planner turns them into a realistic week that fits the hours you actually have.',
+    points: ['Semester Command Center', 'Study planner and timetable', 'Deadlines and task board', 'Grades, CGPA and attendance'],
+    tint: 'from-[#36D399] to-[#37C9E8]',
+  },
+  {
+    id: 'career',
+    label: 'Career',
+    icon: Briefcase,
+    title: 'From first resume to first offer',
+    text: 'See the gap between where you are and the role you want, then close it: mock interviews, an ATS-aware resume builder and a tracker for every application.',
+    points: ['Skill-gap analysis and roadmaps', 'AI mock interviews', 'Resume builder with ATS checks', 'Internship and placement tracker'],
+    tint: 'from-[#F5B942] to-[#F87171]',
+  },
+  {
+    id: 'research',
+    label: 'Build',
+    icon: Microscope,
+    title: 'Projects and research, documented',
+    text: 'Plan milestones, connect GitHub, keep a paper library with citations, and write literature reviews with an assistant that cites its sources.',
+    points: ['Project workspace with milestones', 'GitHub workspace', 'Research library and citations', 'Personal knowledge base'],
+    tint: 'from-[#9B78FF] to-[#37C9E8]',
+  },
+] as const;
+
+function ModuleExplorer({ onOpen }: { onOpen: () => void }) {
+  const [active, setActive] = React.useState(0);
+  const m = MODULES[active];
+  const Icon = m.icon;
+  return (
+    <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
+      <div role="tablist" aria-label="Platform areas" className="flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible">
+        {MODULES.map((mod, i) => {
+          const MIcon = mod.icon;
+          const on = i === active;
+          return (
+            <button
+              key={mod.id}
+              type="button"
+              role="tab"
+              aria-selected={on}
+              onClick={() => setActive(i)}
+              onMouseEnter={() => setActive(i)}
+              className={cn(
+                'press relative flex shrink-0 items-center gap-3 rounded-2xl px-4 py-3.5 text-left transition-colors',
+                on ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900'
+              )}
+            >
+              {on && (
+                <motion.span
+                  layoutId="module-tab"
+                  className="absolute inset-0 rounded-2xl border border-blue-200 bg-white/80 shadow-[0_12px_30px_-18px_rgb(105_87_232_/_0.6)] backdrop-blur"
+                  transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+                />
+              )}
+              <span className={cn('relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br text-white', mod.tint)}>
+                <MIcon className="h-4.5 w-4.5" />
+              </span>
+              <span className="relative text-[15px] font-semibold">{mod.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <SpotlightCard className="min-h-[360px] p-7 sm:p-9">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={m.id}
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3, ease: EASE_OUT }}
+            className="relative grid gap-8 md:grid-cols-[1.2fr_1fr] md:items-center"
+          >
+            <div className="space-y-4">
+              <span className={cn('inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow-lg', m.tint)}>
+                <Icon className="h-6 w-6" />
+              </span>
+              <h3 className="font-display text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">{m.title}</h3>
+              <p className="text-[15px] leading-relaxed text-slate-600">{m.text}</p>
+              <button type="button" onClick={onOpen} className="press inline-flex items-center gap-1.5 text-sm font-semibold text-blue-700 hover:text-blue-800">
+                Open it in your workspace →
+              </button>
+            </div>
+            <ul className="space-y-2.5">
+              {m.points.map((p, i) => (
+                <motion.li
+                  key={p}
+                  initial={{ opacity: 0, x: 16 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.08 * i, duration: 0.35, ease: EASE_OUT }}
+                  className="flex items-center gap-3 rounded-2xl border border-slate-200/80 bg-white/80 px-4 py-3 text-sm font-medium text-slate-800"
+                >
+                  <span className={cn('flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br text-white', m.tint)}>
+                    <Check className="h-3.5 w-3.5" />
+                  </span>
+                  {p}
+                </motion.li>
+              ))}
+            </ul>
+          </motion.div>
+        </AnimatePresence>
+      </SpotlightCard>
+    </div>
+  );
+}
+
+/* ───────────────────────────── Live lab: binary search ───────────────────────────── */
+
+const ARRAY = [3, 8, 11, 15, 19, 24, 27, 31, 36, 42, 47, 53, 58, 64, 71];
+
+type BsStep = { lo: number; hi: number; mid: number; note: string; found?: boolean };
+
+function binarySearchSteps(target: number): BsStep[] {
+  const steps: BsStep[] = [];
+  let lo = 0;
+  let hi = ARRAY.length - 1;
+  while (lo <= hi) {
+    const mid = lo + Math.floor((hi - lo) / 2);
+    if (ARRAY[mid] === target) {
+      steps.push({ lo, hi, mid, note: `a[${mid}] = ${ARRAY[mid]} equals ${target}. Found in ${steps.length + 1} steps.`, found: true });
+      return steps;
+    }
+    if (ARRAY[mid] < target) {
+      steps.push({ lo, hi, mid, note: `a[${mid}] = ${ARRAY[mid]} < ${target}, so search the right half.` });
+      lo = mid + 1;
+    } else {
+      steps.push({ lo, hi, mid, note: `a[${mid}] = ${ARRAY[mid]} > ${target}, so search the left half.` });
+      hi = mid - 1;
+    }
+  }
+  steps.push({ lo, hi, mid: -1, note: `The range is empty: ${target} is not in the array (${steps.length} comparisons).` });
+  return steps;
+}
+
+function BinarySearchLab() {
+  const [target, setTarget] = React.useState(42);
+  const steps = React.useMemo(() => binarySearchSteps(target), [target]);
+  const [i, setI] = React.useState(0);
+  const [playing, setPlaying] = React.useState(false);
+  const s = steps[Math.min(i, steps.length - 1)];
+  const done = i >= steps.length - 1;
+
+  React.useEffect(() => {
+    setI(0);
+    setPlaying(false);
+  }, [target]);
+
+  React.useEffect(() => {
+    if (!playing) return;
+    if (done) {
+      setPlaying(false);
+      return;
+    }
+    const id = window.setTimeout(() => setI((x) => x + 1), 900);
+    return () => window.clearTimeout(id);
+  }, [playing, i, done]);
 
   return (
-    <PublicLayout currentPath="/" onNavigate={onNavigate}>
-      {/* 1. Hero Section */}
-      <section className="relative overflow-hidden border-b border-slate-200 pt-14 pb-20 sm:pt-20 sm:pb-28">
-        {/* Aurora + fine grid backdrop */}
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-          <div className="absolute -top-40 left-1/2 h-[520px] w-[900px] -translate-x-1/2 rounded-full bg-gradient-to-tr from-blue-500/25 via-violet-500/20 to-sky-400/20 blur-3xl animate-aurora" />
-          <div className="absolute -left-24 top-40 h-72 w-72 rounded-full bg-violet-500/15 blur-3xl animate-float" />
-          <div className="absolute -right-16 top-24 h-64 w-64 rounded-full bg-sky-400/15 blur-3xl animate-float [animation-delay:1.2s]" />
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,var(--grid-dot)_1px,transparent_1px),linear-gradient(to_bottom,var(--grid-dot)_1px,transparent_1px)] bg-[size:44px_44px] [mask-image:radial-gradient(ellipse_70%_60%_at_50%_30%,black,transparent)]" />
+    <SpotlightCard className="p-6 sm:p-8">
+      <div className="relative flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#37C9E8] to-[#7865F5] text-white">
+            <Binary className="h-5 w-5" />
+          </span>
+          <div>
+            <p className="font-semibold text-slate-900">Binary search, step by step</p>
+            <p className="text-xs text-slate-500">A tiny piece of the DSA Lab, running right here</p>
+          </div>
         </div>
-
-        <div className="relative mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: -8, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.5, ease: EASE_OUT }}
-            className="mb-7 inline-flex items-center gap-2 rounded-full border border-blue-200/80 bg-white/70 px-3.5 py-1.5 text-xs font-semibold text-blue-700 shadow-sm backdrop-blur"
+        <label className="flex items-center gap-2 text-sm text-slate-700">
+          Find
+          <select
+            value={target}
+            onChange={(e) => setTarget(Number(e.target.value))}
+            className="rounded-xl border border-slate-300 bg-white px-3 py-1.5 font-mono text-sm font-semibold text-slate-900"
           >
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-60" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-500" />
-            </span>
-            The Academic &amp; Career Operating System for B.Tech Students
-          </motion.div>
+            {[...ARRAY, 50, 2].sort((a, b) => a - b).map((n) => (
+              <option key={n} value={n}>
+                {n}
+                {ARRAY.includes(n) ? '' : ' (missing)'}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
 
-          <h1 className="mx-auto max-w-5xl font-display text-[2.4rem] font-extrabold leading-[1.05] tracking-tight text-slate-900 sm:text-6xl lg:text-7xl">
-            {['Master', 'Your', 'Engineering', 'Curriculum.'].map((w, i) => (
-              <motion.span
-                key={w}
-                className="mr-[0.25em] inline-block"
-                initial={{ opacity: 0, y: 24, filter: 'blur(8px)' }}
-                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                transition={{ duration: 0.6, ease: EASE_OUT, delay: 0.08 * i }}
+      <div className="relative mt-7 grid grid-cols-5 gap-1.5 sm:grid-cols-[repeat(15,minmax(0,1fr))]">
+        {ARRAY.map((n, idx) => {
+          const inRange = s.mid !== -1 ? idx >= s.lo && idx <= s.hi : false;
+          const isMid = idx === s.mid;
+          const found = isMid && s.found;
+          return (
+            <motion.div
+              key={n}
+              layout
+              animate={{ scale: isMid ? 1.08 : 1, opacity: inRange || isMid ? 1 : 0.35 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 26 }}
+              className={cn(
+                'flex flex-col items-center rounded-xl border py-2.5 font-mono text-sm font-semibold',
+                found
+                  ? 'border-emerald-400 bg-emerald-50 text-emerald-700'
+                  : isMid
+                    ? 'border-blue-400 bg-blue-50 text-blue-700 shadow-[0_8px_20px_-10px_rgb(105_87_232_/_0.8)]'
+                    : 'border-slate-200 bg-white/80 text-slate-700'
+              )}
+            >
+              {n}
+              <span className="mt-0.5 text-[9px] font-medium text-slate-400">{idx}</span>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      <div className="relative mt-5 flex flex-wrap items-center justify-between gap-4">
+        <p className="min-h-[2.5rem] max-w-xl text-sm text-slate-700" aria-live="polite">
+          <span className="mr-2 rounded-md bg-slate-100 px-1.5 py-0.5 font-mono text-[11px] text-slate-600">
+            step {Math.min(i + 1, steps.length)}/{steps.length}
+          </span>
+          {s.note}
+        </p>
+        <div className="flex items-center gap-2">
+          <button type="button" onClick={() => setPlaying((p) => !p)} disabled={done} className="press inline-flex items-center gap-1.5 rounded-xl bg-brand-gradient px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
+            {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />} {playing ? 'Pause' : 'Run'}
+          </button>
+          <button type="button" onClick={() => setI((x) => Math.min(steps.length - 1, x + 1))} disabled={done} aria-label="Next step" className="press rounded-xl border border-slate-300 bg-white p-2 text-slate-700 disabled:opacity-40">
+            <StepForward className="h-4 w-4" />
+          </button>
+          <button type="button" onClick={() => { setI(0); setPlaying(false); }} aria-label="Reset" className="press rounded-xl border border-slate-300 bg-white p-2 text-slate-700">
+            <RotateCcw className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+    </SpotlightCard>
+  );
+}
+
+/* ───────────────────────────── Make it yours ───────────────────────────── */
+
+const GOALS = [
+  { id: 'placements', label: 'Placements', icon: Briefcase },
+  { id: 'gate', label: 'GATE', icon: GraduationCap },
+  { id: 'higher', label: 'Higher studies', icon: Brain },
+  { id: 'research', label: 'Research', icon: FlaskConical },
+  { id: 'startup', label: 'Build a startup', icon: Rocket },
+  { id: 'cgpa', label: 'Top CGPA', icon: Trophy },
+] as const;
+type GoalId = (typeof GOALS)[number]['id'];
+
+const YEAR_BASE: Record<number, string[]> = {
+  1: ['Programming fundamentals in the Coding Lab', 'Maths and physics with the AI Tutor', 'A first habit: 20 flashcards a day'],
+  2: ['Data structures in the DSA Lab', 'DBMS practice in the SQL Lab', 'A semester plan around your minors'],
+  3: ['Core CS revision: OS, CN and DBMS', 'Your first real project with milestones', 'Internship applications in the tracker'],
+  4: ['Final-year project and report', 'Placement drives and mock interviews', 'Resume polished against target roles'],
+};
+const GOAL_ADD: Record<GoalId, string> = {
+  placements: 'Weekly DSA sets and one mock interview',
+  gate: 'GATE syllabus mapped to your subjects, with timed tests',
+  higher: 'Research reading list and SOP-ready project notes',
+  research: 'Paper library and a literature-review workspace',
+  startup: 'System design lab and a shipped side project on GitHub',
+  cgpa: 'Unit-wise revision plan before every slip test',
+};
+
+function Personalizer({ onStart }: { onStart: () => void }) {
+  const [year, setYear] = React.useState(2);
+  const [goals, setGoals] = React.useState<GoalId[]>(['placements']);
+  const toggle = (g: GoalId) => setGoals((cur) => (cur.includes(g) ? cur.filter((x) => x !== g) : [...cur, g].slice(-3)));
+  const plan = [...YEAR_BASE[year], ...goals.map((g) => GOAL_ADD[g])];
+
+  return (
+    <div className="grid gap-6 lg:grid-cols-2">
+      <SpotlightCard className="space-y-7 p-7 sm:p-8">
+        <div className="relative space-y-3">
+          <p className="text-sm font-semibold text-slate-900">Which year are you in?</p>
+          <div className="grid grid-cols-4 gap-2" role="radiogroup" aria-label="Year of study">
+            {[1, 2, 3, 4].map((y) => (
+              <button
+                key={y}
+                type="button"
+                role="radio"
+                aria-checked={year === y}
+                onClick={() => setYear(y)}
+                className={cn(
+                  'press relative rounded-2xl border py-3 text-sm font-semibold transition-colors',
+                  year === y ? 'border-transparent text-white' : 'border-slate-200 bg-white/80 text-slate-700 hover:border-blue-200'
+                )}
               >
-                {w}
-              </motion.span>
+                {year === y && <motion.span layoutId="year-pill" className="absolute inset-0 rounded-2xl bg-brand-gradient" transition={{ type: 'spring', stiffness: 420, damping: 32 }} />}
+                <span className="relative">Year {y}</span>
+              </button>
             ))}
-            <br />
-            <motion.span
-              className="text-gradient inline-block bg-[length:200%_auto] animate-gradient-pan"
-              initial={{ opacity: 0, y: 24, filter: 'blur(8px)' }}
-              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-              transition={{ duration: 0.7, ease: EASE_OUT, delay: 0.4 }}
-            >
-              Code Real Labs. Build Career Mastery.
-            </motion.span>
-          </h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.6, ease: EASE_OUT }}
-            className="mx-auto mt-7 max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg"
-          >
-            Tailored directly to your degree, branch, semester, and university syllabus. Unified with intelligent
-            multi-agent AI tutoring, isolated coding and SQL execution sandboxes, automated study planning, and placement preparation.
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.72, ease: EASE_OUT }}
-            className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4"
-          >
-            <button
-              type="button"
-              onClick={() => onNavigate('/register')}
-              className="btn-shine group relative inline-flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-violet-600 px-8 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-600/25 transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-xl hover:shadow-blue-600/30 active:translate-y-0 sm:w-auto"
-            >
-              <span>Get Started Free</span>
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </button>
-            <Button
-              variant="outline"
-              onClick={() => onNavigate('/how-it-works')}
-              className="h-auto w-full rounded-xl px-6 py-3.5 text-sm font-semibold sm:w-auto"
-            >
-              See How It Works (12 Steps)
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() => onNavigate('/login')}
-              className="h-auto w-full rounded-xl px-4 py-3.5 text-sm font-semibold text-blue-600 hover:bg-blue-50 hover:text-blue-700 sm:w-auto"
-            >
-              Already Registered? Sign In
-            </Button>
-          </motion.div>
-
-          <motion.div
-            initial="hidden"
-            animate="show"
-            variants={{ hidden: {}, show: { transition: { staggerChildren: 0.08, delayChildren: 0.9 } } }}
-            className="mt-12 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-xs font-medium text-slate-600"
-          >
-            {['Supports 8+ Engineering Branches', 'Safe In-Browser Execution Sandboxes', 'Contextualized AI Multi-Agent System', 'Zero Fabrication & 100% Student-Only'].map((t) => (
-              <motion.div key={t} variants={{ hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0 } }} className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                <span>{t}</span>
-              </motion.div>
-            ))}
-          </motion.div>
-
-          {/* What the workspace looks like (an illustration, no real student data) */}
-          <HeroPreview />
+          </div>
         </div>
+        <div className="relative space-y-3">
+          <p className="text-sm font-semibold text-slate-900">
+            What are you aiming for? <span className="font-normal text-slate-500">Pick up to three</span>
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {GOALS.map((g) => {
+              const on = goals.includes(g.id);
+              const GIcon = g.icon;
+              return (
+                <button
+                  key={g.id}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => toggle(g.id)}
+                  className={cn(
+                    'press inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-sm font-medium transition-colors',
+                    on ? 'border-blue-300 bg-blue-50 text-blue-800' : 'border-slate-200 bg-white/80 text-slate-700 hover:border-blue-200'
+                  )}
+                >
+                  <GIcon className="h-4 w-4" />
+                  {g.label}
+                  {on && <Check className="h-3.5 w-3.5" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </SpotlightCard>
+
+      <div className="hero-brand inverse-island relative overflow-hidden rounded-3xl p-7 text-white sm:p-8">
+        <div aria-hidden="true" className="neural-backdrop pointer-events-none absolute inset-0 opacity-50" />
+        <div className="relative">
+          <div className="flex items-center justify-between">
+            <p className="flex items-center gap-2 text-sm font-semibold text-white/80">
+              <Target className="h-4 w-4 text-[#7AD8EF]" /> Your first weeks would focus on
+            </p>
+            <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white/70">Preview</span>
+          </div>
+          <ul className="mt-5 space-y-2.5">
+            <AnimatePresence initial={false} mode="popLayout">
+              {plan.map((p, idx) => (
+                <motion.li
+                  key={p}
+                  layout
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3, delay: idx * 0.03, ease: EASE_OUT }}
+                  className="flex items-start gap-3 rounded-2xl bg-white/[0.06] px-4 py-3 text-sm ring-1 ring-inset ring-white/10"
+                >
+                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-gradient text-[10px] font-bold">{idx + 1}</span>
+                  {p}
+                </motion.li>
+              ))}
+            </AnimatePresence>
+          </ul>
+          <button type="button" onClick={onStart} className="press mt-6 inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-2.5 text-sm font-semibold text-[#182033] hover:bg-[#F3F1FE]">
+            Build my real plan →
+          </button>
+          <p className="mt-3 text-xs text-white/55">Your actual plan comes from your own syllabus and exam dates after onboarding.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ───────────────────────────── Page ───────────────────────────── */
+
+const FACTS = [
+  { value: 150, suffix: '', label: 'curated DSA problems', icon: Binary },
+  { value: 100, suffix: '+', label: 'courses in the catalog', icon: Layers },
+  { value: 38, suffix: '', label: 'specialist AI agents', icon: Bot },
+  { value: 30, suffix: '+', label: 'tools in one workspace', icon: Database },
+];
+
+const FAQ = [
+  { q: 'Who is NEXORA AI for?', a: 'B.Tech students. Everything is built around a student’s own semester, subjects, labs and career goals. There are no faculty dashboards and no one else sees your workspace.' },
+  { q: 'Does the AI just give me answers?', a: 'It explains first. The tutor works at your chosen level, shows its steps, asks follow-up questions and can turn any explanation into notes, flashcards or a quiz so you actually keep it.' },
+  { q: 'Do I need to install anything for the labs?', a: 'No. Code, SQL and many Python experiments run in the browser, so you can practise on any laptop, including the one in the college lab.' },
+  { q: 'How does it know my syllabus?', a: 'You tell it during onboarding: university, branch, semester and subjects. You can add or change subjects any time from the Semester Command Center.' },
+  { q: 'What happens to my data?', a: 'Your profile and activity are used only to personalise your own workspace. You can see what the assistant knows about you, switch personalisation off, and edit or clear its memory.' },
+];
+
+export function HomePage({ onNavigate }: HomePageProps) {
+  const { isAuthenticated } = useAuth();
+  const start = () => onNavigate(isAuthenticated ? '/dashboard' : '/register');
+
+  return (
+    <PublicLayout currentPath="/" onNavigate={onNavigate} backdrop="home">
+      {/* Hero */}
+      <section className="relative mx-auto grid max-w-7xl items-center gap-14 px-4 pb-16 pt-14 sm:px-6 lg:grid-cols-[1.1fr_1fr] lg:px-8 lg:pb-24 lg:pt-20">
+        <div className="min-w-0 space-y-7">
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: EASE_OUT }}>
+            <Eyebrow>The AI learning companion for B.Tech</Eyebrow>
+          </motion.div>
+          <motion.h1
+            initial={{ opacity: 0, y: 22 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.05, ease: EASE_OUT }}
+            className="text-balance font-display text-[38px] font-extrabold leading-[1.05] tracking-tight text-slate-900 sm:text-6xl lg:text-[68px]"
+          >
+            An AI that <br className="hidden sm:block" />
+            <RotatingWord />
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.15, ease: EASE_OUT }}
+            className="max-w-xl text-pretty text-lg leading-relaxed text-slate-600"
+          >
+            NEXORA AI gives every student a personal agent that learns your syllabus, your strengths and your goals, then helps you study,
+            practise, plan and get placed from one calm workspace.
+          </motion.p>
+          <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.25, ease: EASE_OUT }}>
+            <HeroButtons
+              primary={{ label: isAuthenticated ? 'Open my workspace' : 'Start free', onClick: start }}
+              secondary={{ label: 'See how it works', onClick: () => onNavigate('/how-it-works') }}
+            />
+          </motion.div>
+          <motion.ul
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-600"
+          >
+            {['Built for your branch', 'Labs in the browser', 'Private by default'].map((t) => (
+              <li key={t} className="flex items-center gap-2">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                  <Check className="h-3 w-3" />
+                </span>
+                {t}
+              </li>
+            ))}
+          </motion.ul>
+        </div>
+        <AskDemo />
       </section>
 
-      {/* 2. Engineering Problems & Solutions Grid */}
-      <motion.section {...REVEAL} className="py-16 sm:py-24 bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-blue-600">
-              Built for Engineering Students
-            </h2>
-            <p className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
-              Solving the 4 Critical Challenges in Engineering Education
-            </p>
-            <p className="mt-3 text-sm text-slate-600">
-              Undergraduate engineering is rigorous and demanding. Here is how our purpose-built platform empowers your success.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {coreProblems.map((item, idx) => {
-              const Icon = item.icon;
-              return (
-                <div
-                  key={idx}
-                  className="group space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:bg-white hover:shadow-xl sm:p-8"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold px-2.5 py-1 rounded-md bg-red-50 text-red-600 border border-red-200">
-                      Problem: {item.problem}
-                    </span>
-                    <div className={`p-2.5 rounded-xl bg-gradient-to-br ${item.accent}`}>
-                      <Icon className="h-5 w-5" />
-                    </div>
-                  </div>
-                  <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
-                    <span>{item.solution}</span>
-                  </h3>
-                  <p className="text-sm text-slate-600 leading-relaxed">
-                    {item.description}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </motion.section>
-
-      {/* 3. Multi-Agent Orchestration Architecture Showcase */}
-      <motion.section {...REVEAL} className="py-16 sm:py-24 bg-slate-50 border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-indigo-600">
-              Intelligent Multi-Agent System
-            </h2>
-            <p className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
-              Coordinated Specialized AI Agents for Every Academic Need
-            </p>
-            <p className="mt-3 text-sm text-slate-600">
-              Instead of disconnected generic chatbots, our platform coordinates specialized autonomous agents orchestrated through a centralized Tool Registry and Student Context Engine.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {agentGroups.map((group, idx) => {
-              const Icon = group.icon;
-              return (
-                <div
-                  key={idx}
-                  className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-violet-200 hover:shadow-xl"
-                >
-                  <div>
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 border ${group.color}`}>
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <h3 className="font-bold text-base text-slate-900">{group.title}</h3>
-                    <p className="text-xs font-medium text-slate-500 mb-4">{group.subtitle}</p>
-                    <ul className="space-y-2 text-xs text-slate-600">
-                      {group.agents.map((agent, aIdx) => (
-                        <li key={aIdx} className="flex items-start gap-1.5 leading-snug">
-                          <span className="text-blue-600 font-bold mt-0.5">•</span>
-                          <span>{agent}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </motion.section>
-
-      {/* 4. Practical Laboratories Grid */}
-      <motion.section {...REVEAL} className="py-16 sm:py-24 bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-600">
-              Hands-on Engineering
-            </h2>
-            <p className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
-              Comprehensive Practical Laboratories
-            </p>
-            <p className="mt-3 text-sm text-slate-600">
-              From algorithms to distributed systems, experience active learning directly inside the browser with secure execution sandboxes.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {labs.map((lab, idx) => {
-              const Icon = lab.icon;
-              return (
-                <div
-                  key={idx}
-                  className="p-6 rounded-2xl border border-slate-200 bg-slate-50/50 hover:bg-white hover:border-blue-200 hover:shadow-sm transition-all"
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="p-2.5 rounded-xl bg-blue-50 text-blue-600">
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
-                      {lab.badge}
-                    </span>
-                  </div>
-                  <h3 className="text-base font-bold text-slate-900 mb-1.5">{lab.name}</h3>
-                  <p className="text-xs text-slate-600 leading-relaxed">{lab.desc}</p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </motion.section>
-
-      {/* 5. 12-Step Student Workflow Banner */}
-      <motion.section {...REVEAL} className="py-16 sm:py-24 bg-gradient-to-br from-navy-900 via-slate-900 to-slate-800 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-blue-400">
-            Structured Academic Success
-          </h2>
-          <p className="mt-2 text-2xl sm:text-4xl font-extrabold tracking-tight">
-            The Complete 12-Step Student Journey
-          </p>
-          <p className="mt-3 text-sm text-slate-300 max-w-2xl mx-auto">
-            From onboarding and syllabus configuration to interactive labs, exam excellence, and placement readiness.
-          </p>
-
-          <div className="mt-12 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 text-left">
-            {[
-              { step: '01', title: 'Register Account', desc: 'Secure student sign up' },
-              { step: '02', title: 'Profile Setup', desc: 'Degree, branch, & roll no.' },
-              { step: '03', title: 'Semester Config', desc: 'Active semester & year' },
-              { step: '04', title: 'Subject Enrollment', desc: 'Core & elective courses' },
-              { step: '05', title: 'Syllabus Parsing', desc: 'Units, topics, & dates' },
-              { step: '06', title: 'Study Preferences', desc: 'Style, depth, & availability' },
-              { step: '07', title: 'Dynamic Dashboard', desc: "Personalized today's plan" },
-              { step: '08', title: 'AI Tutor Guidance', desc: 'Syllabus-grounded doubts' },
-              { step: '09', title: 'Practice & Labs', desc: 'Coding, DSA, SQL & Quiz' },
-              { step: '10', title: 'Unified Progress', desc: 'Verified mastery metrics' },
-              { step: '11', title: 'Study Planner', desc: 'Dynamic schedule tuning' },
-              { step: '12', title: 'Career & Placement', desc: 'Projects, resume & mocks' },
-            ].map((item, idx) => (
-              <div
-                key={idx}
-                className="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4 hover:border-blue-400 transition-colors"
-              >
-                <span className="text-xs font-black text-blue-400 tracking-wider">
-                  STEP {item.step}
+      {/* Facts */}
+      <section className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <motion.div {...reveal} className="grid grid-cols-2 gap-3 rounded-3xl border border-slate-200/80 bg-white/60 p-3 backdrop-blur-xl lg:grid-cols-4">
+          {FACTS.map((f) => {
+            const FIcon = f.icon;
+            return (
+              <div key={f.label} className="group flex items-center gap-4 rounded-2xl p-4 transition-colors hover:bg-white/80">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-50 to-sky-50 text-blue-600 ring-1 ring-inset ring-blue-100 transition-transform group-hover:-rotate-6 group-hover:scale-110">
+                  <FIcon className="h-5 w-5" />
                 </span>
-                <h4 className="font-bold text-xs text-white mt-1.5">{item.title}</h4>
-                <p className="text-[11px] text-slate-400 mt-1">{item.desc}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-10">
-            <Button
-              onClick={() => onNavigate('/how-it-works')}
-              className="bg-white hover:bg-slate-100 text-navy-900 font-bold text-xs px-6 py-3 rounded-xl shadow-md cursor-pointer"
-            >
-              Read the Full 12-Step Implementation Guide
-            </Button>
-          </div>
-        </div>
-      </motion.section>
-
-      {/* 6. Frequently Asked Questions (FAQ) */}
-      <motion.section {...REVEAL} className="py-16 sm:py-24 bg-white border-b border-slate-200">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-blue-600">
-              Questions & Answers
-            </h2>
-            <p className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
-              Frequently Asked Questions
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            {faqs.map((faq, idx) => {
-              const isOpen = activeFaq === idx;
-              return (
-                <div
-                  key={idx}
-                  className="border border-slate-200 rounded-2xl overflow-hidden transition-all bg-slate-50"
-                >
-                  <button
-                    onClick={() => toggleFaq(idx)}
-                    className="w-full px-6 py-4 text-left flex items-center justify-between font-bold text-sm text-slate-900 hover:bg-slate-100/60 cursor-pointer"
-                  >
-                    <span>{faq.q}</span>
-                    <ChevronDown
-                      className={`h-4 w-4 text-slate-500 transition-transform duration-200 ${
-                        isOpen ? 'rotate-180 text-blue-600' : ''
-                      }`}
-                    />
-                  </button>
-                  {isOpen && (
-                    <div className="px-6 pb-4 pt-1 text-xs text-slate-600 leading-relaxed border-t border-slate-100 bg-white">
-                      {faq.a}
-                    </div>
-                  )}
+                <div>
+                  <div className="font-display text-2xl font-bold tabular-nums text-slate-900 sm:text-3xl">
+                    <AnimatedNumber value={`${f.value}${f.suffix}`} />
+                  </div>
+                  <div className="text-xs text-slate-500 sm:text-sm">{f.label}</div>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-      </motion.section>
+              </div>
+            );
+          })}
+        </motion.div>
+      </section>
 
-      {/* 7. Final Call to Action */}
-      <motion.section {...REVEAL} className="py-16 sm:py-20 bg-slate-50">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="hero-brand rounded-3xl p-8 sm:p-12 text-white">
-            <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
-              Ready to Transform Your B.Tech Journey?
-            </h2>
-            <p className="mt-3 text-sm sm:text-base text-blue-100 max-w-xl mx-auto">
-              Join students mastering university examinations, building real engineering projects, and securing tier-1 tech placements.
-            </p>
-            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button
-                onClick={() => onNavigate('/register')}
-                className="w-full sm:w-auto bg-white hover:bg-slate-100 text-blue-600 font-bold text-sm px-8 py-3.5 rounded-xl shadow-md cursor-pointer"
-              >
-                Create Your Free Student Account
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => onNavigate('/login')}
-                className="w-full sm:w-auto border-white/40 text-white hover:bg-white/10 font-semibold text-sm px-6 py-3.5 rounded-xl cursor-pointer"
-              >
-                Sign In to Existing Account
-              </Button>
-            </div>
-          </div>
-        </div>
-      </motion.section>
+      <Section>
+        <SectionHeading
+          eyebrow="One workspace"
+          title="Everything your degree asks of you,"
+          accent="in one place."
+          description="Five areas, one agent that connects them. Hover or tap to look inside."
+        />
+        <ModuleExplorer onOpen={start} />
+      </Section>
+
+      <Section className="pt-0 lg:pt-0">
+        <SectionHeading
+          eyebrow="Try it now"
+          title="Practise, don’t just read."
+          accent="Run a lab here."
+          description="Pick a number and run the search. Every lab in NEXORA works like this: you act, it shows you exactly what happened."
+        />
+        <motion.div {...reveal}>
+          <BinarySearchLab />
+        </motion.div>
+      </Section>
+
+      <Section className="pt-0 lg:pt-0">
+        <SectionHeading
+          eyebrow="Make it yours"
+          title="No two students get"
+          accent="the same workspace."
+          description="Choose your year and goals to preview where your agent would start."
+        />
+        <motion.div {...reveal}>
+          <Personalizer onStart={start} />
+        </motion.div>
+      </Section>
+
+      <Section className="pt-0 lg:pt-0">
+        <SectionHeading eyebrow="Questions" title="Good to know" />
+        <motion.div {...reveal}>
+          <Faq items={FAQ} />
+        </motion.div>
+      </Section>
+
+      <CtaBand
+        title="Learn smarter. Build faster. Achieve more."
+        text="Set up your workspace in a few minutes. Your agent starts learning about you from the first step."
+        primary={{ label: isAuthenticated ? 'Open my workspace' : 'Create my account', onClick: start }}
+        secondary={{ label: 'Read our story', onClick: () => onNavigate('/about') }}
+      />
     </PublicLayout>
   );
 }
