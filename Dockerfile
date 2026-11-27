@@ -1,10 +1,10 @@
 # ============================================================================
-# Multi-Stage Production Dockerfile for B.Tech AI Learning Platform
+# Multi-Stage Production Dockerfile for NEXORA AI
 # Non-root user, minimal attack surface, health checks & production bundles
 # ============================================================================
 
 # --- Stage 1: Build Frontend and Compile Assets ---
-FROM node:20-alpine AS builder
+FROM public.ecr.aws/docker/library/node:20-alpine AS builder
 
 WORKDIR /app
 
@@ -40,7 +40,7 @@ ENV VITE_FIREBASE_API_KEY=$VITE_FIREBASE_API_KEY \
 RUN npm run build
 
 # --- Stage 2: Minimal Production Runtime ---
-FROM node:20-alpine AS runner
+FROM public.ecr.aws/docker/library/node:20-alpine AS runner
 
 WORKDIR /app
 
@@ -59,6 +59,11 @@ COPY --from=builder /app/server ./server
 COPY --from=builder /app/server.ts ./server.ts
 COPY --from=builder /app/tsconfig.json ./tsconfig.json
 COPY --from=builder /app/index.html ./index.html
+
+# Amazon RDS CA bundle, so connections to RDS PostgreSQL verify the server certificate (server/db/pgSsl.ts).
+RUN mkdir -p /app/certs \
+  && wget -qO /app/certs/rds-global-bundle.pem https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem \
+  && grep -q "BEGIN CERTIFICATE" /app/certs/rds-global-bundle.pem
 
 # Create data directories and grant permissions to non-root node user
 RUN mkdir -p /app/data/vault && chown -R node:node /app

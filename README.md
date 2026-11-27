@@ -62,6 +62,11 @@ Phase 14 delivers a unified student personal productivity, community, and learni
 - TypeScript: Typecheck passes with zero errors (`npx tsc --noEmit`).
 - Production Bundle: Vite production build passes (`npm run build`).
 
+## Deploy to AWS (Free Tier) with GitHub Actions
+
+See [docs/deployment/AWS_DEPLOYMENT.md](docs/deployment/AWS_DEPLOYMENT.md): RDS PostgreSQL, an Application Load
+Balancer, an EC2 app server, ECR, CloudWatch, and CI/CD from GitHub Actions through OIDC (no stored AWS keys).
+
 ## Deploy to Vercel
 
 See [docs/deployment/VERCEL_DEPLOYMENT.md](docs/deployment/VERCEL_DEPLOYMENT.md).
