@@ -10,6 +10,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useWorkspacePrefs } from '../../store/workspacePrefsStore';
 import { KeyboardShortcuts } from '../navigation/KeyboardShortcuts';
 import { BackToTop, ScrollProgress, motion, EASE_OUT } from '../motion';
+import { useThemeStore } from '../../store/themeStore';
 
 export interface AppShellProps {
   currentPath: string;
@@ -19,6 +20,7 @@ export interface AppShellProps {
 
 export function AppShell({ currentPath, onNavigate, children }: AppShellProps) {
   const sidebarCollapsed = useUiStore((s) => s.sidebarCollapsed);
+  const theme = useThemeStore((s) => s.resolved);
   const routeKey = currentPath.split(/[?#]/)[0];
   const { student } = useAuth();
   const loadPrefs = useWorkspacePrefs((s) => s.load);
@@ -35,7 +37,7 @@ export function AppShell({ currentPath, onNavigate, children }: AppShellProps) {
   }, [routeKey, studentId, prefsOwner, recordVisit]);
 
   return (
-    <div className="min-h-screen bg-canvas text-slate-900">
+    <div className="app-canvas min-h-screen text-slate-900">
       <ScrollProgress />
       <a
         href="#main-content"
@@ -80,6 +82,8 @@ export function AppShell({ currentPath, onNavigate, children }: AppShellProps) {
 
       <Toaster
         position="top-right"
+        theme={theme}
+        richColors
         closeButton
         toastOptions={{
           classNames: {

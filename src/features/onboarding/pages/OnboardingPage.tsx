@@ -26,6 +26,9 @@ import {
   SKILL_CATEGORY_LABELS,
 } from '../../profile/components/ProfileSectionForms';
 import { trackEvent } from '../../../lib/analytics';
+import { AnimatePresence, motion } from 'motion/react';
+import { BrandMark } from '../../../components/layout/BrandMark';
+import { ThemeToggle } from '../../../components/navigation/ThemeToggle';
 
 export const REGISTRATION_STEPS = [
   { n: 1, title: 'Account and identity', optional: false },
@@ -322,34 +325,79 @@ export function OnboardingPage({ onNavigate }: { onNavigate: (path: string) => v
 }
 
 function Shell({ step, completed, skipped, onJump, children }: { step: number; completed: number[]; skipped: number[]; onJump: (n: number) => void; children: React.ReactNode }) {
+  const pct = Math.round((completed.length / REGISTRATION_STEPS.length) * 100);
   return (
-    <div className="min-h-screen bg-slate-50 py-8 px-4">
-      <div className="max-w-5xl mx-auto grid md:grid-cols-[240px_1fr] gap-6">
-        {/* Phase 6 (P6-005): on phones the step list filled the first screen and pushed the form below the fold; it now follows the form there. */}
-        <nav aria-label="Registration steps" className="order-2 md:order-1 bg-white rounded-xl border border-slate-200 p-4 h-fit">
-          <p className="text-xs font-semibold text-slate-500 mb-3">Student registration</p>
-          <ol className="space-y-1">
-            {REGISTRATION_STEPS.map((s) => {
-              const done = completed.includes(s.n);
-              const skip = skipped.includes(s.n);
-              return (
-                <li key={s.n}>
-                  <button
-                    type="button"
-                    onClick={() => onJump(s.n)}
-                    aria-current={s.n === step ? 'step' : undefined}
-                    className={`w-full text-left flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm ${s.n === step ? 'bg-blue-50 text-blue-700 font-medium' : 'text-slate-700 hover:bg-slate-100'}`}
-                  >
-                    {done ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Circle className="w-4 h-4 text-slate-300" />}
-                    <span>{s.n}. {s.title}</span>
-                    {skip && <span className="ml-auto text-[10px] text-slate-400">skipped</span>}
-                  </button>
-                </li>
-              );
-            })}
-          </ol>
-        </nav>
-        <main className="order-1 md:order-2 bg-white rounded-xl border border-slate-200 p-5 sm:p-6">{children}</main>
+    <div className="app-canvas min-h-screen px-4 py-8 [#main-content_&]:min-h-0 [#main-content_&]:bg-none [#main-content_&]:bg-transparent [#main-content_&]:p-0 [#main-content_&]:before:hidden">
+      <div className="mx-auto max-w-5xl">
+        {/* Overall progress */}
+        <div className="mb-6 flex items-center gap-4">
+          {/* Inside the app shell the sidebar and top bar already show the logo and theme switch. */}
+          <BrandMark className="h-10 w-10 [#main-content_&]:hidden" />
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center justify-between text-xs font-semibold text-slate-600">
+              <span>Set up your workspace</span>
+              <span className="tabular-nums">{pct}% complete</span>
+            </div>
+            <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-slate-200/70">
+              <motion.div
+                className="h-full rounded-full bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500"
+                initial={false}
+                animate={{ width: `${Math.max(4, pct)}%` }}
+                transition={{ type: 'spring', stiffness: 120, damping: 20 }}
+              />
+            </div>
+          </div>
+          <ThemeToggle className="[#main-content_&]:hidden" />
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-[250px_1fr]">
+          {/* Phase 6 (P6-005): on phones the step list filled the first screen and pushed the form below the fold; it now follows the form there. */}
+          <nav aria-label="Registration steps" className="order-2 h-fit rounded-2xl border border-slate-200 bg-white p-4 shadow-xs md:order-1 md:sticky md:top-6">
+            <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Student registration</p>
+            <ol className="relative space-y-1">
+              <span aria-hidden="true" className="absolute bottom-4 left-[21px] top-4 w-px bg-slate-200" />
+              {REGISTRATION_STEPS.map((s) => {
+                const done = completed.includes(s.n);
+                const skip = skipped.includes(s.n);
+                const current = s.n === step;
+                return (
+                  <li key={s.n} className="relative">
+                    <button
+                      type="button"
+                      onClick={() => onJump(s.n)}
+                      aria-current={current ? 'step' : undefined}
+                      className={`relative flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left text-sm transition-colors ${current ? 'font-semibold text-blue-700' : 'text-slate-700 hover:bg-slate-50'}`}
+                    >
+                      {current && <motion.span layoutId="onboarding-step" className="absolute inset-0 rounded-xl bg-blue-50 ring-1 ring-inset ring-blue-100" transition={{ type: 'spring', stiffness: 380, damping: 32 }} />}
+                      <span
+                        className={`relative z-[1] flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ring-2 ring-white transition-colors ${
+                          done ? 'bg-emerald-500 text-white' : current ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500'
+                        }`}
+                      >
+                        {done ? <CheckCircle2 className="h-3.5 w-3.5" /> : s.n}
+                      </span>
+                      <span className="relative flex-1 truncate">{s.title}</span>
+                      {skip && <span className="relative text-[10px] text-slate-500">skipped</span>}
+                    </button>
+                  </li>
+                );
+              })}
+            </ol>
+          </nav>
+          <main className="order-1 overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7 md:order-2">
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={step}
+                initial={{ opacity: 0, x: 24 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -24 }}
+                transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+              >
+                {children}
+              </motion.div>
+            </AnimatePresence>
+          </main>
+        </div>
       </div>
     </div>
   );

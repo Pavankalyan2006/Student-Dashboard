@@ -83,7 +83,7 @@ export function Sidebar({ currentPath, onNavigate }: { currentPath: string; onNa
       <aside
         aria-label="Main navigation"
         className={cn(
-          'fixed inset-y-0 left-0 z-50 flex flex-col bg-navy-950 text-[#A3ADC6] border-r border-white/[0.06]',
+          'sidebar-surface fixed inset-y-0 left-0 z-50 flex flex-col text-[#A3ADC6] border-r border-white/[0.06]',
           'transition-[width,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
           sidebarCollapsed ? 'lg:w-[76px]' : 'lg:w-[272px]',
           mobileDrawerOpen ? 'w-[288px] max-w-[86vw] translate-x-0 shadow-2xl' : 'w-[288px] -translate-x-full lg:translate-x-0'

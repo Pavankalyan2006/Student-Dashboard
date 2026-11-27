@@ -23,6 +23,17 @@ import {
 } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import { PublicLayout } from '../components/PublicLayout';
+import { motion } from 'motion/react';
+import { EASE_OUT } from '../../../components/motion';
+import { HeroPreview } from '../components/HeroPreview';
+
+/** Each section below the hero rises in once as it scrolls into view. */
+const REVEAL = {
+  initial: { opacity: 0, y: 28 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: '-80px' },
+  transition: { duration: 0.65, ease: EASE_OUT },
+} as const;
 
 interface HomePageProps {
   onNavigate: (path: string) => void;
@@ -188,80 +199,113 @@ export function HomePage({ onNavigate }: HomePageProps) {
   return (
     <PublicLayout currentPath="/" onNavigate={onNavigate}>
       {/* 1. Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-white via-blue-50/30 to-slate-50 pt-12 pb-20 sm:pt-16 sm:pb-28 border-b border-slate-200">
-        {/* Background glow effects */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-gradient-to-tr from-blue-400/10 via-indigo-400/10 to-transparent blur-3xl pointer-events-none" />
+      <section className="relative overflow-hidden border-b border-slate-200 pt-14 pb-20 sm:pt-20 sm:pb-28">
+        {/* Aurora + fine grid backdrop */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+          <div className="absolute -top-40 left-1/2 h-[520px] w-[900px] -translate-x-1/2 rounded-full bg-gradient-to-tr from-blue-500/25 via-violet-500/20 to-sky-400/20 blur-3xl animate-aurora" />
+          <div className="absolute -left-24 top-40 h-72 w-72 rounded-full bg-violet-500/15 blur-3xl animate-float" />
+          <div className="absolute -right-16 top-24 h-64 w-64 rounded-full bg-sky-400/15 blur-3xl animate-float [animation-delay:1.2s]" />
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,var(--grid-dot)_1px,transparent_1px),linear-gradient(to_bottom,var(--grid-dot)_1px,transparent_1px)] bg-[size:44px_44px] [mask-image:radial-gradient(ellipse_70%_60%_at_50%_30%,black,transparent)]" />
+        </div>
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          {/* Top Pill */}
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/80 text-blue-600 text-xs font-semibold mb-6 shadow-xs animate-fade-in">
-            <Sparkles className="h-3.5 w-3.5" />
-            <span>The Academic & Career Operating System for B.Tech Students</span>
-          </div>
-
-          {/* Main Headline */}
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 max-w-4xl mx-auto leading-tight sm:leading-none">
-            Master Your Engineering Curriculum. <br />
-            <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent">
-              Code Real Labs. Build Career Mastery.
+        <div className="relative mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: -8, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.5, ease: EASE_OUT }}
+            className="mb-7 inline-flex items-center gap-2 rounded-full border border-blue-200/80 bg-white/70 px-3.5 py-1.5 text-xs font-semibold text-blue-700 shadow-sm backdrop-blur"
+          >
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-60" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-500" />
             </span>
+            The Academic &amp; Career Operating System for B.Tech Students
+          </motion.div>
+
+          <h1 className="mx-auto max-w-5xl font-display text-[2.4rem] font-extrabold leading-[1.05] tracking-tight text-slate-900 sm:text-6xl lg:text-7xl">
+            {['Master', 'Your', 'Engineering', 'Curriculum.'].map((w, i) => (
+              <motion.span
+                key={w}
+                className="mr-[0.25em] inline-block"
+                initial={{ opacity: 0, y: 24, filter: 'blur(8px)' }}
+                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                transition={{ duration: 0.6, ease: EASE_OUT, delay: 0.08 * i }}
+              >
+                {w}
+              </motion.span>
+            ))}
+            <br />
+            <motion.span
+              className="text-gradient inline-block bg-[length:200%_auto] animate-gradient-pan"
+              initial={{ opacity: 0, y: 24, filter: 'blur(8px)' }}
+              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+              transition={{ duration: 0.7, ease: EASE_OUT, delay: 0.4 }}
+            >
+              Code Real Labs. Build Career Mastery.
+            </motion.span>
           </h1>
 
-          {/* Subtitle */}
-          <p className="mt-6 text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
+          <motion.p
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.6, ease: EASE_OUT }}
+            className="mx-auto mt-7 max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg"
+          >
             Tailored directly to your degree, branch, semester, and university syllabus. Unified with intelligent
             multi-agent AI tutoring, isolated coding and SQL execution sandboxes, automated study planning, and placement preparation.
-          </p>
+          </motion.p>
 
-          {/* Primary Call to Action */}
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.72, ease: EASE_OUT }}
+            className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4"
+          >
+            <button
+              type="button"
               onClick={() => onNavigate('/register')}
-              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm px-8 py-3.5 rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="btn-shine group relative inline-flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-violet-600 px-8 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-600/25 transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-xl hover:shadow-blue-600/30 active:translate-y-0 sm:w-auto"
             >
               <span>Get Started Free</span>
-              <ArrowRight className="h-4 w-4" />
-            </Button>
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </button>
             <Button
               variant="outline"
               onClick={() => onNavigate('/how-it-works')}
-              className="w-full sm:w-auto border-slate-300 hover:bg-slate-100 text-slate-700 font-semibold text-sm px-6 py-3.5 rounded-xl cursor-pointer"
+              className="h-auto w-full rounded-xl px-6 py-3.5 text-sm font-semibold sm:w-auto"
             >
               See How It Works (12 Steps)
             </Button>
             <Button
               variant="ghost"
               onClick={() => onNavigate('/login')}
-              className="w-full sm:w-auto text-blue-600 hover:text-blue-700 hover:bg-blue-50 font-semibold text-sm px-4 py-3.5 rounded-xl cursor-pointer"
+              className="h-auto w-full rounded-xl px-4 py-3.5 text-sm font-semibold text-blue-600 hover:bg-blue-50 hover:text-blue-700 sm:w-auto"
             >
               Already Registered? Sign In
             </Button>
-          </div>
+          </motion.div>
 
-          {/* Key Trust Signals */}
-          <div className="mt-12 flex flex-wrap items-center justify-center gap-6 sm:gap-8 text-xs font-medium text-slate-600">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-              <span>Supports 8+ Engineering Branches</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-              <span>Safe In-Browser Execution Sandboxes</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-              <span>Contextualized AI Multi-Agent System</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-              <span>Zero Fabrication & 100% Student-Only</span>
-            </div>
-          </div>
+          <motion.div
+            initial="hidden"
+            animate="show"
+            variants={{ hidden: {}, show: { transition: { staggerChildren: 0.08, delayChildren: 0.9 } } }}
+            className="mt-12 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-xs font-medium text-slate-600"
+          >
+            {['Supports 8+ Engineering Branches', 'Safe In-Browser Execution Sandboxes', 'Contextualized AI Multi-Agent System', 'Zero Fabrication & 100% Student-Only'].map((t) => (
+              <motion.div key={t} variants={{ hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0 } }} className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                <span>{t}</span>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          {/* What the workspace looks like (an illustration, no real student data) */}
+          <HeroPreview />
         </div>
       </section>
 
       {/* 2. Engineering Problems & Solutions Grid */}
-      <section className="py-16 sm:py-24 bg-white border-b border-slate-200">
+      <motion.section {...REVEAL} className="py-16 sm:py-24 bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <h2 className="text-xs font-bold uppercase tracking-wider text-blue-600">
@@ -281,7 +325,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
               return (
                 <div
                   key={idx}
-                  className="p-6 sm:p-8 rounded-2xl border border-slate-200 bg-slate-50 hover:bg-white hover:shadow-md transition-all space-y-4"
+                  className="group space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:bg-white hover:shadow-xl sm:p-8"
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold px-2.5 py-1 rounded-md bg-red-50 text-red-600 border border-red-200">
@@ -303,10 +347,10 @@ export function HomePage({ onNavigate }: HomePageProps) {
             })}
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* 3. Multi-Agent Orchestration Architecture Showcase */}
-      <section className="py-16 sm:py-24 bg-slate-50 border-b border-slate-200">
+      <motion.section {...REVEAL} className="py-16 sm:py-24 bg-slate-50 border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <h2 className="text-xs font-bold uppercase tracking-wider text-indigo-600">
@@ -326,7 +370,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
               return (
                 <div
                   key={idx}
-                  className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs flex flex-col justify-between"
+                  className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-violet-200 hover:shadow-xl"
                 >
                   <div>
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 border ${group.color}`}>
@@ -348,10 +392,10 @@ export function HomePage({ onNavigate }: HomePageProps) {
             })}
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* 4. Practical Laboratories Grid */}
-      <section className="py-16 sm:py-24 bg-white border-b border-slate-200">
+      <motion.section {...REVEAL} className="py-16 sm:py-24 bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-600">
@@ -388,10 +432,10 @@ export function HomePage({ onNavigate }: HomePageProps) {
             })}
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* 5. 12-Step Student Workflow Banner */}
-      <section className="py-16 sm:py-24 bg-gradient-to-br from-navy-900 via-slate-900 to-slate-800 text-white">
+      <motion.section {...REVEAL} className="py-16 sm:py-24 bg-gradient-to-br from-navy-900 via-slate-900 to-slate-800 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-xs font-bold uppercase tracking-wider text-blue-400">
             Structured Academic Success
@@ -440,10 +484,10 @@ export function HomePage({ onNavigate }: HomePageProps) {
             </Button>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* 6. Frequently Asked Questions (FAQ) */}
-      <section className="py-16 sm:py-24 bg-white border-b border-slate-200">
+      <motion.section {...REVEAL} className="py-16 sm:py-24 bg-white border-b border-slate-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-xs font-bold uppercase tracking-wider text-blue-600">
@@ -483,10 +527,10 @@ export function HomePage({ onNavigate }: HomePageProps) {
             })}
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* 7. Final Call to Action */}
-      <section className="py-16 sm:py-20 bg-slate-50">
+      <motion.section {...REVEAL} className="py-16 sm:py-20 bg-slate-50">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="hero-brand rounded-3xl p-8 sm:p-12 text-white">
             <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
@@ -512,7 +556,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
     </PublicLayout>
   );
 }

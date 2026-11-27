@@ -16,6 +16,9 @@ import {
 } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import { useAuth } from '../../../hooks/useAuth';
+import { ThemeToggle } from '../../../components/navigation/ThemeToggle';
+import { BrandMark } from '../../../components/layout/BrandMark';
+import { ScrollProgress } from '../../../components/motion';
 
 interface PublicLayoutProps {
   currentPath: string;
@@ -34,18 +37,17 @@ export function PublicLayout({ currentPath, onNavigate, children }: PublicLayout
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans">
+    <div className="app-canvas min-h-screen flex flex-col text-slate-900 font-sans">
+      <ScrollProgress />
       {/* Top Navigation Bar */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-slate-200 shadow-xs">
+      <header className="glass-bar sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* Logo & Brand */}
           <div
             onClick={() => onNavigate('/')}
             className="flex items-center gap-3 cursor-pointer group"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-md group-hover:scale-105 transition-transform">
-              <Sparkles className="h-5 w-5" />
-            </div>
+            <BrandMark className="h-10 w-10 transition-transform duration-300 group-hover:scale-105 group-hover:-rotate-3" />
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-bold text-base sm:text-lg tracking-tight text-slate-900">
@@ -69,7 +71,7 @@ export function PublicLayout({ currentPath, onNavigate, children }: PublicLayout
                 <button
                   key={link.path}
                   onClick={() => onNavigate(link.path)}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+                  className={`relative px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
                     isActive
                       ? 'bg-blue-50 text-blue-600 font-semibold'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
@@ -83,6 +85,7 @@ export function PublicLayout({ currentPath, onNavigate, children }: PublicLayout
 
           {/* Right Action Buttons */}
           <div className="hidden md:flex items-center gap-3">
+            <ThemeToggle />
             {isAuthenticated ? (
               <Button
                 onClick={() => onNavigate('/dashboard')}
@@ -113,6 +116,7 @@ export function PublicLayout({ currentPath, onNavigate, children }: PublicLayout
 
           {/* Mobile Hamburger Button */}
           <div className="md:hidden flex items-center gap-2">
+            <ThemeToggle />
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 focus:outline-none"

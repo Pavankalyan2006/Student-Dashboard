@@ -7,6 +7,7 @@ import { ProfileMenu } from './ProfileMenu';
 import { findActiveNavItem, findSectionForItem } from './navConfig';
 import { useWorkspacePrefs } from '../../store/workspacePrefsStore';
 import { PersonalContextChip } from './PersonalContextChip';
+import { ThemeToggle } from './ThemeToggle';
 import { cn } from '../../lib/utils';
 
 export interface TopbarProps {
@@ -63,7 +64,7 @@ export function Topbar({ currentPath, onNavigate }: TopbarProps) {
   const togglePin = useWorkspacePrefs((s) => s.togglePin);
 
   return (
-    <header className="print:hidden sticky top-0 z-30 flex h-16 w-full items-center gap-3 border-b border-slate-200/80 bg-white/85 px-4 backdrop-blur-xl supports-[backdrop-filter]:bg-white/75 sm:px-6 lg:px-8">
+    <header className="glass-bar print:hidden sticky top-0 z-30 flex h-16 w-full items-center gap-3 px-4 sm:px-6 lg:px-8">
       {/* Left: drawer trigger + location */}
       <div className="flex min-w-0 flex-1 items-center gap-2.5">
         <button
@@ -123,9 +124,9 @@ export function Topbar({ currentPath, onNavigate }: TopbarProps) {
         <button
           type="button"
           onClick={() => setGlobalSearchOpen(true)}
-          className="flex w-full items-center gap-2.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-[13px] text-slate-500 transition-colors hover:border-slate-300 hover:bg-white"
+          className="group flex w-full items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2 text-[13px] text-slate-500 shadow-2xs transition-[border-color,background-color,box-shadow] hover:border-blue-300 hover:bg-white hover:shadow-sm"
         >
-          <Search className="h-4 w-4 shrink-0 text-slate-400" />
+          <Search className="h-4 w-4 shrink-0 text-slate-400 transition-colors group-hover:text-blue-500" />
           <span className="flex-1 truncate text-left">Search courses, notes, documents…</span>
           <kbd className="hidden items-center rounded-md border border-slate-200 bg-white px-1.5 py-0.5 font-mono text-[10px] font-medium text-slate-500 lg:inline-flex">
             Ctrl K
@@ -145,6 +146,7 @@ export function Topbar({ currentPath, onNavigate }: TopbarProps) {
         </button>
         <PersonalContextChip currentPath={currentPath} onNavigate={onNavigate} />
         <AskAIButton onClick={() => onNavigate('/ai-agent')} />
+        <ThemeToggle className="hidden sm:flex" />
         <NotificationBell onNavigate={onNavigate} />
         <span className="mx-0.5 hidden h-6 w-px bg-slate-200 sm:block" aria-hidden="true" />
         <ProfileMenu onNavigate={onNavigate} />

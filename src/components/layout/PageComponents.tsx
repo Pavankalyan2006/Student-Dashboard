@@ -6,23 +6,9 @@ import { motion } from 'motion/react';
 import { AnimatedNumber, EASE_OUT } from '../motion';
 
 export function PageContainer({ children, className }: { children: React.ReactNode; className?: string }) {
-  // The shell already pads and centres <main>; pages only add vertical rhythm.
-  // Each top-level section rises in a moment after the one above it, so a page settles in from top to bottom.
-  const items = React.Children.toArray(children);
-  return (
-    <div className={cn('mx-auto w-full max-w-7xl space-y-6 lg:space-y-8', className)}>
-      {items.map((child, i) => (
-        <motion.div
-          key={(React.isValidElement(child) && child.key) || i}
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.42, ease: EASE_OUT, delay: Math.min(i, 8) * 0.055 }}
-        >
-          {child}
-        </motion.div>
-      ))}
-    </div>
-  );
+  // The shell already pads and centres <main>; pages only add vertical rhythm. Sections rise in one after
+  // another through the global entrance in styles/theme.css, which also covers pages without this container.
+  return <div className={cn('mx-auto w-full max-w-7xl space-y-6 lg:space-y-8', className)}>{children}</div>;
 }
 
 export interface PageHeaderProps {
@@ -193,7 +179,7 @@ export function LoadingState({ message = 'Loading…', className }: { message?: 
       <span className="sr-only">{message}</span>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="rounded-xl border border-slate-200 bg-white p-5">
+          <div key={i} className="rounded-xl border border-slate-200 bg-white p-5" style={{ animationDelay: `${i * 90}ms` }}>
             <div className="skeleton h-3 w-24" />
             <div className="skeleton mt-4 h-6 w-16" />
           </div>
@@ -205,8 +191,11 @@ export function LoadingState({ message = 'Loading…', className }: { message?: 
         <div className="skeleton mt-2.5 h-3 w-5/6" />
         <div className="skeleton mt-2.5 h-3 w-2/3" />
       </div>
-      <p className="flex items-center justify-center gap-2 text-xs font-medium text-slate-500" aria-hidden="true">
-        <RefreshCw className="h-3.5 w-3.5 animate-spin text-blue-500" />
+      <p className="flex items-center justify-center gap-2.5 text-xs font-medium text-slate-500" aria-hidden="true">
+        <span className="relative flex h-4 w-4">
+          <span className="absolute inset-0 animate-ping rounded-full bg-blue-400/40" />
+          <span className="relative m-auto h-2 w-2 rounded-full bg-gradient-to-br from-blue-500 to-violet-500" />
+        </span>
         {message}
       </p>
     </div>

@@ -1,5 +1,7 @@
 import * as React from 'react';
-import { User, TrendingUp, Settings, LogOut, ShieldCheck } from 'lucide-react';
+import { User, TrendingUp, Settings, LogOut, ShieldCheck, Sun, Moon, Monitor } from 'lucide-react';
+import { useThemeStore, type ThemePreference } from '../../store/themeStore';
+import { cn } from '../../lib/utils';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -13,6 +15,8 @@ import { toast } from 'sonner';
 
 export function ProfileMenu({ onNavigate }: { onNavigate: (url: string) => void }) {
   const { student, logout } = useAuth();
+  const themePref = useThemeStore((st) => st.preference);
+  const setThemePref = useThemeStore((st) => st.setPreference);
 
   const handleLogout = async () => {
     try {
@@ -88,6 +92,37 @@ export function ProfileMenu({ onNavigate }: { onNavigate: (url: string) => void 
           <Settings className="mr-2 h-3.5 w-3.5 text-slate-500" />
           <span>Settings</span>
         </DropdownMenuItem>
+
+        <DropdownMenuSeparator />
+
+        {/* Appearance: light, dark or follow the device */}
+        <div className="px-2 py-1.5">
+          <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Appearance</p>
+          <div className="grid grid-cols-3 gap-1 rounded-lg bg-slate-100 p-1" role="radiogroup" aria-label="Theme">
+            {([
+              ['light', 'Light', Sun],
+              ['dark', 'Dark', Moon],
+              ['system', 'Auto', Monitor],
+            ] as [ThemePreference, string, typeof Sun][]).map(([value, label, Icon]) => (
+              <button
+                key={value}
+                type="button"
+                role="radio"
+                aria-checked={themePref === value}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setThemePref(value);
+                }}
+                className={cn(
+                  'flex items-center justify-center gap-1 rounded-md py-1.5 text-xs font-semibold transition-colors',
+                  themePref === value ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'
+                )}
+              >
+                <Icon className="h-3.5 w-3.5" /> {label}
+              </button>
+            ))}
+          </div>
+        </div>
 
         <DropdownMenuSeparator />
 

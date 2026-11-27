@@ -1,8 +1,14 @@
 @import "tailwindcss";
 /* Enter/exit utilities (animate-in, fade-in, zoom-in-95, slide-in-from-*) used by dialogs, menus and toasts. */
 @import "tw-animate-css";
+/* Light and dark theme, textures and global motion. These rules are unlayered, so they override the
+   layered design-system rules below whatever their position in the file. */
+@import "./styles/theme-palette.css";
+@import "./styles/theme.css";
 
-@custom-variant dark (&:where(.dark, .dark *));
+/* Dark mode is driven by theme tokens (styles/theme-palette.css), so old one-off "dark:" classes
+   are switched off: they would fight the token remap. */
+@custom-variant dark (&:where(.legacy-dark, .legacy-dark *));
 
 /*
  * ─────────────────────────────────────────────────────────────────────────────
@@ -33,7 +39,7 @@
   --color-slate-100: #EFF1F6;
   --color-slate-200: #E3E6EE;
   --color-slate-300: #CDD2DD;
-  --color-slate-400: #9AA3B5;
+  --color-slate-400: #828BA0; /* 3.4:1 on white: readable as secondary text */
   --color-slate-500: #636C80;
   --color-slate-600: #4C5569;
   --color-slate-700: #363F52;
@@ -526,7 +532,7 @@
     background:
       radial-gradient(120% 140% at 0% 0%, rgb(70 84 224 / 0.07) 0%, transparent 55%),
       radial-gradient(90% 120% at 100% 0%, rgb(121 81 216 / 0.06) 0%, transparent 60%),
-      #FFFFFF;
+      var(--surface-1, #FFFFFF);
   }
 }
 
@@ -536,4 +542,3 @@
     max-width: 100%;
   }
 }
-

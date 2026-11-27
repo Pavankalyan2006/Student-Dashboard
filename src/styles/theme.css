@@ -1,0 +1,267 @@
+/*
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  Theme layer: light and dark surfaces, textures, global motion and finishing.
+ *
+ *  Dark mode works the same way as the Meridian palette remap in index.css:
+ *  pages keep writing bg-white / text-slate-900 / bg-blue-50, and the tokens behind
+ *  those names change when <html> has the "dark" class (see theme-palette.css).
+ *  That way all 148 pages get a dark theme without each one being rewritten.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+
+:root {
+  --surface-0: #F6F7FB;
+  --surface-1: #FFFFFF;
+  --surface-2: #FFFFFF;
+  --surface-glass: rgb(255 255 255 / 0.78);
+  --hairline: rgb(18 24 41 / 0.07);
+  --glow-a: rgb(94 110 239 / 0.10);
+  --glow-b: rgb(141 107 234 / 0.08);
+  --glow-c: rgb(46 151 192 / 0.06);
+  --grid-dot: rgb(18 24 41 / 0.045);
+  --noise-opacity: 0.025;
+  --selection: rgb(94 110 239 / 0.22);
+}
+
+:root.dark {
+  --surface-0: #070B16;
+  --surface-1: #0E1424;
+  --surface-2: #131B2E;
+  --surface-glass: rgb(12 18 33 / 0.72);
+  --hairline: rgb(255 255 255 / 0.06);
+  --glow-a: rgb(94 110 239 / 0.16);
+  --glow-b: rgb(141 107 234 / 0.12);
+  --glow-c: rgb(46 151 192 / 0.08);
+  --grid-dot: rgb(255 255 255 / 0.035);
+  --noise-opacity: 0.04;
+  --selection: rgb(127 144 247 / 0.35);
+}
+
+/* ---------- Dark surfaces for white-based utilities ----------
+   text-white stays white (it sits on coloured buttons). Only white *surfaces* turn dark.
+   :where() keeps specificity equal to the utility, so hover:/focus: variants still win. */
+:where(.dark) .bg-white { background-color: var(--surface-1); }
+:where(.dark) .bg-white\/95 { background-color: rgb(14 20 36 / 0.95); }
+:where(.dark) .bg-white\/90 { background-color: rgb(14 20 36 / 0.9); }
+:where(.dark) .bg-white\/85 { background-color: rgb(14 20 36 / 0.85); }
+:where(.dark) .bg-white\/80 { background-color: rgb(14 20 36 / 0.8); }
+:where(.dark) .bg-white\/75 { background-color: rgb(14 20 36 / 0.75); }
+:where(.dark) .bg-white\/70 { background-color: rgb(14 20 36 / 0.7); }
+:where(.dark) .bg-white\/60 { background-color: rgb(14 20 36 / 0.6); }
+:where(.dark) .bg-white\/50 { background-color: rgb(14 20 36 / 0.5); }
+:where(.dark) .hover\:bg-white:hover,
+:where(.dark) .focus\:bg-white:focus,
+:where(.dark) .group:hover .group-hover\:bg-white { background-color: var(--surface-2); }
+:where(.dark) .supports-\[backdrop-filter\]\:bg-white\/75 { background-color: var(--surface-glass); }
+:where(.dark) .from-white { --tw-gradient-from: var(--surface-1); }
+:where(.dark) .via-white { --tw-gradient-via: var(--surface-1); }
+:where(.dark) .to-white { --tw-gradient-to: var(--surface-1); }
+:where(.dark) .border-white { border-color: var(--surface-1); }
+:where(.dark) .ring-offset-white { --tw-ring-offset-color: var(--surface-1); }
+:where(.dark) .text-black { color: var(--color-slate-900); }
+:where(.dark) .bg-canvas { background-color: var(--surface-0); }
+/* Inverse islands keep white surfaces white (a white chip on a gradient hero). */
+:where(.dark) :is(.inverse-island, .hero-brand, .sidebar-surface, .bg-navy-900, .bg-navy-950, .bg-slate-900, .bg-slate-950, .bg-blue-600, .bg-indigo-600, .bg-violet-600, [class*="from-blue-6"], [class*="from-indigo-6"], [class*="from-violet-6"], [class*="from-navy-"]) :is(.bg-white, .hover\:bg-white:hover) { background-color: #fff; }
+
+/* Native controls, scrollbars and autofill follow the theme. */
+:where(.dark) input,
+:where(.dark) select,
+:where(.dark) textarea { color-scheme: dark; }
+:where(.dark) input:-webkit-autofill {
+  -webkit-text-fill-color: var(--color-slate-900);
+  box-shadow: 0 0 0 1000px var(--surface-2) inset;
+}
+
+/* Charts (Recharts) draw with fixed colours; give their chrome theme colours. */
+:where(.dark) .recharts-cartesian-grid line,
+:where(.dark) .recharts-polar-grid line,
+:where(.dark) .recharts-polar-grid polygon { stroke: var(--color-slate-200); }
+:where(.dark) .recharts-cartesian-axis-tick-value,
+:where(.dark) .recharts-polar-angle-axis-tick-value,
+:where(.dark) .recharts-legend-item-text { fill: var(--color-slate-500); color: var(--color-slate-600) !important; }
+:where(.dark) .recharts-cartesian-axis-line { stroke: var(--color-slate-300); }
+:where(.dark) .recharts-default-tooltip {
+  background-color: var(--surface-2) !important;
+  border-color: var(--color-slate-200) !important;
+  border-radius: 10px;
+  color: var(--color-slate-900);
+}
+:where(.dark) .recharts-tooltip-cursor { fill: rgb(255 255 255 / 0.04); }
+
+/* Images keep their colours; very bright ones are softened a touch at night. */
+:where(.dark) img:not([src$=".svg"]) { filter: brightness(0.92); }
+
+/* ---------- Texture: soft light glows, a fine dot grid and film grain ---------- */
+.app-canvas {
+  background-color: var(--surface-0);
+  background-image:
+    radial-gradient(1100px 520px at 88% -8%, var(--glow-a), transparent 60%),
+    radial-gradient(900px 480px at 12% -12%, var(--glow-b), transparent 60%),
+    radial-gradient(700px 500px at 50% 115%, var(--glow-c), transparent 65%),
+    radial-gradient(var(--grid-dot) 1px, transparent 1.2px);
+  background-size: auto, auto, auto, 22px 22px;
+  background-attachment: fixed;
+}
+.app-canvas::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: var(--noise-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.app-canvas > * { position: relative; z-index: 1; }
+
+/* Sidebar: deep navy with a faint aurora at the top and the same grain. */
+.sidebar-surface {
+  background-color: var(--color-navy-950);
+  background-image:
+    radial-gradient(420px 260px at 0% 0%, rgb(94 110 239 / 0.22), transparent 70%),
+    radial-gradient(300px 240px at 100% 100%, rgb(141 107 234 / 0.14), transparent 70%),
+    linear-gradient(180deg, rgb(255 255 255 / 0.02), transparent 40%);
+}
+:where(.dark) .sidebar-surface {
+  background-color: #060A15;
+  border-right-color: rgb(255 255 255 / 0.05);
+}
+
+/* Frosted top bar. */
+.glass-bar {
+  background-color: var(--surface-glass);
+  backdrop-filter: saturate(1.6) blur(16px);
+  -webkit-backdrop-filter: saturate(1.6) blur(16px);
+  border-bottom: 1px solid var(--hairline);
+}
+
+/* Gradient text for display headings and stats. */
+.text-gradient {
+  background-image: linear-gradient(100deg, var(--color-blue-600), var(--color-violet-600) 55%, var(--color-sky-500));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+:where(.dark) .text-gradient {
+  background-image: linear-gradient(100deg, #A6B5FC, #C3B4FA 55%, #7DD3F0);
+}
+
+/* A card style for hand-built panels: hairline border, soft lift on hover. */
+.surface-card {
+  background-color: var(--surface-1);
+  border: 1px solid var(--color-slate-200);
+  border-radius: 14px;
+  box-shadow: var(--shadow-xs);
+  transition: box-shadow 220ms var(--ease-out), border-color 220ms var(--ease-out), transform 220ms var(--ease-out);
+}
+.surface-card:hover { box-shadow: var(--shadow-md); border-color: var(--color-slate-300); }
+
+/* ---------- Global page entrance ----------
+   Every page's top-level sections rise in one after another, including the ~95 pages that
+   lay themselves out without PageContainer. "backwards" fill leaves no transform behind,
+   so sticky and fixed children inside pages keep working. */
+@keyframes section-rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+#main-content > * > * {
+  animation: section-rise 480ms var(--ease-out) backwards;
+}
+#main-content > * > *:nth-child(2) { animation-delay: 50ms; }
+#main-content > * > *:nth-child(3) { animation-delay: 100ms; }
+#main-content > * > *:nth-child(4) { animation-delay: 150ms; }
+#main-content > * > *:nth-child(5) { animation-delay: 200ms; }
+#main-content > * > *:nth-child(6) { animation-delay: 250ms; }
+#main-content > * > *:nth-child(7) { animation-delay: 300ms; }
+#main-content > * > *:nth-child(n + 8) { animation-delay: 340ms; }
+
+/* Smooth colour change only while switching themes (never on first paint). */
+.theme-switching,
+.theme-switching *,
+.theme-switching *::before,
+.theme-switching *::after {
+  transition: background-color 380ms var(--ease-out), border-color 380ms var(--ease-out), color 380ms var(--ease-out), fill 380ms var(--ease-out), box-shadow 380ms var(--ease-out) !important;
+}
+
+/* ---------- Finishing ---------- */
+::selection { background: var(--selection); }
+
+/* Keyboard focus ring for controls; text fields use the softer glow below instead. */
+:where(:focus-visible:not(input, textarea, select)) { outline: 2px solid var(--color-blue-500); outline-offset: 2px; }
+:where(button, a, [role="button"], [role="tab"]):focus:not(:focus-visible) { outline: none; }
+
+/* Page scrollbars that suit the palette. */
+html { scrollbar-color: var(--color-slate-300) transparent; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-slate-300);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { background-color: var(--color-slate-400); }
+
+/* Numbers line up in tables and stats everywhere. */
+table, .tabular { font-variant-numeric: tabular-nums; }
+
+/* Toasts follow the theme. */
+:where(.dark) [data-sonner-toast] {
+  background: var(--surface-2) !important;
+  border-color: var(--color-slate-200) !important;
+  color: var(--color-slate-900) !important;
+}
+
+/* ---------- Form fields everywhere ----------
+   Many pages write their own <input>/<select>/<textarea>. :where() keeps this at zero specificity,
+   so any page's own classes still win; fields without their own focus style get a soft glow. */
+:where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]), select, textarea) {
+  transition: border-color 150ms var(--ease-out), box-shadow 150ms var(--ease-out), background-color 150ms var(--ease-out);
+}
+/* Only bordered fields get the glow; borderless ones (search palettes, chat boxes) stay clean. */
+:where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]), select, textarea):where([class*="border"]:not([class*="border-0"]):not([class*="border-none"]):not([class*="border-transparent"])):focus {
+  border-color: var(--color-blue-400);
+  box-shadow: 0 0 0 3px rgb(94 110 239 / 0.16);
+  outline: none;
+}
+:where(input, textarea)::placeholder { color: var(--color-slate-400); }
+:where(input[type="checkbox"], input[type="radio"], input[type="range"]) { accent-color: var(--color-blue-600); }
+
+/* Links inside long-form content. */
+:where(.prose, .markdown-body) a { text-underline-offset: 3px; }
+
+/* Radix tabs: the active tab eases in. */
+[role="tab"][data-state] { transition: color 160ms var(--ease-out), background-color 160ms var(--ease-out), box-shadow 160ms var(--ease-out); }
+
+/* Skeleton shimmer is a faint sheen at night instead of a bright stripe. */
+:where(.dark) .skeleton { background-image: linear-gradient(90deg, transparent 0, rgb(255 255 255 / 0.06) 50%, transparent 100%); }
+:where(.dark) .surface-hero {
+  background:
+    radial-gradient(120% 140% at 0% 0%, rgb(94 110 239 / 0.14) 0%, transparent 55%),
+    radial-gradient(90% 120% at 100% 0%, rgb(141 107 234 / 0.12) 0%, transparent 60%),
+    var(--surface-1);
+}
+
+/* Landing page effects */
+@keyframes aurora {
+  0%, 100% { transform: translateX(-50%) rotate(0deg) scale(1); }
+  50% { transform: translateX(-46%) rotate(8deg) scale(1.08); }
+}
+.animate-aurora { animation: aurora 14s ease-in-out infinite; }
+@keyframes shine-sweep {
+  from { transform: translateX(-120%) skewX(-20deg); }
+  to { transform: translateX(260%) skewX(-20deg); }
+}
+.btn-shine::after {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.35), transparent);
+  transform: translateX(-120%) skewX(-20deg);
+  animation: shine-sweep 2.8s var(--ease-out) 1.4s infinite;
+  pointer-events: none;
+}
+
+/* Navy text is a light-theme ink; at night it reads as the main text colour. Inside inverse islands the
+   slate token is the light one again, so this still resolves to navy-like ink there. */
+:where(.dark) :is(.text-navy-950, .text-navy-900, .text-navy-800) { color: var(--color-slate-900); }

@@ -242,7 +242,7 @@ export function SemesterSubjectsSyllabusPage({ initialSubjectId, onNavigate }: S
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className={`text-xs font-bold ${isSelected ? 'text-indigo-400' : 'text-white'}`}>
+                      <span className={`text-xs font-bold ${isSelected ? 'text-indigo-700' : 'text-slate-900'}`}>
                         {sub.name}
                       </span>
                       <span className="text-[10px] font-mono text-slate-500 font-semibold">{sub.progress_percent}%</span>
@@ -366,7 +366,7 @@ export function SemesterSubjectsSyllabusPage({ initialSubjectId, onNavigate }: S
                                       <Check className="w-3.5 h-3.5 stroke-[3]" />
                                     </div>
                                     <div>
-                                      <span className={`text-xs font-semibold ${topic.completed ? 'line-through text-slate-400' : 'text-slate-100'}`}>
+                                      <span className={`text-xs font-semibold ${topic.completed ? 'line-through text-slate-400' : 'text-slate-800'}`}>
                                         {topic.name}
                                       </span>
                                       <div className="flex items-center gap-2 text-[10px] text-slate-500 mt-0.5">

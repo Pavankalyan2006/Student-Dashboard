@@ -22,6 +22,11 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/card';
 import { toast } from 'sonner';
+import { motion } from 'motion/react';
+import { AuthShowcase } from '../features/public/components/AuthShowcase';
+import { BrandMark } from '../components/layout/BrandMark';
+import { ThemeToggle } from '../components/navigation/ThemeToggle';
+import { EASE_OUT } from '../components/motion';
 
 const BRANCH_OPTIONS = [
   'Computer Science & Engineering (CSE)',
@@ -198,7 +203,10 @@ export function LoginPage({
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-slate-50 px-4 py-12">
+    <div className="app-canvas min-h-screen lg:grid lg:grid-cols-[1.05fr_1fr]">
+      <AuthShowcase />
+      <div className="relative flex min-h-screen flex-col items-center justify-center px-4 py-12">
+      <ThemeToggle className="absolute right-4 top-4" />
       {/* Return to Public Website */}
       {onNavigate && (
         <button
@@ -212,11 +220,9 @@ export function LoginPage({
       {/* Brand Header */}
       <div
         onClick={() => onNavigate && onNavigate('/')}
-        className="flex items-center gap-3 mb-6 cursor-pointer"
+        className="flex items-center gap-3 mb-6 cursor-pointer lg:hidden"
       >
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-lg">
-          <Sparkles className="h-6 w-6" />
-        </div>
+        <BrandMark className="h-11 w-11" />
         <div>
           <h1 className="text-xl font-bold tracking-tight text-slate-900">B.Tech AI Learning Platform</h1>
           <p className="text-xs text-slate-500">Personalized Academic Operating System for Engineering Students</p>
@@ -224,7 +230,13 @@ export function LoginPage({
       </div>
 
       {/* Main Auth Card */}
-      <Card className="w-full max-w-lg shadow-xl border border-slate-200 bg-white rounded-2xl">
+      <motion.div
+        initial={{ opacity: 0, y: 18, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.55, ease: EASE_OUT }}
+        className="w-full max-w-lg"
+      >
+      <Card className="w-full shadow-2xl shadow-blue-900/10 border border-slate-200 bg-white rounded-2xl">
         <CardHeader className="space-y-2 pb-4 pt-6 px-6 sm:px-8 border-b border-slate-100">
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg font-bold text-slate-900">
@@ -248,13 +260,16 @@ export function LoginPage({
                 setAuthMode('signin');
                 setErrorMessage(null);
               }}
-              className={`py-2 rounded-lg transition-all cursor-pointer text-center ${
-                authMode === 'signin'
-                  ? 'bg-white text-slate-900 shadow-sm font-bold'
-                  : 'text-slate-500 hover:text-slate-900'
+              className={`relative py-2 rounded-lg transition-colors cursor-pointer text-center ${
+                authMode === 'signin' ? 'text-slate-900 font-bold' : 'text-slate-500 hover:text-slate-900'
               }`}
             >
+              {authMode === 'signin' && (
+                <motion.span layoutId="auth-mode-pill" className="absolute inset-0 rounded-lg bg-white shadow-sm" transition={{ type: 'spring', stiffness: 420, damping: 32 }} />
+              )}
+              <span className="relative">
               Sign In
+              </span>
             </button>
             <button
               type="button"
@@ -262,13 +277,16 @@ export function LoginPage({
                 setAuthMode('signup');
                 setErrorMessage(null);
               }}
-              className={`py-2 rounded-lg transition-all cursor-pointer text-center ${
-                authMode === 'signup'
-                  ? 'bg-white text-slate-900 shadow-sm font-bold'
-                  : 'text-slate-500 hover:text-slate-900'
+              className={`relative py-2 rounded-lg transition-colors cursor-pointer text-center ${
+                authMode === 'signup' ? 'text-slate-900 font-bold' : 'text-slate-500 hover:text-slate-900'
               }`}
             >
+              {authMode === 'signup' && (
+                <motion.span layoutId="auth-mode-pill" className="absolute inset-0 rounded-lg bg-white shadow-sm" transition={{ type: 'spring', stiffness: 420, damping: 32 }} />
+              )}
+              <span className="relative">
               Create Account (Sign Up)
+              </span>
             </button>
           </div>
         </CardHeader>
@@ -403,6 +421,7 @@ export function LoginPage({
           )}
         </CardContent>
       </Card>
+      </motion.div>
 
       {/* Footer */}
       <div className="mt-8 text-center text-xs text-slate-500 space-y-1">
@@ -410,6 +429,7 @@ export function LoginPage({
         <p className="text-[11px] text-slate-400">
           Personalized syllabus tracking, AI Tutor, DSA & Coding labs, Viva prep, and Career guidance.
         </p>
+      </div>
       </div>
     </div>
   );
