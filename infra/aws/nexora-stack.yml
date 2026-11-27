@@ -1,0 +1,692 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  NEXORA AI on AWS, sized for the AWS Free Tier: VPC, Application Load Balancer, one EC2 app server in a
+  self-healing Auto Scaling group, RDS PostgreSQL, ECR, CloudWatch logs and alarms, a budget alert, and a
+  GitHub Actions deploy role (OIDC, no stored keys). See docs/deployment/AWS_DEPLOYMENT.md.
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label: { default: Project }
+        Parameters: [ProjectName, Environment, GitHubRepository, CreateGitHubOidcProvider]
+      - Label: { default: Compute and database (Free Tier sizes) }
+        Parameters: [InstanceType, LatestAmiId, DBInstanceClass]
+      - Label: { default: Load balancer and HTTPS }
+        Parameters: [EnableLoadBalancer, CertificateArn, AppDomainName]
+      - Label: { default: Cost and health alerts }
+        Parameters: [AlertEmail, MonthlyBudgetUSD]
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: nexora
+    AllowedPattern: '^[a-z][a-z0-9-]{1,20}$'
+    Description: Lower-case name used for resources, tags and the Parameter Store path.
+  Environment:
+    Type: String
+    Default: prod
+    AllowedValues: [prod, staging]
+  GitHubRepository:
+    Type: String
+    Default: Pavankalyan2006/Student-Dashboard
+    Description: owner/repo allowed to deploy through GitHub Actions (main branch only).
+  CreateGitHubOidcProvider:
+    Type: String
+    Default: 'true'
+    AllowedValues: ['true', 'false']
+    Description: Set to false if this AWS account already has the token.actions.githubusercontent.com OIDC provider.
+  InstanceType:
+    Type: String
+    Default: t3.micro
+    AllowedValues: [t2.micro, t3.micro]
+    Description: >-
+      Free Tier instance. Accounts on the older 12-month Free Tier get t2.micro free (t3.micro only in regions
+      without t2). Accounts on the newer Free plan get t3.micro. Check the Billing console if unsure.
+  LatestAmiId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64
+  DBInstanceClass:
+    Type: String
+    Default: db.t4g.micro
+    AllowedValues: [db.t4g.micro, db.t3.micro]
+  EnableLoadBalancer:
+    Type: String
+    Default: 'true'
+    AllowedValues: ['true', 'false']
+    Description: >-
+      true = Application Load Balancer in front of the server (health checks, HTTPS). false = the server is reached
+      directly on an Elastic IP, which avoids the load balancer's hourly and public IPv4 charges once Free Tier ends.
+  CertificateArn:
+    Type: String
+    Default: ''
+    Description: Optional ACM certificate ARN (same region) for HTTPS on the load balancer. Leave empty for HTTP only.
+  AppDomainName:
+    Type: String
+    Default: ''
+    Description: Your domain (for example app.example.com) when CertificateArn is set; point it at the load balancer with a CNAME.
+  AlertEmail:
+    Type: String
+    AllowedPattern: '^[^@\s]+@[^@\s]+\.[^@\s]+$'
+    Description: Receives budget and health alerts. Confirm the subscription email AWS sends.
+  MonthlyBudgetUSD:
+    Type: Number
+    Default: 1
+    MinValue: 1
+    Description: Alert when actual spend passes 80% of this, or the forecast passes it.
+
+Conditions:
+  UseAlb: !Equals [!Ref EnableLoadBalancer, 'true']
+  NoAlb: !Equals [!Ref EnableLoadBalancer, 'false']
+  UseHttps: !And [!Condition UseAlb, !Not [!Equals [!Ref CertificateArn, '']], !Not [!Equals [!Ref AppDomainName, '']]]
+  HttpOnlyAlb: !And [!Condition UseAlb, !Not [!Condition UseHttps]]
+  CreateOidc: !Equals [!Ref CreateGitHubOidcProvider, 'true']
+
+Resources:
+  # ───────────────────────────── Network ─────────────────────────────
+  # Public subnets hold the load balancer and the app server (which needs outbound internet to pull images and
+  # reach AI providers). Private subnets hold the database. No NAT gateway: it is not in the Free Tier.
+  Vpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.40.0.0/16
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags: [{ Key: Name, Value: !Sub '${ProjectName}-${Environment}-vpc' }, { Key: Project, Value: !Ref ProjectName }]
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags: [{ Key: Name, Value: !Sub '${ProjectName}-${Environment}-igw' }, { Key: Project, Value: !Ref ProjectName }]
+
+  GatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties: { VpcId: !Ref Vpc, InternetGatewayId: !Ref InternetGateway }
+
+  PublicSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: 10.40.0.0/24
+      AvailabilityZone: !Select [0, !GetAZs '']
+      MapPublicIpOnLaunch: true
+      Tags: [{ Key: Name, Value: !Sub '${ProjectName}-public-a' }, { Key: Project, Value: !Ref ProjectName }]
+
+  PublicSubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: 10.40.1.0/24
+      AvailabilityZone: !Select [1, !GetAZs '']
+      MapPublicIpOnLaunch: true
+      Tags: [{ Key: Name, Value: !Sub '${ProjectName}-public-b' }, { Key: Project, Value: !Ref ProjectName }]
+
+  PrivateSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: 10.40.10.0/24
+      AvailabilityZone: !Select [0, !GetAZs '']
+      Tags: [{ Key: Name, Value: !Sub '${ProjectName}-private-a' }, { Key: Project, Value: !Ref ProjectName }]
+
+  PrivateSubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: 10.40.11.0/24
+      AvailabilityZone: !Select [1, !GetAZs '']
+      Tags: [{ Key: Name, Value: !Sub '${ProjectName}-private-b' }, { Key: Project, Value: !Ref ProjectName }]
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref Vpc
+      Tags: [{ Key: Name, Value: !Sub '${ProjectName}-public-rt' }, { Key: Project, Value: !Ref ProjectName }]
+
+  PublicDefaultRoute:
+    Type: AWS::EC2::Route
+    DependsOn: GatewayAttachment
+    Properties: { RouteTableId: !Ref PublicRouteTable, DestinationCidrBlock: 0.0.0.0/0, GatewayId: !Ref InternetGateway }
+
+  PublicSubnetARoute:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: { SubnetId: !Ref PublicSubnetA, RouteTableId: !Ref PublicRouteTable }
+
+  PublicSubnetBRoute:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: { SubnetId: !Ref PublicSubnetB, RouteTableId: !Ref PublicRouteTable }
+
+  # Private subnets get their own table with no internet route.
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref Vpc
+      Tags: [{ Key: Name, Value: !Sub '${ProjectName}-private-rt' }, { Key: Project, Value: !Ref ProjectName }]
+
+  PrivateSubnetARoute:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: { SubnetId: !Ref PrivateSubnetA, RouteTableId: !Ref PrivateRouteTable }
+
+  PrivateSubnetBRoute:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: { SubnetId: !Ref PrivateSubnetB, RouteTableId: !Ref PrivateRouteTable }
+
+  # ───────────────────────────── Security groups ─────────────────────────────
+  AlbSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Condition: UseAlb
+    Properties:
+      GroupDescription: Public HTTP and HTTPS to the load balancer
+      VpcId: !Ref Vpc
+      SecurityGroupIngress:
+        - { IpProtocol: tcp, FromPort: 80, ToPort: 80, CidrIp: 0.0.0.0/0 }
+        - { IpProtocol: tcp, FromPort: 443, ToPort: 443, CidrIp: 0.0.0.0/0 }
+      Tags: [{ Key: Name, Value: !Sub '${ProjectName}-alb-sg' }, { Key: Project, Value: !Ref ProjectName }]
+
+  # No SSH port: administrators use Systems Manager Session Manager instead.
+  AppSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: App server. HTTP from the load balancer only (or from anywhere when there is no load balancer).
+      VpcId: !Ref Vpc
+      SecurityGroupIngress:
+        - !If
+          - UseAlb
+          - { IpProtocol: tcp, FromPort: 80, ToPort: 80, SourceSecurityGroupId: !Ref AlbSecurityGroup }
+          - { IpProtocol: tcp, FromPort: 80, ToPort: 80, CidrIp: 0.0.0.0/0 }
+      Tags: [{ Key: Name, Value: !Sub '${ProjectName}-app-sg' }, { Key: Project, Value: !Ref ProjectName }]
+
+  DbSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: PostgreSQL from the app server only
+      VpcId: !Ref Vpc
+      SecurityGroupIngress:
+        - { IpProtocol: tcp, FromPort: 5432, ToPort: 5432, SourceSecurityGroupId: !Ref AppSecurityGroup }
+      Tags: [{ Key: Name, Value: !Sub '${ProjectName}-db-sg' }, { Key: Project, Value: !Ref ProjectName }]
+
+  # ───────────────────────────── Database ─────────────────────────────
+  DbSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Private subnets for NEXORA PostgreSQL
+      SubnetIds: [!Ref PrivateSubnetA, !Ref PrivateSubnetB]
+      Tags: [{ Key: Project, Value: !Ref ProjectName }]
+
+  Database:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Snapshot
+    UpdateReplacePolicy: Snapshot
+    Properties:
+      DBInstanceIdentifier: !Sub '${ProjectName}-${Environment}-db'
+      Engine: postgres
+      EngineVersion: '17.10'
+      DBInstanceClass: !Ref DBInstanceClass
+      AllocatedStorage: '20'
+      StorageType: gp2
+      StorageEncrypted: true
+      DBName: nexora
+      MasterUsername: nexora
+      # Read from Parameter Store at deploy time (the bootstrap script creates it); never stored in the template.
+      MasterUserPassword: !Sub '{{resolve:ssm-secure:/${ProjectName}/${Environment}/DB_PASSWORD}}'
+      DBSubnetGroupName: !Ref DbSubnetGroup
+      VPCSecurityGroups: [!Ref DbSecurityGroup]
+      PubliclyAccessible: false
+      MultiAZ: false
+      BackupRetentionPeriod: 1
+      AutoMinorVersionUpgrade: true
+      DeletionProtection: true
+      EnablePerformanceInsights: false
+      MonitoringInterval: 0
+      CopyTagsToSnapshot: true
+      Tags: [{ Key: Project, Value: !Ref ProjectName }]
+
+  # ───────────────────────────── Images and logs ─────────────────────────────
+  EcrRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Sub '${ProjectName}-app'
+      ImageScanningConfiguration: { ScanOnPush: true }
+      ImageTagMutability: MUTABLE
+      LifecyclePolicy:
+        # Keep the newest 5 images so storage stays under the 500 MB Free Tier allowance.
+        LifecyclePolicyText: |
+          {"rules":[{"rulePriority":1,"description":"Keep the newest 5 images","selection":{"tagStatus":"any","countType":"imageCountMoreThan","countNumber":5},"action":{"type":"expire"}}]}
+      Tags: [{ Key: Project, Value: !Ref ProjectName }]
+
+  AppLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/${ProjectName}/${Environment}/app'
+      RetentionInDays: 14
+
+  # ───────────────────────────── App server ─────────────────────────────
+  InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - { Effect: Allow, Principal: { Service: ec2.amazonaws.com }, Action: sts:AssumeRole }
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+      Policies:
+        - PolicyName: app-runtime
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: ReadAppConfig
+                Effect: Allow
+                Action: [ssm:GetParametersByPath, ssm:GetParameters, ssm:GetParameter]
+                Resource: !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/*'
+              - Sid: ReadAppConfigPath
+                Effect: Allow
+                Action: ssm:GetParametersByPath
+                Resource: !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}'
+              - Sid: WriteAppLogs
+                Effect: Allow
+                Action: [logs:CreateLogStream, logs:PutLogEvents, logs:DescribeLogStreams]
+                Resource: !Sub '${AppLogGroup.Arn}:*'
+              - Sid: KeepElasticIp
+                Effect: Allow
+                Action: ec2:AssociateAddress
+                Resource: '*'
+      Tags: [{ Key: Project, Value: !Ref ProjectName }]
+
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties: { Roles: [!Ref InstanceRole] }
+
+  ElasticIp:
+    Type: AWS::EC2::EIP
+    Condition: NoAlb
+    Properties:
+      Domain: vpc
+      Tags: [{ Key: Name, Value: !Sub '${ProjectName}-app-ip' }, { Key: Project, Value: !Ref ProjectName }]
+
+  LaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateData:
+        ImageId: !Ref LatestAmiId
+        InstanceType: !Ref InstanceType
+        IamInstanceProfile: { Arn: !GetAtt InstanceProfile.Arn }
+        SecurityGroupIds: [!Ref AppSecurityGroup]
+        MetadataOptions: { HttpTokens: required, HttpEndpoint: enabled, HttpPutResponseHopLimit: 1 }
+        BlockDeviceMappings:
+          - DeviceName: /dev/xvda
+            Ebs: { VolumeSize: 20, VolumeType: gp3, Encrypted: true, DeleteOnTermination: true }
+        TagSpecifications:
+          - ResourceType: volume
+            Tags: [{ Key: Project, Value: !Ref ProjectName }]
+        UserData:
+          Fn::Base64: !Sub
+            - |
+              #!/bin/bash
+              # First boot of a NEXORA app server: Docker, swap, the deploy script, then the newest image.
+              set -euxo pipefail
+              dnf install -y docker
+              systemctl enable --now docker
+
+              # 2 GB swap: the micro instance has 1 GB of memory.
+              if [ ! -f /swapfile ]; then
+                dd if=/dev/zero of=/swapfile bs=1M count=2048
+                chmod 600 /swapfile
+                mkswap /swapfile
+                swapon /swapfile
+                echo '/swapfile swap swap defaults 0 0' >> /etc/fstab
+              fi
+
+              mkdir -p /opt/nexora
+              cat > /opt/nexora/env.conf <<'CONF'
+              REGION=${AWS::Region}
+              REPO=${EcrRepository.RepositoryUri}
+              PARAM_PATH=/${ProjectName}/${Environment}
+              DB_HOST=${Database.Endpoint.Address}
+              DB_PORT=${Database.Endpoint.Port}
+              DB_NAME=nexora
+              DB_USER=nexora
+              LOG_GROUP=${AppLogGroup}
+              PUBLIC_URL=${PublicUrl}
+              ALLOCATION_ID=${AllocationId}
+              CONF
+
+              cat > /opt/nexora/deploy.sh <<'DEPLOY'
+              #!/bin/bash
+              # Usage: deploy.sh <image-tag>. Pulls the image, starts it with config from Parameter Store,
+              # waits for /health/ready and rolls back to the previous image if the new one never gets healthy.
+              set -euo pipefail
+              source /opt/nexora/env.conf
+              TAG="$1"
+              IMAGE="$REPO:$TAG"
+              REGISTRY="$(echo "$REPO" | cut -d/ -f1)"
+              aws ecr get-login-password --region "$REGION" | docker login --username AWS --password-stdin "$REGISTRY"
+              docker pull "$IMAGE"
+
+              # Runtime config: every parameter under PARAM_PATH becomes NAME=value (SecureStrings decrypted).
+              umask 077
+              ENV_FILE=/opt/nexora/app.env
+              aws ssm get-parameters-by-path --region "$REGION" --path "$PARAM_PATH" --recursive --with-decryption \
+                --query 'Parameters[].[Name,Value]' --output text \
+                | while IFS=$'\t' read -r name value; do echo "$(basename "$name")=$value"; done > "$ENV_FILE"
+              DB_PASSWORD="$(grep '^DB_PASSWORD=' "$ENV_FILE" | cut -d= -f2-)"
+              DB_URL="postgresql://$DB_USER:$DB_PASSWORD@$DB_HOST:$DB_PORT/$DB_NAME"
+              {
+                echo "NODE_ENV=production"
+                echo "PORT=3000"
+                echo "TRUST_PROXY=true"
+                echo "STATE_STORE=postgres"
+                echo "STATE_DB_URL=$DB_URL"
+                echo "PROFILE_STORE=supabase"
+                echo "SUPABASE_DB_URL=$DB_URL"
+                echo "APP_URL=$PUBLIC_URL"
+                grep -q '^CORS_ORIGINS=' "$ENV_FILE" || echo "CORS_ORIGINS=$PUBLIC_URL"
+              } >> "$ENV_FILE"
+              sed -i '/^DB_PASSWORD=/d' "$ENV_FILE"
+
+              PREVIOUS="$(docker inspect --format '{{.Config.Image}}' nexora 2>/dev/null || true)"
+              start() {
+                docker rm -f nexora >/dev/null 2>&1 || true
+                docker run -d --name nexora --restart unless-stopped -p 80:3000 --env-file "$ENV_FILE" \
+                  --log-driver awslogs --log-opt awslogs-region="$REGION" --log-opt awslogs-group="$LOG_GROUP" \
+                  --log-opt awslogs-stream="$(hostname)" "$1"
+              }
+              healthy() {
+                for _ in $(seq 1 40); do
+                  if curl -fsS http://localhost/health/ready >/dev/null 2>&1; then return 0; fi
+                  sleep 5
+                done
+                return 1
+              }
+
+              start "$IMAGE"
+              if healthy; then
+                echo "Deployed $IMAGE"
+                docker image prune -af --filter "until=72h" >/dev/null || true
+                exit 0
+              fi
+              echo "New image $IMAGE did not become healthy. Last log lines:"
+              docker logs --tail 40 nexora || true
+              if [ -n "$PREVIOUS" ] && [ "$PREVIOUS" != "$IMAGE" ]; then
+                echo "Rolling back to $PREVIOUS"
+                start "$PREVIOUS"
+                healthy || echo "Rollback image is not healthy either"
+              fi
+              exit 1
+              DEPLOY
+              chmod 700 /opt/nexora/deploy.sh
+
+              # Without a load balancer, keep the same public address across instance replacements.
+              if [ "${AllocationId}" != "none" ]; then
+                TOKEN="$(curl -fsS -X PUT http://169.254.169.254/latest/api/token -H 'X-aws-ec2-metadata-token-ttl-seconds: 300')"
+                IID="$(curl -fsS -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/instance-id)"
+                aws ec2 associate-address --region ${AWS::Region} --allocation-id ${AllocationId} --instance-id "$IID" --allow-reassociation
+              fi
+
+              # The first boot happens before CI/CD has pushed an image; the deploy workflow starts it then.
+              /opt/nexora/deploy.sh latest || echo "No deployable image yet; waiting for the first GitHub Actions deploy."
+            - AllocationId: !If [NoAlb, !GetAtt ElasticIp.AllocationId, 'none']
+              PublicUrl: !If
+                - UseHttps
+                - !Sub 'https://${AppDomainName}'
+                - !If [UseAlb, !Sub 'http://${LoadBalancer.DNSName}', !Sub 'http://${ElasticIp.PublicIp}']
+
+  # One instance only: the app keeps its working state in memory and saves it to PostgreSQL, so two copies
+  # would overwrite each other. The group replaces the server automatically if it fails.
+  AppAutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    DependsOn: [PublicDefaultRoute]
+    UpdatePolicy:
+      # Infrastructure changes (new AMI, instance type) replace the single server one at a time.
+      AutoScalingRollingUpdate: { MinInstancesInService: 0, MaxBatchSize: 1, PauseTime: PT5M }
+    Properties:
+      AutoScalingGroupName: !Sub '${ProjectName}-${Environment}-app'
+      MinSize: '1'
+      MaxSize: '1'
+      DesiredCapacity: '1'
+      VPCZoneIdentifier: [!Ref PublicSubnetA, !Ref PublicSubnetB]
+      LaunchTemplate: { LaunchTemplateId: !Ref LaunchTemplate, Version: !GetAtt LaunchTemplate.LatestVersionNumber }
+      TargetGroupARNs: !If [UseAlb, [!Ref TargetGroup], !Ref 'AWS::NoValue']
+      HealthCheckType: EC2
+      HealthCheckGracePeriod: 300
+      Tags:
+        - { Key: Name, Value: !Sub '${ProjectName}-${Environment}-app', PropagateAtLaunch: true }
+        - { Key: Project, Value: !Ref ProjectName, PropagateAtLaunch: true }
+        - { Key: Role, Value: app, PropagateAtLaunch: true }
+        - { Key: Environment, Value: !Ref Environment, PropagateAtLaunch: true }
+
+  # ───────────────────────────── Load balancer ─────────────────────────────
+  LoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Condition: UseAlb
+    Properties:
+      Name: !Sub '${ProjectName}-${Environment}-alb'
+      Scheme: internet-facing
+      Type: application
+      Subnets: [!Ref PublicSubnetA, !Ref PublicSubnetB]
+      SecurityGroups: [!Ref AlbSecurityGroup]
+      LoadBalancerAttributes:
+        # AI answers can take a while; keep connections open longer than the default 60 s.
+        - { Key: idle_timeout.timeout_seconds, Value: '120' }
+        - { Key: routing.http.drop_invalid_header_fields.enabled, Value: 'true' }
+      Tags: [{ Key: Project, Value: !Ref ProjectName }]
+
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Condition: UseAlb
+    Properties:
+      VpcId: !Ref Vpc
+      Protocol: HTTP
+      Port: 80
+      TargetType: instance
+      HealthCheckPath: /health/ready
+      HealthCheckIntervalSeconds: 30
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 3
+      Matcher: { HttpCode: '200' }
+      TargetGroupAttributes:
+        - { Key: deregistration_delay.timeout_seconds, Value: '30' }
+      Tags: [{ Key: Project, Value: !Ref ProjectName }]
+
+  HttpForwardListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Condition: HttpOnlyAlb
+    Properties:
+      LoadBalancerArn: !Ref LoadBalancer
+      Port: 80
+      Protocol: HTTP
+      DefaultActions: [{ Type: forward, TargetGroupArn: !Ref TargetGroup }]
+
+  HttpRedirectListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Condition: UseHttps
+    Properties:
+      LoadBalancerArn: !Ref LoadBalancer
+      Port: 80
+      Protocol: HTTP
+      DefaultActions:
+        - Type: redirect
+          RedirectConfig: { Protocol: HTTPS, Port: '443', StatusCode: HTTP_301 }
+
+  HttpsListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Condition: UseHttps
+    Properties:
+      LoadBalancerArn: !Ref LoadBalancer
+      Port: 443
+      Protocol: HTTPS
+      SslPolicy: ELBSecurityPolicy-TLS13-1-2-2021-06
+      Certificates: [{ CertificateArn: !Ref CertificateArn }]
+      DefaultActions: [{ Type: forward, TargetGroupArn: !Ref TargetGroup }]
+
+  # ───────────────────────────── CI/CD: GitHub Actions role ─────────────────────────────
+  GitHubOidcProvider:
+    Type: AWS::IAM::OIDCProvider
+    Condition: CreateOidc
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ClientIdList: [sts.amazonaws.com]
+      ThumbprintList: [6938fd4d98bab03faadb97b34396831e3780aea1, 1c58a3a8518e8759bf075b76b750d4f2df264fcd]
+
+  # Only workflows on the main branch of this repository can assume this role, and it can only push the app
+  # image and run the deploy script on this project's servers.
+  GitHubDeployRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${ProjectName}-${Environment}-github-deploy'
+      MaxSessionDuration: 3600
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !If
+                - CreateOidc
+                - !Ref GitHubOidcProvider
+                - !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com'
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+                token.actions.githubusercontent.com:sub: !Sub 'repo:${GitHubRepository}:ref:refs/heads/main'
+      Policies:
+        - PolicyName: deploy-app
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: EcrLogin
+                Effect: Allow
+                Action: ecr:GetAuthorizationToken
+                Resource: '*'
+              - Sid: PushAppImage
+                Effect: Allow
+                Action:
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:BatchGetImage
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:InitiateLayerUpload
+                  - ecr:UploadLayerPart
+                  - ecr:CompleteLayerUpload
+                  - ecr:PutImage
+                  - ecr:DescribeImages
+                Resource: !GetAtt EcrRepository.Arn
+              - Sid: RunDeployScriptOnAppServers
+                Effect: Allow
+                Action: ssm:SendCommand
+                Resource: !Sub 'arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:instance/*'
+                Condition:
+                  StringEquals:
+                    ssm:resourceTag/Project: !Ref ProjectName
+                    ssm:resourceTag/Role: app
+              - Sid: UseShellDocument
+                Effect: Allow
+                Action: ssm:SendCommand
+                Resource: !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}::document/AWS-RunShellScript'
+              - Sid: ReadDeployResults
+                Effect: Allow
+                Action: [ssm:GetCommandInvocation, ssm:ListCommandInvocations, ec2:DescribeInstances]
+                Resource: '*'
+      Tags: [{ Key: Project, Value: !Ref ProjectName }]
+
+  # ───────────────────────────── Cost and health alerts ─────────────────────────────
+  AlertTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub '${ProjectName}-${Environment}-alerts'
+      Subscription: [{ Protocol: email, Endpoint: !Ref AlertEmail }]
+      Tags: [{ Key: Project, Value: !Ref ProjectName }]
+
+  MonthlyBudget:
+    Type: AWS::Budgets::Budget
+    Properties:
+      Budget:
+        BudgetName: !Sub '${ProjectName}-${Environment}-monthly'
+        BudgetType: COST
+        TimeUnit: MONTHLY
+        BudgetLimit: { Amount: !Ref MonthlyBudgetUSD, Unit: USD }
+      NotificationsWithSubscribers:
+        - Notification: { NotificationType: ACTUAL, ComparisonOperator: GREATER_THAN, Threshold: 80, ThresholdType: PERCENTAGE }
+          Subscribers: [{ SubscriptionType: EMAIL, Address: !Ref AlertEmail }]
+        - Notification: { NotificationType: FORECASTED, ComparisonOperator: GREATER_THAN, Threshold: 100, ThresholdType: PERCENTAGE }
+          Subscribers: [{ SubscriptionType: EMAIL, Address: !Ref AlertEmail }]
+
+  UnhealthyAppAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: UseAlb
+    Properties:
+      AlarmName: !Sub '${ProjectName}-${Environment}-app-unhealthy'
+      AlarmDescription: The load balancer has had no healthy app server for 10 minutes.
+      Namespace: AWS/ApplicationELB
+      MetricName: HealthyHostCount
+      Dimensions:
+        - { Name: LoadBalancer, Value: !GetAtt LoadBalancer.LoadBalancerFullName }
+        - { Name: TargetGroup, Value: !GetAtt TargetGroup.TargetGroupFullName }
+      Statistic: Minimum
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 1
+      ComparisonOperator: LessThanThreshold
+      TreatMissingData: breaching
+      AlarmActions: [!Ref AlertTopic]
+      OKActions: [!Ref AlertTopic]
+
+  Server5xxAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: UseAlb
+    Properties:
+      AlarmName: !Sub '${ProjectName}-${Environment}-app-5xx'
+      AlarmDescription: The app returned more than 25 server errors in 5 minutes.
+      Namespace: AWS/ApplicationELB
+      MetricName: HTTPCode_Target_5XX_Count
+      Dimensions: [{ Name: LoadBalancer, Value: !GetAtt LoadBalancer.LoadBalancerFullName }]
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 25
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref AlertTopic]
+
+  DatabaseStorageAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${ProjectName}-${Environment}-db-storage-low'
+      AlarmDescription: Less than 3 GB free on the 20 GB Free Tier database.
+      Namespace: AWS/RDS
+      MetricName: FreeStorageSpace
+      Dimensions: [{ Name: DBInstanceIdentifier, Value: !Ref Database }]
+      Statistic: Minimum
+      Period: 900
+      EvaluationPeriods: 1
+      Threshold: 3221225472
+      ComparisonOperator: LessThanThreshold
+      AlarmActions: [!Ref AlertTopic]
+
+Outputs:
+  AppUrl:
+    Description: Where the app is served
+    Value: !If
+      - UseHttps
+      - !Sub 'https://${AppDomainName}'
+      - !If [UseAlb, !Sub 'http://${LoadBalancer.DNSName}', !Sub 'http://${ElasticIp.PublicIp}']
+  LoadBalancerDnsName:
+    Condition: UseAlb
+    Description: Point your domain's CNAME here when using HTTPS
+    Value: !GetAtt LoadBalancer.DNSName
+  EcrRepositoryUri:
+    Description: Docker image repository (GitHub variable ECR_REPOSITORY is its name)
+    Value: !GetAtt EcrRepository.RepositoryUri
+  EcrRepositoryName:
+    Value: !Ref EcrRepository
+  GitHubDeployRoleArn:
+    Description: GitHub variable AWS_DEPLOY_ROLE_ARN
+    Value: !GetAtt GitHubDeployRole.Arn
+  AutoScalingGroupName:
+    Value: !Ref AppAutoScalingGroup
+  DatabaseEndpoint:
+    Value: !GetAtt Database.Endpoint.Address
+  ParameterPath:
+    Description: Parameter Store path for the app's secrets and settings
+    Value: !Sub '/${ProjectName}/${Environment}'
+  LogGroup:
+    Value: !Ref AppLogGroup

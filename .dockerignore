@@ -6,3 +6,5 @@ build
 *.log
 .env*
 coverage
+data/runtime
+infra
