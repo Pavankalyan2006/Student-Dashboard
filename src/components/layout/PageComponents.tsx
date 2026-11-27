@@ -4,6 +4,8 @@ import { cn } from '../../lib/utils';
 import { Button } from '../ui/button';
 import { motion } from 'motion/react';
 import { AnimatedNumber, EASE_OUT } from '../motion';
+import { NexoraLoader } from '../brand/Nexora';
+import { EmptyOrbit } from '../brand/Illustrations';
 
 export function PageContainer({ children, className }: { children: React.ReactNode; className?: string }) {
   // The shell already pads and centres <main>; pages only add vertical rhythm. Sections rise in one after
@@ -32,13 +34,18 @@ export function PageHeader({ title, description, badge, actions, eyebrow, icon, 
             animate={{ scale: 1, rotate: 0, opacity: 1 }}
             whileHover={{ rotate: -6, scale: 1.06 }}
             transition={{ type: 'spring', stiffness: 320, damping: 18 }}
-            className="mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-50 to-violet-50 text-blue-600 ring-1 ring-inset ring-blue-100 [&_svg]:h-5 [&_svg]:w-5"
+            className="gradient-border mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-50 via-violet-50 to-sky-50 text-blue-600 shadow-[0_8px_20px_-12px_rgb(105_87_232_/_0.7)] [&_svg]:h-5 [&_svg]:w-5"
           >
             {icon}
           </motion.div>
         )}
         <div className="min-w-0 space-y-1.5">
-          {eyebrow && <p className="text-xs font-semibold uppercase tracking-[0.08em] text-blue-600">{eyebrow}</p>}
+          {eyebrow && (
+            <p className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-blue-600">
+              <span className="h-1.5 w-1.5 rounded-full bg-gradient-to-br from-blue-500 to-sky-400" aria-hidden="true" />
+              {eyebrow}
+            </p>
+          )}
           <div className="flex flex-wrap items-center gap-2.5">
             <h1 className="text-balance font-display text-2xl font-bold tracking-tight text-slate-900 sm:text-[28px] sm:leading-9">
               {title}
@@ -112,10 +119,11 @@ export function MetricCard({ label, value, hint, icon, tone = 'brand', onClick, 
       whileTap={onClick ? { scale: 0.98 } : undefined}
       transition={{ type: 'spring', stiffness: 380, damping: 26 }}
       className={cn(
-        'group/metric flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 text-left shadow-xs transition-[border-color,box-shadow] hover:border-slate-300 hover:shadow-md sm:p-5',
+        'group/metric relative flex flex-col gap-3 overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-xs transition-[border-color,box-shadow] hover:border-blue-200 hover:shadow-[0_12px_32px_-16px_rgb(105_87_232_/_0.45)] sm:p-5',
         className
       )}
     >
+      <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-400/50 to-transparent opacity-0 transition-opacity duration-300 group-hover/metric:opacity-100" />
       <div className="flex items-center justify-between gap-3">
         <span className="text-[13px] font-medium text-slate-600">{label}</span>
         {icon && (
@@ -152,13 +160,11 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        'flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300/80 bg-white px-6 py-10 text-center sm:py-14',
+        'flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300/80 bg-white/70 px-6 py-10 text-center sm:py-14',
         className
       )}
     >
-      <div className="mb-4 flex h-12 w-12 animate-float items-center justify-center rounded-xl bg-gradient-to-br from-slate-50 to-blue-50 text-blue-500 ring-1 ring-inset ring-slate-200 [&_svg]:h-6 [&_svg]:w-6">
-        {icon || <FolderOpen className="h-6 w-6" />}
-      </div>
+      <EmptyOrbit className="mb-4">{icon || <FolderOpen className="h-5 w-5" />}</EmptyOrbit>
       <h3 className="mb-1 text-[15px] font-semibold text-slate-900">{title}</h3>
       <p className="mb-5 max-w-sm text-[13px] leading-relaxed text-slate-500">{description}</p>
       {action ? (
@@ -179,7 +185,7 @@ export function LoadingState({ message = 'Loading…', className }: { message?: 
       <span className="sr-only">{message}</span>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="rounded-xl border border-slate-200 bg-white p-5" style={{ animationDelay: `${i * 90}ms` }}>
+          <div key={i} className="rounded-2xl border border-slate-200 bg-white p-5" style={{ animationDelay: `${i * 90}ms` }}>
             <div className="skeleton h-3 w-24" />
             <div className="skeleton mt-4 h-6 w-16" />
           </div>
@@ -191,13 +197,10 @@ export function LoadingState({ message = 'Loading…', className }: { message?: 
         <div className="skeleton mt-2.5 h-3 w-5/6" />
         <div className="skeleton mt-2.5 h-3 w-2/3" />
       </div>
-      <p className="flex items-center justify-center gap-2.5 text-xs font-medium text-slate-500" aria-hidden="true">
-        <span className="relative flex h-4 w-4">
-          <span className="absolute inset-0 animate-ping rounded-full bg-blue-400/40" />
-          <span className="relative m-auto h-2 w-2 rounded-full bg-gradient-to-br from-blue-500 to-violet-500" />
-        </span>
+      <div className="flex items-center justify-center gap-2.5 text-xs font-medium text-slate-500" aria-hidden="true">
+        <NexoraLoader size="sm" className="!flex-row" />
         {message}
-      </p>
+      </div>
     </div>
   );
 }

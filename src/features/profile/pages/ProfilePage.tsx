@@ -454,7 +454,7 @@ export function ProfilePage({ onNavigate }: { onNavigate: (path: string) => void
 
             <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-3">
               <div className="flex items-center justify-between">
-                <h4 className="text-xs font-bold text-slate-900">B.Tech AI Learning Platform</h4>
+                <h4 className="text-xs font-bold text-slate-900">NEXORA AI</h4>
                 <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-800">
                   Capstone
                 </span>

@@ -198,18 +198,18 @@ export const PlacementProgressPage: React.FC<Props> = ({ onNavigate }) => {
             <div className="h-[260px] w-full pt-4">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={dimensionChartData} margin={{ top: 10, right: 10, left: -20, bottom: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EFF1F6" />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E8EAF2" />
                   <XAxis
                     dataKey="name"
                     tickLine={false}
                     axisLine={false}
-                    tick={{ fontSize: 11, fill: '#6A7387' }}
+                    tick={{ fontSize: 11, fill: '#647089' }}
                   />
                   <YAxis
                     domain={[0, 100]}
                     tickLine={false}
                     axisLine={false}
-                    tick={{ fontSize: 11, fill: '#6A7387' }}
+                    tick={{ fontSize: 11, fill: '#647089' }}
                   />
                   <Tooltip
                     content={({ active, payload }) => {
@@ -229,7 +229,7 @@ export const PlacementProgressPage: React.FC<Props> = ({ onNavigate }) => {
                     {dimensionChartData.map((_, index) => (
                       <Cell
                         key={`cell-${index}`}
-                        fill={index % 2 === 0 ? '#4654E0' : '#574FDD'}
+                        fill={index % 2 === 0 ? '#6957E8' : '#6957E8'}
                       />
                     ))}
                   </Bar>
@@ -251,18 +251,18 @@ export const PlacementProgressPage: React.FC<Props> = ({ onNavigate }) => {
               <div className="h-[200px] w-full pt-2">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={interviewTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EFF1F6" />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E8EAF2" />
                     <XAxis
                       dataKey="round"
                       tickLine={false}
                       axisLine={false}
-                      tick={{ fontSize: 11, fill: '#6A7387' }}
+                      tick={{ fontSize: 11, fill: '#647089' }}
                     />
                     <YAxis
                       domain={[0, 100]}
                       tickLine={false}
                       axisLine={false}
-                      tick={{ fontSize: 11, fill: '#6A7387' }}
+                      tick={{ fontSize: 11, fill: '#647089' }}
                     />
                     <Tooltip
                       content={({ active, payload }) => {
@@ -281,9 +281,9 @@ export const PlacementProgressPage: React.FC<Props> = ({ onNavigate }) => {
                     <Line
                       type="monotone"
                       dataKey="score"
-                      stroke="#21A06F"
+                      stroke="#1CB67F"
                       strokeWidth={3}
-                      dot={{ r: 4, fill: '#21A06F' }}
+                      dot={{ r: 4, fill: '#1CB67F' }}
                     />
                   </LineChart>
                 </ResponsiveContainer>

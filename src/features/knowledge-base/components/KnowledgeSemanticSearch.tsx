@@ -170,7 +170,7 @@ export const KnowledgeSemanticSearch: React.FC<KnowledgeSemanticSearchProps> = (
                   >
                     <div
                       className="w-7 h-7 rounded-md flex items-center justify-center text-slate-900 text-xs"
-                      style={{ backgroundColor: c.color || '#5E6EEF' }}
+                      style={{ backgroundColor: c.color || '#7B69F0' }}
                     >
                       <Folder className="w-3.5 h-3.5" />
                     </div>

@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { NexoraLoader } from './components/brand/Nexora';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './api/queryClient';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
@@ -184,9 +185,8 @@ function AppContent() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
-        <RefreshCw className="h-8 w-8 animate-spin text-blue-600 mb-3" />
-        <p className="text-xs font-medium text-slate-600">Initializing B.Tech AI Learning Workspace...</p>
+      <div className="app-canvas flex min-h-screen flex-col items-center justify-center gap-4">
+        <NexoraLoader size="lg" label="Starting NEXORA AI…" />
       </div>
     );
   }

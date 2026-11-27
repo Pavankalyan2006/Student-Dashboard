@@ -39,7 +39,7 @@ import {
 } from '../../../../server/models/communityProfileProgressTypes';
 import { toast } from 'sonner';
 
-const PIE_COLORS = ['#4654E0', '#1F7AA2', '#14825A', '#7951D8', '#E48A1C'];
+const PIE_COLORS = ['#6957E8', '#128CAB', '#12936A', '#7A5BE6', '#E99A1E'];
 
 const DATE_FILTERS = [
   { id: '7d', label: 'Last 7 Days' },
@@ -365,10 +365,10 @@ export function ProgressDashboardPage({ onNavigate }: { onNavigate: (path: strin
                     }}
                   />
                   <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
-                  <Bar dataKey="lessons" name="Lessons" fill="#4654E0" stackId="a" radius={[0, 0, 0, 0]} />
-                  <Bar dataKey="coding" name="Coding & DSA" fill="#1F7AA2" stackId="a" radius={[0, 0, 0, 0]} />
-                  <Bar dataKey="quizzes" name="Quizzes" fill="#E48A1C" stackId="a" radius={[0, 0, 0, 0]} />
-                  <Bar dataKey="research" name="Research" fill="#7951D8" stackId="a" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="lessons" name="Lessons" fill="#6957E8" stackId="a" radius={[0, 0, 0, 0]} />
+                  <Bar dataKey="coding" name="Coding & DSA" fill="#128CAB" stackId="a" radius={[0, 0, 0, 0]} />
+                  <Bar dataKey="quizzes" name="Quizzes" fill="#E99A1E" stackId="a" radius={[0, 0, 0, 0]} />
+                  <Bar dataKey="research" name="Research" fill="#7A5BE6" stackId="a" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>

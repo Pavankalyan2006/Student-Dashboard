@@ -17,7 +17,7 @@ import {
 import { Button } from '../../../components/ui/button';
 import { useAuth } from '../../../hooks/useAuth';
 import { ThemeToggle } from '../../../components/navigation/ThemeToggle';
-import { BrandMark } from '../../../components/layout/BrandMark';
+import { NexoraLogo, NexoraMark } from '../../../components/brand/Nexora';
 import { ScrollProgress } from '../../../components/motion';
 
 interface PublicLayoutProps {
@@ -47,20 +47,11 @@ export function PublicLayout({ currentPath, onNavigate, children }: PublicLayout
             onClick={() => onNavigate('/')}
             className="flex items-center gap-3 cursor-pointer group"
           >
-            <BrandMark className="h-10 w-10 transition-transform duration-300 group-hover:scale-105 group-hover:-rotate-3" />
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-base sm:text-lg tracking-tight text-slate-900">
-                  B.Tech AI Learning
-                </span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-200/60 uppercase tracking-wider">
-                  Student Platform
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-500 hidden sm:block">
-                Academic & Practical Engineering OS
-              </p>
-            </div>
+            <NexoraLogo
+              tone="auto"
+              tagline="Learn Smarter. Build Faster. Achieve More."
+              markClassName="h-10 w-10 transition-transform duration-300 group-hover:scale-105 group-hover:-rotate-3"
+            />
           </div>
 
           {/* Desktop Navigation Links */}
@@ -198,12 +189,10 @@ export function PublicLayout({ currentPath, onNavigate, children }: PublicLayout
             {/* Platform Identity */}
             <div className="lg:col-span-2 space-y-4">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-md">
-                  <Sparkles className="h-5 w-5" />
-                </div>
+                <NexoraMark className="h-10 w-10" />
                 <div>
-                  <h3 className="font-bold text-lg text-white">B.Tech AI Learning Platform</h3>
-                  <p className="text-xs text-slate-400">Student-Centric Engineering Operating System</p>
+                  <h3 className="font-display text-lg font-extrabold tracking-[0.08em] text-white">NEXORA AI</h3>
+                  <p className="text-xs text-slate-400">Learn Smarter. Build Faster. Achieve More.</p>
                 </div>
               </div>
               <p className="text-sm text-slate-300 leading-relaxed max-w-sm">
@@ -315,7 +304,7 @@ export function PublicLayout({ currentPath, onNavigate, children }: PublicLayout
 
           {/* Bottom Bar */}
           <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-4">
-            <p>© {new Date().getFullYear()} B.Tech AI Learning Platform. All rights reserved. Dedicated to engineering student excellence.</p>
+            <p>© {new Date().getFullYear()} NEXORA AI. All rights reserved. Dedicated to engineering student excellence.</p>
             <div className="flex items-center gap-6">
               <button onClick={() => onNavigate('/about')} className="hover:text-white transition-colors">About</button>
               <button onClick={() => onNavigate('/how-it-works')} className="hover:text-white transition-colors">How It Works</button>

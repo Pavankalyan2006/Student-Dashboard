@@ -43,19 +43,20 @@ export function DashboardAIHero({ onNavigate }: { onNavigate: (path: string) => 
   ];
 
   return (
-    <div className="relative overflow-hidden rounded-2xl hero-brand p-5 sm:p-6 text-white border border-navy-700">
+    <div className="hero-brand inverse-island relative overflow-hidden rounded-3xl p-5 text-white ring-1 ring-white/[0.06] sm:p-6">
       {/* Background ambient accents */}
-      <div className="absolute top-0 right-0 -mt-10 -mr-10 h-48 w-48 rounded-full bg-gradient-to-br from-blue-600/20 to-indigo-600/30 blur-2xl pointer-events-none" />
+      <div aria-hidden="true" className="neural-backdrop pointer-events-none absolute inset-0 opacity-60 [mask-image:linear-gradient(to_left,black,transparent_65%)]" />
+      <div aria-hidden="true" className="pointer-events-none absolute -right-10 -top-10 h-48 w-48 rounded-full bg-gradient-to-br from-[#9B78FF]/25 to-[#37C9E8]/20 blur-2xl" />
 
       <div className="relative z-10 space-y-4">
         {/* Header line */}
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2 flex-wrap">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-xs">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-gradient text-white shadow-xs">
               <Sparkles className="h-4 w-4" />
             </div>
             <span className="text-xs font-bold tracking-tight uppercase text-indigo-300">
-              {persona?.agent_companion_name ? `${persona.agent_companion_name} · AI Companion` : 'B.Tech AI Learning Assistant'}
+              {persona?.agent_companion_name ? `${persona.agent_companion_name} · AI Companion` : 'NEXORA AI Assistant'}
             </span>
             {persona?.pedagogical_tone && (
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-200 border border-indigo-500/30 font-medium capitalize">
@@ -63,8 +64,9 @@ export function DashboardAIHero({ onNavigate }: { onNavigate: (path: string) => 
               </span>
             )}
           </div>
-          <span className="text-[11px] font-mono text-slate-400 hidden sm:inline-block">
-            Gemini &amp; Tool Registry Connected
+          <span className="hidden items-center gap-1.5 text-[11px] font-medium text-slate-400 sm:inline-flex">
+            <span className={persona ? 'h-1.5 w-1.5 rounded-full bg-[#36D399]' : 'h-1.5 w-1.5 rounded-full bg-slate-500'} aria-hidden="true" />
+            {persona ? 'Personalised from your onboarding profile' : 'Answers use your profile once onboarding is complete'}
           </span>
         </div>
 
@@ -96,11 +98,11 @@ export function DashboardAIHero({ onNavigate }: { onNavigate: (path: string) => 
             onChange={(e) => setPrompt(e.target.value)}
             aria-label="Ask the AI tutor"
             placeholder="Ask AI: Explain AVL Tree rotations, debug my code, or generate a quiz..."
-            className="w-full h-11 pl-4 pr-24 rounded-xl bg-white/10 text-xs sm:text-sm text-white placeholder:text-slate-400 border border-white/15 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:bg-white/15 transition-all shadow-inner"
+            className="w-full h-11 pl-4 pr-24 rounded-xl bg-white/10 text-xs sm:text-sm text-white placeholder:text-slate-400 border border-white/15 focus:outline-none focus:ring-2 focus:ring-[#9B78FF] focus:bg-white/15 transition-all shadow-inner"
           />
           <button
             type="submit"
-            className="absolute right-1.5 h-8 px-3.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-semibold hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+            className="press absolute right-1.5 h-8 px-3.5 rounded-lg bg-brand-gradient text-white text-xs font-semibold hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
           >
             <span>Ask AI</span>
             <CornerDownLeft className="h-3.5 w-3.5" />

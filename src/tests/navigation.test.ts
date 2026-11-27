@@ -10,16 +10,17 @@ const appSource = readFileSync(path.resolve(__dirname, '../App.tsx'), 'utf8');
 describe('Navigation & shell', () => {
   it('groups modules into the redesign categories', () => {
     expect(NAV_SECTIONS.map((s) => s.title)).toEqual([
-      'Overview',
-      'Personal Intelligence',
+      'Home',
+      'Academics',
+      'AI Workspace',
       'Learn',
-      'Practice',
-      'AI Labs',
+      'Code Labs',
+      'Labs & Experiments',
       'Assessments',
-      'Career',
       'Projects & Research',
+      'Career',
       'Community',
-      'Personal Workspace',
+      'You',
       'Settings',
     ]);
   });
@@ -69,11 +70,13 @@ describe('Navigation & shell', () => {
     expect(findActiveNavItem('/interviews/setup')?.name).toBe('Mock Interviews');
     expect(findActiveNavItem('/semester/subjects')?.name).toBe('Semester Command Center');
     expect(findActiveNavItem('/')?.name).toBe('Dashboard');
-    expect(findSectionForItem(findActiveNavItem('/sql-lab'))?.title).toBe('Practice');
+    expect(findSectionForItem(findActiveNavItem('/sql-lab'))?.title).toBe('Code Labs');
+    expect(findActiveNavItem('/viva')?.href).toBe('/labs');
+    expect(findActiveNavItem('/sandbox')?.href).toBe('/coding');
   });
 
   it('builds readable breadcrumbs from the nav structure', () => {
-    expect(buildBreadcrumbs('/dashboard').map((c) => c.label)).toEqual(['Overview', 'Dashboard']);
+    expect(buildBreadcrumbs('/dashboard').map((c) => c.label)).toEqual(['Home', 'Dashboard']);
     expect(buildBreadcrumbs('/community/questions').map((c) => c.label)).toEqual(['Community', 'Q&A Forum']);
     const deep = buildBreadcrumbs('/courses/course_ab12cd34ef/learn');
     expect(deep.map((c) => c.label)).toEqual(['Learn', 'Courses', 'Learn']);

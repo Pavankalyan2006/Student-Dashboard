@@ -87,38 +87,47 @@ export interface NavSection {
 }
 
 /**
- * Student navigation, grouped by what the student is trying to do.
+ * NEXORA AI student navigation, grouped by what the student is trying to do.
  * Every href is a real route in App.tsx; nothing here is a placeholder.
- * The retired pilot feedback page is intentionally absent.
+ * The retired pilot feedback page is intentionally absent, and there is no faculty or admin entry.
  */
 export const NAV_SECTIONS: NavSection[] = [
   {
     id: 'overview',
-    title: 'Overview',
+    title: 'Home',
     icon: LayoutDashboard,
     items: [
       { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-      { name: 'Semester Command Center', href: '/semester-command-center', icon: CalendarRange, match: ['/semester'] },
-      { name: 'Grades & CGPA', href: '/grades', icon: Calculator, match: ['/cgpa', '/cgpa-calculator'] },
-      { name: 'Class Timetable', href: '/timetable', icon: CalendarDays, match: ['/schedule'] },
-      { name: 'Attendance', href: '/attendance', icon: CalendarCheck },
-      { name: 'Task Board', href: '/tasks', icon: KanbanSquare, match: ['/task-board', '/kanban'] },
-      { name: 'Deadlines', href: '/deadlines', icon: CalendarClock, match: ['/calendar'] },
-      { name: 'Unified Progress', href: '/progress', icon: TrendingUp },
-      { name: 'Learning Analytics', href: '/analytics', icon: Activity, match: ['/learning-analytics'] },
+      { name: 'Daily Briefing', href: '/briefing', icon: Sunrise, match: ['/daily-briefing'] },
       { name: 'Notifications', href: '/notifications', icon: Bell },
     ],
   },
   {
-    id: 'personal-intelligence',
-    title: 'Personal Intelligence',
-    icon: Brain,
+    id: 'academics',
+    title: 'Academics',
+    icon: GraduationCap,
     items: [
-      { name: 'Daily Briefing', href: '/briefing', icon: Sunrise, match: ['/daily-briefing'] },
-      { name: 'My AI Brain', href: '/ai-brain', icon: Brain, isAi: true },
-      { name: 'Knowledge Graph', href: '/knowledge-graph', icon: Network, match: ['/knowledge-map'] },
-      { name: 'AI Agent Control Center', href: '/agents', icon: Workflow, isAi: true, match: ['/agent-control-center'] },
+      { name: 'Semester Command Center', href: '/semester-command-center', icon: CalendarRange, match: ['/semester'] },
+      { name: 'Study Planner', href: '/study-planner', icon: Calendar },
+      { name: 'Class Timetable', href: '/timetable', icon: CalendarDays, match: ['/schedule'] },
+      { name: 'Task Board', href: '/tasks', icon: KanbanSquare, match: ['/task-board', '/kanban'] },
+      { name: 'Deadlines', href: '/deadlines', icon: CalendarClock, match: ['/calendar'] },
+      { name: 'Grades & CGPA', href: '/grades', icon: Calculator, match: ['/cgpa', '/cgpa-calculator'] },
+      { name: 'Attendance', href: '/attendance', icon: CalendarCheck },
+    ],
+  },
+  {
+    id: 'personal-intelligence',
+    title: 'AI Workspace',
+    icon: Sparkles,
+    items: [
+      { name: 'AI Tutor', href: '/ai-agent', icon: Bot, isAi: true, badge: 'AI', match: ['/ai-tutor'] },
+      { name: 'Personal AI Agent', href: '/ai-brain', icon: Brain, isAi: true },
+      { name: 'Doubt Solver', href: '/doubts', icon: HelpCircle, isAi: true },
+      { name: 'Agent Control Center', href: '/agents', icon: Workflow, isAi: true, match: ['/agent-control-center'] },
       { name: 'AI Memory', href: '/ai-memory', icon: BrainCircuit, isAi: true, match: ['/profile/ai-memory'] },
+      { name: 'Knowledge Graph', href: '/knowledge-graph', icon: Network, match: ['/knowledge-map'] },
+      { name: 'Discover', href: '/discover', icon: Compass, isAi: true, badge: 'Sources' },
     ],
   },
   {
@@ -126,40 +135,38 @@ export const NAV_SECTIONS: NavSection[] = [
     title: 'Learn',
     icon: BookOpen,
     items: [
-      { name: 'AI Tutor', href: '/ai-agent', icon: Bot, isAi: true, badge: 'AI', match: ['/ai-tutor'] },
-      { name: 'Discover', href: '/discover', icon: Compass, isAi: true, badge: 'Sources' },
       { name: 'Courses', href: '/courses', icon: BookOpen, match: ['/course'] },
       { name: 'Notes', href: '/notes', icon: FileText },
       { name: 'Documents', href: '/documents', icon: Files },
-      { name: 'Doubt Solver', href: '/doubts', icon: HelpCircle, isAi: true },
       { name: 'Flashcards', href: '/flashcards', icon: Layers },
-      { name: 'Study Planner', href: '/study-planner', icon: Calendar },
+      { name: 'Knowledge Base', href: '/knowledge', icon: Database, isAi: true, badge: 'RAG' },
       { name: 'Language Learning', href: '/languages', icon: Languages },
     ],
   },
   {
     id: 'practice',
-    title: 'Practice',
+    title: 'Code Labs',
     icon: Code2,
     items: [
-      { name: 'Coding Lab', href: '/coding', icon: Code2, match: ['/coding-lab', '/sandbox'] },
-      { name: 'Code Review', href: '/code-review', icon: ScanSearch },
+      // The sandbox (/sandbox) is the Coding Lab's blank workspace, so it shares this entry.
+      { name: 'Coding Lab & Sandbox', href: '/coding', icon: Code2, match: ['/coding-lab', '/sandbox'] },
       { name: 'DSA Lab', href: '/dsa', icon: Binary, match: ['/dsa-lab'] },
       { name: 'SQL Lab', href: '/sql-lab', icon: Database },
-      { name: 'Git Lab', href: '/git', icon: GitBranch, match: ['/git-lab'] },
       { name: 'System Design Lab', href: '/system-design', icon: Network },
-      { name: 'Virtual Lab', href: '/virtual-lab', icon: FlaskConical, match: ['/simulators'] },
+      { name: 'Code Review', href: '/code-review', icon: ScanSearch },
+      { name: 'Git Lab', href: '/git', icon: GitBranch, match: ['/git-lab'] },
       { name: 'Cybersecurity Lab', href: '/cybersecurity-lab', icon: ShieldCheck, match: ['/cybersecurity', '/cyber-lab'] },
     ],
   },
   {
     id: 'ai-labs',
-    title: 'AI Labs',
-    icon: Sparkles,
+    title: 'Labs & Experiments',
+    icon: FlaskConical,
     items: [
       { name: 'AI/ML Lab', href: '/ml-lab', icon: Cpu, isAi: true },
-      { name: 'Knowledge Base', href: '/knowledge', icon: Brain, isAi: true, badge: 'RAG' },
-      { name: 'Lab Assistant', href: '/labs', icon: FlaskConical },
+      // Viva practice (/viva) lives inside the Lab Assistant, next to each experiment.
+      { name: 'Lab Assistant & Viva', href: '/labs', icon: FlaskConical, match: ['/viva', '/lab-assistant'] },
+      { name: 'Virtual Lab', href: '/virtual-lab', icon: Microscope, match: ['/simulators'] },
     ],
   },
   {
@@ -168,9 +175,9 @@ export const NAV_SECTIONS: NavSection[] = [
     icon: ListChecks,
     items: [
       { name: 'Quiz', href: '/quiz', icon: ListChecks },
-      { name: 'Mistake Notebook', href: '/mistakes', icon: NotebookPen, match: ['/mistake-notebook'] },
+      { name: 'Exam Preparation', href: '/exams', icon: GraduationCap, match: ['/exam-preparation'] },
       { name: 'Previous Papers', href: '/previous-papers', icon: FileStack, match: ['/papers'] },
-      { name: 'Exam Preparation', href: '/exams', icon: GraduationCap },
+      { name: 'Mistake Notebook', href: '/mistakes', icon: NotebookPen, match: ['/mistake-notebook'] },
       { name: 'GATE Exam Preparation', href: '/assessment/gate-preparation', icon: BookOpenCheck, match: ['/gate'] },
       {
         name: 'Mock Interviews',
@@ -182,29 +189,29 @@ export const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
+    id: 'research',
+    title: 'Projects & Research',
+    icon: Hammer,
+    items: [
+      { name: 'Projects', href: '/projects', icon: Hammer },
+      { name: 'GitHub Workspace', href: '/github', icon: Github },
+      { name: 'Research Workspace', href: '/research', icon: Microscope },
+    ],
+  },
+  {
     id: 'career',
     title: 'Career',
     icon: BriefcaseBusiness,
     items: [
-      { name: 'Career', href: '/career', icon: BriefcaseBusiness, match: ['/career/explore', '/career/roles', '/career/role'] },
+      { name: 'Career Development', href: '/career', icon: BriefcaseBusiness, match: ['/career/explore', '/career/roles', '/career/role'] },
+      { name: 'Resume Builder', href: '/resume', icon: FileUser },
+      { name: 'Internship Tracker', href: '/applications', icon: Briefcase },
+      { name: 'Placement Preparation', href: '/placement', icon: Award, match: ['/placements'] },
       { name: 'Skills Profile', href: '/skills', icon: BarChart3 },
       { name: 'Skill Gap Analysis', href: '/career/skill-gap', icon: Target },
       { name: 'Career Roadmap', href: '/career/roadmap', icon: Route },
       { name: 'Jobs Discovery', href: '/career/jobs', icon: Search, match: ['/jobs'] },
-      { name: 'Resume', href: '/resume', icon: FileUser },
-      { name: 'Internships / Applications', href: '/applications', icon: Briefcase },
       { name: 'Competition Hub', href: '/competitions', icon: Trophy, match: ['/hackathons'] },
-      { name: 'Placement Preparation', href: '/placement', icon: Award, match: ['/placements'] },
-    ],
-  },
-  {
-    id: 'research',
-    title: 'Projects & Research',
-    icon: Microscope,
-    items: [
-      { name: 'Projects', href: '/projects', icon: Hammer },
-      { name: 'Research', href: '/research', icon: Microscope },
-      { name: 'GitHub', href: '/github', icon: Github },
     ],
   },
   {
@@ -220,11 +227,13 @@ export const NAV_SECTIONS: NavSection[] = [
   },
   {
     id: 'workspace',
-    title: 'Personal Workspace',
+    title: 'You',
     icon: UserRound,
     items: [
+      { name: 'Progress & Analytics', href: '/progress', icon: TrendingUp },
+      { name: 'Learning Analytics', href: '/analytics', icon: Activity, match: ['/learning-analytics'] },
+      { name: 'Goals', href: '/goals', icon: Target, match: ['/learning-goals'] },
       { name: 'Student Profile', href: '/profile', icon: User },
-      { name: 'Learning Goals', href: '/goals', icon: Target, match: ['/learning-goals'] },
       { name: 'Portfolio Showcase', href: '/portfolio', icon: Presentation, match: ['/showcase', '/profile/portfolio'] },
       { name: 'Achievements', href: '/profile/achievements', icon: Medal },
       { name: 'Certificates', href: '/certificates', icon: BadgeCheck, match: ['/profile/certificates'] },

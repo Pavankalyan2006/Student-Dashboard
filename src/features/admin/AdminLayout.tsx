@@ -111,7 +111,7 @@ export function AdminLayout({ currentPath, onNavigate, children }: AdminLayoutPr
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-bold text-sm tracking-tight text-white">B.Tech AI Platform</span>
+                <span className="font-bold text-sm tracking-tight text-white">NEXORA AI</span>
                 <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
                   Super Admin
                 </span>

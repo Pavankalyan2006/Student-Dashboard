@@ -226,7 +226,7 @@ export const KnowledgeDocumentsView: React.FC<KnowledgeDocumentsViewProps> = ({
                       {docCollection && (
                         <span
                           className="text-[10px] font-medium px-2 py-0.5 rounded-md text-slate-900"
-                          style={{ backgroundColor: docCollection.color || '#574FDD' }}
+                          style={{ backgroundColor: docCollection.color || '#6957E8' }}
                         >
                           {docCollection.name}
                         </span>

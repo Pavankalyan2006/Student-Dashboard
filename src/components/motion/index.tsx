@@ -170,6 +170,8 @@ export function ProgressRing({
   className,
   trackClassName = 'stroke-slate-100',
   barClassName = 'stroke-blue-600',
+  gradient = false,
+  label,
   children,
 }: {
   value: number;
@@ -178,14 +180,32 @@ export function ProgressRing({
   className?: string;
   trackClassName?: string;
   barClassName?: string;
+  /** Draw the bar in the NEXORA brand gradient (violet to cyan) instead of barClassName's colour. */
+  gradient?: boolean;
+  /** Accessible name; when given the ring is exposed as a progressbar. */
+  label?: string;
   children?: React.ReactNode;
 }) {
+  const gid = React.useId().replace(/:/g, '');
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   const pct = Math.max(0, Math.min(100, value));
   return (
-    <div className={cn('relative inline-flex items-center justify-center', className)} style={{ width: size, height: size }}>
+    <div
+      className={cn('relative inline-flex items-center justify-center', className)}
+      style={{ width: size, height: size }}
+      {...(label ? { role: 'progressbar', 'aria-label': label, 'aria-valuenow': Math.round(pct), 'aria-valuemin': 0, 'aria-valuemax': 100 } : {})}
+    >
       <svg width={size} height={size} className="-rotate-90" aria-hidden="true">
+        {gradient && (
+          <defs>
+            <linearGradient id={`ring-${gid}`} x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#7865F5" />
+              <stop offset="60%" stopColor="#9B78FF" />
+              <stop offset="100%" stopColor="#37C9E8" />
+            </linearGradient>
+          </defs>
+        )}
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" strokeWidth={stroke} className={trackClassName} />
         <motion.circle
           cx={size / 2}
@@ -194,7 +214,8 @@ export function ProgressRing({
           fill="none"
           strokeWidth={stroke}
           strokeLinecap="round"
-          className={barClassName}
+          className={gradient ? undefined : barClassName}
+          stroke={gradient ? `url(#ring-${gid})` : undefined}
           strokeDasharray={c}
           initial={{ strokeDashoffset: c }}
           animate={{ strokeDashoffset: c - (pct / 100) * c }}
@@ -297,7 +318,7 @@ function prefersReducedMotion() {
 export function celebrate(origin?: { x: number; y: number }) {
   if (typeof window === 'undefined' || prefersReducedMotion()) return;
   const fire = confettiOnPage();
-  const colors = ['#4654E0', '#8D6BEA', '#38BDF8', '#10B981', '#F59E0B'];
+  const colors = ['#6957E8', '#8D6BEA', '#38BDF8', '#36D399', '#F5B942'];
   const base = { origin: origin ?? { x: 0.5, y: 0.6 }, colors, disableForReducedMotion: true };
   fire({ ...base, particleCount: 70, spread: 70, startVelocity: 38 });
   window.setTimeout(() => fire({ ...base, particleCount: 40, spread: 110, startVelocity: 28, scalar: 0.8 }), 160);

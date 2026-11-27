@@ -185,7 +185,7 @@ function DiskSim({ explain }: { explain: (s: string) => void }) {
             ))}
           </div>
           <svg viewBox={`0 0 ${max} ${cur.path.length * 12 + 10}`} preserveAspectRatio="none" className="h-56 w-full rounded-xl border border-slate-200 bg-white" role="img" aria-label={`${show} head movement`}>
-            <polyline fill="none" stroke="#2563eb" strokeWidth={2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" points={cur.path.map((c, i) => `${c},${5 + i * 12}`).join(' ')} />
+            <polyline fill="none" stroke="#6957E8" strokeWidth={2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" points={cur.path.map((c, i) => `${c},${5 + i * 12}`).join(' ')} />
           </svg>
           <div className="-mt-3 flex justify-between text-[10px] text-slate-500"><span>0</span><span>Cylinder</span><span>{max}</span></div>
           <p className="text-xs text-slate-600">Order: {cur.path.join(' → ')}</p>

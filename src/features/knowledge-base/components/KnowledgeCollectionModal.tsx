@@ -31,15 +31,15 @@ const CATEGORIES: Array<{ id: KnowledgeCategory; label: string; desc: string }> 
 ];
 
 const COLORS = [
-  '#5E6EEF', // Blue
+  '#7B69F0', // Blue
   '#6B66EC', // Indigo
-  '#8B5CF6', // Purple
+  '#8B72F5', // Purple
   '#8D6BEA', // Pink
-  '#21A06F', // Emerald
-  '#14B8A6', // Teal
-  '#E48A1C', // Amber
+  '#1CB67F', // Emerald
+  '#37C9E8', // Teal
+  '#E99A1E', // Amber
   '#E54C43', // Red
-  '#6A7387', // Slate
+  '#647089', // Slate
 ];
 
 export const KnowledgeCollectionModal: React.FC<KnowledgeCollectionModalProps> = ({
@@ -53,7 +53,7 @@ export const KnowledgeCollectionModal: React.FC<KnowledgeCollectionModalProps> =
   const [category, setCategory] = useState<KnowledgeCategory>('COURSEWORK');
   const [subject, setSubject] = useState('');
   const [semester, setSemester] = useState<number | undefined>(undefined);
-  const [color, setColor] = useState('#5E6EEF');
+  const [color, setColor] = useState('#7B69F0');
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [visibility, setVisibility] = useState<'PRIVATE' | 'SHARED' | 'PUBLIC'>('PRIVATE');
@@ -67,7 +67,7 @@ export const KnowledgeCollectionModal: React.FC<KnowledgeCollectionModalProps> =
       setCategory(editingCollection.category);
       setSubject(editingCollection.subject || '');
       setSemester(editingCollection.semester);
-      setColor(editingCollection.color || '#5E6EEF');
+      setColor(editingCollection.color || '#7B69F0');
       setTags(editingCollection.tags || []);
       setVisibility(editingCollection.visibility || 'PRIVATE');
     } else {
@@ -76,7 +76,7 @@ export const KnowledgeCollectionModal: React.FC<KnowledgeCollectionModalProps> =
       setCategory('COURSEWORK');
       setSubject('');
       setSemester(undefined);
-      setColor('#5E6EEF');
+      setColor('#7B69F0');
       setTags([]);
       setVisibility('PRIVATE');
     }

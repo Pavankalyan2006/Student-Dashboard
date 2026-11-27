@@ -27,7 +27,9 @@ import {
 } from '../../profile/components/ProfileSectionForms';
 import { trackEvent } from '../../../lib/analytics';
 import { AnimatePresence, motion } from 'motion/react';
-import { BrandMark } from '../../../components/layout/BrandMark';
+import { NexoraLoader, NexoraLogo } from '../../../components/brand/Nexora';
+import { LearnBuildArt } from '../../../components/brand/Illustrations';
+import { celebrate } from '../../../components/motion';
 import { ThemeToggle } from '../../../components/navigation/ThemeToggle';
 
 export const REGISTRATION_STEPS = [
@@ -39,6 +41,17 @@ export const REGISTRATION_STEPS = [
   { n: 6, title: 'Learning preferences', optional: false },
   { n: 7, title: 'Review and complete', optional: false },
 ] as const;
+
+/** What each step teaches the student's NEXORA AI agent. Shown under the step title. */
+const STEP_PURPOSE: Record<number, string> = {
+  1: 'Who you are, so your workspace and agent are yours alone.',
+  2: 'Your university, degree, year, semester and subjects, so tutoring and plans follow your syllabus.',
+  3: 'What you can already do, so labs and practice start at the right level.',
+  4: 'What you have built, so project guidance and your resume start from real work.',
+  5: 'Where you are heading: roles, placements, higher studies and competitive exams.',
+  6: 'How you like to learn, the difficulty you want and how much time you have each day.',
+  7: 'Check everything once. Your answers stay private to you and your agent.',
+};
 
 export function passwordProblems(password: string, email: string): string[] {
   const p: string[] = [];
@@ -221,8 +234,7 @@ export function OnboardingPage({ onNavigate }: { onNavigate: (path: string) => v
   if (!isAuthenticated) {
     return (
       <Shell step={1} completed={[]} skipped={[]} onJump={() => {}}>
-        <h2 className="text-lg font-semibold mb-1">Create your account</h2>
-        <p className="text-sm text-slate-500 mb-4">Step 1 of 7. You can save and continue the rest later.</p>
+        <StepHeading step={1} title="Create your account" optional={false} note="You can save and continue the rest later." />
         <AccountCreateForm onCreated={() => { resumed.current = false; void refetch(); }} />
         <p className="mt-4 text-sm text-slate-500">
           Already registered? <button className="text-blue-600 font-medium" onClick={() => onNavigate('/login')}>Sign in</button>
@@ -233,8 +245,8 @@ export function OnboardingPage({ onNavigate }: { onNavigate: (path: string) => v
 
   if (isLoading || !data) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-slate-500">
-        <Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading your profile…
+      <div className="app-canvas flex min-h-screen items-center justify-center">
+        <NexoraLoader label="Loading your profile…" />
       </div>
     );
   }
@@ -265,7 +277,8 @@ export function OnboardingPage({ onNavigate }: { onNavigate: (path: string) => v
       const res = await profileMeApi.complete();
       applyProfileUpdate(res);
       void trackEvent('onboarding_completed', { step_count: 7 });
-      toast.success('Registration complete. Welcome!');
+      toast.success('Registration complete. Your NEXORA AI agent is ready.');
+      celebrate();
       onNavigate('/dashboard');
     } catch (err: any) {
       toast.error(err.message || 'Could not complete registration.');
@@ -278,10 +291,7 @@ export function OnboardingPage({ onNavigate }: { onNavigate: (path: string) => v
   return (
     <Shell step={step} completed={o.completed_steps} skipped={o.skipped_steps} onJump={setStep}>
       <VerificationBanner />
-      <h2 className="text-lg font-semibold mb-1">{meta.title}</h2>
-      <p className="text-sm text-slate-500 mb-4">
-        Step {step} of 7{meta.optional ? ' · optional, you can skip it and complete it later' : ''}. Fields marked * are required.
-      </p>
+      <StepHeading step={step} title={meta.title} optional={meta.optional} />
       {step === 1 && <IdentityForm {...formProps} emailVerificationRequired={emailVerificationRequired} />}
       {step === 2 && <AcademicForm {...formProps} />}
       {step === 3 && <SkillsForm {...formProps} />}
@@ -332,15 +342,15 @@ function Shell({ step, completed, skipped, onJump, children }: { step: number; c
         {/* Overall progress */}
         <div className="mb-6 flex items-center gap-4">
           {/* Inside the app shell the sidebar and top bar already show the logo and theme switch. */}
-          <BrandMark className="h-10 w-10 [#main-content_&]:hidden" />
+          <NexoraLogo tone="auto" className="shrink-0 [#main-content_&]:hidden" markClassName="h-10 w-10" />
           <div className="min-w-0 flex-1">
             <div className="flex items-center justify-between text-xs font-semibold text-slate-600">
-              <span>Set up your workspace</span>
+              <span>Set up your NEXORA AI workspace</span>
               <span className="tabular-nums">{pct}% complete</span>
             </div>
             <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-slate-200/70">
               <motion.div
-                className="h-full rounded-full bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500"
+                className="h-full rounded-full bg-brand-gradient"
                 initial={false}
                 animate={{ width: `${Math.max(4, pct)}%` }}
                 transition={{ type: 'spring', stiffness: 120, damping: 20 }}
@@ -353,6 +363,11 @@ function Shell({ step, completed, skipped, onJump, children }: { step: number; c
         <div className="grid gap-6 md:grid-cols-[250px_1fr]">
           {/* Phase 6 (P6-005): on phones the step list filled the first screen and pushed the form below the fold; it now follows the form there. */}
           <nav aria-label="Registration steps" className="order-2 h-fit rounded-2xl border border-slate-200 bg-white p-4 shadow-xs md:order-1 md:sticky md:top-6">
+            <div className="surface-hero -m-4 mb-3 rounded-t-2xl border-b border-slate-100 p-4">
+              <LearnBuildArt className="mx-auto h-20 w-28" />
+              <p className="mt-2 text-center text-[13px] font-semibold text-slate-900">Meet your personal AI agent</p>
+              <p className="mt-0.5 text-center text-[11px] leading-relaxed text-slate-500">Each step teaches it about you. Skip what you like and add it later.</p>
+            </div>
             <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Student registration</p>
             <ol className="relative space-y-1">
               <span aria-hidden="true" className="absolute bottom-4 left-[21px] top-4 w-px bg-slate-200" />
@@ -371,7 +386,7 @@ function Shell({ step, completed, skipped, onJump, children }: { step: number; c
                       {current && <motion.span layoutId="onboarding-step" className="absolute inset-0 rounded-xl bg-blue-50 ring-1 ring-inset ring-blue-100" transition={{ type: 'spring', stiffness: 380, damping: 32 }} />}
                       <span
                         className={`relative z-[1] flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ring-2 ring-white transition-colors ${
-                          done ? 'bg-emerald-500 text-white' : current ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500'
+                          done ? 'bg-emerald-500 text-white' : current ? 'bg-brand-gradient text-white shadow-[0_4px_12px_-4px_rgb(105_87_232_/_0.8)]' : 'bg-slate-100 text-slate-500'
                         }`}
                       >
                         {done ? <CheckCircle2 className="h-3.5 w-3.5" /> : s.n}
@@ -399,6 +414,25 @@ function Shell({ step, completed, skipped, onJump, children }: { step: number; c
           </main>
         </div>
       </div>
+    </div>
+  );
+}
+
+function StepHeading({ step, title, optional, note }: { step: number; title: string; optional: boolean; note?: string }) {
+  return (
+    <div className="mb-5">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-semibold tabular-nums text-blue-700 ring-1 ring-inset ring-blue-100">
+          Step {step} of 7
+        </span>
+        {optional && (
+          <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-medium text-slate-600">Optional · skip and finish later</span>
+        )}
+      </div>
+      <h2 className="mt-2.5 font-display text-xl font-bold tracking-tight text-slate-900">{title}</h2>
+      <p className="mt-1 text-sm leading-relaxed text-slate-500">
+        {STEP_PURPOSE[step]} {note ?? 'Fields marked * are required.'}
+      </p>
     </div>
   );
 }

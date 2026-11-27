@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { Menu, Search, ChevronRight, Star } from 'lucide-react';
+import { Menu, Search, ChevronRight, Star, GraduationCap } from 'lucide-react';
+import { useAuth } from '../../hooks/useAuth';
 import { useUiStore } from '../../store/uiStore';
 import { AskAIButton } from './AskAIButton';
 import { NotificationBell } from './NotificationBell';
@@ -33,7 +34,10 @@ function labelForSegment(seg: string): string {
 
 export function buildBreadcrumbs(currentPath: string): Crumb[] {
   const path = (currentPath.split(/[?#]/)[0] || '/').replace(/\/+$/, '') || '/';
-  if (path === '/' || path === '/dashboard') return [{ label: 'Overview' }, { label: 'Dashboard' }];
+  if (path === '/' || path === '/dashboard') {
+    const home = findSectionForItem(findActiveNavItem('/dashboard'));
+    return [{ label: home?.title ?? 'Home' }, { label: 'Dashboard' }];
+  }
 
   const item = findActiveNavItem(path);
   const section = findSectionForItem(item);
@@ -62,11 +66,13 @@ export function Topbar({ currentPath, onNavigate }: TopbarProps) {
   const pinned = useWorkspacePrefs((s) => (navItem ? s.pinned.includes(navItem.href) : false));
   const canPin = useWorkspacePrefs((s) => Boolean(s.studentId));
   const togglePin = useWorkspacePrefs((s) => s.togglePin);
+  const { student } = useAuth();
+  const semester = student?.semester;
 
   return (
     <header className="glass-bar print:hidden sticky top-0 z-30 flex h-16 w-full items-center gap-3 px-4 sm:px-6 lg:px-8">
       {/* Left: drawer trigger + location */}
-      <div className="flex min-w-0 flex-1 items-center gap-2.5">
+      <div className="flex min-w-[140px] flex-1 items-center gap-2.5">
         <button
           type="button"
           onClick={() => setMobileDrawerOpen(true)}
@@ -119,16 +125,17 @@ export function Topbar({ currentPath, onNavigate }: TopbarProps) {
         </div>
       </div>
 
-      {/* Center: global search */}
-      <div className="hidden w-full max-w-sm md:block lg:max-w-md">
+      {/* Center: global search and command palette */}
+      <div className="hidden w-full max-w-[260px] md:block xl:max-w-sm 2xl:max-w-md">
         <button
           type="button"
           onClick={() => setGlobalSearchOpen(true)}
-          className="group flex w-full items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2 text-[13px] text-slate-500 shadow-2xs transition-[border-color,background-color,box-shadow] hover:border-blue-300 hover:bg-white hover:shadow-sm"
+          data-testid="topbar-search"
+          className="group flex w-full items-center gap-2.5 rounded-xl border border-slate-200 bg-white/60 px-3 py-2 text-[13px] text-slate-500 shadow-2xs transition-[border-color,background-color,box-shadow] hover:border-blue-300 hover:bg-white hover:shadow-[0_0_0_3px_rgb(105_87_232_/_0.08)]"
         >
-          <Search className="h-4 w-4 shrink-0 text-slate-400 transition-colors group-hover:text-blue-500" />
-          <span className="flex-1 truncate text-left">Search courses, notes, documents…</span>
-          <kbd className="hidden items-center rounded-md border border-slate-200 bg-white px-1.5 py-0.5 font-mono text-[10px] font-medium text-slate-500 lg:inline-flex">
+          <Search className="h-4 w-4 shrink-0 text-slate-400 transition-colors group-hover:text-blue-600" />
+          <span className="flex-1 truncate text-left">Search or jump to anything…</span>
+          <kbd className="hidden items-center gap-0.5 rounded-md border border-slate-200 bg-slate-50 px-1.5 py-0.5 font-mono text-[10px] font-medium text-slate-500 lg:inline-flex">
             Ctrl K
           </kbd>
         </button>
@@ -144,6 +151,18 @@ export function Topbar({ currentPath, onNavigate }: TopbarProps) {
         >
           <Search className="h-[18px] w-[18px]" />
         </button>
+        {semester ? (
+          <button
+            type="button"
+            onClick={() => onNavigate('/semester-command-center')}
+            title="Open the Semester Command Center"
+            data-testid="topbar-semester"
+            className="press hidden items-center gap-1.5 rounded-full border border-slate-200 bg-white/70 px-2.5 py-1 text-[12px] font-semibold text-slate-700 transition-colors hover:border-blue-300 hover:text-blue-700 lg:inline-flex"
+          >
+            <GraduationCap className="h-3.5 w-3.5 text-blue-600" />
+            Semester {semester}
+          </button>
+        ) : null}
         <PersonalContextChip currentPath={currentPath} onNavigate={onNavigate} />
         <AskAIButton onClick={() => onNavigate('/ai-agent')} />
         <ThemeToggle className="hidden sm:flex" />

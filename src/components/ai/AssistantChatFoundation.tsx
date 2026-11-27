@@ -146,7 +146,7 @@ export function AssistantChatFoundation({
             <Sparkles className="h-3.5 w-3.5" />
           </div>
           <div>
-            <h4 className="text-xs font-semibold text-slate-900">B.Tech AI Learning Assistant</h4>
+            <h4 className="text-xs font-semibold text-slate-900">NEXORA AI Assistant</h4>
             <p className="text-[11px] text-slate-500">AI Provider & Tool Registry Architecture (Phase 1)</p>
           </div>
         </div>

@@ -102,7 +102,7 @@ export const KnowledgeCollectionsGrid: React.FC<KnowledgeCollectionsGridProps> =
                   <div className="flex items-center gap-3">
                     <div
                       className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-900 shadow-md"
-                      style={{ backgroundColor: col.color || '#5E6EEF' }}
+                      style={{ backgroundColor: col.color || '#7B69F0' }}
                     >
                       <Folder className="w-5 h-5" />
                     </div>

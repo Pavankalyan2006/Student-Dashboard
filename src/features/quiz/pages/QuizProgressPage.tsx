@@ -184,7 +184,7 @@ export const QuizProgressPage: React.FC<QuizProgressPageProps> = ({ onNavigate }
                   formatter={(val: any) => [`${val}%`, 'Accuracy']}
                   contentStyle={{ backgroundColor: '#121829', borderColor: '#363F52', borderRadius: '8px', color: '#fff', fontSize: '12px' }}
                 />
-                <Bar dataKey="accuracy" fill="#5E6EEF" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="accuracy" fill="#7B69F0" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -207,7 +207,7 @@ export const QuizProgressPage: React.FC<QuizProgressPageProps> = ({ onNavigate }
                     formatter={(val: any) => [`${val}%`, 'Score']}
                     contentStyle={{ backgroundColor: '#121829', borderColor: '#363F52', borderRadius: '8px', color: '#fff', fontSize: '12px' }}
                   />
-                  <Line type="monotone" dataKey="score" stroke="#8b5cf6" strokeWidth={2.5} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                  <Line type="monotone" dataKey="score" stroke="#8B72F5" strokeWidth={2.5} dot={{ r: 4 }} activeDot={{ r: 6 }} />
                 </LineChart>
               </ResponsiveContainer>
             ) : (

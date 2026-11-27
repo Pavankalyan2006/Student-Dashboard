@@ -58,7 +58,7 @@ export function DashboardOnboarding({
             <span>Welcome Onboarding</span>
           </div>
           <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
-            Welcome to your B.Tech AI Learning Platform, {studentName}!
+            Welcome to your NEXORA AI, {studentName}!
           </h2>
           <p className="text-xs sm:text-sm text-slate-600 max-w-2xl leading-relaxed">
             Your personal learning command center is ready. Follow these initial steps to calibrate your curriculum roadmap and AI tutor.

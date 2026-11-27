@@ -36,7 +36,7 @@ export function PublicShowcasePage({ slug, onNavigate }: { slug: string; onNavig
           </main>
         )}
         <button onClick={() => onNavigate('/')} className="mx-auto mt-10 flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-700">
-          <GraduationCap className="h-4 w-4" /> Made with the B.Tech Learning Platform
+          <GraduationCap className="h-4 w-4" /> Made with NEXORA AI
         </button>
       </div>
     </div>

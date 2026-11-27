@@ -50,17 +50,17 @@ export function LearningAnalytics({ analytics }: { analytics: DashboardAnalytics
         <div className="h-[200px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EFF1F6" />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E8EAF2" />
               <XAxis
                 dataKey="day"
                 tickLine={false}
                 axisLine={false}
-                tick={{ fontSize: 11, fill: '#6A7387' }}
+                tick={{ fontSize: 11, fill: '#647089' }}
               />
               <YAxis
                 tickLine={false}
                 axisLine={false}
-                tick={{ fontSize: 11, fill: '#6A7387' }}
+                tick={{ fontSize: 11, fill: '#647089' }}
                 tickFormatter={(v) => `${v}h`}
               />
               <Tooltip
@@ -82,7 +82,7 @@ export function LearningAnalytics({ analytics }: { analytics: DashboardAnalytics
                   return null;
                 }}
               />
-              <Bar dataKey="hours" fill="#4654E0" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="hours" fill="#6957E8" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>

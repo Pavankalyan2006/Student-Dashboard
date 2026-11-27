@@ -67,7 +67,7 @@ export function DashboardPage({ onNavigate }: { onNavigate: (path: string) => vo
   if (data.is_new_student) {
     return (
       <PageContainer className="space-y-6">
-        <DashboardWelcome student={data.student} streakDays={1} />
+        <DashboardWelcome student={data.student} streakDays={data.summary?.streak_days ?? 0} summary={data.summary} />
         {data.student_profile && <DashboardProfileSummary profile={data.student_profile} onNavigate={onNavigate} />}
         <DashboardAIHero onNavigate={onNavigate} />
         <LearningModulesSummaryWidget onNavigate={onNavigate} />
@@ -104,7 +104,7 @@ export function DashboardPage({ onNavigate }: { onNavigate: (path: string) => vo
       )}
 
       {/* Welcome and academic summary */}
-      <DashboardWelcome student={data.student} streakDays={data.summary.streak_days} />
+      <DashboardWelcome student={data.student} streakDays={data.summary.streak_days} summary={data.summary} />
       {data.student_profile && <DashboardProfileSummary profile={data.student_profile} onNavigate={onNavigate} />}
 
       {/* Pick up where you left off */}
